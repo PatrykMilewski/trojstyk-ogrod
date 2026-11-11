@@ -18,7 +18,7 @@ Interaktywny rzut wspólnej przestrzeni działek 775/193, 775/190 i 775/191 w Ch
 
 Zmiany zapisują się automatycznie **tylko w lokalnej pamięci przeglądarki**. Nie zmieniają strony ani układów innych osób. Przycisk „Zapisz układ” pobiera JSON — można przesłać go komuś i użyć „Wczytaj”. Nie jest to edycja współdzielona w czasie rzeczywistym. Wyczyszczenie danych przeglądarki usuwa zapis lokalny, dlatego warto pobierać kopie JSON.
 
-Domyślny wariant pochodzi z pliku `moj-ogrod (8).json`. „Przywróć układ startowy” przywraca ten wariant. Podkład działek jest stały; konfigurator nie pobiera innych działek po adresie.
+Domyślny wariant pochodzi z pliku `moj-ogrod (9).json`. „Przywróć układ startowy” przywraca ten wariant. Podkład działek jest stały; konfigurator nie pobiera innych działek po adresie.
 
 Spacja + przeciągnięcie przesuwa widok, kółko myszy zmienia przybliżenie. R / Shift+R obraca wybrany element o 15°. Przycisk „Wymiary elementów” pokazuje rozmiary na mapie i w tabeli, osobno dla sauny i podestu.
 
