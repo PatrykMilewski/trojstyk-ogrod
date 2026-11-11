@@ -4,7 +4,7 @@
 
 Interaktywny rzut wspólnej przestrzeni działek 775/193, 775/190 i 775/191 w Chwaszczynie. Każdy może przygotować własny wariant na tym podkładzie.
 
-- Przeciąganie wyposażenia, obrót i zmiana wymiarów; sauna z podestem oraz balia z podbudową jako zestawy.
+- Przeciąganie wyposażenia, obrót i zmiana wymiarów; sauna z podestem oraz balia z podbudową jako zestawy. Podest ma niezależnie regulowaną szerokość od ściany i długość wzdłuż ściany, jest wyśrodkowany przy saunie.
 - Edycja płotu: najedź i kliknij „+”, następnie przeciągnij punkt.
 - Furtki i bramy o regulowanej szerokości.
 - Każdy z czterech narożników piasku może być zaokrąglony albo kanciasty; ustawienia zapisują się w JSON-ie.
