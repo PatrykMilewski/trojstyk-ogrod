@@ -108,8 +108,13 @@ function objectRing(object,override) {
  let local;
  if(object.shape==='circle')local=Array.from({length:96},(_,i)=>[Math.cos(i*Math.PI/48)*w/2,Math.sin(i*Math.PI/48)*h/2]);
  else if(object.shape==='rounded'){
-  const r=Math.min(object.radius||1.4,w/2,h/2);local=[];
-  for(let k=0;k<4;k++){const a=k*Math.PI/2,cx=(k===0||k===3?1:-1)*(w/2-r),cy=(k<2?1:-1)*(h/2-r);for(let j=0;j<=16;j++){const t=a+j*Math.PI/32;local.push([cx+r*Math.cos(t),cy+r*Math.sin(t)]);}}
+  const radius=Math.min(object.radius??1.4,w/2,h/2);local=[];
+  for(let k=0;k<4;k++){
+   const r=object.corners?.[k]===false?0:radius,a=k*Math.PI/2;
+   const cx=(k===0||k===3?1:-1)*(w/2-r),cy=(k<2?1:-1)*(h/2-r);
+   if(r===0){local.push([cx,cy]);continue;}
+   for(let j=0;j<=16;j++){const t=a+j*Math.PI/32;local.push([cx+r*Math.cos(t),cy+r*Math.sin(t)]);}
+  }
  }
  else if(object.shape==='polygon')local=object.vertices.map(p=>[p[0]*w,p[1]*h]);
  else local=[[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]];
@@ -138,6 +143,7 @@ function validateImport(value) {
   if(!['rect','circle','polygon','rounded'].includes(o.shape))throw Error('Nieznany kształt.');
   if(o.shape==='polygon'&&(!Array.isArray(o.vertices)||!validRing(o.vertices.map(p=>[p[0]*o.w,p[1]*o.h]))))throw Error('Nieprawidłowy obrys domu.');
   if(typeof o.color!=='string'||!/^#[0-9a-f]{6}$/i.test(o.color))throw Error('Nieprawidłowy kolor.');
+  if(o.corners!==undefined&&(!Array.isArray(o.corners)||o.corners.length!==4||o.corners.some(v=>typeof v!=='boolean')))throw Error('Nieprawidłowe narożniki.');
   if(o.radius!==undefined&&(!finite(o.radius)||o.radius<0||o.radius>100))throw Error('Nieprawidłowe zaokrąglenie.');
   if(o.parts!==undefined){
    if(!Array.isArray(o.parts)||o.parts.length>4)throw Error('Nieprawidłowy zestaw.');
@@ -376,13 +382,25 @@ function draw() {
  const priority=o=>o.kind==='dom'?0:o.category==='podłoże'?1:2;
  const sorted=[...state.objects].sort((a,b)=>priority(a)-priority(b));
  content+=walkwayDrawing();content+=sorted.map(objectDrawing).join('');
- content+=fenceDrawing();content+=walkwayHandles();const selectedObject=findSelected();if(selection?.type==='object'&&selectedObject&&!selectedObject.locked)content+=objectHandles(selectedObject);content+=`<path d="M-.3 0H.3M0 -.3V.3" stroke="#9e5471" stroke-width=".05"/>`+label(.5,-.5,'T',.35,'#9e5471');
+ content+=fenceDrawing();content+=walkwayHandles();const selectedObject=findSelected();if(selection?.type==='object'&&selectedObject&&!selectedObject.locked)content+=objectHandles(selectedObject)+sandCornerLabels(selectedObject);content+=`<path d="M-.3 0H.3M0 -.3V.3" stroke="#9e5471" stroke-width=".05"/>`+label(.5,-.5,'T',.35,'#9e5471');
  const north=[view.x+view.w-2.5,-view.y-2.8],end=add(north,mul(GEO.north,1.5));
  content+=worldLine(north,end,'#203b35',.07)+label(...add(end,mul(GEO.north,.4)),'N',.38,'#203b35','font-weight="bold"');
  svg.innerHTML=content+'<g id="fence-hover"></g>';
 }
 function field(label,key,value,options={}) {
  const type=options.type||'number';return `<label class="${options.full?'full':''}">${esc(label)}<input data-field="${key}" type="${type}" value="${esc(type==='number'?Number(value.toFixed(3)):value)}" ${type==='number'?`step="${options.step||.1}" min="${options.min??-2000}" max="${options.max??2000}"`:''} ${options.disabled?'disabled':''}></label>`;
+}
+function cornerControls(o) {
+ if(o.kind!=='piasek')return '';
+ return `<div class="full"><b>Narożniki piasku</b><p class="quiet">Zaznaczony = zaokrąglony, odznaczony = kanciasty. Numery odpowiadają oznaczeniom na planszy i obracają się z piaskiem.</p></div>`+[0,1,2,3].map(i=>`<label class="check"><input type="checkbox" data-field="corner-${i}" ${o.corners?.[i]!==false?'checked':''} ${o.locked?'disabled':''}>${i+1} · zaokrąglony</label>`).join('');
+}
+function sandCornerLabels(o) {
+ if(o.kind!=='piasek')return '';
+ const a=o.angle*Math.PI/180,c=Math.cos(a),s=Math.sin(a);
+ return [0,1,2,3].map(i=>{
+  const x=(i===0||i===3?1:-1)*(o.w/2+.35),y=(i<2?1:-1)*(o.h/2+.35);
+  return label(o.x+c*x-s*y,o.y+s*x+c*y,String(i+1),.34,'#bc562c','data-corner-label="true" font-weight="bold" paint-order="stroke" stroke="#fffdf8" stroke-width=".12"');
+ }).join('');
 }
 function inspector() {
  const pane=$('inspector'),o=findSelected();
@@ -403,7 +421,7 @@ function inspector() {
  }
  const disabled=o.locked;
  const rotationButtons=`<div class="row"><button data-action="rotate-left" ${disabled?'disabled':''}>↶ 15°</button><button data-action="rotate-right" ${disabled?'disabled':''}>↷ 15°</button><button data-action="rotate-quarter" ${disabled?'disabled':''}>↶ 90°</button></div><p class="quiet">Obracaj przyciskami, uchwytem nad elementem lub wpisz kąt. Skrót: R / Shift+R.${o.kind==='piasek'?' Piasek przesuwa i obraca niezablokowane urządzenia, których środek jest na piasku. Każde urządzenie możesz też przesuwać osobno.':''}</p>`;
- pane.innerHTML=`<h2>${esc(o.name)}</h2>${rotationButtons}<div class="fields">${field('Nazwa','name',o.name,{type:'text',full:true})}${field('X · m','x',o.x,{disabled})}${field('Y · m','y',o.y,{disabled})}${field(o.shape==='circle'?'Średnica · m':'Szerokość · m','w',o.w,{min:.2,max:100,disabled})}${o.shape==='circle'?'':field('Głębokość · m','h',o.h,{min:.2,max:100,disabled})}${o.shape==='rounded'?field('Zaokrąglenie · m','radius',o.radius||1.4,{min:.2,max:100,disabled}):''}${o.parts?.some(p=>p.kind==='podest')?field('Podest przy saunie · m','deck',o.parts.find(p=>p.kind==='podest').w,{min:.2,max:10,disabled}):''}${field('Obrót · °','angle',o.angle,{min:-360,max:360,step:5,disabled})}<label class="full check"><input type="checkbox" data-field="locked" ${o.locked?'checked':''}>Zablokuj przesuwanie</label>${o.kind==='hustawka'?field('Rezerwa szer. · m','safetyW',o.safetyW||3,{min:.2,max:100})+field('Rezerwa długość · m','safetyH',o.safetyH||7,{min:.2,max:100}):''}</div><p class="quiet">Ślad elementu: ${formatArea(polygonArea(footprint(o)))}. We wspólnej części: ${formatArea(polygonArea(pc.intersection(footprint(o),polygon(state.fence))))}.</p><div class="row"><button data-action="duplicate">Powiel</button><button data-action="delete" class="danger" ${o.locked?'disabled':''}>Usuń</button></div>`;
+ pane.innerHTML=`<h2>${esc(o.name)}</h2>${rotationButtons}<div class="fields">${field('Nazwa','name',o.name,{type:'text',full:true})}${field('X · m','x',o.x,{disabled})}${field('Y · m','y',o.y,{disabled})}${field(o.shape==='circle'?'Średnica · m':'Szerokość · m','w',o.w,{min:.2,max:100,disabled})}${o.shape==='circle'?'':field('Głębokość · m','h',o.h,{min:.2,max:100,disabled})}${o.shape==='rounded'?field('Zaokrąglenie · m','radius',o.radius||1.4,{min:.2,max:100,disabled}):''}${cornerControls(o)}${o.parts?.some(p=>p.kind==='podest')?field('Podest przy saunie · m','deck',o.parts.find(p=>p.kind==='podest').w,{min:.2,max:10,disabled}):''}${field('Obrót · °','angle',o.angle,{min:-360,max:360,step:5,disabled})}<label class="full check"><input type="checkbox" data-field="locked" ${o.locked?'checked':''}>Zablokuj przesuwanie</label>${o.kind==='hustawka'?field('Rezerwa szer. · m','safetyW',o.safetyW||3,{min:.2,max:100})+field('Rezerwa długość · m','safetyH',o.safetyH||7,{min:.2,max:100}):''}</div><p class="quiet">Ślad elementu: ${formatArea(polygonArea(footprint(o)))}. We wspólnej części: ${formatArea(polygonArea(pc.intersection(footprint(o),polygon(state.fence))))}.</p><div class="row"><button data-action="duplicate">Powiel</button><button data-action="delete" class="danger" ${o.locked?'disabled':''}>Usuń</button></div>`;
 }
 function renderList() {
  $('object-list').innerHTML=[...state.objects.map(o=>({type:'object',id:o.id,name:o.name,detail:`${o.locked?'▣ ':''}${number(polygonArea(footprint(o)),1)} m²`})),...(state.walkway?[{type:'walkway',id:'walkway',name:'Wirtualny chodnik',detail:formatArea(polygonArea(walkwayGeometry()))}]:[]),...state.gates.map(g=>({type:'gate',id:g.id,name:g.name,detail:`${number(gateInfo(g).width,2)} m`}))].map(o=>`<button class="object-row ${selection?.id===o.id?'selected':''}" data-select="${esc(o.id)}" data-type="${o.type}"><span>${esc(o.name)}</span><span>${o.detail}</span></button>`).join('');
@@ -574,6 +592,7 @@ function updateField(event) {
   if(!validRing(next)){toast('Narożnik tworzy nieprawidłowy obrys.');inspector();return;}commit(()=>state.fence=next);return;
  }
  const o=findSelected();if(!o)return;
+ if(/^corner-[0-3]$/.test(key)){if(selection.type==='object'&&o.kind==='piasek'&&!o.locked)commit(()=>{o.corners=o.corners||[true,true,true,true];o.corners[Number(key.slice(-1))]=input.checked;});return;}
  const before=clone(state);
  const value=input.type==='checkbox'?input.checked:key==='name'?input.value.slice(0,80):key==='kind'?input.value:Number(input.value);
  if(typeof value==='number'&&!finite(value)){inspector();return;}

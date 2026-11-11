@@ -7,6 +7,7 @@ Interaktywny rzut wspólnej przestrzeni działek 775/193, 775/190 i 775/191 w Ch
 - Przeciąganie wyposażenia, obrót i zmiana wymiarów; sauna z podestem oraz balia z podbudową jako zestawy.
 - Edycja płotu: najedź i kliknij „+”, następnie przeciągnij punkt.
 - Furtki i bramy o regulowanej szerokości.
+- Każdy z czterech narożników piasku może być zaokrąglony albo kanciasty; ustawienia zapisują się w JSON-ie.
 - Piasek przesuwa urządzenia stojące na nim; poszczególne urządzenia można przesuwać osobno.
 - Wirtualny chodnik łączący furtki z przeciąganym skrzyżowaniem i uchwytami łuków.
 - Bilans powierzchni działek na żywo, osobne pole chodnika oraz przełącznik wymiarów elementów.
