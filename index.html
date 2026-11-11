@@ -9,18 +9,14 @@
 </aside><main class="canvas-wrap"><div class="canvas-bar"><button id="fit-zone">Wspólna część</button><button id="fit-all">Trzy działki</button><span class="spacer"></span><label class="check"><input type="checkbox" id="snap" checked>Siatka 10 cm</label><label class="check"><input type="checkbox" id="magnet" checked>Do granic</label><label class="check"><input type="checkbox" id="dimensions" checked>Wymiary płotu</label><label class="check dimension-toggle"><input type="checkbox" id="element-dimensions">Wymiary elementów</label><button id="zoom-out" aria-label="Oddal">−</button><button id="zoom-in" aria-label="Przybliż">＋</button></div><svg id="board" class="board" role="application" aria-label="Interaktywna mapa ogrodu. Wybierz element i użyj strzałek lub przeciągnij myszą." tabindex="0" xmlns="http://www.w3.org/2000/svg"></svg><div class="hint" id="hint">Przeciągnij wyposażenie. <strong>Kształt ogrodzenia</strong> odsłania uchwyty płotu.</div><div class="canvas-footer"><span id="cursor-pos">Wymiary w metrach · siatka 1 m</span><span>Granice ULDK · koncepcja, nie pomiar geodezyjny</span></div></main>
 <aside class="right"><section class="section"><h3>Bilans na żywo</h3><div class="metric"><strong id="total-area">—</strong><span>m² wspólne</span></div><div class="sharebar" id="sharebar"></div><table class="stats-table"><thead><tr><th>Działka</th><th>m² wspólne</th><th>Udział</th></tr></thead><tbody id="shares"></tbody></table><div class="separator"></div><div id="metrics"></div><div id="warnings" aria-live="polite"></div><details><summary>Pozostały teren działek</summary><div id="parcel-balance"></div><p>„Prywatne” = powierzchnia działki minus wspólna część; obejmuje także dom i podjazd.</p></details><details><summary>Jak liczone są powierzchnie?</summary><p>Przecięcia z rzeczywistymi granicami działek są liczone w metrach. Zagospodarowane = suma geometryczna śladów elementów we wspólnej części. Nakładające się pola, np. urządzenie na piasku, liczone są tylko raz. „Wolne” nie oznacza automatycznie powierzchni biologicznie czynnej. Przerywana rezerwa huśtawki nie zwiększa zajętej powierzchni.</p></details></section>
 <section class="section" id="dimension-panel" hidden><h3>Wymiary wszystkich elementów</h3><div id="dimension-list"></div><p class="quiet">Wymiary w rzucie z góry. Sauna i podest osobno. Ø oznacza średnicę.</p></section><section class="section"><h3>Parametry</h3><div id="inspector"><h2>Twój układ, Twoje decyzje.</h2><p class="quiet">Kliknij element, bramę lub płot. Tutaj zmienisz jego wymiary i położenie.</p></div></section>
-<section class="section"><h3>Elementy na planszy</h3><div id="object-list" class="objects list-scroll"></div></section><p class="quiet small">Układ domyślny: Twój plik „moj-ogrod (9).json”, z wirtualnym chodnikiem 1,8 m. Domy orientacyjnie wg załączników. ULDK: 11.11.2026, układ EPSG:2177. Obliczenia nie potwierdzają zgodności budowlanej ani stref bezpieczeństwa urządzeń. Sylwetki ludzi są poglądowe, przypisane do wyposażenia i chodnika; nie zwiększają powierzchni. Twoje zmiany zapisują się tylko w tej przeglądarce. Inni odwiedzający mają własny układ. Plik działa offline. Kopię układu zapisuj przyciskiem u góry.</p></aside></div>
+<section class="section"><h3>Elementy na planszy</h3><div id="object-list" class="objects list-scroll"></div></section><p class="quiet small">Układ domyślny: Twój plik „moj-ogrod (11).json”, z wirtualnym chodnikiem 1,8 m. Domy orientacyjnie wg załączników. ULDK: 11.11.2026, układ EPSG:2177. Obliczenia nie potwierdzają zgodności budowlanej ani stref bezpieczeństwa urządzeń. Sylwetki ludzi są poglądowe, przypisane do wyposażenia i chodnika; nie zwiększają powierzchni. Twoje zmiany zapisują się tylko w tej przeglądarce. Inni odwiedzający mają własny układ. Plik działa offline. Kopię układu zapisuj przyciskiem u góry.</p></aside></div>
 <input type="file" id="file-input" class="file-input" accept="application/json,.json"><div id="toast" class="error-toast" hidden></div>
 <script id="default-layout" type="application/json">{
   "version": 1,
   "fence": [
     [
-      -1.1,
-      -5
-    ],
-    [
-      -0.7,
-      -5.4
+      -1.4,
+      -4.1
     ],
     [
       0.1,
@@ -44,11 +40,11 @@
     ],
     [
       4.4,
-      5.8
+      6.1
     ],
     [
-      0.0013444470478574393,
-      5.822855465452808
+      0.0014141173841780287,
+      6.1246005578093925
     ],
     [
       0.0017035941795902729,
@@ -67,8 +63,8 @@
       5.316271016453781e-16
     ],
     [
-      -3.2486612522095903,
-      3.0237880279750885e-16
+      -4.2,
+      -1.2
     ]
   ],
   "objects": [
@@ -102,7 +98,7 @@
       "color": "#b88b61",
       "category": "budynek",
       "x": 1.5,
-      "y": 4.6,
+      "y": 4.9,
       "angle": -180,
       "locked": false,
       "shape": "rect",
@@ -111,11 +107,11 @@
           "id": "item-3",
           "kind": "podest",
           "name": "Podest",
-          "w": 1.4,
+          "w": 1.2,
           "h": 2.4,
           "color": "#e4c59c",
           "category": "podłoże",
-          "x": -2.2,
+          "x": -2.1,
           "y": 0,
           "angle": 0,
           "locked": false,
@@ -361,8 +357,8 @@
       "h": 2.2,
       "color": "#82a59a",
       "category": "urządzenie",
-      "x": -4.2,
-      "y": 1.5,
+      "x": -4,
+      "y": 0.9,
       "angle": 0,
       "locked": false,
       "shape": "circle"
@@ -372,8 +368,8 @@
     {
       "id": "brama-193",
       "name": "Furtka /193",
-      "edge": 13,
-      "t": 0.5029552706228279,
+      "edge": 12,
+      "t": 0.5029552706228277,
       "width": 1.2,
       "open": true,
       "kind": "wicket"
@@ -381,7 +377,7 @@
     {
       "id": "brama-190",
       "name": "Furtka /190",
-      "edge": 10,
+      "edge": 9,
       "t": 0.4999999999999999,
       "width": 1.2,
       "open": true,
@@ -390,7 +386,7 @@
     {
       "id": "brama-191",
       "name": "Furtka /191",
-      "edge": 5,
+      "edge": 4,
       "t": 0.49999999999999994,
       "width": 1.2,
       "open": true,
