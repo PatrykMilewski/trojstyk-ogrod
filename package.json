@@ -1,0 +1,13 @@
+{
+  "name": "trojstyk-ogrod",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interaktywny edytor wsp\u00f3lnego ogrodu",
+  "scripts": {
+    "build": "python3 scripts/build.py",
+    "check": "node --check src/app.js"
+  },
+  "dependencies": {
+    "polygon-clipping": "^0.15.7"
+  }
+}
