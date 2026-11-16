@@ -108,3 +108,8 @@ Trzy drzewa przy /41 przesunięto bliżej siebie i domu na podstawie połączone
 Skróty działek, psów, trójstyku, spaceru i pozostałych widoków znajdują się w menu „Widoki i sterowanie”. „Słońce i mapy” oraz „Reset widoku” pozostają osobno. Po aktywacji słońca u dołu wyświetla się bieżąca godzina symulacji, również po zamknięciu panelu; status w panelu mówi tylko, czy słońce jest nad/pod horyzontem. Usunięto górny baner i pionową adnotację wysokości /193. Dokumenty „Wymiary” i „Rzut 2D” oraz dotychczasowy opis są w dwóch sekcjach „Informacje”.
 
 Podczas spaceru Shift zwiększa prędkość z 2,2 do 4,84 m/s, a spacja rozpoczyna skok o wysokości 0,6 m. Po lądowaniu oczy wracają do 1,70 m. Przytrzymanie spacji nie powoduje kolejnych skoków, a skok w powietrzu jest zablokowany. Kolizje z domami pozostają aktywne podczas biegu i skoku. Na ekranach dotykowych dodano przyciski sprintu i skoku.
+
+
+## Kompaktowy skrót spaceru 2026-11-16.9
+
+Dolny panel spaceru zawiera wyłącznie tekst ze skrótami sterowania, bez przycisków ruchu, sprintu, skoku i wyjścia. Jest niski, nie przechwytuje kliknięć i zawija tekst na małych ekranach. Wyjście pozostaje pod Esc oraz w menu „Widoki i sterowanie”.

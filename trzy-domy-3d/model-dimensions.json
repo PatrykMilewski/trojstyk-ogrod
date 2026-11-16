@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-16.8",
+  "modelVersion": "2026-11-16.9",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1454,7 +1454,7 @@
     "proceduralCodeSha256": "ac4bc94551c124940bc8916e95213a8b7b8848fcbdd3659cfc50f9c75d278b6b",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "426140b9e29c7b44a98258b31e23e939a3789b4b671d8536079a11c746c93047",
-    "runtimeSha256": "d0a06b87ac746192131e0097ef4bdcd1d728fd4f7d473f89d7289f72685efa51"
+    "runtimeSha256": "7c8c1f7f3f8efe6bc0c2a612246d13b438b6db6bbe99df66595509b7c880db69"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",

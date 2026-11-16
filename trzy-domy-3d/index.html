@@ -13,8 +13,8 @@
 #environment-tools{position:absolute;right:22px;top:180px;width:335px;max-height:calc(100dvh - 210px);overflow:auto;z-index:6;background:#fcfbf7f5;border:1px solid #bac8bc;border-radius:12px;padding:18px;box-shadow:0 8px 35px #1f362322}#environment-tools[hidden]{display:none}#environment-tools h2,.solar-heading{font:22px Georgia,serif;margin:0 0 14px}#map-panel{border-top:1px solid #d3dace;margin-top:18px;padding-top:18px}.solar-inputs{display:flex;gap:10px}.solar-inputs label{flex:1;min-width:0}.solar-inputs input,#solar-panel select,.map-select select{display:block;width:100%;margin-top:6px;padding:9px 7px;min-height:40px;border:1px solid #bac8bc;background:white;border-radius:6px;font:inherit;color:inherit}.solar-zone,.solar-note,.map-note{font-size:11px;line-height:1.5;color:#53675b}.solar-zone{margin:9px 0}#solar-status{display:block;background:#edf1e7;padding:10px;border-radius:6px;font-size:12px;line-height:1.5}.map-checks{display:flex;gap:22px;margin-top:14px}.map-checks label{display:flex;align-items:center;min-height:34px;gap:6px}.map-checks input{width:18px;height:18px}.water-key{color:#045ce0}.electricity-key{color:#d52b20}#height-key{font-size:11px}.height-gradient{display:block;height:12px;margin:12px 0 6px;background:linear-gradient(to right,#235d61,#679b84,#c5cf9d,#e2c480,#99684a)}
 @media(max-width:800px){#environment-tools{left:16px;right:16px;top:260px;width:auto;max-height:calc(100dvh - 280px);padding:14px}.solar-inputs input,#solar-panel select{max-width:100%;font-size:13px}.panel{gap:5px}.panel button{padding:8px 10px}}
 #solar-panel select{min-width:0}#solar-panel>label{display:block;font-size:12px;margin:12px 0}#solar-panel input[type=range]{display:block;width:100%;padding:0;min-height:30px;accent-color:#345f46;cursor:pointer}#solar-panel output:not(#solar-status){font-size:12px;color:#56715d;margin-left:4px}.solar-inputs:has(#solar-play){align-items:center;gap:16px;margin-top:12px}#solar-play{min-width:110px;align-self:center;background:#294c3d;color:#fff}.solar-inputs:has(#solar-play) label{font-size:12px}
-#walk-controls{position:absolute;z-index:7;bottom:20px;left:50%;transform:translateX(-50%);background:#fcfbf7f2;border:1px solid #bac8bc;border-radius:12px;padding:12px;text-align:center;max-width:calc(100vw - 24px);width:480px;touch-action:none}#walk-controls[hidden]{display:none}#walk-help{font-size:12px;line-height:1.5;margin:0 0 8px}.walk-actions{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:4px 0 8px}.walk-actions button{min-height:42px}.walk-pad{display:inline-flex;gap:6px;margin:0 8px 6px 0}.walk-pad button{font-size:20px;min-width:46px;min-height:46px;padding:6px 10px;user-select:none;-webkit-user-select:none}.walk-mode .hint{display:none}.walk-mode canvas{cursor:grab}.walk-mode canvas:active{cursor:grabbing}
-@media(max-width:800px){#walk-controls{bottom:12px;padding:10px}#walk-help{font-size:11px}.walk-mode .help{display:none}}
+#walk-controls{position:absolute;z-index:7;bottom:20px;left:50%;transform:translateX(-50%);background:#fcfbf7ed;border:1px solid #bac8bc;border-radius:8px;padding:8px 12px;text-align:center;max-width:calc(100vw - 24px);width:max-content;pointer-events:none}#walk-controls[hidden]{display:none}#walk-help{font-size:11px;line-height:1.4;margin:0}.walk-mode .hint{display:none}.walk-mode canvas{cursor:grab}.walk-mode canvas:active{cursor:grabbing}
+@media(max-width:800px){#walk-controls{bottom:12px;padding:7px 10px}#walk-help{font-size:11px}.walk-mode .help{display:none}}
 #view-menu{position:absolute;right:22px;z-index:6;width:335px;display:flex;flex-wrap:wrap;gap:8px;padding:16px;overflow:auto;background:#fcfbf7f5;border:1px solid #bac8bc;border-radius:12px;box-shadow:0 8px 35px #1f362322}#view-menu[hidden]{display:none}#view-menu button{flex:1 0 auto}#walk-toggle{flex-basis:100%!important}#model-info{position:fixed;right:24px;bottom:22px}#model-info section+section{border-top:1px solid #d3dace;margin-top:16px;padding-top:8px}#model-info h3{margin:8px 0}.info-links a{display:inline-block;margin-right:16px;padding:6px 0}#simulation-clock{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;z-index:5;pointer-events:none;background:#fcfbf7f2;border:1px solid #bac8bc;border-radius:14px;padding:12px 26px;text-align:center;box-shadow:0 5px 24px #14291b20;max-width:calc(100vw - 32px)}#simulation-clock[hidden]{display:none}#simulation-clock span{display:block;font-size:11px;color:#5d7166}#simulation-clock strong{display:block;font-size:38px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums;letter-spacing:1px}.solar-mode .hint{display:none}
 @media(max-width:800px){.panel{top:14px}.panel button{font-size:12px}#view-menu{left:16px;right:16px;width:auto}#model-info{left:16px;right:16px;bottom:14px}#simulation-clock strong{font-size:32px}.walk-mode #model-info{display:none}}
 </style>
@@ -779,14 +779,7 @@ function walkMarkup(button) {
   button.setAttribute('aria-pressed', 'false'); button.setAttribute('aria-controls', 'walk-controls');
   const panel = document.createElement('section'); panel.id = 'walk-controls'; panel.hidden = true;
   panel.setAttribute('aria-label', 'Sterowanie spacerem');
-  panel.innerHTML = `<p id="walk-help">Wysokość oczu 1,70 m · WASD / strzałki: ruch · Shift: sprint · Spacja: skok · przeciągnij widok: rozglądanie · Esc: wyjście</p>
-    <div class="walk-pad"><button type="button" data-walk="forward" aria-label="Idź do przodu">↑</button>
-    <button type="button" data-walk="left" aria-label="Idź w lewo">←</button>
-    <button type="button" data-walk="back" aria-label="Idź do tyłu">↓</button>
-    <button type="button" data-walk="right" aria-label="Idź w prawo">→</button></div>
-    <div class="walk-actions"><button type="button" data-walk="sprint" aria-label="Przytrzymaj, aby biec">Sprint · przytrzymaj</button>
-    <button type="button" data-walk="jump" aria-label="Skocz">Skok</button></div>
-    <button type="button" id="walk-exit">Zakończ spacer</button>`;
+  panel.innerHTML = `<p id="walk-help">Wysokość oczu 1,70 m · WASD / strzałki: ruch · Shift: sprint · Spacja: skok · przeciągnij widok: rozglądanie · Esc: wyjście</p>`;
   document.body.append(panel);
   return panel;
 }
@@ -860,9 +853,6 @@ function walkInput({ canvas, panel, isActive, move, look, jump, exit, clearSprin
 
 function walkButtons(button, panel, isActive, enter, exit) {
   button.addEventListener('click', () => isActive() ? exit() : enter());
-  panel.querySelector('#walk-exit').addEventListener('click', () => {
-    exit(); (button.getClientRects().length ? button : document.querySelector('#views-toggle'))?.focus();
-  });
   document.addEventListener('click', event => {
     if (event.target.closest('#reset,#top,#in,#out,[id^="focus-"],#map-focus')) exit();
   }, true);

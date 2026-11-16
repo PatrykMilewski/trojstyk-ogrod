@@ -129,14 +129,7 @@ function walkMarkup(button) {
   button.setAttribute('aria-pressed', 'false'); button.setAttribute('aria-controls', 'walk-controls');
   const panel = document.createElement('section'); panel.id = 'walk-controls'; panel.hidden = true;
   panel.setAttribute('aria-label', 'Sterowanie spacerem');
-  panel.innerHTML = `<p id="walk-help">Wysokość oczu 1,70 m · WASD / strzałki: ruch · Shift: sprint · Spacja: skok · przeciągnij widok: rozglądanie · Esc: wyjście</p>
-    <div class="walk-pad"><button type="button" data-walk="forward" aria-label="Idź do przodu">↑</button>
-    <button type="button" data-walk="left" aria-label="Idź w lewo">←</button>
-    <button type="button" data-walk="back" aria-label="Idź do tyłu">↓</button>
-    <button type="button" data-walk="right" aria-label="Idź w prawo">→</button></div>
-    <div class="walk-actions"><button type="button" data-walk="sprint" aria-label="Przytrzymaj, aby biec">Sprint · przytrzymaj</button>
-    <button type="button" data-walk="jump" aria-label="Skocz">Skok</button></div>
-    <button type="button" id="walk-exit">Zakończ spacer</button>`;
+  panel.innerHTML = `<p id="walk-help">Wysokość oczu 1,70 m · WASD / strzałki: ruch · Shift: sprint · Spacja: skok · przeciągnij widok: rozglądanie · Esc: wyjście</p>`;
   document.body.append(panel);
   return panel;
 }
@@ -210,9 +203,6 @@ function walkInput({ canvas, panel, isActive, move, look, jump, exit, clearSprin
 
 function walkButtons(button, panel, isActive, enter, exit) {
   button.addEventListener('click', () => isActive() ? exit() : enter());
-  panel.querySelector('#walk-exit').addEventListener('click', () => {
-    exit(); (button.getClientRects().length ? button : document.querySelector('#views-toggle'))?.focus();
-  });
   document.addEventListener('click', event => {
     if (event.target.closest('#reset,#top,#in,#out,[id^="focus-"],#map-focus')) exit();
   }, true);
