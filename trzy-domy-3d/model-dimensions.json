@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-16.6",
+  "modelVersion": "2026-11-16.7",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1451,10 +1451,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "b967ebf892991498e646774f5a004b96e913e516819401991d6f0ab74b634fa0",
-    "proceduralCodeSha256": "78958bc957689eefa02843f0b9cc71e4af983e2f8ba2c8f0f84cfa2048142b5d",
+    "proceduralCodeSha256": "a28ccc06037a7774bd051fd58f64beade19caa89e49aac41c71921394ed20930",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "426140b9e29c7b44a98258b31e23e939a3789b4b671d8536079a11c746c93047",
-    "runtimeSha256": "7a95e5488d24fbeae8dfb859493d1ef5a1c955bc04908555f2e1d3fb27a93934"
+    "runtimeSha256": "a29818f2b151783035ee032fdaedb16e684e68736d005746001d822f7bac0666"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -2614,7 +2614,7 @@
       "lengthAxis": "x"
     }
   ],
-  "geometryBaselineCommit": "4827cdbccc4db320d936cbc2e234fe2d59406420",
+  "geometryBaselineCommit": "19b7b7972d86d4b5b8457c51d2919d6832ada269",
   "mapLayers": {
     "crs": "EPSG:2177",
     "origin2177": [
@@ -2670,7 +2670,7 @@
   },
   "surroundingVegetation": {
     "dataFile": "vegetation-data.json",
-    "dataSha256": "e53f8a05b8dfb65c2804d5e836454034c87404f9cba11bbaa950385542360a8e",
+    "dataSha256": "7120f45e72895dae320ea5bdb6cc26a90165cd62e57cd13167388bcaa790422b",
     "crop": {
       "heightM": 0.95,
       "heightRangeM": [
@@ -2684,44 +2684,47 @@
       {
         "id": "existing-41-1",
         "sourcePixel": [
-          1305,
-          1075
+          1300,
+          1090
         ],
         "center": [
-          67.2267,
-          -7.46
+          66.3478,
+          -10.0967
         ],
         "height": 11,
         "crownRadius": 4.0,
-        "kind": "deciduous"
+        "kind": "deciduous",
+        "positionBasis": "Representative position in merged inner canopy; individual trunk not resolved"
       },
       {
         "id": "existing-41-2",
         "sourcePixel": [
-          1360,
-          1050
+          1324,
+          1098
         ],
         "center": [
-          76.8946,
-          -3.0654
+          70.5665,
+          -11.5029
         ],
         "height": 10.5,
         "crownRadius": 4.5,
-        "kind": "deciduous"
+        "kind": "deciduous",
+        "positionBasis": "Representative position in merged inner canopy; individual trunk not resolved"
       },
       {
         "id": "existing-41-3",
         "sourcePixel": [
-          1420,
-          1030
+          1348,
+          1108
         ],
         "center": [
-          87.4415,
-          0.4502
+          74.7853,
+          -13.2608
         ],
         "height": 10,
         "crownRadius": 4.2,
-        "kind": "deciduous"
+        "kind": "deciduous",
+        "positionBasis": "Representative position in merged inner canopy; individual trunk not resolved"
       },
       {
         "id": "existing-41-4",
@@ -2735,7 +2738,8 @@
         ],
         "height": 9,
         "crownRadius": 3.8,
-        "kind": "deciduous"
+        "kind": "deciduous",
+        "positionBasis": "Approximate visible canopy center"
       },
       {
         "id": "existing-41-5",
@@ -2749,7 +2753,8 @@
         ],
         "height": 9,
         "crownRadius": 3.2,
-        "kind": "deciduous"
+        "kind": "deciduous",
+        "positionBasis": "Approximate visible canopy center"
       }
     ],
     "positionsApproximate": true,
@@ -3231,5 +3236,37 @@
       "obj-44df8e1f-d905-4a92-a4cc-12a31a2ab48e": 0.0
     },
     "fullSandGeometryPreserved": true
+  },
+  "navigation": {
+    "walkEyeHeightM": 1.7,
+    "walkCollisionRadiusM": 0.28,
+    "walkSpeedMPerSecond": 2.2,
+    "solidHouseParcels": [
+      "190",
+      "191",
+      "193",
+      "41"
+    ],
+    "fencesPassable": true,
+    "otherGardenObjectsPassable": true,
+    "orbitClipping": "Scene bounds fitted in camera depth without changing orthographic framing"
+  },
+  "northIndicator": {
+    "centerLocalM": [
+      -30.2,
+      7.3
+    ],
+    "shaftWidthM": 0.44,
+    "color": "#d71d29",
+    "bearingTrueDeg": 0
+  },
+  "shadowRendering": {
+    "fence": "Continuous shadow-only panels; visible boards do not cast separate shadows",
+    "darknessRange": [
+      0,
+      1
+    ],
+    "defaultDarkness": 1,
+    "datePresetYear": "selected year; Europe/Warsaw; approximate season dates"
   }
 }

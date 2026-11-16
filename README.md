@@ -92,3 +92,12 @@ Na otwartych polach rośnie modelowe zboże 0,8–1 m; maski wykluczają drogi i
 Plik `moj-ogrod (1).json` zapisano bez zmian w `src/default-layout.json` i przeniesiono do modelu 3D z tym samym obrysem, wyposażeniem, częściami zestawów, furtkami i chodnikiem. Powierzchnia wspólna wynosi 156,189 m². Zachowano ostrzeżenie o piasku poza płotem (około 0,233 m²); piasek nie jest przycinany. Dojścia prywatne połączono z nowymi pozycjami furtek, bez przesuwania domów. Zboże ma ciemniejszą, bardziej zieloną barwę.
 
 Zapisane lokalnie układy odwiedzających pozostają zachowane. Aby zobaczyć nowy domyślny układ w dotychczas używanej przeglądarce, wybierz „Przywróć układ startowy”. Rejestr wymiarów kontroluje odcisk źródłowego pliku, aby konfigurator i model 3D nie rozchodziły się przy kolejnych aktualizacjach.
+
+
+## Spacer, widok i cienie 2026-11-16.7
+
+„Spacer · 1,7 m” przełącza na perspektywę z wysokości oczu 1,70 m. WASD lub strzałki poruszają obserwatorem, przeciągnięcie rozgląda, Esc kończy spacer. Na telefonie służą do tego cztery przyciski ruchu. Domy /190, /191, /193 i /41 blokują ruch; płoty i wyposażenie ogrodu są przenikalne. Promień kolizji wynosi 0,28 m, prędkość 2,2 m/s. Wyjście przywraca widok orbitalny.
+
+Zakres głębokości kamery obejmuje scenę również po przybliżeniu do psa i późniejszym oddaleniu. Widoczne deski płotów nie rzucają oddzielnych cieni: odcinki płotu i otwarte furtki używają ciągłych paneli cienia. Suwak ciemności steruje intensywnością cieni w zakresie 0–100%. Daty przesileń i równonocy są obliczane w przybliżeniu dla wybranego roku, z zachowaniem wybranej godziny; „Dzisiaj” ustawia aktualny czas polski.
+
+Trzy drzewa przy /41 przesunięto bliżej siebie i domu na podstawie połączonej korony widocznej na ortofotomapie. Pnie są ukryte, więc pozycje są reprezentatywnymi założeniami, nie pomiarem. Wysokości 11 / 10,5 / 10 / 9 / 9 m i geometria pól zostały zachowane. Czerwona strzałka N o szerokości trzonu 0,44 m leży w środku skrzyżowania działki drogowej /133. Usunięto etykietę bramy /191.

@@ -36,12 +36,7 @@ export function warsawInstant(date, time) {
   return candidates[0];
 }
 
-// NOAA/Meeus Julian-century equations, geometric solar centre (no refraction).
-// https://gml.noaa.gov/grad/solcalc/calcdetails.html
-export function solarPosition(instant, latitude = SITE.latitude, longitude = SITE.longitude) {
-  const millis = instant instanceof Date ? instant.getTime() : NaN;
-  if (!Number.isFinite(millis) || !Number.isFinite(latitude) || Math.abs(latitude) > 90
-    || !Number.isFinite(longitude) || Math.abs(longitude) > 180) throw new RangeError('Niepoprawny czas lub współrzędne.');
+function solarOrbit(millis) {
   const t = (millis / 86400000 + 2440587.5 - 2451545) / 36525;
   const meanLongitude = solarWrap(280.46646 + t * (36000.76983 + t * .0003032));
   const anomaly = (357.52911 + t * (35999.05029 - .0001537 * t)) * SOLAR_RAD;
@@ -52,6 +47,16 @@ export function solarPosition(instant, latitude = SITE.latitude, longitude = SIT
   const apparentLongitude = (meanLongitude + centre - .00569 - .00478 * Math.sin(omega)) * SOLAR_RAD;
   const obliquity = (23 + (26 + (21.448 - t * (46.815 + t * (.00059 - .001813 * t))) / 60) / 60
     + .00256 * Math.cos(omega)) * SOLAR_RAD;
+  return { meanLongitude, anomaly, eccentricity, apparentLongitude, obliquity };
+}
+
+// NOAA/Meeus Julian-century equations, geometric solar centre (no refraction).
+// https://gml.noaa.gov/grad/solcalc/calcdetails.html
+export function solarPosition(instant, latitude = SITE.latitude, longitude = SITE.longitude) {
+  const millis = instant instanceof Date ? instant.getTime() : NaN;
+  if (!Number.isFinite(millis) || !Number.isFinite(latitude) || Math.abs(latitude) > 90
+    || !Number.isFinite(longitude) || Math.abs(longitude) > 180) throw new RangeError('Niepoprawny czas lub współrzędne.');
+  const { meanLongitude, anomaly, eccentricity, apparentLongitude, obliquity } = solarOrbit(millis);
   const declination = Math.asin(Math.sin(obliquity) * Math.sin(apparentLongitude));
   const y = Math.tan(obliquity / 2) ** 2, l = meanLongitude * SOLAR_RAD;
   const equationOfTime = 4 / SOLAR_RAD * (y * Math.sin(2 * l) - 2 * eccentricity * Math.sin(anomaly)
@@ -119,6 +124,26 @@ export function solarCalendarFields(instant) {
     zone: solarZoneFormat.formatToParts(instant).find(part => part.type === 'timeZoneName').value };
 }
 
+const SOLAR_SEASONS = Object.freeze({ spring: [2, 0], summer: [5, 90], autumn: [8, 180], winter: [11, 270] });
+
+// Solve apparent solar longitude = 0°, 90°, 180°, 270°; the low-precision NOAA model
+// gives approximate season dates, converted to the site's civil time zone.
+// https://promenade.imcce.fr/en/pages4/438.html
+export function solarSeasonDate(year, season) {
+  if (!Number.isInteger(year) || year < 2000 || year > 2100 || !Object.hasOwn(SOLAR_SEASONS, season)) {
+    throw new RangeError('Wybierz porę roku i rok z zakresu 2000–2100.');
+  }
+  const [month, longitude] = SOLAR_SEASONS[season];
+  let start = Date.UTC(year, month, 18), end = Date.UTC(year, month, 26);
+  while (end - start > 1000) {
+    const middle = (start + end) / 2;
+    const angle = solarWrap(solarOrbit(middle).apparentLongitude / SOLAR_RAD - longitude + 180) - 180;
+    if (angle < 0) start = middle;
+    else end = middle;
+  }
+  return solarCalendarFields(new Date((start + end) / 2)).date;
+}
+
 export function createSolarPlayback({ apply, onChange = () => {},
   requestFrame = callback => globalThis.requestAnimationFrame(callback),
   cancelFrame = id => globalThis.cancelAnimationFrame(id),
@@ -168,8 +193,14 @@ function solarControlMarkup() {
   return `<div class="solar-heading">Słońce i cień</div>
     <div class="solar-inputs"><label>Data<input id="solar-date" type="date" min="2000-01-01" max="2100-12-31"></label>
     <label>Godzina<input id="solar-time" type="time" step="60"></label></div>
+    <label>Dni charakterystyczne <output id="solar-preset-year"></output><select id="solar-preset" aria-label="Wybierz charakterystyczny dzień">
+    <option value="">Wybierz dzień…</option><option value="summer">Najdłuższy dzień · przesilenie letnie</option>
+    <option value="winter">Najkrótszy dzień · przesilenie zimowe</option><option value="spring">Równonoc wiosenna</option>
+    <option value="autumn">Równonoc jesienna</option><option value="today">Dzisiaj · aktualny czas</option></select></label>
+    <p class="solar-zone">Pory roku: daty przybliżone dla wybranego roku, godzina bez zmian.</p>
     <label>Dzień roku <output id="solar-day-label"></output><input id="solar-day" aria-label="Dzień roku" type="range" min="1" max="365" step="1"></label>
     <label>Godzina <output id="solar-minute-label"></output><input id="solar-minute" aria-label="Godzina dnia" type="range" min="0" max="1439" step="1"></label>
+    <label>Ciemność cienia <output id="solar-shadow-label"></output><input id="solar-shadow" aria-label="Ciemność cienia od jasnego do ciemnego" type="range" min="0" max="100" step="1"></label>
     <div class="solar-inputs"><button id="solar-play" type="button" aria-pressed="false">▶ Odtwórz</button>
     <label>Tempo <output id="solar-speed-label"></output><input id="solar-speed" aria-label="Sekundy na godzinę symulacji" type="range" min="1" max="15" step="0.5" value="3"></label></div>
     <p class="solar-zone">Czas w Polsce · Europe/Warsaw (CET / CEST)</p>
@@ -181,28 +212,20 @@ function solarControlMarkup() {
 
 function solarControls(container, actions) {
   container.innerHTML = solarControlMarkup();
-  const elements = Object.fromEntries(['date', 'time', 'day', 'minute', 'play', 'speed', 'status',
-    'day-label', 'minute-label', 'speed-label'].map(name => [name, container.querySelector(`#solar-${name}`)]));
+  const elements = Object.fromEntries(['date', 'time', 'day', 'minute', 'play', 'speed', 'status', 'preset', 'shadow',
+    'day-label', 'minute-label', 'speed-label', 'preset-year', 'shadow-label'].map(name => [name, container.querySelector(`#solar-${name}`)]));
   const listeners = [];
   function listen(name, event, callback) {
     elements[name].addEventListener(event, callback);
     listeners.push(() => elements[name].removeEventListener(event, callback));
   }
-  function update() {
-    const date = elements.date.value, time = elements.time.value;
-    actions.pause();
-    try {
-      actions.setLocal(date, time);
-      elements.date.removeAttribute('aria-invalid'); elements.time.removeAttribute('aria-invalid');
-      elements.status.removeAttribute('role');
-    } catch (error) {
-      elements.date.value = date; elements.time.value = time;
-      elements.status.textContent = `${error.message} Zachowano ostatnie poprawne oświetlenie.`;
-      elements.status.setAttribute('role', 'alert');
-      elements.date.setAttribute('aria-invalid', 'true'); elements.time.setAttribute('aria-invalid', 'true');
-    }
-  }
+  const update = () => updateSolarSelection(elements, actions, (date, time) => actions.setLocal(date, time));
   listen('date', 'change', update); listen('time', 'change', update);
+  listen('preset', 'change', () => {
+    const preset = elements.preset.value;
+    if (preset) updateSolarSelection(elements, actions, () => actions.setPreset(preset));
+    elements.preset.value = '';
+  });
   listen('day', 'input', () => {
     const year = Number(elements.date.value.slice(0, 4)) || actions.getState().year;
     elements.date.value = new Date(Date.UTC(year, 0, Number(elements.day.value))).toISOString().slice(0, 10);
@@ -215,7 +238,23 @@ function solarControls(container, actions) {
   });
   listen('play', 'click', () => actions.getState().playing ? actions.pause() : actions.play());
   listen('speed', 'input', () => { actions.activate(); actions.setPlaybackSpeed(Number(elements.speed.value)); });
+  listen('shadow', 'input', () => actions.setShadowStrength(Number(elements.shadow.value) / 100));
   return { ...elements, dispose: () => listeners.forEach(remove => remove()) };
+}
+
+function updateSolarSelection(elements, actions, select) {
+  const date = elements.date.value, time = elements.time.value;
+  actions.pause();
+  try {
+    select(date, time);
+    elements.date.removeAttribute('aria-invalid'); elements.time.removeAttribute('aria-invalid');
+    elements.status.removeAttribute('role');
+  } catch (error) {
+    elements.date.value = date; elements.time.value = time;
+    elements.status.textContent = `${error.message} Zachowano ostatnie poprawne oświetlenie.`;
+    elements.status.setAttribute('role', 'alert');
+    elements.date.setAttribute('aria-invalid', 'true'); elements.time.setAttribute('aria-invalid', 'true');
+  }
 }
 
 function syncSolarControls(controls, state) {
@@ -225,6 +264,9 @@ function syncSolarControls(controls, state) {
   controls.minute.value = String(state.minute);
   controls['day-label'].textContent = `${state.day} / ${state.daysInYear}`;
   controls['minute-label'].textContent = `${state.time}:${state.seconds}`;
+  controls['preset-year'].textContent = String(state.year);
+  controls.shadow.value = String(Math.round(state.shadowStrength * 100));
+  controls['shadow-label'].textContent = `${Math.round(state.shadowStrength * 100)}%`;
   controls.speed.value = String(state.secondsPerHour);
   controls['speed-label'].textContent = `1 h / ${state.secondsPerHour} s`;
   controls.play.textContent = state.playing ? '❚❚ Pauza' : '▶ Odtwórz';
@@ -253,7 +295,8 @@ export function setupSolar({ THREE, scene, sun, renderer, requestDraw, container
     Math.min(4096, renderer.capabilities?.maxTextureSize || 4096));
   const lighting = { THREE, sun, bounds, renderer, intensity: sun.intensity };
   let state, controls, playback, active = false;
-  const getState = () => ({ ...state, active, ...playback.getState(), direction: [...state.direction] });
+  const getState = () => ({ ...state, active, shadowStrength: sun.shadow.intensity,
+    ...playback.getState(), direction: [...state.direction] });
   const sync = () => { if (state && playback) syncSolarControls(controls, getState()); };
   function apply(instant) {
     state = applySolarLight(lighting, instant);
@@ -267,8 +310,21 @@ export function setupSolar({ THREE, scene, sun, renderer, requestDraw, container
     playback.setInstant(instant);
     return apply(instant);
   }
+  function setPreset(preset, now = new Date()) {
+    if (preset !== 'today') return setLocal(solarSeasonDate(state.year, preset), state.time);
+    const fields = solarCalendarFields(now);
+    if (fields.year < 2000 || fields.year > 2100) throw new RangeError('Wybierz datę z lat 2000–2100.');
+    activate(); playback.setInstant(now);
+    return apply(now);
+  }
+  function setShadowStrength(value) {
+    if (!Number.isFinite(value) || value < 0 || value > 1) throw new RangeError('Ciemność cienia: od 0 do 1.');
+    activate(); sun.shadow.intensity = value;
+    sync(); requestDraw();
+    return getState();
+  }
   playback = createSolarPlayback({ ...playbackClock, apply, onChange: sync });
-  const api = { activate, setLocal, getState, pause: playback.pause,
+  const api = { activate, setLocal, setPreset, setShadowStrength, getState, pause: playback.pause,
     play() { activate(); playback.play(); }, setPlaybackSpeed: playback.setPlaybackSpeed,
     deactivate() { playback.pause(); active = false; },
     dispose() { playback.dispose(); controls?.dispose(); } };

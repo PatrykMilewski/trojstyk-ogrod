@@ -7,7 +7,7 @@ const html = await readFile(new URL('../trzy-domy-3d/index.html', import.meta.ur
 const imports = JSON.parse(html.split('<script type="importmap">')[1].split('</script>')[0]).imports;
 const threeSource = Buffer.from(imports.three.split(',')[1], 'base64').toString('utf8');
 const THREE = await import(moduleUrl(threeSource.replaceAll("'three/core'", `'${imports['three/core']}'`)));
-for (const file of ['solar.js', 'map-layers.js', 'vegetation.js']) {
+for (const file of process.argv.includes('--source-only') ? [] : ['solar.js', 'map-layers.js', 'vegetation.js']) {
   assert.ok(html.includes((await readFile(new URL('../src/model/'+file, import.meta.url), 'utf8')).replaceAll('export ', '')), file+' embedded source');
 }
 const near = (actual, expected, tolerance, message) => assert.ok(Math.abs(actual - expected) <= tolerance, `${message}: ${actual} vs ${expected}`);
@@ -36,6 +36,20 @@ for (const [date, time] of [['2026-03-29', '02:30'], ['2026-10-25', '02:30'], ['
   assert.throws(() => solar.warsawInstant(date, time), RangeError);
 }
 assert.throws(() => solar.solarPosition(new Date('invalid')), RangeError);
+// USNO season instants converted to Europe/Warsaw civil dates, including leap-year changes.
+// https://aa.usno.navy.mil/calculated/seasons?dst=false&tz=0.00&tz_label=false&tz_sign=-1&year=2026
+const seasons = ['spring', 'summer', 'autumn', 'winter'];
+for (const [year, dates] of [
+  [2024, ['03-20', '06-20', '09-22', '12-21']],
+  [2026, ['03-20', '06-21', '09-23', '12-21']],
+  [2027, ['03-20', '06-21', '09-23', '12-22']],
+  [2028, ['03-20', '06-20', '09-22', '12-21']],
+]) {
+  seasons.forEach((season, index) => assert.equal(solar.solarSeasonDate(year, season), `${year}-${dates[index]}`));
+}
+for (const args of [[1999, 'spring'], [2101, 'summer'], [2026.5, 'autumn'], [2026, 'unknown'], [2026, 'toString']]) {
+  assert.throws(() => solar.solarSeasonDate(...args), RangeError);
+}
 const trueNorth = solar.sunDirection({ azimuthDeg: 0, elevationDeg: 0 });
 assert.ok(trueNorth[0] < 0 && trueNorth[1] > 0, 'true north points west of grid north east of central meridian');
 const east = solar.sunDirection({ azimuthDeg: 90 + solar.SITE.gridConvergenceDeg, elevationDeg: 0 });
@@ -70,6 +84,27 @@ controller.setLocal('2026-07-21', '00:00');
 assert.equal(sun.intensity, 0); assert.equal(sun.castShadow, false);
 controller.setLocal('2026-07-20', '15:50');
 assert.equal(sun.intensity, 3.6); assert.equal(sun.castShadow, true);
+const selected = controller.getState();
+for (const strength of [0, .3, 1]) {
+  const shadow = controller.setShadowStrength(strength);
+  assert.equal(sun.shadow.intensity, strength, 'slider changes Three.js shadow intensity');
+  assert.equal(shadow.shadowStrength, strength);
+  assert.equal(shadow.instant, selected.instant, 'shadow strength preserves selected instant');
+  assert.deepEqual(shadow.direction, selected.direction, 'shadow strength preserves astronomical direction');
+  assert.equal(sun.intensity, 3.6, 'shadow strength does not dim direct light');
+}
+for (const value of [-.1, 1.1, NaN, '1']) assert.throws(() => controller.setShadowStrength(value), RangeError);
+assert.equal(sun.shadow.intensity, 1, 'invalid strength preserves last valid shadow');
+controller.setLocal('2028-02-29', '16:35');
+assert.equal(controller.setPreset('summer').date, '2028-06-20', 'preset follows selected year');
+assert.equal(controller.getState().time, '16:35', 'season preset retains local clock time');
+assert.equal(controller.setPreset('winter').date, '2028-12-21');
+const currentInstant = new Date('2026-10-25T01:30:00Z');
+assert.equal(controller.setPreset('today', currentInstant).instant, currentInstant.toISOString(), 'today uses absolute current instant during repeated autumn hour');
+assert.equal(controller.getState().time, '02:30');
+assert.equal(controller.getState().year, 2026);
+assert.throws(() => controller.setPreset('today', new Date('2101-01-01T12:00:00Z')), RangeError);
+controller.setLocal('2026-07-20', '15:50');
 assert.ok(draws >= 7);
 const farRoad = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshBasicMaterial());
 farRoad.receiveShadow = true; scene.add(farRoad);
@@ -127,6 +162,9 @@ assert.equal(clock.pending(), 0);
 animated.setPlaybackSpeed(6);
 animated.play(); clock.step(3000);
 assert.equal(new Date(animated.getState().instant) - new Date(paused), 1800000, 'adjusted speed advances half hour in 3 seconds');
+animated.setShadowStrength(.4);
+assert.equal(animated.getState().playing, true, 'shadow slider keeps playback running');
+assert.equal(animated.getState().shadowStrength, .4);
 animated.setPlaybackSpeed(1);
 const faster = animated.getState().instant;
 clock.step(500);
@@ -204,8 +242,18 @@ const uiController = solar.setupSolar({ THREE, scene, sun, renderer, container: 
 const control = name => ui.querySelector(`#solar-${name}`);
 assert.equal(uiActivations, 0);
 assert.equal(control('minute').value, '950');
+assert.equal(control('shadow').value, '40', 'shadow slider initializes from light shadow intensity');
+control('shadow').value = '70'; control('shadow').emit('input');
+assert.equal(sun.shadow.intensity, .7);
+assert.equal(control('shadow-label').textContent, '70%');
+assert.equal(control('preset-year').textContent, '2026');
 control('date').value = '2028-01-01'; control('date').emit('change');
 assert.equal(control('day').max, '366', 'date year updates leap-year slider maximum');
+assert.equal(control('preset-year').textContent, '2028');
+control('preset').value = 'summer'; control('preset').emit('change');
+assert.equal(control('date').value, '2028-06-20');
+assert.equal(control('time').value, '15:50');
+assert.equal(control('preset').value, '', 'preset stays usable after a manual date change');
 control('day').value = '60'; control('day').emit('input');
 assert.equal(control('date').value, '2028-02-29', 'day slider updates date');
 control('minute').value = '1439'; control('minute').emit('input');
@@ -226,6 +274,11 @@ assert.equal(control('time').getAttribute('aria-invalid'), undefined);
 assert.ok(uiActivations >= 7, 'user solar interactions activate parent solar mode');
 uiController.dispose();
 control('play').emit('click');
+control('shadow').value = '15'; control('shadow').emit('input');
+control('preset').value = 'winter'; control('preset').emit('change');
+assert.equal(sun.shadow.intensity, .7, 'disposed controls remove shadow handler');
+assert.equal(control('date').value, '2026-03-29', 'disposed controls remove preset handler');
 assert.equal(uiClock.pending(), 0, 'disposed controls remove handlers');
 controller.dispose();
-console.log('Solar checks passed: 6 NREL SPA cases; DST/validation; shadows; deterministic playback, speed, rollover, frame cap, hidden pause and disposal.');
+console.log('Solar checks passed: 6 NREL SPA cases; 16 USNO season dates; shadow darkness; preset/year/time; DST/validation; deterministic playback, speed, rollover, frame cap, hidden pause and disposal.'
+  + (process.argv.includes('--source-only') ? ' Source-only mode: generated HTML embedding not checked.' : ' Generated HTML embedding checked.'));

@@ -79,6 +79,13 @@ content += section('Symulacja słońca i mapy', '<p>Pozycja słońca dla wybrane
         ['Promień mapy wody i prądu', '150 m od rzeczywistego wspólnego wierzchołka działek'],
         ['Siatka NMT / układ wysokości', '1 m / PL-EVRF2007-NH'],
         ['Ortofotomapa', '360 × 360 m; indeks 2024 w centrum, dokładna data nalotu nieznana']]) + '<p><a href="map-sources.json">Pełne źródła map, współrzędne i parametry eksportu</a></p>')
+content += section('Spacer i widoczność', table(['Parametr', 'Wartość'], [
+    ['Wysokość oczu', number(registry['navigation']['walkEyeHeightM'])+' m'],
+    ['Promień kolizji', number(registry['navigation']['walkCollisionRadiusM'])+' m'],
+    ['Prędkość chodu', number(registry['navigation']['walkSpeedMPerSecond'])+' m/s'],
+    ['Przeszkody', 'Domy /190, /191, /193 i /41; przez płoty i wyposażenie można przechodzić'],
+    ['Cienie płotu', 'Ciągły panel odpowiadający przebiegowi płotu, bez cieni pojedynczych desek'],
+    ['Regulacja cieni', '0–100%; daty przesileń i równonocy dla wybranego roku, przybliżone']]))
 content += section('Ludzie i psy w skali', table(['Osoba', 'Wzrost (m)'], [
     [p['id'], number(p['heightM'])] for p in registry['people']]) + table(
     ['Pies / działka', 'Wysokość w kłębie (m)', 'Długość samego tułowia (m)'], [
@@ -92,7 +99,7 @@ content += section('Odsunięcia projektowanych domów /190, /191 i /193', table(
     ['/191 od SE — rzeczywiste minimum w modelu', number(registry['clearances']['actualParcel191SoutheastM'])],
     ['/191 od NW — rzeczywiste odsunięcie w modelu', number(registry['clearances']['parcel191NorthwestM'])]]))
 surroundings = registry['surroundingVegetation']
-content += section('Otaczające pola i drzewa przy /41', '<p>Pozycje koron i granice pól odtworzono orientacyjnie z ortofotomapy. Wysokości drzew przyjęto według wskazania użytkownika; nie są pomiarem. Zboże jest scenariuszem wizualnym.</p>' + table(
+content += section('Otaczające pola i drzewa przy /41', '<p>Pozycje drzew i granice pól oszacowano z ortofotomapy. Trzy drzewa przy domu /41 tworzą ciaśniejszą grupę; pnie ukryte pod połączonymi koronami nie są widoczne, więc ich położenie pozostaje założeniem. Wysokości drzew przyjęto według wskazania użytkownika; nie są pomiarem. Zboże jest scenariuszem wizualnym.</p>' + table(
     ['Drzewo', 'Wysokość (m)', 'Promień korony (m)', 'Środek X / Y modelu (m)'], [
         [t['id'], number(t['height']), number(t['crownRadius']), ' / '.join(number(v) for v in t['center'])]
         for t in surroundings['trees']]) + '<p>Zboże: wysokość 0,8–1 m; rośliny instancjonowane w kępach. Drogi, zabudowa i zaprojektowane ogrody wyłączone z pól.</p>')

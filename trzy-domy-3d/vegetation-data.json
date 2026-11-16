@@ -11,7 +11,7 @@
       "Tree heights are user-prescribed illustrative 9–11 m, not remotely measured.",
       "Field crop is an illustrative growing grain scenario, not an observation of crop species or current growth.",
       "Core plots /190 /191 /193, /41 and cadastral road /133 excluded with clearance; /192 may carry grain where open.",
-      "Canopy positions and radii approximate visible crowns; imagery not a tree survey."
+      "First three trees represent the merged inner canopy near /41; individual crowns, count and trunks cannot be resolved reliably. Positions are a model assumption, not a tree survey."
     ]
   },
   "crop": {
@@ -27,44 +27,47 @@
     {
       "id": "existing-41-1",
       "sourcePixel": [
-        1305,
-        1075
+        1300,
+        1090
       ],
       "center": [
-        67.2267,
-        -7.46
+        66.3478,
+        -10.0967
       ],
       "height": 11,
       "crownRadius": 4.0,
-      "kind": "deciduous"
+      "kind": "deciduous",
+      "positionBasis": "Representative position in merged inner canopy; individual trunk not resolved"
     },
     {
       "id": "existing-41-2",
       "sourcePixel": [
-        1360,
-        1050
+        1324,
+        1098
       ],
       "center": [
-        76.8946,
-        -3.0654
+        70.5665,
+        -11.5029
       ],
       "height": 10.5,
       "crownRadius": 4.5,
-      "kind": "deciduous"
+      "kind": "deciduous",
+      "positionBasis": "Representative position in merged inner canopy; individual trunk not resolved"
     },
     {
       "id": "existing-41-3",
       "sourcePixel": [
-        1420,
-        1030
+        1348,
+        1108
       ],
       "center": [
-        87.4415,
-        0.4502
+        74.7853,
+        -13.2608
       ],
       "height": 10,
       "crownRadius": 4.2,
-      "kind": "deciduous"
+      "kind": "deciduous",
+      "positionBasis": "Representative position in merged inner canopy; individual trunk not resolved"
     },
     {
       "id": "existing-41-4",
@@ -78,7 +81,8 @@
       ],
       "height": 9,
       "crownRadius": 3.8,
-      "kind": "deciduous"
+      "kind": "deciduous",
+      "positionBasis": "Approximate visible canopy center"
     },
     {
       "id": "existing-41-5",
@@ -92,7 +96,8 @@
       ],
       "height": 9,
       "crownRadius": 3.2,
-      "kind": "deciduous"
+      "kind": "deciduous",
+      "positionBasis": "Approximate visible canopy center"
     }
   ],
   "fields": [
