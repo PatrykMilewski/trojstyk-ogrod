@@ -84,9 +84,13 @@ content += section('Spacer i widoczność', table(['Parametr', 'Wartość'], [
     ['Promień kolizji', number(registry['navigation']['walkCollisionRadiusM'])+' m'],
     ['Prędkość chodu / sprintu', number(registry['navigation']['walkSpeedMPerSecond'])+' / '+number(registry['navigation']['sprintSpeedMPerSecond'])+' m/s'],
     ['Skok — maksymalne podniesienie oczu', number(registry['navigation']['jumpApexM'])+' m ponad poziom 1,70 m'],
-    ['Przeszkody', 'Domy /190, /191, /193 i /41; przez płoty i wyposażenie można przechodzić'],
+    ['Przeszkody', 'Domy /190, /191 i /41 oraz ściany /193; przejścia drzwiowe /193 i schody dostępne. Przez płoty można przechodzić'],
     ['Cienie płotu', 'Ciągły panel odpowiadający przebiegowi płotu, bez cieni pojedynczych desek'],
     ['Regulacja cieni', '0–100%; daty przesileń i równonocy dla wybranego roku, przybliżone']]))
+if 'interior' in registry:
+    content += section('Wnętrze Stodoła Icon /193', '<p>Odtworzenie z publicznych rzutów i przekroju; położenia ścian i otworów są przybliżone. Meble to aranżacja poglądowa. Salon zachowuje pustkę do dachu.</p>' + table(['Element', 'Wartość'], [
+        ['Podłoga poddasza', '3,20 m'], ['Sufit parteru', '2,80 m'], ['Schody', '18 podniesień po 3,20/18 m; szerokość biegu 0,90 m; stopnica 0,26 m'],
+        ['Drzwi', 'Otwarte przejścia zgodnie z zapisanym układem'], ['Dane i źródła', 'interior-data.json']]) + '<p><a href="interior-data.json">Pobierz współrzędne, wymiary i założenia wnętrza</a></p>')
 content += section('Ludzie i psy w skali', table(['Osoba', 'Wzrost (m)'], [
     [p['id'], number(p['heightM'])] for p in registry['people']]) + table(
     ['Pies / działka', 'Wysokość w kłębie (m)', 'Długość samego tułowia (m)'], [

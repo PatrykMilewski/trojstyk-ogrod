@@ -98,7 +98,8 @@ export function createWalkCollision(footprints, radius = .28) {
   return { radius, footprints, move, safeSpawn, blocked: point => pathBlocked(point, point), pathBlocked };
 }
 
-export function createWalkMotion(collision) {
+export function createWalkMotion(collision, navigation) {
+  if (navigation) return createInteriorWalkMotion(collision, navigation);
   const eyeHeightM = 1.7, walkSpeedMps = 2.2, sprintMultiplier = 2.2, jumpHeightM = .6, gravityMps2 = 9.81;
   const launchSpeedMps = Math.sqrt(2 * gravityMps2 * jumpHeightM);
   let position = [0, 0, eyeHeightM], flightTime = null, sprinting = false;
@@ -122,7 +123,108 @@ export function createWalkMotion(collision) {
   }
   return { reset, jump, move, setPosition: point => { position = [...point, position[2]]; }, clearSprint: () => { sprinting = false; },
     getState: () => ({ position: [...position], eyeHeightM, walkSpeedMps, sprintMultiplier, jumpHeightM, gravityMps2,
-      jumpHeight: position[2] - eyeHeightM, grounded: flightTime === null, sprinting }) };
+      floorHeightM: 0, jumpHeight: position[2] - eyeHeightM, grounded: flightTime === null, sprinting }) };
+}
+
+function walkRampHeight(point, ramp) {
+  const dx = ramp.end[0] - ramp.start[0], dy = ramp.end[1] - ramp.start[1], length = Math.hypot(dx, dy);
+  if (!length) return null;
+  const along = ((point[0] - ramp.start[0]) * dx + (point[1] - ramp.start[1]) * dy) / length;
+  const across = Math.abs((point[0] - ramp.start[0]) * dy - (point[1] - ramp.start[1]) * dx) / length;
+  if (along < -1e-7 || along > length + 1e-7 || across > ramp.width / 2) return null;
+  return ramp.z0 + Math.max(0, Math.min(1, along / length)) * (ramp.z1 - ramp.z0);
+}
+
+function walkSupport(point, navigation, ceiling, connectedRamps = new Set(), airborneCeiling = Infinity) {
+  const ramps = navigation.ramps.filter(ramp => connectedRamps.has(ramp.id));
+  const connectedHeights = ramps.flatMap(ramp => [ramp.z0, ramp.z1]);
+  const floorHeights = navigation.floors.filter(floor => walkInside(point, floor.ring) &&
+    (floor.z <= ceiling + 1e-7 || connectedHeights.some(z => Math.abs(z - floor.z) < 1e-7)))
+    .map(floor => floor.z).filter(z => z <= airborneCeiling);
+  const rampHeights = navigation.ramps.map(ramp => ({ ramp, z: walkRampHeight(point, ramp) }))
+    .filter(({ ramp, z }) => z !== null && z <= airborneCeiling &&
+      (z <= ceiling + 1e-7 || connectedRamps.has(ramp.id))).map(({ z }) => z);
+  return Math.max(0, ...floorHeights, ...rampHeights);
+}
+
+function walkCeilingMove(navigation, start, end, feet) {
+  if (!navigation.ceilingHeight || navigation.ceilingHeight(end) >= feet + 1.7) return end;
+  let low = 0, high = 1;
+  for (let i = 0; i < 30; i++) {
+    const t = (low + high) / 2, point = [start[0] + (end[0] - start[0]) * t, start[1] + (end[1] - start[1]) * t];
+    if (navigation.ceilingHeight(point) >= feet + 1.7) low = t; else high = t;
+  }
+  return [start[0] + (end[0] - start[0]) * low, start[1] + (end[1] - start[1]) * low];
+}
+
+function walkSlabStepClear(wall, point, feet, navigation, radius) {
+  if (wall.kind !== 'slab' || wall.maxZ - feet > .25 || wall.maxZ < feet - 1e-6) return false;
+  return navigation.ramps.some(ramp => [[ramp.start, ramp.z0], [ramp.end, ramp.z1]].some(([end, z]) =>
+    Math.abs(z - wall.maxZ) < 1e-6 && Math.hypot(point[0] - end[0], point[1] - end[1]) <= radius + .1));
+}
+
+function walkInteriorCollision(collision, navigation, minFeet, maxFeet, stepPoint) {
+  const walls = navigation.obstacles.filter(wall => wall.minZ < maxFeet + 1.7 - 1e-6 && wall.maxZ > minFeet + 1e-6 &&
+    !(stepPoint && walkSlabStepClear(wall, stepPoint, minFeet, navigation, collision.radius)));
+  return createWalkCollision([...collision.footprints, ...walls], collision.radius);
+}
+
+function createInteriorWalkMotion(collision, navigation) {
+  const eyeHeightM = 1.7, walkSpeedMps = 2.2, sprintMultiplier = 2.2, jumpHeightM = .6, gravityMps2 = 9.81;
+  const launchSpeed = Math.sqrt(2 * gravityMps2 * jumpHeightM);
+  let position = [0, 0, eyeHeightM], floorHeightM = 0, velocity = 0, grounded = true, sprinting = false;
+  let landingCeiling = 0, connectedRamps = new Set();
+  function airborneRamps() {
+    return new Set(navigation.ramps.filter(ramp => Math.abs(ramp.z0 - floorHeightM) <= .12 ||
+      Math.abs(ramp.z1 - floorHeightM) <= .12 || Math.abs((walkRampHeight(position, ramp) ?? Infinity) - floorHeightM) <= .12)
+      .map(ramp => ramp.id));
+  }
+  function reset(point) {
+    floorHeightM = walkSupport(point, navigation, point[2] ?? 0);
+    position = [point[0], point[1], floorHeightM + eyeHeightM];
+    velocity = 0; grounded = true; sprinting = false; landingCeiling = floorHeightM; connectedRamps = new Set();
+  }
+  function jump() {
+    if (!grounded) return false;
+    connectedRamps = airborneRamps(); grounded = false; velocity = launchSpeed; landingCeiling = floorHeightM; return true;
+  }
+  function step(delta, dt) {
+    const feet = position[2] - eyeHeightM;
+    let nextFeet = grounded ? feet : feet + velocity * dt - gravityMps2 * dt * dt / 2;
+    const tentative = [position[0] + delta[0], position[1] + delta[1]];
+    // Only a small connected rise may be stepped onto; a jump cannot select another storey.
+    const support = walkSupport(tentative, navigation, grounded ? feet + .12 : landingCeiling + .12, grounded ? undefined : connectedRamps, grounded ? Infinity : Math.max(feet, nextFeet) + .12);
+    if (grounded && support >= feet - .12) nextFeet = support;
+    const walls = walkInteriorCollision(collision, navigation, Math.min(feet, nextFeet), Math.max(feet, nextFeet), grounded ? position : undefined);
+    const point = walkCeilingMove(navigation, position, walls.move(position.slice(0, 2), delta), feet);
+    const surface = walkSupport(point, navigation, grounded ? feet + .12 : landingCeiling + .12, grounded ? undefined : connectedRamps, grounded ? Infinity : Math.max(feet, nextFeet) + .12);
+    if (grounded && surface >= feet - .12) { nextFeet = surface; floorHeightM = surface; landingCeiling = surface; }
+    else {
+      if (grounded) { connectedRamps = airborneRamps(); grounded = false; velocity = 0; landingCeiling = feet; }
+      velocity -= gravityMps2 * dt;
+      if (nextFeet <= surface && velocity <= 0) {
+        nextFeet = surface; floorHeightM = surface; velocity = 0; grounded = true;
+      }
+    }
+    const ceiling = navigation.obstacles.filter(wall => wall.minZ >= feet + eyeHeightM - 1e-6 &&
+      walkInside(point, wall.ring)).reduce((height, wall) => Math.min(height, wall.minZ - eyeHeightM), navigation.ceilingHeight ? navigation.ceilingHeight(point) - eyeHeightM : Infinity);
+    if (!grounded && nextFeet > ceiling) { nextFeet = ceiling; velocity = Math.min(0, velocity); }
+    position = [...point, nextFeet + eyeHeightM];
+  }
+  function move(forward, right, dt, yaw = 0, sprint = false) {
+    if (![forward, right, dt, yaw].every(Number.isFinite) || dt < 0) throw new TypeError('Nieprawidłowy krok spaceru.');
+    sprinting = sprint && !!(forward || right);
+    const speed = walkSpeedMps * (sprinting ? sprintMultiplier : 1) / Math.max(1, Math.hypot(forward, right));
+    const dx = (Math.sin(yaw) * forward + Math.cos(yaw) * right) * speed;
+    const dy = (Math.cos(yaw) * forward - Math.sin(yaw) * right) * speed;
+    const count = Math.max(1, Math.ceil(dt * Math.max(120, Math.hypot(dx, dy) / .025)));
+    for (let i = 0; i < count; i++) step([dx * dt / count, dy * dt / count], dt / count);
+    return [...position];
+  }
+  return { reset, jump, move, setPosition: point => { position = [point[0], point[1], position[2]]; },
+    clearSprint: () => { sprinting = false; },
+    getState: () => ({ position: [...position], eyeHeightM, walkSpeedMps, sprintMultiplier, jumpHeightM, gravityMps2,
+      floorHeightM, jumpHeight: position[2] - eyeHeightM - floorHeightM, grounded, sprinting }) };
 }
 
 function walkMarkup(button) {
@@ -201,7 +303,7 @@ function walkInput({ canvas, panel, isActive, move, look, jump, exit, clearSprin
   } };
 }
 
-function walkButtons(button, panel, isActive, enter, exit) {
+function walkButtons(button, isActive, enter, exit) {
   button.addEventListener('click', () => isActive() ? exit() : enter());
   document.addEventListener('click', event => {
     if (event.target.closest('#reset,#top,#in,#out,[id^="focus-"],#map-focus')) exit();
@@ -221,9 +323,11 @@ function createWalkView(THREE, requestDraw) {
     face: direction => { yaw = Math.atan2(direction.x, direction.y); pitch = 0; } };
 }
 
-export function setupWalk({ THREE, house, neighbors, camera, controls, renderer, requestDraw, onCameraChange, button }) {
+export function setupWalk({ THREE, house, neighbors, camera, controls, renderer, requestDraw, onCameraChange, button, interior }) {
   const view = createWalkView(THREE, requestDraw), perspective = view.camera;
-  const collision = createWalkCollision(walkHouseFootprints(house, neighbors)), motion = createWalkMotion(collision);
+  const navigation = interior?.navigation;
+  const footprints = walkHouseFootprints(house, neighbors).filter(item => !navigation || item.parcel !== '193');
+  const collision = createWalkCollision(footprints), motion = createWalkMotion(collision, navigation);
   const panel = walkMarkup(button), canvas = renderer.domElement;
   canvas.tabIndex = 0; canvas.setAttribute('aria-label', 'Interaktywny model 3D');
   let active = false, frame = null, last = 0;
@@ -238,13 +342,16 @@ export function setupWalk({ THREE, house, neighbors, camera, controls, renderer,
   const input = walkInput({ canvas, panel, isActive: () => active, move, look: view.look, jump, clearSprint: motion.clearSprint, exit: () => exit() });
   function tick(now) {
     frame = null; if (!active) return;
-    input.tick(Math.max(0, (now - last) / 1000)); last = now; frame = requestAnimationFrame(tick);
+    input.tick(Math.min(.1, Math.max(0, (now - last) / 1000))); last = now; frame = requestAnimationFrame(tick);
   }
-  function enter() {
-    if (active) return;
-    const spawn = collision.safeSpawn([controls.target.x, controls.target.y]);
-    view.face(camera.getWorldDirection(new THREE.Vector3()));
-    motion.reset(spawn); perspective.position.set(...motion.getState().position); active = true; controls.enabled = false;
+  function enter(preferred, direction) {
+    if (active && !preferred) return;
+    const point = preferred ?? [controls.target.x, controls.target.y];
+    const spawnCollision = navigation ? walkInteriorCollision(collision, navigation, point[2] ?? 0, point[2] ?? 0) : collision;
+    const spawn = [...spawnCollision.safeSpawn(point.slice(0, 2)), point[2] ?? 0];
+    view.face(direction ? new THREE.Vector3(direction[0], direction[1], 0) : camera.getWorldDirection(new THREE.Vector3()));
+    if (frame !== null) cancelAnimationFrame(frame);
+    motion.reset(navigation ? spawn : spawn.slice(0, 2)); perspective.position.set(...motion.getState().position); active = true; controls.enabled = false;
     input.clear(); panel.hidden = false; document.body.classList.add('walk-mode');
     button.setAttribute('aria-pressed', 'true'); button.textContent = 'Wyjdź ze spaceru';
     resize(); view.updateLook(); onCameraChange(perspective); canvas.focus({ preventScroll: true });
@@ -259,7 +366,7 @@ export function setupWalk({ THREE, house, neighbors, camera, controls, renderer,
     onCameraChange(camera); controls.update(); requestDraw();
   }
   function resize() { perspective.aspect = innerWidth / innerHeight; perspective.updateProjectionMatrix(); }
-  walkButtons(button, panel, () => active, enter, exit);
+  walkButtons(button, () => active, enter, exit);
   return { enter, exit, resize, move, look: view.look, jump, camera: perspective, collision, clearInput: input.clear,
     getState: () => ({ ...motion.getState(), ...view.getState(), active, position: perspective.position.toArray(),
       collisionRadiusM: collision.radius, footprintParcels: [...new Set(collision.footprints.map(item => item.parcel))] }) };

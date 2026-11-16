@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-16.9",
+  "modelVersion": "2026-11-16.10",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -89,19 +89,19 @@
       ],
       "boundsLocalM": {
         "min": [
-          -1.5,
-          -1.222,
+          -1.6375000008940694,
+          -1.2219999997764825,
           0
         ],
         "max": [
           1.5,
-          1.365,
-          3.2
+          1.3650000002980232,
+          3.200000047683716
         ],
         "size": [
-          3,
-          2.587,
-          3.2
+          3.1375000008940694,
+          2.5870000000745055,
+          3.200000047683716
         ]
       },
       "baseElevationM": 0.08,
@@ -768,7 +768,7 @@
     },
     {
       "id": "sauna-door",
-      "name": "Drzwi sauny od wspólnego chodnika",
+      "name": "Drzwi sauny od podestu — ściana szczytowa -X",
       "values": [
         0.8,
         1.85
@@ -781,11 +781,11 @@
     },
     {
       "id": "sauna-window",
-      "name": "Okno sauny",
+      "name": "Okno sauny — dotychczasowa ściana boczna +Y",
       "values": [
-        1.1,
-        0.7,
-        1
+        2,
+        1.4,
+        0.4
       ],
       "labels": [
         "szerokość ramy m",
@@ -1451,10 +1451,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "b967ebf892991498e646774f5a004b96e913e516819401991d6f0ab74b634fa0",
-    "proceduralCodeSha256": "ac4bc94551c124940bc8916e95213a8b7b8848fcbdd3659cfc50f9c75d278b6b",
+    "proceduralCodeSha256": "89ea0f70724e1d85cb967212374276c3ce3f451188b4e5e553a7974b4c7bd5a6",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "426140b9e29c7b44a98258b31e23e939a3789b4b671d8536079a11c746c93047",
-    "runtimeSha256": "7c8c1f7f3f8efe6bc0c2a612246d13b438b6db6bbe99df66595509b7c880db69"
+    "runtimeSha256": "8ae764e2870e0ee6917e39f65005b9c66c1c8b29e90793d1ca3ad97766633d63"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1462,7 +1462,8 @@
     "Odbicie /190 zmienia stronę garażu przy zachowaniu skrajnego położenia. Oba garaże nadal mają wjazd od dotychczasowej drogi.",
     "Osiem samochodów: po dwa na trzech podjazdach i dwa na drodze. Wymiary pobierane z vehicleTypes.",
     "Touchpad: dwa palce przesuwają widok; Ctrl lub gest szczypnięcia zmienia zoom.",
-    "Zachowano wymiary 23 obiektów ogrodu, drzew, ludzi i psów oraz kontekst /41, /192 i /133."
+    "Zachowano wymiary 23 obiektów ogrodu, drzew, ludzi i psów oraz kontekst /41, /192 i /133.",
+    "Wnętrze /193: przejścia drzwiowe, schody na +3,20 m, ściany, pustka nad salonem i poglądowe meble. Sauna: wejście od podestu i okno 2 × 1,4 m."
   ],
   "contextParcels": [
     {
@@ -3272,5 +3273,20 @@
     ],
     "defaultDarkness": 1,
     "datePresetYear": "selected year; Europe/Warsaw; approximate season dates"
+  },
+  "interior": {
+    "dataFile": "interior-data.json",
+    "dataSha256": "632b4d47749c56f80866f0aa638e306fc0dad2ae9d9219a501102fe4c2152b14",
+    "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
+    "floorHeightsM": [
+      0,
+      3.2
+    ],
+    "groundCeilingM": 2.8,
+    "stairRises": 18,
+    "stairFlightWidthM": 0.9,
+    "stairTreadM": 0.26,
+    "reconstruction": "Raster-derived approximate walls/openings; illustrative furniture; exact external envelope retained",
+    "originalShell": "Original roof, garden piers, pergola and rooflights retained; solid walls replaced with doorway/window cutouts"
   }
 }

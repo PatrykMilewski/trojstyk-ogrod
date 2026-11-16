@@ -113,3 +113,9 @@ Podczas spaceru Shift zwiększa prędkość z 2,2 do 4,84 m/s, a spacja rozpoczy
 ## Kompaktowy skrót spaceru 2026-11-16.9
 
 Dolny panel spaceru zawiera wyłącznie tekst ze skrótami sterowania, bez przycisków ruchu, sprintu, skoku i wyjścia. Jest niski, nie przechwytuje kliknięć i zawija tekst na małych ekranach. Wyjście pozostaje pod Esc oraz w menu „Widoki i sterowanie”.
+
+## Wnętrze Icon i sauna 2026-11-16.10
+
+Menu „Widoki i sterowanie” zawiera wejście do wnętrza /193. Parter i poddasze odtworzono z rzutów oraz przekroju Stodoły Icon, z otwartymi przejściami, ścianami, meblami i schodami. Poziom poddasza to +3,20 m; salon zachowuje pustkę do dachu. Dane, źródła i przybliżenia są w `trzy-domy-3d/interior-data.json`, a ich hash w rejestrze wymiarów. To rekonstrukcja poglądowa rysunków rastrowych, nie dokumentacja wykonawcza.
+
+Spacer uwzględnia wysokość podłogi, kolizje ze ścianami i nadprożami oraz schody w obie strony. Shift i spacja zachowują sprint i skok. Drzwi sauny przeniesiono na szczyt od podestu; okno ma 2 × 1,4 m. Zachowano gabaryty sauny oraz ustawienie i gabaryty domów.

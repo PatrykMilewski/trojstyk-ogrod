@@ -1,0 +1,663 @@
+{
+  "version": 1,
+  "coordinateSystem": "Original unmirrored catalogue coordinates, metres; x=0 left main facade, y=0 garage front. Apply house.metadata transform exactly once.",
+  "levels": {
+    "ground": 0,
+    "groundCeiling": 2.8,
+    "upper": 3.2,
+    "eave": 4.07,
+    "ridge": 8.3,
+    "upperCeiling": 5.86
+  },
+  "exterior": {
+    "ground": [
+      [
+        0,
+        0
+      ],
+      [
+        6.9,
+        0
+      ],
+      [
+        6.9,
+        4.21
+      ],
+      [
+        14.64,
+        4.21
+      ],
+      [
+        14.64,
+        12.71
+      ],
+      [
+        8.5,
+        12.71
+      ],
+      [
+        8.5,
+        17.09
+      ],
+      [
+        0,
+        17.09
+      ]
+    ],
+    "upper": [
+      [
+        0,
+        0
+      ],
+      [
+        8.5,
+        0
+      ],
+      [
+        8.5,
+        4.21
+      ],
+      [
+        14.64,
+        4.21
+      ],
+      [
+        14.64,
+        12.71
+      ],
+      [
+        8.5,
+        12.71
+      ],
+      [
+        8.5,
+        18.13
+      ],
+      [
+        0,
+        18.13
+      ]
+    ]
+  },
+  "rooms": [
+    {
+      "id": "0.1",
+      "name": "Garaż",
+      "box": [
+        0.5,
+        0.5,
+        6.45,
+        6.53
+      ],
+      "area": 35.87,
+      "finish": "tile"
+    },
+    {
+      "id": "0.2",
+      "name": "Spiżarnia",
+      "box": [
+        0.5,
+        6.79,
+        3.61,
+        8.39
+      ],
+      "area": 6.37,
+      "finish": "tile"
+    },
+    {
+      "id": "0.3",
+      "name": "Pomieszczenie techniczne",
+      "box": [
+        3.87,
+        6.79,
+        6.57,
+        8.39
+      ],
+      "area": 4.32,
+      "finish": "tile"
+    },
+    {
+      "id": "0.4",
+      "name": "Kuchnia, salon, jadalnia",
+      "box": [
+        0.5,
+        8.65,
+        8,
+        16.59
+      ],
+      "area": 61.31,
+      "finish": "oak"
+    },
+    {
+      "id": "0.5",
+      "name": "Komunikacja",
+      "box": [
+        6.7,
+        8.01,
+        11.19,
+        9.21
+      ],
+      "area": 5.39,
+      "finish": "oak"
+    },
+    {
+      "id": "0.6",
+      "name": "Wiatrołap z garderobą",
+      "box": [
+        6.7,
+        4.71,
+        11.05,
+        7.87
+      ],
+      "area": 10.35,
+      "finish": "tile"
+    },
+    {
+      "id": "0.7",
+      "name": "Łazienka",
+      "box": [
+        8.48,
+        6.27,
+        11.05,
+        7.87
+      ],
+      "area": 3.37,
+      "finish": "tile"
+    },
+    {
+      "id": "0.8",
+      "name": "Pokój gościnny",
+      "box": [
+        11.33,
+        4.71,
+        14.13,
+        9.22
+      ],
+      "area": 12.63,
+      "finish": "oak"
+    },
+    {
+      "id": "0.9",
+      "name": "Gabinet",
+      "box": [
+        9.87,
+        9.48,
+        14.14,
+        12.27
+      ],
+      "area": 13.14,
+      "finish": "oak"
+    },
+    {
+      "id": "1.1",
+      "name": "Pokój 1",
+      "box": [
+        0.5,
+        0.5,
+        8,
+        3.6
+      ],
+      "area": 16.93,
+      "finish": "oak"
+    },
+    {
+      "id": "1.2",
+      "name": "Łazienka",
+      "box": [
+        0.5,
+        3.74,
+        4.77,
+        5.64
+      ],
+      "area": 5.95,
+      "finish": "tile"
+    },
+    {
+      "id": "1.3",
+      "name": "Pokój 2",
+      "box": [
+        0.5,
+        5.78,
+        4.77,
+        10.18
+      ],
+      "area": 14.23,
+      "finish": "oak"
+    },
+    {
+      "id": "1.4",
+      "name": "Komunikacja",
+      "box": [
+        4.91,
+        3.74,
+        6.16,
+        10.18
+      ],
+      "area": 16.02,
+      "finish": "oak"
+    },
+    {
+      "id": "1.5",
+      "name": "Pralnia",
+      "box": [
+        6.3,
+        5.11,
+        8.77,
+        7.89
+      ],
+      "area": 6.47,
+      "finish": "tile"
+    },
+    {
+      "id": "1.6",
+      "name": "Łazienka prywatna",
+      "box": [
+        8.91,
+        5.11,
+        11.55,
+        7.89
+      ],
+      "area": 5.52,
+      "finish": "tile"
+    },
+    {
+      "id": "1.7",
+      "name": "Garderoba",
+      "box": [
+        11.69,
+        5.11,
+        14.14,
+        7.89
+      ],
+      "area": 5.12,
+      "finish": "oak"
+    },
+    {
+      "id": "1.8",
+      "name": "Sypialnia",
+      "box": [
+        9.94,
+        8.03,
+        14.14,
+        12.28
+      ],
+      "area": 13.57,
+      "finish": "oak"
+    }
+  ],
+  "walls": [
+    {
+      "id": "garage-back",
+      "a": [
+        0.5,
+        6.66
+      ],
+      "b": [
+        6.57,
+        6.66
+      ],
+      "thickness": 0.26,
+      "doors": [
+        [
+          1.16,
+          2.06
+        ],
+        [
+          4.15,
+          5.05
+        ]
+      ]
+    },
+    {
+      "id": "garage-hall",
+      "a": [
+        6.57,
+        4.71
+      ],
+      "b": [
+        6.57,
+        8.39
+      ],
+      "thickness": 0.26,
+      "doors": [
+        [
+          0.3,
+          1.2
+        ]
+      ]
+    },
+    {
+      "id": "pantry-technical",
+      "a": [
+        3.74,
+        6.79
+      ],
+      "b": [
+        3.74,
+        8.39
+      ],
+      "thickness": 0.26,
+      "doors": []
+    },
+    {
+      "id": "kitchen-back",
+      "a": [
+        0.5,
+        8.52
+      ],
+      "b": [
+        6.57,
+        8.52
+      ],
+      "thickness": 0.26,
+      "doors": [
+        [
+          0.55,
+          1.45
+        ]
+      ]
+    },
+    {
+      "id": "guest-inner",
+      "a": [
+        11.19,
+        4.71
+      ],
+      "b": [
+        11.19,
+        9.35
+      ],
+      "thickness": 0.28,
+      "doors": [
+        [
+          3.68,
+          4.58
+        ]
+      ]
+    },
+    {
+      "id": "guest-office",
+      "a": [
+        9.87,
+        9.35
+      ],
+      "b": [
+        14.14,
+        9.35
+      ],
+      "thickness": 0.26,
+      "doors": [
+        [
+          0,
+          0.9
+        ]
+      ]
+    },
+    {
+      "id": "vestibule-bath-top",
+      "a": [
+        8.34,
+        6.13
+      ],
+      "b": [
+        11.05,
+        6.13
+      ],
+      "thickness": 0.28,
+      "doors": []
+    },
+    {
+      "id": "bath-left",
+      "a": [
+        8.34,
+        6.27
+      ],
+      "b": [
+        8.34,
+        7.87
+      ],
+      "thickness": 0.28,
+      "doors": []
+    },
+    {
+      "id": "hall-front",
+      "a": [
+        6.7,
+        7.94
+      ],
+      "b": [
+        11.05,
+        7.94
+      ],
+      "thickness": 0.14,
+      "doors": [
+        [
+          0.3,
+          1.2
+        ],
+        [
+          2.2,
+          3.1
+        ]
+      ]
+    },
+    {
+      "id": "stair-office",
+      "a": [
+        9.8,
+        9.48
+      ],
+      "b": [
+        9.8,
+        12.27
+      ],
+      "thickness": 0.14,
+      "doors": []
+    },
+    {
+      "id": "u-room1",
+      "a": [
+        0.5,
+        3.67
+      ],
+      "b": [
+        8,
+        3.67
+      ],
+      "thickness": 0.14,
+      "level": 1,
+      "doors": [
+        [
+          4.75,
+          5.65
+        ]
+      ]
+    },
+    {
+      "id": "u-bath-room2",
+      "a": [
+        0.5,
+        5.71
+      ],
+      "b": [
+        4.77,
+        5.71
+      ],
+      "thickness": 0.14,
+      "level": 1,
+      "doors": []
+    },
+    {
+      "id": "u-room2-hall",
+      "a": [
+        4.84,
+        3.74
+      ],
+      "b": [
+        4.84,
+        10.18
+      ],
+      "thickness": 0.14,
+      "level": 1,
+      "doors": [
+        [
+          0.6,
+          1.5
+        ],
+        [
+          3.2,
+          4.1
+        ]
+      ]
+    },
+    {
+      "id": "u-laundry-hall",
+      "a": [
+        6.23,
+        3.74
+      ],
+      "b": [
+        6.23,
+        7.89
+      ],
+      "thickness": 0.14,
+      "level": 1,
+      "doors": [
+        [
+          2.42,
+          3.32
+        ]
+      ]
+    },
+    {
+      "id": "u-laundry-private",
+      "a": [
+        8.84,
+        5.11
+      ],
+      "b": [
+        8.84,
+        7.89
+      ],
+      "thickness": 0.14,
+      "level": 1,
+      "doors": []
+    },
+    {
+      "id": "u-private-dressing",
+      "a": [
+        11.62,
+        5.11
+      ],
+      "b": [
+        11.62,
+        7.89
+      ],
+      "thickness": 0.14,
+      "level": 1,
+      "doors": []
+    },
+    {
+      "id": "u-suite-front",
+      "a": [
+        6.3,
+        7.96
+      ],
+      "b": [
+        14.14,
+        7.96
+      ],
+      "thickness": 0.14,
+      "level": 1,
+      "doors": [
+        [
+          0.35,
+          1.25
+        ],
+        [
+          3.4,
+          4.3
+        ],
+        [
+          6.25,
+          7.15
+        ]
+      ]
+    },
+    {
+      "id": "u-suite-hall",
+      "a": [
+        9.87,
+        8.03
+      ],
+      "b": [
+        9.87,
+        12.28
+      ],
+      "thickness": 0.14,
+      "level": 1,
+      "doors": [
+        [
+          0.2,
+          1.1
+        ]
+      ]
+    }
+  ],
+  "stairs": {
+    "box": [
+      7.94,
+      9.23,
+      9.8,
+      12.21
+    ],
+    "width": 0.9,
+    "gap": 0.06,
+    "tread": 0.26,
+    "rises": 18,
+    "landingDepth": 0.9,
+    "floorHeight": 3.2,
+    "sourceRise": 0.1768
+  },
+  "void": {
+    "box": [
+      0,
+      10.3,
+      8.5,
+      18.13
+    ]
+  },
+  "entry": {
+    "position": [
+      7.4,
+      4.21,
+      0
+    ],
+    "direction": [
+      0,
+      1
+    ],
+    "width": 1
+  },
+  "metadata": {
+    "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
+    "localSources": [
+      "work/sources/icon-karta.pdf pages4–7",
+      "work/sources/icon-parter-lustro.jpg",
+      "work/icon3d-research/attic-mirror.jpg",
+      "work/icon3d-research/sections-mirror.jpg",
+      "work/icon3d/interior-research/section1-mirror.jpg"
+    ],
+    "assumptions": [
+      "Approximate visual reconstruction from public catalogue raster plans, not execution or BIM documentation.",
+      "Room areas, 18 stair rises, 26cm treads, 90cm flight widths, 2.80m ceiling and +3.20m floor come from publisher drawings. Coordinates and door placement are manually traced approximations, typically 10–20cm uncertainty.",
+      "Source stair label18×17.68cm sums to3.1824m; visual model uses section+3.20m and uniform18rises.",
+      "Published room usable areas on sloped upper floor differ from rectangular floor footprints.",
+      "Furnishings are illustrative inspired by publisher floorplan; exact products and dimensions unknown.",
+      "Upper slope follows unchanged exterior roof; interior roof finish thickness and installation void estimated.",
+      "Private-bath doorway traced position shifted25cm within the same partition to provide walk-camera clearance at the perpendicular suite wall; raster-derived design remains approximate.",
+      "Existing rooflights remain exterior glazing overlays without roof or interior-lining cutouts; they are not transparent openings from inside. Pale roof lining follows the unchanged exterior planes45mm below them.",
+      "Main entrance, internal doorways and one terrace sliding panel are held open for walking; garage door and remaining glazing stay closed."
+    ]
+  }
+}
