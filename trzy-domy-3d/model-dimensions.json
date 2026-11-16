@@ -1230,11 +1230,11 @@
   },
   "sharedAreaM2": 148.32612022495755,
   "integrity": {
-    "geometryBaselineCommit": "7e42d0bb78fbd7379ed77550eeeb691f552a5715",
+    "geometryBaselineCommit": "0dcf43df9785c338aaff2d4d31b9c5175f3c09f6",
     "inputsSha256": "6e324a14dc2fb569dca91ce8f79df7daaab185539576aa105cdda2fcbdf71b71",
     "proceduralCodeSha256": "dac7bdd1cbdb24bba73baacde82e952656f1cf920b01fe402a445ceb36ab922f",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
-    "planSha256": "526980d2717effafe4533db3b8f8b3e5947b73473667a1e4fd3723bfeba73393"
+    "planSha256": "af75ab1af3ab4c54f3098bd92b253d1d1b179b23adf7c74724c7b804fad4c853"
   },
   "revisionNotes": [
     "Oba projekty zweryfikowane jako katalogowe lustra; brak dodatkowego podwójnego odbicia.",
