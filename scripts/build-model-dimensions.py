@@ -56,6 +56,9 @@ content += section('Wyposażenie — rzut i pełny model', '<p>Rzut nie obejmuje
 content += section('Detale i przyjęte wymiary', table(['Element', 'Wymiary / parametry', 'Podstawa'], [
     [d['name'], '; '.join(f'{label}: {number(value)}' for label, value in zip(d['labels'], d['values'])), d['source']]
     for d in registry['details']]))
+content += section('Samochody w skali', table(['Pojazd / miejsce', 'Długość × szerokość × wysokość (m)'], [
+    [c['id']+' · '+c['location'].replace('driveway-','podjazd /').replace('road-133','droga /133'),
+     dimensions([c['measuredLength'],c['measuredWidth'],c['measuredHeight']])] for c in registry['cars']]))
 content += section('Ludzie i psy w skali', table(['Osoba', 'Wzrost (m)'], [
     [p['id'], number(p['heightM'])] for p in registry['people']]) + table(
     ['Pies / działka', 'Wysokość w kłębie (m)', 'Długość samego tułowia (m)'], [
@@ -65,7 +68,9 @@ content += section('Nasadzenia — wartości nominalne koncepcji', table(['Drzew
 content += section('Odsunięcia projektowanych domów /190, /191 i /193', table(['Granica', 'Odległość (m)'], [
     ['Droga', number(registry['clearances']['roadM'])],
     ['Pozostałe granice — przyjęte założenie', number(registry['clearances']['otherBoundariesAssumedM'])],
-    ['/191 od południowego wschodu — instrukcja użytkownika', number(registry['clearances']['parcel191SoutheastM'])]]))
+    ['/191 od SE — wymagane minimum', number(registry['clearances']['parcel191SoutheastM'])],
+    ['/191 od SE — rzeczywiste minimum w modelu', number(registry['clearances']['actualParcel191SoutheastM'])],
+    ['/191 od NW — rzeczywiste odsunięcie w modelu', number(registry['clearances']['parcel191NorthwestM'])]]))
 notes = ''.join(f'<li>{escape(text)}</li>' for text in registry['conventions'])
 sources = ''.join(f'<li><b>{escape(name)}</b>: ' + (f'<a href="{escape(value, quote=True)}" rel="noopener">źródło</a>' if value.startswith('https://') else escape(value)) + '</li>' for name, value in registry['sources'].items())
 content += section('Pochodzenie i zasady zmian', f'<ul>{notes}</ul><ul>{sources}</ul>')

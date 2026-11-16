@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-16.2",
+  "modelVersion": "2026-11-16.3",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -41,7 +41,7 @@
     },
     {
       "parcel": "190",
-      "name": "Willa Floryda 6 — lustro",
+      "name": "Willa Floryda 6 — odbicie modelu 2026-11-16.2",
       "source": "catalogue-190",
       "catalogueEnvelopeM": {
         "width": 15.5,
@@ -53,7 +53,7 @@
     },
     {
       "parcel": "191",
-      "name": "Dom w felicjach 6 (G2) — lustro",
+      "name": "Dom w felicjach 6 (G2) — odbicie modelu 2026-11-16.2",
       "source": "catalogue-191",
       "catalogueEnvelopeM": {
         "width": 15.3,
@@ -1139,7 +1139,9 @@
     "roadM": 5,
     "otherBoundariesAssumedM": 4,
     "parcel191SoutheastM": 10.5,
-    "basis": "Odsunięcia przyjęte w tej koncepcji, w tym 10,5 m SE według instrukcji użytkownika."
+    "basis": "Odsunięcia przyjęte w tej koncepcji, w tym 10,5 m SE według instrukcji użytkownika.",
+    "actualParcel191SoutheastM": 13.598287378209555,
+    "parcel191NorthwestM": 4.0
   },
   "placementPins": {
     "190": {
@@ -1149,37 +1151,141 @@
           1.0
         ],
         [
-          1.0,
+          -1.0,
           0.0
         ]
       ],
       "translation": [
-        -26.415381431530896,
-        9.643405154666652
+        -26.41538143153089,
+        25.143405154666652
       ],
-      "variant": "odbicie lustrzane",
+      "variant": "odbicie względem modelu 2026-11-16.2",
       "northernPlacement": {
-        "objective": "maximum common-plot +Y; geographic north tie-break",
+        "objective": "Within 0.01m of global maximum common-plot +Y, maximize map-grid north (NW on plot).",
+        "northVectorCommon": [
+          -0.6805872861464128,
+          0.7326670089036768
+        ],
+        "uppermostFeasibleYM": 25.143405154666652,
         "previousTranslation": [
-          -28.533296597646547,
-          7.5731536501132615
+          -26.415381431530896,
+          9.643405154666652
         ],
         "movementCommonM": [
-          2.117915166115651,
-          2.070251504553391
+          7.105427357601002e-15,
+          15.5
         ],
         "movementEastNorthM": [
-          2.960713422994208,
-          0.07537884232448944
+          10.549102935269406,
+          11.356338638006985
         ],
-        "mirroredDeterminant": -1.0,
-        "upperBoundaryOptimalityGapM": 0.0
+        "bodyCentroidMovementCommonM": [
+          7.105427357601002e-15,
+          0.0
+        ],
+        "bodyCentroidMovementEastNorthM": [
+          5.205912209075881e-15,
+          -4.835863522220143e-15
+        ],
+        "bodyCentroidMovementLengthM": 7.105427357601002e-15,
+        "relativeReflectionDeterminant": -1.0,
+        "matrixDeterminant": 1.0,
+        "upperBoundaryOptimalityGapM": 0.0,
+        "northTieBreakOptimalityGapM": 0.0,
+        "globalMapNorthOptimalityGapM": 0.0,
+        "activeSetbacks": [
+          {
+            "edge": 2,
+            "road": true,
+            "requiredM": 5.0,
+            "actualM": 5.0
+          },
+          {
+            "edge": 3,
+            "road": true,
+            "requiredM": 5.0,
+            "actualM": 5.0
+          }
+        ],
+        "feasibleTranslations": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -28.533296597646547,
+                23.073153650113255
+              ],
+              [
+                -26.41538143153089,
+                25.143405154666652
+              ],
+              [
+                -21.65777356403785,
+                25.143151878950274
+              ],
+              [
+                -21.658341681241506,
+                22.682613125676664
+              ],
+              [
+                -23.098095228327665,
+                19.50000002159148
+              ],
+              [
+                -28.57367327247309,
+                19.50000002158362
+              ],
+              [
+                -28.533296597646547,
+                23.073153650113255
+              ]
+            ]
+          ]
+        },
+        "proof": "Full parcel half-plane intersection includes catalogue reservation setbacks and whole terrace/pergola containment; triangulated Minkowski obstacles remove shared-zone overlaps. Linear objectives attain maxima at resulting polygon vertices. Driveway and entry of selected maximizer pass containment and shared-zone checks, so these checks do not reduce this maximum.",
+        "occupiedOutsideParcelM2": 0.0,
+        "occupiedSharedOverlapM2": 0.0
+      },
+      "reflectionRelativeToModel": {
+        "baseline": "2026-11-16.2",
+        "baselineFile": "work/mirror-v3-before/placement-draft.json",
+        "previousMatrix": [
+          [
+            0.0,
+            1.0
+          ],
+          [
+            1.0,
+            0.0
+          ]
+        ],
+        "relativeMatrix": [
+          [
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            -1.0
+          ]
+        ],
+        "canonicalAxisReflection": [
+          [
+            -1.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0
+          ]
+        ],
+        "originalGarageFrontRetained": true
       }
     },
     "191": {
       "matrix": [
         [
-          1.0,
+          -1.0,
           0.0
         ],
         [
@@ -1188,26 +1294,126 @@
         ]
       ],
       "translation": [
-        7.110858085287692,
-        25.143165350240658
+        19.305805432463604,
+        25.14300796409688
       ],
-      "variant": "odbicie lustrzane",
+      "variant": "odbicie względem modelu 2026-11-16.2",
       "northernPlacement": {
-        "objective": "maximum common-plot +Y; geographic north tie-break",
+        "objective": "Within 0.01m of global maximum common-plot +Y, maximize map-grid north (NW on plot).",
+        "northVectorCommon": [
+          -0.6805872861464128,
+          0.7326670089036768
+        ],
+        "uppermostFeasibleYM": 25.14306175477974,
         "previousTranslation": [
           7.110858085287692,
           25.143165350240658
         ],
         "movementCommonM": [
-          0.0,
-          0.0
+          12.194947347175912,
+          -0.00015738614377625026
         ],
         "movementEastNorthM": [
-          0.0,
-          0.0
+          8.934728481584731,
+          -8.299841431348055
         ],
-        "mirroredDeterminant": -1.0,
-        "upperBoundaryOptimalityGapM": 0.0
+        "bodyCentroidMovementCommonM": [
+          -4.531846047441611,
+          -0.00015738614377269755
+        ],
+        "bodyCentroidMovementEastNorthM": [
+          -3.3204412033994624,
+          3.084201491026433
+        ],
+        "bodyCentroidMovementLengthM": 4.531846050174537,
+        "relativeReflectionDeterminant": -1.0,
+        "matrixDeterminant": 1.0,
+        "upperBoundaryOptimalityGapM": 5.379068285904509e-05,
+        "northTieBreakOptimalityGapM": 0.0,
+        "globalMapNorthOptimalityGapM": 0.0,
+        "activeSetbacks": [
+          {
+            "edge": 4,
+            "road": true,
+            "requiredM": 5.0,
+            "actualM": 5.0
+          },
+          {
+            "edge": 5,
+            "road": false,
+            "requiredM": 4.0,
+            "actualM": 4.000000000000003
+          }
+        ],
+        "feasibleTranslations": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                22.20580674352124,
+                22.039583626667103
+              ],
+              [
+                20.198966887893395,
+                22.03965676908132
+              ],
+              [
+                19.305088928253785,
+                22.039799042076137
+              ],
+              [
+                19.305805432463604,
+                25.14300796409688
+              ],
+              [
+                22.410851240812455,
+                25.14306175477974
+              ],
+              [
+                22.20580674352124,
+                22.039583626667103
+              ]
+            ]
+          ]
+        },
+        "proof": "Full parcel half-plane intersection includes catalogue reservation setbacks and whole terrace/pergola containment; triangulated Minkowski obstacles remove shared-zone overlaps. Linear objectives attain maxima at resulting polygon vertices. Driveway and entry of selected maximizer pass containment and shared-zone checks, so these checks do not reduce this maximum.",
+        "occupiedOutsideParcelM2": 1.031149791179226e-14,
+        "occupiedSharedOverlapM2": 0.0
+      },
+      "reflectionRelativeToModel": {
+        "baseline": "2026-11-16.2",
+        "baselineFile": "work/mirror-v3-before/placement-draft.json",
+        "previousMatrix": [
+          [
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            -1.0
+          ]
+        ],
+        "relativeMatrix": [
+          [
+            -1.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0
+          ]
+        ],
+        "canonicalAxisReflection": [
+          [
+            -1.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0
+          ]
+        ],
+        "originalGarageFrontRetained": true
       }
     },
     "193": {
@@ -1230,17 +1436,19 @@
   },
   "sharedAreaM2": 148.32612022495755,
   "integrity": {
-    "geometryBaselineCommit": "0dcf43df9785c338aaff2d4d31b9c5175f3c09f6",
-    "inputsSha256": "6e324a14dc2fb569dca91ce8f79df7daaab185539576aa105cdda2fcbdf71b71",
-    "proceduralCodeSha256": "dac7bdd1cbdb24bba73baacde82e952656f1cf920b01fe402a445ceb36ab922f",
+    "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
+    "inputsSha256": "df334b840f8db3482eccd949fedb599b2b935f7d69de9ae83ed8b5a14aa874fd",
+    "proceduralCodeSha256": "750aa52af7d97abed5c932472ead50072dcdbc1b68c111715bbb93aaa9ec29c4",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
-    "planSha256": "af75ab1af3ab4c54f3098bd92b253d1d1b179b23adf7c74724c7b804fad4c853"
+    "planSha256": "4899af2a47ba217c59d63bea9630fa1aee1ee3f65d3aa0e298388ce981bedda8"
   },
   "revisionNotes": [
-    "Oba projekty zweryfikowane jako katalogowe lustra; brak dodatkowego podwójnego odbicia.",
-    "190: przesunięcie +2.117915m w bok i +2.070252m ku górnej granicy w osiach schematu;191 już na górnym limicie5m.",
-    "Brak zmiany skali trzech projektów,23 obiektów wyposażenia, ludzi i psów.",
-    "Dodane źródłowe działki41 i192,pełny obrys133 oraz budynek41 z EGiB. Wysokość41 to uzgodnione założenie2x2.6m."
+    "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
+    "Środek /191 przesunięto o 3,320441 m na zachód i 3,084201 m na północ siatki EPSG:2177; rzeczywiste minimum od SE wynosi 13,598287 m, wymagane minimum 10,5 m.",
+    "Odbicie /190 zmienia stronę garażu przy zachowaniu skrajnego położenia. Oba garaże nadal mają wjazd od dotychczasowej drogi.",
+    "Osiem samochodów: po dwa na trzech podjazdach i dwa na drodze. Wymiary pobierane z vehicleTypes.",
+    "Touchpad: dwa palce przesuwają widok; Ctrl lub gest szczypnięcia zmienia zoom.",
+    "Zachowano wymiary 23 obiektów ogrodu, drzew, ludzi i psów oraz kontekst /41, /192 i /133."
   ],
   "contextParcels": [
     {
@@ -2002,5 +2210,605 @@
     "fullOfficialPolygon": true,
     "widened": false,
     "meaning": "Granica działki drogowej, nie szerokość utwardzonej jezdni."
-  }
+  },
+  "vehicleTypes": {
+    "sedan": {
+      "length": 4.6,
+      "width": 1.85,
+      "height": 1.48
+    },
+    "suv": {
+      "length": 4.8,
+      "width": 1.95,
+      "height": 1.7
+    }
+  },
+  "carPlacements": [
+    {
+      "id": "car-190-0",
+      "kind": "suv",
+      "position": [
+        6.736909321539328,
+        31.22346542910459,
+        0.055
+      ],
+      "angleRad": -0.7598634395529511,
+      "location": "driveway-190",
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              4.325475227984849,
+              32.16983248920499
+            ],
+            [
+              7.805139628316817,
+              28.863484706369327
+            ],
+            [
+              9.148343415093807,
+              30.277098369004186
+            ],
+            [
+              5.66867901476184,
+              33.58344615183985
+            ],
+            [
+              4.325475227984849,
+              32.16983248920499
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "car-190-1",
+      "kind": "sedan",
+      "position": [
+        5.244051571742828,
+        29.469449063150385,
+        0.055
+      ],
+      "angleRad": -0.7598634395529511,
+      "location": "driveway-190",
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              2.939551609266469,
+              30.38318038194517
+            ],
+            [
+              6.274229992917939,
+              27.214597090060987
+            ],
+            [
+              7.548551534219187,
+              28.5557177443556
+            ],
+            [
+              4.213873150567717,
+              31.724301036239783
+            ],
+            [
+              2.939551609266469,
+              30.38318038194517
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "car-191-0",
+      "kind": "sedan",
+      "position": [
+        43.075649796150856,
+        15.757729997177877,
+        0.055
+      ],
+      "angleRad": -2.3193429127766985,
+      "location": "driveway-191",
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              43.963243472290834,
+              18.072422734038717
+            ],
+            [
+              40.83260034178681,
+              14.70210025845453
+            ],
+            [
+              42.18805612001088,
+              13.44303726031704
+            ],
+            [
+              45.318699250514904,
+              16.813359735901223
+            ],
+            [
+              43.963243472290834,
+              18.072422734038717
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "car-191-1",
+      "kind": "sedan",
+      "position": [
+        41.390515675672404,
+        17.323080755314628,
+        0.055
+      ],
+      "angleRad": -2.3193429127766985,
+      "location": "driveway-191",
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              42.27810935181238,
+              19.637773492175466
+            ],
+            [
+              39.147466221308356,
+              16.26745101659128
+            ],
+            [
+              40.502921999532425,
+              15.00838801845379
+            ],
+            [
+              43.63356513003645,
+              18.37871049403797
+            ],
+            [
+              42.27810935181238,
+              19.637773492175466
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "car-193-0",
+      "kind": "sedan",
+      "position": [
+        -9.493291358369476,
+        18.17753979303972,
+        0.055
+      ],
+      "angleRad": -0.7597627547843719,
+      "location": "driveway-193",
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -11.79788330799121,
+              19.091039079158044
+            ],
+            [
+              -8.462885913167334,
+              15.922791554655271
+            ],
+            [
+              -7.188699408747741,
+              17.264040506921397
+            ],
+            [
+              -10.523696803571617,
+              20.43228803142417
+            ],
+            [
+              -11.79788330799121,
+              19.091039079158044
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "car-193-1",
+      "kind": "sedan",
+      "position": [
+        -11.077415120620863,
+        16.510041095627777,
+        0.055
+      ],
+      "angleRad": -0.7597627547843719,
+      "location": "driveway-193",
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -13.382007070242597,
+              17.4235403817461
+            ],
+            [
+              -10.047009675418721,
+              14.255292857243328
+            ],
+            [
+              -8.772823170999128,
+              15.596541809509452
+            ],
+            [
+              -12.107820565823005,
+              18.764789334012228
+            ],
+            [
+              -13.382007070242597,
+              17.4235403817461
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "car-road-190",
+      "kind": "sedan",
+      "position": [
+        4.20733127247993,
+        39.998305280093874,
+        0.01
+      ],
+      "angleRad": -2.3306597663478477,
+      "location": "road-133",
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5.121062591274715,
+              42.30280524257023
+            ],
+            [
+              1.9524792993905322,
+              38.968126858918765
+            ],
+            [
+              3.2935999536851455,
+              37.69380531761752
+            ],
+            [
+              6.462183245569328,
+              41.02848370126898
+            ],
+            [
+              5.121062591274715,
+              42.30280524257023
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "car-road-191",
+      "kind": "sedan",
+      "position": [
+        58.894143432859636,
+        8.052331775638459,
+        0.01
+      ],
+      "angleRad": -0.7485465859818018,
+      "location": "road-133",
+      "footprint": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              56.579450695998794,
+              8.939925451778437
+            ],
+            [
+              59.94977317158298,
+              5.809282321274406
+            ],
+            [
+              61.20883616972048,
+              7.16473809949848
+            ],
+            [
+              57.83851369413629,
+              10.29538123000251
+            ],
+            [
+              56.579450695998794,
+              8.939925451778437
+            ]
+          ]
+        ]
+      }
+    }
+  ],
+  "cars": [
+    {
+      "id": "car-190-0",
+      "kind": "suv",
+      "location": "driveway-190",
+      "sceneObjectName": "car-190-0",
+      "nominalDimensions": {
+        "length": 4.8,
+        "width": 1.95,
+        "height": 1.7
+      },
+      "measuredLocalBounds": {
+        "min": [
+          -2.4000000953674316,
+          -0.9750000238418579,
+          -1.4305114759416426e-08
+        ],
+        "max": [
+          2.4000000953674316,
+          0.9750000238418579,
+          1.7000000476837158
+        ]
+      },
+      "measuredLength": 4.800000190734863,
+      "measuredWidth": 1.9500000476837158,
+      "measuredHeight": 1.7000000619888307,
+      "groundPosition": [
+        6.736909321539328,
+        31.22346542910459,
+        0.055
+      ],
+      "angleRad": -0.7598634395529511,
+      "units": "metres",
+      "upAxis": "z",
+      "lengthAxis": "x"
+    },
+    {
+      "id": "car-190-1",
+      "kind": "sedan",
+      "location": "driveway-190",
+      "sceneObjectName": "car-190-1",
+      "nominalDimensions": {
+        "length": 4.6,
+        "width": 1.85,
+        "height": 1.48
+      },
+      "measuredLocalBounds": {
+        "min": [
+          -2.299999952316284,
+          -0.925000011920929,
+          7.152557379708213e-09
+        ],
+        "max": [
+          2.299999952316284,
+          0.925000011920929,
+          1.4800000190734863
+        ]
+      },
+      "measuredLength": 4.599999904632568,
+      "measuredWidth": 1.850000023841858,
+      "measuredHeight": 1.480000011920929,
+      "groundPosition": [
+        5.244051571742828,
+        29.469449063150385,
+        0.055
+      ],
+      "angleRad": -0.7598634395529511,
+      "units": "metres",
+      "upAxis": "z",
+      "lengthAxis": "x"
+    },
+    {
+      "id": "car-191-0",
+      "kind": "sedan",
+      "location": "driveway-191",
+      "sceneObjectName": "car-191-0",
+      "nominalDimensions": {
+        "length": 4.6,
+        "width": 1.85,
+        "height": 1.48
+      },
+      "measuredLocalBounds": {
+        "min": [
+          -2.299999952316284,
+          -0.925000011920929,
+          7.152557379708213e-09
+        ],
+        "max": [
+          2.299999952316284,
+          0.925000011920929,
+          1.4800000190734863
+        ]
+      },
+      "measuredLength": 4.599999904632568,
+      "measuredWidth": 1.850000023841858,
+      "measuredHeight": 1.480000011920929,
+      "groundPosition": [
+        43.075649796150856,
+        15.757729997177877,
+        0.055
+      ],
+      "angleRad": -2.3193429127766985,
+      "units": "metres",
+      "upAxis": "z",
+      "lengthAxis": "x"
+    },
+    {
+      "id": "car-191-1",
+      "kind": "sedan",
+      "location": "driveway-191",
+      "sceneObjectName": "car-191-1",
+      "nominalDimensions": {
+        "length": 4.6,
+        "width": 1.85,
+        "height": 1.48
+      },
+      "measuredLocalBounds": {
+        "min": [
+          -2.299999952316284,
+          -0.925000011920929,
+          7.152557379708213e-09
+        ],
+        "max": [
+          2.299999952316284,
+          0.925000011920929,
+          1.4800000190734863
+        ]
+      },
+      "measuredLength": 4.599999904632568,
+      "measuredWidth": 1.850000023841858,
+      "measuredHeight": 1.480000011920929,
+      "groundPosition": [
+        41.390515675672404,
+        17.323080755314628,
+        0.055
+      ],
+      "angleRad": -2.3193429127766985,
+      "units": "metres",
+      "upAxis": "z",
+      "lengthAxis": "x"
+    },
+    {
+      "id": "car-193-0",
+      "kind": "sedan",
+      "location": "driveway-193",
+      "sceneObjectName": "car-193-0",
+      "nominalDimensions": {
+        "length": 4.6,
+        "width": 1.85,
+        "height": 1.48
+      },
+      "measuredLocalBounds": {
+        "min": [
+          -2.299999952316284,
+          -0.925000011920929,
+          7.152557379708213e-09
+        ],
+        "max": [
+          2.299999952316284,
+          0.925000011920929,
+          1.4800000190734863
+        ]
+      },
+      "measuredLength": 4.599999904632568,
+      "measuredWidth": 1.850000023841858,
+      "measuredHeight": 1.480000011920929,
+      "groundPosition": [
+        -9.493291358369476,
+        18.17753979303972,
+        0.055
+      ],
+      "angleRad": -0.7597627547843719,
+      "units": "metres",
+      "upAxis": "z",
+      "lengthAxis": "x"
+    },
+    {
+      "id": "car-193-1",
+      "kind": "sedan",
+      "location": "driveway-193",
+      "sceneObjectName": "car-193-1",
+      "nominalDimensions": {
+        "length": 4.6,
+        "width": 1.85,
+        "height": 1.48
+      },
+      "measuredLocalBounds": {
+        "min": [
+          -2.299999952316284,
+          -0.925000011920929,
+          7.152557379708213e-09
+        ],
+        "max": [
+          2.299999952316284,
+          0.925000011920929,
+          1.4800000190734863
+        ]
+      },
+      "measuredLength": 4.599999904632568,
+      "measuredWidth": 1.850000023841858,
+      "measuredHeight": 1.480000011920929,
+      "groundPosition": [
+        -11.077415120620863,
+        16.510041095627777,
+        0.055
+      ],
+      "angleRad": -0.7597627547843719,
+      "units": "metres",
+      "upAxis": "z",
+      "lengthAxis": "x"
+    },
+    {
+      "id": "car-road-190",
+      "kind": "sedan",
+      "location": "road-133",
+      "sceneObjectName": "car-road-190",
+      "nominalDimensions": {
+        "length": 4.6,
+        "width": 1.85,
+        "height": 1.48
+      },
+      "measuredLocalBounds": {
+        "min": [
+          -2.299999952316284,
+          -0.925000011920929,
+          7.152557379708213e-09
+        ],
+        "max": [
+          2.299999952316284,
+          0.925000011920929,
+          1.4800000190734863
+        ]
+      },
+      "measuredLength": 4.599999904632568,
+      "measuredWidth": 1.850000023841858,
+      "measuredHeight": 1.480000011920929,
+      "groundPosition": [
+        4.20733127247993,
+        39.998305280093874,
+        0.01
+      ],
+      "angleRad": -2.3306597663478477,
+      "units": "metres",
+      "upAxis": "z",
+      "lengthAxis": "x"
+    },
+    {
+      "id": "car-road-191",
+      "kind": "sedan",
+      "location": "road-133",
+      "sceneObjectName": "car-road-191",
+      "nominalDimensions": {
+        "length": 4.6,
+        "width": 1.85,
+        "height": 1.48
+      },
+      "measuredLocalBounds": {
+        "min": [
+          -2.299999952316284,
+          -0.925000011920929,
+          7.152557379708213e-09
+        ],
+        "max": [
+          2.299999952316284,
+          0.925000011920929,
+          1.4800000190734863
+        ]
+      },
+      "measuredLength": 4.599999904632568,
+      "measuredWidth": 1.850000023841858,
+      "measuredHeight": 1.480000011920929,
+      "groundPosition": [
+        58.894143432859636,
+        8.052331775638459,
+        0.01
+      ],
+      "angleRad": -0.7485465859818018,
+      "units": "metres",
+      "upAxis": "z",
+      "lengthAxis": "x"
+    }
+  ]
 }

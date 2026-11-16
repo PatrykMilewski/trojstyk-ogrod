@@ -38,9 +38,26 @@ function checkContext(neighbors, registry) {
     assert.deepEqual(house.placement.matrix, pin.matrix);
     assert.deepEqual(house.placement.translation, pin.translation);
     const [[a, b], [c, d]] = pin.matrix;
-    assert.ok(Math.abs(a * d - b * c + 1) < 1e-10, `Catalogue mirror /${house.parcel}`);
+    const previous = pin.reflectionRelativeToModel.previousMatrix;
+    const relative = [[a * previous[0][0] + b * previous[0][1], a * previous[1][0] + b * previous[1][1]],
+      [c * previous[0][0] + d * previous[0][1], c * previous[1][0] + d * previous[1][1]]];
+    assert.ok(relative.flat().every((value, i) => Math.abs(value - pin.reflectionRelativeToModel.relativeMatrix.flat()[i]) < 1e-10), 'Relative reflection matrix');
+    assert.ok(Math.abs(relative[0][0] * relative[1][1] - relative[0][1] * relative[1][0] + 1) < 1e-10, `Reflection of previous model /${house.parcel}`);
     assert.ok(Math.abs(a * a + c * c - 1) < 1e-10 && Math.abs(b * b + d * d - 1) < 1e-10 && Math.abs(a * b + c * d) < 1e-10, 'Rigid scale');
   }
+}
+
+function checkVehicles(neighbors, registry) {
+  assert.deepEqual(neighbors.vehicleTypes, registry.vehicleTypes);
+  assert.deepEqual(neighbors.cars, registry.carPlacements);
+  assert.equal(neighbors.cars.length, registry.cars.length);
+  for (const car of registry.cars) {
+    assert.deepEqual(car.nominalDimensions, registry.vehicleTypes[car.kind], car.id);
+    assert.ok(Math.abs(car.measuredLength - car.nominalDimensions.length) < .00001, car.id);
+    assert.ok(Math.abs(car.measuredWidth - car.nominalDimensions.width) < .00001, car.id);
+    assert.ok(Math.abs(car.measuredHeight - car.nominalDimensions.height) < .00001, car.id);
+  }
+  assert.ok(neighbors.setbackDimension191M >= registry.clearances.parcel191SoutheastM);
 }
 
 function checkDimensions(model, registry) {
@@ -54,6 +71,7 @@ function checkDimensions(model, registry) {
   assert.equal(model.codeHash, registry.integrity.proceduralCodeSha256, 'Procedural geometry changed: measure and review before updating the registry');
   const [, garden, icon, neighbors] = model.data;
   checkContext(neighbors, registry);
+  checkVehicles(neighbors, registry);
   const houses = [{ ...icon, parcel: '193' }, ...neighbors.houses];
   for (const expected of registry.houses) {
     const actual = houses.find((house) => house.parcel === expected.parcel);

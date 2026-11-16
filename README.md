@@ -47,7 +47,7 @@ Biblioteka `polygon-clipping` oraz zależności mają informacje licencyjne doł
 
 ## Model 3D działek
 
-Osobna podstrona `trzy-domy-3d/index.html` przedstawia trzy domy, prywatne ogrody i wspólny trójstyk. Obrót lewym przyciskiem myszy, przybliżanie kółkiem, przesuwanie prawym przyciskiem; obsługiwany jest również dotyk. Przyciski przybliżają wybraną działkę, wspólną strefę lub psy.
+Osobna podstrona `trzy-domy-3d/index.html` przedstawia trzy domy, prywatne ogrody i wspólny trójstyk. Obrót lewym przyciskiem myszy; dwa palce na touchpadzie lub kółko przesuwają widok. Szczypnięcie, Ctrl+kółko i przyciski ＋/− przybliżają. Przesuwanie działa też prawym przyciskiem i dwoma palcami na ekranie dotykowym. Przyciski przybliżają wybraną działkę, wspólną strefę lub psy.
 
 Model zachowuje metryczną geometrię i gabaryty katalogowe. Dachy, stolarka, wyposażenie i zieleń są koncepcją; teren przyjęto płaski. Sauna ma rzut 3 × 2,4 m i czerwony dach 45° bez okapu; trampolina jest na poziomie gruntu. Sauna ma oddzielne drzwi i okno, a trzy furtki wspólnego ogrodu mają światło 1,2 m i są uchylone o 20°. Nad stołem na /193 jest ażurowa pergola z lamelami ustawionymi pod kątem 55°. Podziały przeszkleń mają przestrzenne ciemne ramy. Okna dachowe /191 powiększono poglądowo do 94 × 140 cm (wymiar po połaci). Golden retriever jest na /190, mops na /193, a każda działka ma co najmniej dwie osoby w skali.
 
@@ -61,9 +61,11 @@ Podstrona jest samodzielna, działa offline i nie korzysta z zapisów lokalnych 
 
 Rejestru **nie regeneruje się automatycznie**. Przy uzgodnionej zmianie należy porównać geometrię z poprzednią wersją, zmierzyć ją ponownie, zaktualizować odpowiednie liczby i odciski oraz zwiększyć `modelVersion`. Sama aktualizacja odcisku bez przeglądu wymiarów nie jest weryfikacją. `npm run build` odświeża tabelę, lecz nie zmienia rejestru ani modelu 3D.
 
-### Kontekst i ustawienie — wersja 2026-11-16.2
+### Kontekst i ustawienie — wersja 2026-11-16.3
 
-Oba projekty /190 i /191 są zweryfikowanymi odbiciami lustrzanymi katalogów. /190 przesunięto o 2,070252 m ku górze działki i 2,117915 m w bok w osiach schematu; /191 już zajmował najwyższe dopuszczalne położenie przy 5 m od drogi i minimum 10,5 m od SE. Optymalizacja dotyczy przesunięć przy zachowanych kątach i przyjętych rezerwach domu/ganku. Góra schematu nie jest północą siatki EPSG:2177. /190 ma głębszy dolny pas ogrodu, ale dłuższy podjazd; nie deklarujemy wzrostu całkowitej powierzchni ogrodu.
+Oba domy /190 i /191 odbito względem ich rzeczywistego ustawienia w modelu 2026-11-16.2, zachowując skalę i fronty garażowe przy tych samych drogach. /191 przesunięto do północno-zachodniego limitu: środek domu około 3,320441 m na zachód i 3,084201 m na północ siatki EPSG:2177. Obecne odsunięcia: 5 m od drogi, 4 m od NW i minimum 13,598287 m od SE, przy wymaganym minimum 10,5 m. /190 pozostaje na skrajnym północnym położeniu; odbicie zmienia stronę garażu. Oba ustawienia maksymalizują północ siatki w przyjętych ograniczeniach i są najwyżej 1 cm od skrajnej górnej współrzędnej schematu. Taras /191 pozostaje w całości. Rejestr zawiera macierze poprzednie, nowe i względne odbicia.
+
+Dodano osiem samochodów: po dwa na podjazdach /190, /191, /193 i dwa na /133. Wymiary typów w `vehicleTypes` rejestru są używane przy rozmieszczaniu i rysowaniu pojazdów. Obrysy pojazdów są sprawdzane względem nawierzchni; modele nie zmieniają skali domów ani ogrodu.
 
 Dodano pustą /192, /41 oraz pełny urzędowy wielokąt drogi /133 bez bufora i poszerzania. Przycisk „Droga /133” obejmuje całą drogę; pozostałe przyciski pokazują szczegóły. Jest to granica działki drogowej, nie obrys utwardzonej jezdni.
 

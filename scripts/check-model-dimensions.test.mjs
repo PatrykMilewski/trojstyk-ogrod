@@ -42,6 +42,18 @@ test('rejects an unreviewed existing-building height assumption change', (t) => 
   assert.match(result.stderr, /Model data changed/);
 });
 
+test('rejects restoring the previous unreflected house transform', (t) => {
+  const result = runCandidate(t, (html) => html.replace('"matrix": [[0.0, 1.0], [-1.0, 0.0]]', '"matrix": [[0.0, 1.0], [1.0, 0.0]]'));
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Model data changed/);
+});
+
+test('rejects changing the fixed sedan dimensions', (t) => {
+  const result = runCandidate(t, (html) => html.replace('"length": 4.6, "width": 1.85, "height": 1.48', '"length": 5.6, "width": 1.85, "height": 1.48'));
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Model data changed/);
+});
+
 test('accepts UI copy changes that leave geometry untouched', (t) => {
   const result = runCandidate(t, (html) => html.replace('Trzy domy + trójstyk', 'Trzy domy i wspólny ogród'));
   assert.equal(result.status, 0, result.stderr);
