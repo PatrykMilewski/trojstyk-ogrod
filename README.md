@@ -1,6 +1,6 @@
 # Trójstyk — edytor ogrodu
 
-**[Otwórz edytor](https://patrykmilewski.github.io/trojstyk-ogrod/)**
+**[Otwórz edytor](https://patrykmilewski.github.io/trojstyk-ogrod/)** · **[Model 3D trzech domów](https://patrykmilewski.github.io/trojstyk-ogrod/trzy-domy-3d/)**
 
 Interaktywny rzut wspólnej przestrzeni działek 775/193, 775/190 i 775/191 w Chwaszczynie. Każdy może przygotować własny wariant na tym podkładzie.
 
@@ -44,3 +44,11 @@ Granice ULDK z 11.11.2026, obliczenia w metrach na lokalnym układzie opartym na
 Chodnik jest wirtualną rezerwą, liczoną osobno od zagospodarowania. Nakładające się powierzchnie wyposażenia są liczone raz. „Wolne” nie jest równoznaczne z powierzchnią biologicznie czynną.
 
 Biblioteka `polygon-clipping` oraz zależności mają informacje licencyjne dołączone na końcu wygenerowanego HTML.
+
+## Model 3D działek
+
+Osobna podstrona `trzy-domy-3d/index.html` przedstawia trzy domy, prywatne ogrody i wspólny trójstyk. Obrót lewym przyciskiem myszy, przybliżanie kółkiem, przesuwanie prawym przyciskiem; obsługiwany jest również dotyk. Przyciski przybliżają wybraną działkę, wspólną strefę lub psy.
+
+Model zachowuje metryczną geometrię i gabaryty katalogowe. Dachy, stolarka, wyposażenie i zieleń są koncepcją; teren przyjęto płaski. Sauna ma rzut 3 × 2,4 m i czerwony dach 45° bez okapu; trampolina jest na poziomie gruntu. Golden retriever jest na /190, mops na /193, a każda działka ma co najmniej dwie osoby w skali.
+
+Podstrona jest samodzielna, działa offline i nie korzysta z zapisów lokalnych konfiguratora. Three.js r186 i OrbitControls (MIT) oraz dane modelu są osadzone w HTML; informacje licencyjne pozostają w dołączonym kodzie bibliotek. Zwykły build edytora nie nadpisuje tej podstrony.
