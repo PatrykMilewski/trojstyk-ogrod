@@ -123,27 +123,26 @@
     }
   },
   "utilities": {
-    "retrievedAtUTC": "2026-11-16T19:09:34.745672+00:00",
+    "retrievedAtUTC": "2026-11-16T19:40:06.887977+00:00",
     "crs": "EPSG:2177",
     "coordinateOrder": "easting,northing",
     "center2177": [
       6528563.77,
       6033616.61
     ],
-    "centerDefinition": "Exact common vertex in source cadastral polygons 775/190,775/191,775/193; site.sharedCenter is not this cadastral vertex.",
-    "radiusM": 100,
+    "centerDefinition": "Actual common cadastral vertex of 775/190, 775/191 and 775/193",
+    "radiusM": 150,
     "bbox2177": [
-      6528463.77,
-      6033516.61,
-      6528663.77,
-      6033716.61
+      6528413.77,
+      6033466.61,
+      6528713.77,
+      6033766.61
     ],
-    "width": 2048,
-    "height": 2048,
+    "width": 3072,
+    "height": 3072,
     "metresPerPixel": 0.09765625,
-    "pixelCoordinates": "col = (E-minE)/metresPerPixel; row = (maxN-N)/metresPerPixel; pixel centers use col+0.5,row+0.5",
     "registration": {
-      "formula": "rendererLocal = [easting-originE,northing-originN]; no rotation or sharedTranslation applied",
+      "formula": "rendererLocal = EPSG2177 minus origin2177; no rotation",
       "origin2177": [
         6528545.937850511,
         6033615.105133102
@@ -152,132 +151,243 @@
         17.832149488851428,
         1.504866898059845
       ],
-      "textureOrientation": "north-up image, top=maxNorthing; texture rectangle min/max E,N correspond bbox2177; renderer z is visual overlay only, not utility burial depth"
+      "textureOrientation": "North-up; image top=maxNorthing; no sharedTranslation"
     },
     "requests": [
       {
-        "name": "water-legend",
-        "url": "https://kartuski-wms.webewid.pl/iip/ows?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=siec_wodociagowa&FORMAT=image%2Fpng&STYLE=default&SLD_VERSION=1.1.0",
-        "error": "HTTP Error 400: Bad Request"
-      },
-      {
-        "name": "water-wfs-probe",
-        "url": "https://kartuski-wms.webewid.pl/iip/ows?service=WFS&version=1.1.0&request=GetFeature&typename=ms%3Asiec_wodociagowa_lin&srsName=EPSG%3A2177&bbox=6528463.77%2C6033516.61%2C6528663.77%2C6033716.61%2CEPSG%3A2177",
-        "error": "HTTP Error 500: Internal Server Error"
-      },
-      {
-        "name": "water-lines-county",
-        "url": "https://kartuski-wms.webewid.pl/iip/ows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=siec_wodociagowa_lin&STYLES=&SRS=EPSG%3A2177&BBOX=6528463.77%2C6033516.61%2C6528663.77%2C6033716.61&WIDTH=2048&HEIGHT=2048&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
-        "path": "water-lines-county.png",
-        "bytes": 37031,
-        "contentType": "image/png",
-        "sha256": "f29b57fd4913165c7a8233119ee7419a7585bdfbb91f18dc88ba5bf26b455d95",
-        "size": [
-          2048,
-          2048
-        ],
-        "nonTransparentPixels": 5757
-      },
-      {
-        "name": "water-county",
-        "url": "https://kartuski-wms.webewid.pl/iip/ows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=siec_wodociagowa&STYLES=&SRS=EPSG%3A2177&BBOX=6528463.77%2C6033516.61%2C6528663.77%2C6033716.61&WIDTH=2048&HEIGHT=2048&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
-        "path": "water-county.png",
-        "bytes": 38851,
-        "contentType": "image/png",
-        "sha256": "343579ca62a6bdf0a94b66c0ffea6e23543744f331421131359a20ee66f361c2",
-        "size": [
-          2048,
-          2048
-        ],
-        "nonTransparentPixels": 6291
-      },
-      {
-        "name": "electricity-legend",
-        "url": "https://kartuski-wms.webewid.pl/iip/ows?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=siec_elektroenergetyczna&FORMAT=image%2Fpng&STYLE=default&SLD_VERSION=1.1.0",
-        "error": "HTTP Error 400: Bad Request"
-      },
-      {
-        "name": "electricity-county",
-        "url": "https://kartuski-wms.webewid.pl/iip/ows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=siec_elektroenergetyczna&STYLES=&SRS=EPSG%3A2177&BBOX=6528463.77%2C6033516.61%2C6528663.77%2C6033716.61&WIDTH=2048&HEIGHT=2048&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
-        "path": "electricity-county.png",
-        "bytes": 53838,
-        "contentType": "image/png",
-        "sha256": "cf2d61a859a87ef3424120359bde27fc14873d409b5ddfc9ff476550a5ef5f2e",
-        "size": [
-          2048,
-          2048
-        ],
-        "nonTransparentPixels": 9140
-      },
-      {
-        "name": "electricity-lines-county",
-        "url": "https://kartuski-wms.webewid.pl/iip/ows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=siec_elektroenergetyczna_lin&STYLES=&SRS=EPSG%3A2177&BBOX=6528463.77%2C6033516.61%2C6528663.77%2C6033716.61&WIDTH=2048&HEIGHT=2048&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
-        "path": "electricity-lines-county.png",
-        "bytes": 50852,
-        "contentType": "image/png",
-        "sha256": "4012043ee572b57237dfa841e762e0c44f88609f62c8aaabf240b6b2bb4f300e",
-        "size": [
-          2048,
-          2048
-        ],
-        "nonTransparentPixels": 8305
-      },
-      {
-        "name": "electricity-wfs-probe",
-        "url": "https://kartuski-wms.webewid.pl/iip/ows?service=WFS&version=1.1.0&request=GetFeature&typename=ms%3Asiec_elektroenergetyczna_lin&srsName=EPSG%3A2177&bbox=6528463.77%2C6033516.61%2C6528663.77%2C6033716.61%2CEPSG%3A2177",
-        "error": "HTTP Error 500: Internal Server Error"
-      },
-      {
-        "name": "water-kiut",
-        "url": "https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=przewod_wodociagowy&STYLES=&SRS=EPSG%3A2177&BBOX=6528463.77%2C6033516.61%2C6528663.77%2C6033716.61&WIDTH=2048&HEIGHT=2048&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
-        "path": "water-kiut.png",
-        "bytes": 18928,
-        "contentType": "image/png",
-        "sha256": "7a832983cb9eb8f75bbba57f326e62c591697ffc9d03ff7c30fbbca82b9da7ca",
-        "size": [
-          2048,
-          2048
-        ],
-        "nonTransparentPixels": 6758
-      },
-      {
-        "name": "electricity-kiut",
-        "url": "https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=przewod_elektroenergetyczny&STYLES=&SRS=EPSG%3A2177&BBOX=6528463.77%2C6033516.61%2C6528663.77%2C6033716.61&WIDTH=2048&HEIGHT=2048&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
-        "path": "electricity-kiut.png",
-        "bytes": 26215,
-        "contentType": "image/png",
-        "sha256": "35c52e1104bee636a94834146aec7941f689689f4d51ffa27b631db9c9cd530f",
-        "size": [
-          2048,
-          2048
-        ],
-        "nonTransparentPixels": 9289
-      }
-    ],
-    "coverage": "Only features published by official WMS, not proof of comprehensive inventory or absence elsewhere. No underground elevations or physical verification. No line digitization. Source symbology preserved; circle alpha clipping only. Groups include labels, points, polygons and leaders; separate lines rasters contain only _lin layer. Labels may cross or be clipped by circle.",
-    "wfs": "County capabilities lists only parcels, buildings and geodetic control; utility GetFeature probes retained as evidence.",
-    "legendRequests": [
-      {
         "name": "water",
-        "url": "https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetLegendGraphic&LAYER=przewod_wodociagowy&FORMAT=image%2Fpng",
-        "path": "water-kiut-legend.xml",
-        "status": 200,
-        "bytes": 1
+        "layer": "siec_wodociagowa",
+        "url": "https://kartuski-wms.webewid.pl/iip/ows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=siec_wodociagowa&STYLES=&SRS=EPSG%3A2177&BBOX=6528413.77%2C6033466.61%2C6528713.77%2C6033766.61&WIDTH=3072&HEIGHT=3072&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+        "path": "water-county.png",
+        "bytes": 36809,
+        "contentType": "image/png",
+        "sha256": "33d50f1a879ba80929c8719d310e8ce22d80c10150b27a41ddf716c0aedfbebd",
+        "nonTransparentPixels": 0,
+        "acceptedSource": false
+      },
+      {
+        "name": "water-lines",
+        "layer": "siec_wodociagowa_lin",
+        "url": "https://kartuski-wms.webewid.pl/iip/ows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=siec_wodociagowa_lin&STYLES=&SRS=EPSG%3A2177&BBOX=6528413.77%2C6033466.61%2C6528713.77%2C6033766.61&WIDTH=3072&HEIGHT=3072&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+        "path": "water-lines-county.png",
+        "bytes": 36809,
+        "contentType": "image/png",
+        "sha256": "33d50f1a879ba80929c8719d310e8ce22d80c10150b27a41ddf716c0aedfbebd",
+        "nonTransparentPixels": 0,
+        "acceptedSource": false
       },
       {
         "name": "electricity",
-        "url": "https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetLegendGraphic&LAYER=przewod_elektroenergetyczny&FORMAT=image%2Fpng",
-        "path": "electricity-kiut-legend.xml",
-        "status": 200,
-        "bytes": 1
+        "layer": "siec_elektroenergetyczna",
+        "url": "https://kartuski-wms.webewid.pl/iip/ows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=siec_elektroenergetyczna&STYLES=&SRS=EPSG%3A2177&BBOX=6528413.77%2C6033466.61%2C6528713.77%2C6033766.61&WIDTH=3072&HEIGHT=3072&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+        "path": "electricity-county.png",
+        "bytes": 146860,
+        "contentType": "image/png",
+        "sha256": "1cd1202328628e1c598fbf05c4722ab5471417ca7bebdff9ab004f644c7f7b62",
+        "nonTransparentPixels": 26592,
+        "acceptedSource": true
+      },
+      {
+        "name": "electricity-lines",
+        "layer": "siec_elektroenergetyczna_lin",
+        "url": "https://kartuski-wms.webewid.pl/iip/ows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=siec_elektroenergetyczna_lin&STYLES=&SRS=EPSG%3A2177&BBOX=6528413.77%2C6033466.61%2C6528713.77%2C6033766.61&WIDTH=3072&HEIGHT=3072&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+        "path": "electricity-lines-county.png",
+        "bytes": 36809,
+        "contentType": "image/png",
+        "sha256": "33d50f1a879ba80929c8719d310e8ce22d80c10150b27a41ddf716c0aedfbebd",
+        "nonTransparentPixels": 0,
+        "acceptedSource": false
       }
     ],
-    "legendStatus": "County advertised GetLegendGraphic returns HTTP400 empty body for both groups and leaf lines; KIUT GetLegendGraphic returns one newline, not an image. Official layer names identify blue water and red electricity; no full public symbol legend could be retrieved.",
-    "actualNonTransparentPixelsAfter100mClip": {
-      "water": 1999,
-      "electricity": 7018
+    "derived": [
+      {
+        "path": "water-enhanced-150m.png",
+        "sha256": "c3256ad76f916d3e816de417abf828aa1c147dfedaa5b09a91e7da249b2514c0"
+      },
+      {
+        "path": "electricity-enhanced-150m.png",
+        "sha256": "4043050fb65de740f72b3b72db6ff565696480ccb87e0a2d8adc6f4b67629229"
+      },
+      {
+        "path": "electricity-group-emphasis-150m.png",
+        "sha256": "cdb94be220b57bf65c66d157feb30ea7ba651dfad472fad65999b193e3ddf111"
+      },
+      {
+        "path": "water-reprojected-150m.png",
+        "sha256": "47e0d99213a645d4b72d6a69d416024b2ca116a73402e20b5499bf100af7558c"
+      },
+      {
+        "path": "water-reprojected-enhanced-150m.png",
+        "sha256": "606154c36ebb7ad55c0f3c3cf231b8b81e5476ff68f966de2f57a4c5c685697e"
+      }
+    ],
+    "enhancement": {
+      "method": "Line-only alpha 5x5 maximum filter; blue/red color beneath unchanged full WMS group; white halo 7x7 maximum filter; exact final radius clip",
+      "lineExpansionPerSidePixels": 2,
+      "lineExpansionPerSideM": 0.1953125,
+      "haloExpansionPerSidePixels": 3,
+      "haloExpansionPerSideM": 0.29296875,
+      "nominalOnePixelLineWidthM": 0.48828125,
+      "caveat": "Purely graphical width; not physical pipe/cable width. No vector digitization, translation, rotation, resampling, or inferred paths. The official _lin style may itself include annotations; group image is unchanged above the emphasis."
     },
-    "uiCaveatPL": "Publiczna mapa uzbrojenia Starosty Kartuskiego (WMS), zasięg 100 m od trójstyku. Niebieski: wodociąg; czerwony: energia elektryczna. Brak kreski nie potwierdza braku sieci. Mapa może być niepełna i nie potwierdza dostępności przyłącza ani głębokości przewodów."
+    "verification": {
+      "water": {
+        "nonTransparentPixels": 0,
+        "nonTransparentPixelsOutside150m": 0,
+        "pixelsOutsideSourceExpansionBound": 0
+      },
+      "electricity": {
+        "nonTransparentPixels": 23517,
+        "nonTransparentPixelsOutside150m": 0,
+        "pixelsOutsideSourceExpansionBound": 0
+      }
+    },
+    "coverage": "Official public WMS publication only; absence does not establish absence of networks, connectability or underground depth. Group labels and symbols retained. Clipped at exact 150m radius based on pixel centers.",
+    "uiCaveatPL": "Publiczna mapa uzbrojenia Starosty Kartuskiego (WMS), 150 m od trójstyku. Niebieski: wodociąg; czerwony: energia elektryczna. Linie pogrubiono wyłącznie dla czytelności, nie przedstawiają szerokości przewodów. Brak kreski nie potwierdza braku sieci; mapa nie potwierdza dostępności przyłącza ani głębokości.",
+    "status": "Fresh150m water and electricity full-group coverage available. Water recovered through advertised EPSG:2180 with inverse pixel-center reprojection to EPSG:2177; earlier2177 water blanks rejected.",
+    "acceptedPublishCandidates": [
+      "electricity-150m.png",
+      "electricity-group-emphasis-150m.png",
+      "water-reprojected-150m.png",
+      "water-reprojected-enhanced-150m.png"
+    ],
+    "rejectedPublishCandidates": [
+      "water-150m.png",
+      "water-enhanced-150m.png",
+      "water-lines-150m.png",
+      "electricity-lines-150m.png",
+      "electricity-enhanced-150m.png"
+    ],
+    "enhancementFallback": {
+      "path": "electricity-group-emphasis-150m.png",
+      "sha256": "cdb94be220b57bf65c66d157feb30ea7ba651dfad472fad65999b193e3ddf111",
+      "source": "electricity-county.png",
+      "method": "5x5 alpha maximum red emphasis, 7x7 white halo, unchanged original full group overlaid; exact150m clip",
+      "limitation": "Fresh _lin layer unavailable; this fallback emphasizes group symbols and any group text as well as lines. Original raster remains unchanged and available separately.",
+      "physicalWidthCaveat": "Graphical emphasis only; no statement of pipe/cable width, burial depth or surveyed accuracy.",
+      "maxLineExpansionPerSideM": 0.1953125,
+      "maxHaloExpansionPerSideM": 0.29296875,
+      "nonTransparentPixelsOutside150m": 0,
+      "pixelsOutsideSourceExpansionBound": 0
+    },
+    "probeEvidence": [
+      "probe-evidence.json",
+      "tile-probe-evidence.json",
+      "cooldown-probe.json",
+      "final-recovery-probe.json",
+      "projection-recovery-probe.json",
+      "water-lines-projection-recovery.json"
+    ],
+    "serviceLimitations": "After one valid fresh electricity group, county returned transparent rasters for water and line-only requests, including old previously populated URLs, 1.3.0,2048,1536tile variants. Final two tile probes returned429. Blank responses are rejected as utility absence evidence. Cooldown>60s followed by one1024x1024 water request also returned fully transparent. Final targeted combined county GetMap with default,default styles at2048 also blank; KIUT water2048 returns XML projection error.",
+    "waterRecovery": {
+      "sourceCRS": "EPSG:2180",
+      "sourceBBoxCRS": "EPSG:2180",
+      "sourceSize": [
+        2048,
+        2048
+      ],
+      "sourceFiles": [
+        "water-county-2180.png",
+        "water-lines-county-2180.png"
+      ],
+      "reprojection": "For every EPSG2177 target pixel center, pyproj EPSG2177→2180 gives source pixel-center coordinates. Bilinear interpolation of premultiplied RGBA, zero outside source. No fit, arbitrary rotation or translation.",
+      "targetCRS": "EPSG:2177",
+      "targetBBox2177": [
+        6528413.77,
+        6033466.61,
+        6528713.77,
+        6033766.61
+      ],
+      "targetSize": [
+        3072,
+        3072
+      ],
+      "sourcePixelSizeM": 0.14845755586293308,
+      "interpolationFootprint": "Bilinear interpolation within one source pixel per axis (~0.1485m); output pixel spacing0.09765625m. Map symbology remains a raster approximation, not surveyed centerlines.",
+      "enhancement": "5x5 line-only alpha blue emphasis,7x7 white halo beneath unchanged reprojected official full-group raster; exact150m final clip.",
+      "enhancedPath": "water-reprojected-enhanced-150m.png",
+      "sha256": "606154c36ebb7ad55c0f3c3cf231b8b81e5476ff68f966de2f57a4c5c685697e",
+      "nonTransparentPixels": 121624,
+      "nonTransparentPixelsOutside150m": 0,
+      "pixelsOutsideReprojectedSourceExpansionBound": 0,
+      "overlapWithV4": {
+        "method": "Unclipped v4 group alpha>32 vs corresponding central2048x2048 crop of reprojected group alpha>32; symmetric dilation tolerance around new mask; no alignment fit.",
+        "results": {
+          "1px": {
+            "oldPixels": 4189,
+            "matchedOldPixels": 4185,
+            "fraction": 0.9990451181666269
+          },
+          "3px": {
+            "oldPixels": 4189,
+            "matchedOldPixels": 4189,
+            "fraction": 1.0
+          },
+          "7px": {
+            "oldPixels": 4189,
+            "matchedOldPixels": 4189,
+            "fraction": 1.0
+          }
+        }
+      },
+      "sourceBBox2180": [
+        463544.56795876555,
+        729760.4242553422,
+        463848.60903317283,
+        730064.4653297486
+      ],
+      "pyprojVersion": "3.8.0",
+      "projVersion": "9.8.1"
+    },
+    "recoveryRequests": [
+      {
+        "name": "water-kiut-2180",
+        "time": "2026-11-16T19:47:04.974376+00:00",
+        "url": "https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=przewod_wodociagowy&STYLES=&SRS=EPSG%3A2180&BBOX=463544.56795876555%2C729760.4242553422%2C463848.60903317283%2C730064.4653297486&WIDTH=2048&HEIGHT=2048&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+        "sourceCRS": "EPSG:2180",
+        "sourceBBox": [
+          463544.56795876555,
+          729760.4242553422,
+          463848.60903317283,
+          730064.4653297486
+        ],
+        "path": "water-kiut-2180.png",
+        "sha256": "bc045812ecd407f7c9b0634b9fda4f248b2c1f94f24afed661ed84e86e886b30",
+        "bytes": 35535,
+        "nonTransparentPixels": 14452
+      },
+      {
+        "name": "water-county-2180",
+        "time": "2026-11-16T19:47:04.974535+00:00",
+        "url": "https://kartuski-wms.webewid.pl/iip/ows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=siec_wodociagowa&STYLES=&SRS=EPSG%3A2180&BBOX=463544.56795876555%2C729760.4242553422%2C463848.60903317283%2C730064.4653297486&WIDTH=2048&HEIGHT=2048&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+        "sourceCRS": "EPSG:2180",
+        "sourceBBox": [
+          463544.56795876555,
+          729760.4242553422,
+          463848.60903317283,
+          730064.4653297486
+        ],
+        "path": "water-county-2180.png",
+        "sha256": "5f6fab2fef29fe5b5b043098d090f24a0b5ef12eff4c16ca269b6edb8d8e7f4c",
+        "bytes": 69002,
+        "nonTransparentPixels": 14550
+      },
+      {
+        "name": "water-lines-county-2180",
+        "url": "https://kartuski-wms.webewid.pl/iip/ows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=siec_wodociagowa_lin&SRS=EPSG%3A2180&BBOX=463544.56795876555%2C729760.4242553422%2C463848.60903317283%2C730064.4653297486&WIDTH=2048&HEIGHT=2048&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+        "sourceCRS": "EPSG:2180",
+        "sourceBBox": [
+          463544.56795876555,
+          729760.4242553422,
+          463848.60903317283,
+          730064.4653297486
+        ],
+        "path": "water-lines-county-2180.png",
+        "sha256": "fe2bba7e5d0206de8d52cf5170d5403650dd7b7753c95d1ad93d0b57219f811c",
+        "bytes": 65997,
+        "nonTransparentPixels": 13698
+      }
+    ]
   },
   "display": {
     "engineeringTerrain": "flat",
@@ -286,12 +396,16 @@
     "waterPlaneZM": 0.14,
     "electricityPlaneZM": 0.145,
     "heightDeformsGeometry": false,
-    "orthophotoBakedShadowsAreStatic": true
+    "orthophotoBakedShadowsAreStatic": true,
+    "utilityRadiusM": 150,
+    "utilityInkEmphasized": true,
+    "utilityOverlayDepthTest": false,
+    "graphicalUtilityWidthNotPhysical": true
   },
   "assets": {
     "orthophoto.jpg": "d0e8c574be3446dd28a10105346f9dda420b124744714b62eca19481cd811f06",
     "height-hypsometry.png": "b440be32a8667890e257c778e119d42c821877af1f182d6387bc6ea4241c5bd3",
-    "water-100m.png": "cac1112441238829a07869d40d4365e4347a9f8f079ef94fe0887b10b2ffcba7",
-    "electricity-100m.png": "289d63a8e5c37e0cbd68d174296259a34613a8b205aa4fc51da656965c77e15e"
+    "water-reprojected-enhanced-150m.png": "606154c36ebb7ad55c0f3c3cf231b8b81e5476ff68f966de2f57a4c5c685697e",
+    "electricity-group-emphasis-150m.png": "cdb94be220b57bf65c66d157feb30ea7ba651dfad472fad65999b193e3ddf111"
   }
 }

@@ -7,8 +7,9 @@ const html = await readFile(new URL('../trzy-domy-3d/index.html', import.meta.ur
 const imports = JSON.parse(html.split('<script type="importmap">')[1].split('</script>')[0]).imports;
 const threeSource = Buffer.from(imports.three.split(',')[1], 'base64').toString('utf8');
 const THREE = await import(moduleUrl(threeSource.replaceAll("'three/core'", `'${imports['three/core']}'`)));
-assert.ok(html.includes((await readFile(new URL('../src/model/solar.js', import.meta.url), 'utf8')).replaceAll('export ', '')));
-assert.ok(html.includes(await readFile(new URL('../src/model/map-layers.js', import.meta.url), 'utf8')));
+for (const file of ['solar.js', 'map-layers.js', 'vegetation.js']) {
+  assert.ok(html.includes((await readFile(new URL('../src/model/'+file, import.meta.url), 'utf8')).replaceAll('export ', '')), file+' embedded source');
+}
 const near = (actual, expected, tolerance, message) => assert.ok(Math.abs(actual - expected) <= tolerance, `${message}: ${actual} vs ${expected}`);
 
 // Independent reference: pvlib 0.16.1 spa_python (NREL SPA), pressure=0, altitude=0.
@@ -77,4 +78,154 @@ const bounded = solar.setupSolar({ THREE, scene, sun, renderer, requestDraw() {}
 assert.ok(sun.shadow.camera.right - sun.shadow.camera.left < 160, 'bounded core ignores distant road and map extents');
 assert.equal(sun.shadow.mapSize.x, 4096);
 bounded.dispose();
-console.log('Solar checks passed: 6 independent NREL SPA cases, Warsaw DST/validation, grid direction, day/night, shadow coverage and invalidation.');
+function fakeClock() {
+  let timestamp = 0, nextId = 0;
+  const frames = new Map(), listeners = new Map();
+  const visibilityDocument = { hidden: false,
+    addEventListener: (event, callback) => listeners.set(event, callback),
+    removeEventListener: event => listeners.delete(event) };
+  return { options: { now: () => timestamp, visibilityDocument,
+    requestFrame: callback => { frames.set(++nextId, callback); return nextId; },
+    cancelFrame: id => frames.delete(id) },
+    step(milliseconds) {
+      timestamp += milliseconds;
+      const pending = [...frames.values()]; frames.clear();
+      pending.forEach(callback => callback(timestamp));
+    },
+    hide() { visibilityDocument.hidden = true; listeners.get('visibilitychange')?.(); },
+    show() { visibilityDocument.hidden = false; listeners.get('visibilitychange')?.(); },
+    pending: () => frames.size, listenerCount: () => listeners.size };
+}
+
+const clock = fakeClock();
+let activations = 0;
+const animated = solar.setupSolar({ THREE, scene, sun, renderer, requestDraw() {},
+  onActivate: () => activations++, playbackClock: clock.options });
+assert.equal(activations, 0, 'initial setup preserves parent backdrop');
+assert.equal(animated.getState().active, false);
+assert.equal(animated.getState().secondsPerHour, 3);
+animated.activate();
+assert.equal(activations, 1);
+assert.equal(animated.getState().active, true);
+animated.setLocal('2026-07-20', '23:30');
+animated.play(); animated.play();
+assert.equal(clock.pending(), 1, 'repeated play cannot create duplicate animation loops');
+clock.step(1500);
+assert.equal(animated.getState().instant, '2026-07-20T22:00:00.000Z', 'default playback advances half hour in 1.5 seconds');
+assert.equal(animated.getState().date, '2026-07-21', 'playback crosses local midnight');
+assert.equal(animated.getState().time, '00:00');
+clock.step(50);
+assert.equal(animated.getState().seconds, '00');
+assert.equal(animated.getState().time, '00:01', 'minute-level continuous progression');
+clock.step(50);
+assert.equal(animated.getState().time, '00:02');
+animated.pause();
+const paused = animated.getState().instant;
+clock.step(5000);
+assert.equal(animated.getState().instant, paused);
+assert.equal(clock.pending(), 0);
+animated.setPlaybackSpeed(6);
+animated.play(); clock.step(3000);
+assert.equal(new Date(animated.getState().instant) - new Date(paused), 1800000, 'adjusted speed advances half hour in 3 seconds');
+animated.setPlaybackSpeed(1);
+const faster = animated.getState().instant;
+clock.step(500);
+assert.equal(new Date(animated.getState().instant) - new Date(faster), 1800000, 'speed can change while playing without discontinuity');
+assert.throws(() => animated.setPlaybackSpeed(0), RangeError);
+assert.throws(() => animated.setPlaybackSpeed(NaN), RangeError);
+assert.throws(() => animated.setPlaybackSpeed(16), RangeError);
+clock.hide();
+assert.equal(animated.getState().playing, false, 'hidden document pauses playback');
+const hidden = animated.getState().instant;
+clock.step(100000); clock.show();
+assert.equal(animated.getState().instant, hidden, 'hidden time never jumps simulation forward');
+assert.equal(clock.pending(), 0);
+animated.setPlaybackSpeed(3);
+animated.setLocal('2026-03-29', '01:30');
+animated.play(); clock.step(3000);
+assert.equal(animated.getState().time, '03:30', 'spring DST skips missing civil hour');
+assert.equal(animated.getState().instant, '2026-03-29T01:30:00.000Z');
+animated.setLocal('2026-10-25', '01:30');
+animated.play(); clock.step(3000);
+assert.equal(animated.getState().time, '02:30');
+const firstAutumn = animated.getState().instant;
+clock.step(3000);
+assert.equal(animated.getState().time, '02:30', 'autumn repeated hour remains valid during absolute playback');
+assert.equal(new Date(animated.getState().instant) - new Date(firstAutumn), 3600000);
+animated.setLocal('2026-12-31', '23:30');
+animated.play(); clock.step(3000);
+assert.equal(animated.getState().date, '2027-01-01', 'year rollover is synchronized');
+assert.equal(animated.getState().day, 1);
+animated.setLocal('2028-02-29', '12:00');
+assert.equal(animated.getState().day, 60);
+assert.equal(animated.getState().daysInYear, 366);
+animated.setLocal('2026-02-28', '12:00');
+assert.equal(animated.getState().daysInYear, 365);
+animated.play();
+const beforeCap = animated.getState().instant;
+clock.step(10);
+assert.equal(animated.getState().instant, beforeCap, 'lighting render capped at 20 fps');
+clock.step(40);
+assert.equal(new Date(animated.getState().instant) - new Date(beforeCap), 60000);
+animated.pause();
+animated.setPlaybackSpeed(15); animated.play(); clock.step(50);
+assert.equal(animated.getState().seconds, '12', 'playback preserves sub-minute time');
+animated.deactivate();
+assert.equal(animated.getState().playing, false);
+assert.equal(animated.getState().active, false);
+animated.play();
+assert.equal(animated.getState().active, true);
+assert.ok(clock.pending() > 0);
+animated.dispose();
+assert.equal(clock.pending(), 0, 'dispose cancels outstanding RAF');
+assert.equal(clock.listenerCount(), 0, 'dispose removes visibility listener');
+animated.play();
+assert.equal(clock.pending(), 0, 'disposed playback cannot restart');
+function fakeControls() {
+  const elements = new Map();
+  return { querySelector(selector) {
+    if (!elements.has(selector)) {
+      const callbacks = new Map(), attributes = new Map();
+      elements.set(selector, { value: '', textContent: '',
+        addEventListener: (name, callback) => callbacks.set(name, callback),
+        removeEventListener: name => callbacks.delete(name),
+        setAttribute: (name, value) => attributes.set(name, value),
+        removeAttribute: name => attributes.delete(name),
+        getAttribute: name => attributes.get(name),
+        emit: name => callbacks.get(name)?.() });
+    }
+    return elements.get(selector);
+  } };
+}
+const ui = fakeControls(), uiClock = fakeClock();
+let uiActivations = 0;
+const uiController = solar.setupSolar({ THREE, scene, sun, renderer, container: ui,
+  requestDraw() {}, onActivate: () => uiActivations++, playbackClock: uiClock.options });
+const control = name => ui.querySelector(`#solar-${name}`);
+assert.equal(uiActivations, 0);
+assert.equal(control('minute').value, '950');
+control('date').value = '2028-01-01'; control('date').emit('change');
+assert.equal(control('day').max, '366', 'date year updates leap-year slider maximum');
+control('day').value = '60'; control('day').emit('input');
+assert.equal(control('date').value, '2028-02-29', 'day slider updates date');
+control('minute').value = '1439'; control('minute').emit('input');
+assert.equal(control('time').value, '23:59', 'time slider updates minute input');
+control('speed').value = '6'; control('speed').emit('input');
+assert.equal(uiController.getState().secondsPerHour, 6);
+control('play').emit('click');
+assert.equal(control('play').getAttribute('aria-pressed'), 'true');
+uiClock.step(1000);
+assert.equal(control('date').value, '2028-03-01', 'playback synchronizes date input across midnight');
+control('play').emit('click');
+assert.equal(control('play').getAttribute('aria-pressed'), 'false');
+control('date').value = '2026-03-29'; control('time').value = '02:30'; control('date').emit('change');
+assert.equal(control('time').getAttribute('aria-invalid'), 'true');
+assert.match(control('status').textContent, /nie istnieje/);
+control('time').value = '03:30'; control('time').emit('change');
+assert.equal(control('time').getAttribute('aria-invalid'), undefined);
+assert.ok(uiActivations >= 7, 'user solar interactions activate parent solar mode');
+uiController.dispose();
+control('play').emit('click');
+assert.equal(uiClock.pending(), 0, 'disposed controls remove handlers');
+controller.dispose();
+console.log('Solar checks passed: 6 NREL SPA cases; DST/validation; shadows; deterministic playback, speed, rollover, frame cap, hidden pause and disposal.');

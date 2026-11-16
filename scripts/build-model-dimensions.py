@@ -67,7 +67,9 @@ content += section('Symulacja słońca i mapy', '<p>Pozycja słońca dla wybrane
         ['Zbieżność południków EPSG:2177', number(solar['gridConvergenceDeg'])+'°'],
         ['Algorytm', solar['algorithm']],
         ['Początkowa data i godzina', solar['defaultLocalDateTime']],
-        ['Promień mapy wody i prądu', '100 m od rzeczywistego wspólnego wierzchołka działek'],
+        ['Tempo odtwarzania', '1 godzina / 3 sekundy, regulacja 1–15 sekund na godzinę'],
+        ['Sterowanie', 'Suwaki dnia roku i godziny, odtwarzanie/pauza; aktywacja wyłącza podkład'],
+        ['Promień mapy wody i prądu', '150 m od rzeczywistego wspólnego wierzchołka działek'],
         ['Siatka NMT / układ wysokości', '1 m / PL-EVRF2007-NH'],
         ['Ortofotomapa', '360 × 360 m; indeks 2024 w centrum, dokładna data nalotu nieznana']]) + '<p><a href="map-sources.json">Pełne źródła map, współrzędne i parametry eksportu</a></p>')
 content += section('Ludzie i psy w skali', table(['Osoba', 'Wzrost (m)'], [
@@ -82,6 +84,11 @@ content += section('Odsunięcia projektowanych domów /190, /191 i /193', table(
     ['/191 od SE — wymagane minimum', number(registry['clearances']['parcel191SoutheastM'])],
     ['/191 od SE — rzeczywiste minimum w modelu', number(registry['clearances']['actualParcel191SoutheastM'])],
     ['/191 od NW — rzeczywiste odsunięcie w modelu', number(registry['clearances']['parcel191NorthwestM'])]]))
+surroundings = registry['surroundingVegetation']
+content += section('Otaczające pola i drzewa przy /41', '<p>Pozycje koron i granice pól odtworzono orientacyjnie z ortofotomapy. Wysokości drzew przyjęto według wskazania użytkownika; nie są pomiarem. Zboże jest scenariuszem wizualnym.</p>' + table(
+    ['Drzewo', 'Wysokość (m)', 'Promień korony (m)', 'Środek X / Y modelu (m)'], [
+        [t['id'], number(t['height']), number(t['crownRadius']), ' / '.join(number(v) for v in t['center'])]
+        for t in surroundings['trees']]) + '<p>Zboże: wysokość 0,8–1 m; rośliny instancjonowane w kępach. Drogi, zabudowa i zaprojektowane ogrody wyłączone z pól.</p>')
 notes = ''.join(f'<li>{escape(text)}</li>' for text in registry['conventions'])
 sources = ''.join(f'<li><b>{escape(name)}</b>: ' + (f'<a href="{escape(value, quote=True)}" rel="noopener">źródło</a>' if value.startswith('https://') else escape(value)) + '</li>' for name, value in registry['sources'].items())
 content += section('Pochodzenie i zasady zmian', f'<ul>{notes}</ul><ul>{sources}</ul>')

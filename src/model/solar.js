@@ -57,7 +57,7 @@ export function solarPosition(instant, latitude = SITE.latitude, longitude = SIT
   const equationOfTime = 4 / SOLAR_RAD * (y * Math.sin(2 * l) - 2 * eccentricity * Math.sin(anomaly)
     + 4 * eccentricity * y * Math.sin(anomaly) * Math.cos(2 * l)
     - .5 * y * y * Math.sin(4 * l) - 1.25 * eccentricity ** 2 * Math.sin(2 * anomaly));
-  const minutes = instant.getUTCHours() * 60 + instant.getUTCMinutes() + instant.getUTCSeconds() / 60;
+  const minutes = instant.getUTCHours() * 60 + instant.getUTCMinutes() + (instant.getUTCSeconds() + instant.getUTCMilliseconds() / 1000) / 60;
   const hourAngle = (solarWrap(minutes + equationOfTime + 4 * longitude, 1440) / 4 - 180) * SOLAR_RAD;
   const lat = latitude * SOLAR_RAD;
   const east = -Math.cos(declination) * Math.sin(hourAngle);
@@ -104,53 +104,176 @@ function fitSolarShadow(THREE, sun, bounds, direction) {
   camera.updateProjectionMatrix();
 }
 
-function solarControls(container, apply) {
-  container.innerHTML = `<div class="solar-heading">Słońce i cień</div>
-    <div class="solar-inputs"><label>Data<input id="solar-date" type="date" min="2000-01-01" max="2100-12-31" value="2026-07-20"></label>
-    <label>Godzina<input id="solar-time" type="time" step="60" value="15:50"></label></div>
+const solarZoneFormat = new Intl.DateTimeFormat('pl-PL', {
+  timeZone: SITE.timeZone, timeZoneName: 'short',
+});
+
+export function solarCalendarFields(instant) {
+  const [date, time] = solarCivilKey(instant).split('T');
+  const year = Number(date.slice(0, 4));
+  const yearStart = Date.UTC(year, 0, 1);
+  return { date, time, year, minute: Number(time.slice(0, 2)) * 60 + Number(time.slice(3)),
+    day: 1 + (Date.parse(`${date}T00:00:00Z`) - yearStart) / 86400000,
+    daysInYear: (Date.UTC(year + 1, 0, 1) - yearStart) / 86400000,
+    seconds: String(instant.getUTCSeconds()).padStart(2, '0'),
+    zone: solarZoneFormat.formatToParts(instant).find(part => part.type === 'timeZoneName').value };
+}
+
+export function createSolarPlayback({ apply, onChange = () => {},
+  requestFrame = callback => globalThis.requestAnimationFrame(callback),
+  cancelFrame = id => globalThis.cancelAnimationFrame(id),
+  now = () => globalThis.performance.now(), visibilityDocument = globalThis.document }) {
+  let playing = false, disposed = false, frame = null, anchor = 0, origin = 0, lastRender = 0;
+  let instant = 0, secondsPerHour = 3;
+  function advance(timestamp, force = false) {
+    if (!force && timestamp - lastRender < 50) return;
+    instant = origin + Math.max(0, timestamp - anchor) * 3600 / secondsPerHour;
+    const limited = Math.max(Date.parse('1999-12-31T23:00:00Z'),
+      Math.min(Date.parse('2100-12-31T22:59:59.999Z'), instant));
+    apply(new Date(limited));
+    lastRender = timestamp;
+    if (limited !== instant) { instant = limited; playing = false; onChange(); }
+  }
+  function tick(timestamp) {
+    frame = null;
+    if (!playing || disposed) return;
+    advance(timestamp);
+    if (playing) frame = requestFrame(tick);
+  }
+  function pause() {
+    if (playing) advance(now(), true);
+    playing = false;
+    if (frame !== null) cancelFrame(frame);
+    frame = null;
+    onChange();
+  }
+  function play() {
+    if (disposed || playing || visibilityDocument?.hidden) return;
+    playing = true; anchor = now(); origin = instant; lastRender = anchor;
+    frame = requestFrame(tick); onChange();
+  }
+  function setPlaybackSpeed(value) {
+    if (!Number.isFinite(value) || value < 1 || value > 15) throw new RangeError('Tempo: od 1 do 15 sekund na godzinę.');
+    if (playing) { advance(now(), true); origin = instant; anchor = now(); }
+    secondsPerHour = value; onChange();
+  }
+  const visibility = () => { if (visibilityDocument.hidden) pause(); };
+  visibilityDocument?.addEventListener('visibilitychange', visibility);
+  return { play, pause, setPlaybackSpeed, setInstant(value) { pause(); instant = value.getTime(); },
+    getState: () => ({ playing, secondsPerHour }),
+    dispose() { pause(); disposed = true; visibilityDocument?.removeEventListener('visibilitychange', visibility); } };
+}
+
+function solarControlMarkup() {
+  return `<div class="solar-heading">Słońce i cień</div>
+    <div class="solar-inputs"><label>Data<input id="solar-date" type="date" min="2000-01-01" max="2100-12-31"></label>
+    <label>Godzina<input id="solar-time" type="time" step="60"></label></div>
+    <label>Dzień roku <output id="solar-day-label"></output><input id="solar-day" aria-label="Dzień roku" type="range" min="1" max="365" step="1"></label>
+    <label>Godzina <output id="solar-minute-label"></output><input id="solar-minute" aria-label="Godzina dnia" type="range" min="0" max="1439" step="1"></label>
+    <div class="solar-inputs"><button id="solar-play" type="button" aria-pressed="false">▶ Odtwórz</button>
+    <label>Tempo <output id="solar-speed-label"></output><input id="solar-speed" aria-label="Sekundy na godzinę symulacji" type="range" min="1" max="15" step="0.5" value="3"></label></div>
     <p class="solar-zone">Czas w Polsce · Europe/Warsaw (CET / CEST)</p>
-    <output id="solar-status" aria-live="polite"></output>
+    <output id="solar-status" aria-live="off"></output>
     <p class="solar-note">Bezchmurne niebo · teren płaski · geometria poglądowa. Bez refrakcji i przeszkód spoza modelu. Nocą pozostaje światło podglądu.
     Obliczenia: <a href="https://gml.noaa.gov/grad/solcalc/calcdetails.html" target="_blank" rel="noopener">NOAA / Meeus</a>;
     kontrola: <a href="https://pvlib-python.readthedocs.io/en/stable/reference/generated/pvlib.solarposition.spa_python.html" target="_blank" rel="noopener">NREL SPA</a>.</p>`;
-  const date = container.querySelector('#solar-date'), time = container.querySelector('#solar-time');
-  const status = container.querySelector('#solar-status');
-  const update = () => {
-    try { apply(date.value, time.value); date.removeAttribute('aria-invalid'); time.removeAttribute('aria-invalid'); }
-    catch (error) { status.textContent = `${error.message} Zachowano ostatnie poprawne oświetlenie.`; date.setAttribute('aria-invalid', 'true'); time.setAttribute('aria-invalid', 'true'); }
-  };
-  date.addEventListener('change', update); time.addEventListener('change', update);
-  return { date, time, status, dispose() { date.removeEventListener('change', update); time.removeEventListener('change', update); } };
 }
 
-export function setupSolar({ THREE, scene, sun, renderer, requestDraw, container, shadowBounds }) {
+function solarControls(container, actions) {
+  container.innerHTML = solarControlMarkup();
+  const elements = Object.fromEntries(['date', 'time', 'day', 'minute', 'play', 'speed', 'status',
+    'day-label', 'minute-label', 'speed-label'].map(name => [name, container.querySelector(`#solar-${name}`)]));
+  const listeners = [];
+  function listen(name, event, callback) {
+    elements[name].addEventListener(event, callback);
+    listeners.push(() => elements[name].removeEventListener(event, callback));
+  }
+  function update() {
+    const date = elements.date.value, time = elements.time.value;
+    actions.pause();
+    try {
+      actions.setLocal(date, time);
+      elements.date.removeAttribute('aria-invalid'); elements.time.removeAttribute('aria-invalid');
+      elements.status.removeAttribute('role');
+    } catch (error) {
+      elements.date.value = date; elements.time.value = time;
+      elements.status.textContent = `${error.message} Zachowano ostatnie poprawne oświetlenie.`;
+      elements.status.setAttribute('role', 'alert');
+      elements.date.setAttribute('aria-invalid', 'true'); elements.time.setAttribute('aria-invalid', 'true');
+    }
+  }
+  listen('date', 'change', update); listen('time', 'change', update);
+  listen('day', 'input', () => {
+    const year = Number(elements.date.value.slice(0, 4)) || actions.getState().year;
+    elements.date.value = new Date(Date.UTC(year, 0, Number(elements.day.value))).toISOString().slice(0, 10);
+    update();
+  });
+  listen('minute', 'input', () => {
+    const minute = Number(elements.minute.value);
+    elements.time.value = `${String(Math.floor(minute / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`;
+    update();
+  });
+  listen('play', 'click', () => actions.getState().playing ? actions.pause() : actions.play());
+  listen('speed', 'input', () => { actions.activate(); actions.setPlaybackSpeed(Number(elements.speed.value)); });
+  return { ...elements, dispose: () => listeners.forEach(remove => remove()) };
+}
+
+function syncSolarControls(controls, state) {
+  if (!controls) return;
+  controls.date.value = state.date; controls.time.value = state.time;
+  controls.day.max = String(state.daysInYear); controls.day.value = String(state.day);
+  controls.minute.value = String(state.minute);
+  controls['day-label'].textContent = `${state.day} / ${state.daysInYear}`;
+  controls['minute-label'].textContent = `${state.time}:${state.seconds}`;
+  controls.speed.value = String(state.secondsPerHour);
+  controls['speed-label'].textContent = `1 h / ${state.secondsPerHour} s`;
+  controls.play.textContent = state.playing ? '❚❚ Pauza' : '▶ Odtwórz';
+  controls.play.setAttribute('aria-pressed', String(state.playing));
+  controls.status.textContent = `${state.time}:${state.seconds} ${state.zone} · azymut ${state.azimuthDeg.toFixed(1)}° · wysokość ${state.elevationDeg.toFixed(1)}°`
+    + (state.daylight ? (state.elevationDeg < 5 ? ' · niskie słońce: cień orientacyjny' : '') : ' · słońce pod horyzontem: brak bezpośredniego światła');
+}
+
+function applySolarLight({ THREE, sun, bounds, renderer, intensity }, instant) {
+  const position = solarPosition(instant), direction = sunDirection(position);
+  const daylight = position.elevationDeg > 0;
+  fitSolarShadow(THREE, sun, bounds, direction);
+  sun.intensity = daylight ? intensity : 0;
+  sun.castShadow = daylight;
+  renderer.shadowMap.needsUpdate = true;
+  sun.shadow.needsUpdate = true;
+  return { ...solarCalendarFields(instant), instant: instant.toISOString(), ...position, direction, daylight };
+}
+
+export function setupSolar({ THREE, scene, sun, renderer, requestDraw, container, shadowBounds,
+  onActivate = () => {}, playbackClock = {} }) {
   const bounds = shadowBounds
     ? new THREE.Box3(new THREE.Vector3(...shadowBounds.min), new THREE.Vector3(...shadowBounds.max)).expandByScalar(2)
     : solarShadowBounds(THREE, scene);
-  const mapSize = Math.min(4096, renderer.capabilities?.maxTextureSize || 4096);
-  sun.shadow.mapSize.set(mapSize, mapSize);
-  const intensity = sun.intensity;
-  let state, controls;
-  function setLocal(date, time) {
-    const instant = warsawInstant(date, time), position = solarPosition(instant);
-    const direction = sunDirection(position), daylight = position.elevationDeg > 0;
-    fitSolarShadow(THREE, sun, bounds, direction);
-    sun.intensity = daylight ? intensity : 0;
-    sun.castShadow = daylight;
-    renderer.shadowMap.needsUpdate = true;
-    sun.shadow.needsUpdate = true;
-    state = { date, time, instant: instant.toISOString(), ...position, direction, daylight };
-    if (controls) {
-      controls.date.value = date; controls.time.value = time;
-      const zone = new Intl.DateTimeFormat('pl-PL', { timeZone: SITE.timeZone, timeZoneName: 'short' })
-        .formatToParts(instant).find(part => part.type === 'timeZoneName').value;
-      controls.status.textContent = `${time} ${zone} · azymut ${position.azimuthDeg.toFixed(1)}° · wysokość ${position.elevationDeg.toFixed(1)}°`
-        + (daylight ? (position.elevationDeg < 5 ? ' · niskie słońce: cień orientacyjny' : '') : ' · słońce pod horyzontem: brak bezpośredniego światła');
-    }
-    requestDraw();
-    return state;
+  sun.shadow.mapSize.set(Math.min(4096, renderer.capabilities?.maxTextureSize || 4096),
+    Math.min(4096, renderer.capabilities?.maxTextureSize || 4096));
+  const lighting = { THREE, sun, bounds, renderer, intensity: sun.intensity };
+  let state, controls, playback, active = false;
+  const getState = () => ({ ...state, active, ...playback.getState(), direction: [...state.direction] });
+  const sync = () => { if (state && playback) syncSolarControls(controls, getState()); };
+  function apply(instant) {
+    state = applySolarLight(lighting, instant);
+    sync(); requestDraw();
+    return getState();
   }
-  if (container) controls = solarControls(container, setLocal);
-  setLocal('2026-07-20', '15:50');
-  return { setLocal, getState: () => ({ ...state, direction: [...state.direction] }), dispose: () => controls?.dispose() };
+  function activate() { active = true; onActivate(); return getState(); }
+  function setLocal(date, time) {
+    activate();
+    const instant = warsawInstant(date, time);
+    playback.setInstant(instant);
+    return apply(instant);
+  }
+  playback = createSolarPlayback({ ...playbackClock, apply, onChange: sync });
+  const api = { activate, setLocal, getState, pause: playback.pause,
+    play() { activate(); playback.play(); }, setPlaybackSpeed: playback.setPlaybackSpeed,
+    deactivate() { playback.pause(); active = false; },
+    dispose() { playback.dispose(); controls?.dispose(); } };
+  if (container) controls = solarControls(container, api);
+  const initial = warsawInstant('2026-07-20', '15:50');
+  playback.setInstant(initial); apply(initial);
+  return api;
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-16.4",
+  "modelVersion": "2026-11-16.5",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -20,7 +20,10 @@
     "Elewacja /41 skierowana ku /191: jedno lewe górne okno, 1,6 × 1,3 m, parapet 3,15 m.",
     "Symulacja słońca: czas Europe/Warsaw, współrzędne użytkownika i poprawka północy siatkowej EPSG:2177. Teren modelu pozostaje płaski; przeszkody spoza modelu i refrakcja pominięte.",
     "Mapy Geoportalu są nieruchomymi podkładami we właściwym układzie współrzędnych; cienie na ortofotomapie nie są cieniami symulowanymi. NMT pokazano barwami, bez deformacji sceny.",
-    "Publiczne WMS wody i prądu pokazano w promieniu 100 m od rzeczywistego styku działek. Brak linii nie dowodzi braku sieci."
+    "Publiczne WMS wody i prądu pokazano w promieniu 150 m od rzeczywistego styku działek. Brak linii nie dowodzi braku sieci.",
+    "Zboże: 0,8–1 m wysokości, na polach wyznaczonych orientacyjnie z ortofotomapy; bez dróg i zabudowy. Nie oznacza rzeczywistego stanu upraw.",
+    "Pięć drzew przy /41: 11, 10,5, 10, 9 i 9 m. Wysokości przyjęte według użytkownika; pozycje i korony orientacyjne na podstawie zdjęcia lotniczego.",
+    "Odtwarzanie słońca domyślnie 1 godzina na 3 sekundy, regulacja 1–15 sekund. Rozpoczęcie sterowania cieniem przełącza podkład na brak mapy."
   ],
   "sources": {
     "catalogue-193": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
@@ -1447,10 +1450,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "d66e4e1695d8ff9a870d2990af96c0eec43148a8ab32be91741ddd9706d6e962",
-    "proceduralCodeSha256": "750aa52af7d97abed5c932472ead50072dcdbc1b68c111715bbb93aaa9ec29c4",
+    "proceduralCodeSha256": "78958bc957689eefa02843f0b9cc71e4af983e2f8ba2c8f0f84cfa2048142b5d",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "4899af2a47ba217c59d63bea9630fa1aee1ee3f65d3aa0e298388ce981bedda8",
-    "runtimeSha256": "4d07c58e3baa54e69881aa20a1febd9b7b91013ca5c6284b9b5b165eb23f4a81"
+    "runtimeSha256": "8b8521e7d61759f876927cdfe61abee13461744694ce568a6541af104f241dcd"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -2610,7 +2613,7 @@
       "lengthAxis": "x"
     }
   ],
-  "geometryBaselineCommit": "3898269855f42de6a04c71c702981b54bee29b2e",
+  "geometryBaselineCommit": "823eaec8b743b9546d5e507e31f486045e54e1e0",
   "mapLayers": {
     "crs": "EPSG:2177",
     "origin2177": [
@@ -2627,12 +2630,18 @@
       6528563.77,
       6033616.61
     ],
-    "utilityRadiusM": 100,
+    "utilityRadiusM": 150,
     "nmtGridM": 1,
     "nmtVerticalDatum": "PL-EVRF2007-NH",
     "terrainGeometry": "flat",
     "metadataFile": "map-sources.json",
-    "metadataSha256": "4726c88c57e968b31dbff65786bfa9b4f8008743b1aaaac3830fd45d4481d18b"
+    "metadataSha256": "fea5048b39e7fb2aa10d468939c39c41523b660555bf006e0ad027345ca02d02",
+    "utilityBounds2177": [
+      6528413.77,
+      6033466.61,
+      6528713.77,
+      6033766.61
+    ]
   },
   "solarSimulation": {
     "latitude": 54.43205555555555,
@@ -2647,6 +2656,103 @@
     ],
     "defaultLocalDateTime": "2026-07-20T15:50",
     "terrainGeometry": "flat",
-    "externalObstaclesIncluded": false
+    "externalObstaclesIncluded": false,
+    "playbackDefaultSecondsPerHour": 3,
+    "playbackSecondsPerHourRange": [
+      1,
+      15
+    ],
+    "playbackUsesMonotonicClock": true,
+    "automaticPlainGroundOnActivation": true,
+    "hemisphereLightIntensity": 1.1,
+    "directSunIntensity": 3.6
+  },
+  "surroundingVegetation": {
+    "dataFile": "vegetation-data.json",
+    "dataSha256": "e53f8a05b8dfb65c2804d5e836454034c87404f9cba11bbaa950385542360a8e",
+    "crop": {
+      "heightM": 0.95,
+      "heightRangeM": [
+        0.8,
+        1.0
+      ],
+      "spacingM": 1.35,
+      "baseZ": 0.006
+    },
+    "trees": [
+      {
+        "id": "existing-41-1",
+        "sourcePixel": [
+          1305,
+          1075
+        ],
+        "center": [
+          67.2267,
+          -7.46
+        ],
+        "height": 11,
+        "crownRadius": 4.0,
+        "kind": "deciduous"
+      },
+      {
+        "id": "existing-41-2",
+        "sourcePixel": [
+          1360,
+          1050
+        ],
+        "center": [
+          76.8946,
+          -3.0654
+        ],
+        "height": 10.5,
+        "crownRadius": 4.5,
+        "kind": "deciduous"
+      },
+      {
+        "id": "existing-41-3",
+        "sourcePixel": [
+          1420,
+          1030
+        ],
+        "center": [
+          87.4415,
+          0.4502
+        ],
+        "height": 10,
+        "crownRadius": 4.2,
+        "kind": "deciduous"
+      },
+      {
+        "id": "existing-41-4",
+        "sourcePixel": [
+          1280,
+          1175
+        ],
+        "center": [
+          62.8321,
+          -25.0381
+        ],
+        "height": 9,
+        "crownRadius": 3.8,
+        "kind": "deciduous"
+      },
+      {
+        "id": "existing-41-5",
+        "sourcePixel": [
+          1265,
+          1215
+        ],
+        "center": [
+          60.1954,
+          -32.0694
+        ],
+        "height": 9,
+        "crownRadius": 3.2,
+        "kind": "deciduous"
+      }
+    ],
+    "positionsApproximate": true,
+    "treeHeightsUserPrescribed": true,
+    "fieldCount": 6
   }
 }

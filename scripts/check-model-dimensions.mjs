@@ -82,6 +82,11 @@ function checkDimensions(model, registry) {
   checkVehicles(neighbors, registry);
   assert.equal(model.runtimeHash, registry.integrity.runtimeSha256, 'Simulation or map runtime changed without review');
   assert.equal(hash(readFileSync(resolve(root, 'trzy-domy-3d', registry.mapLayers.metadataFile))), registry.mapLayers.metadataSha256, 'Map provenance changed');
+  const vegetation = JSON.parse(readFileSync(resolve(root, 'trzy-domy-3d', registry.surroundingVegetation.dataFile), 'utf8'));
+  assert.equal(hash(readFileSync(resolve(root, 'trzy-domy-3d', registry.surroundingVegetation.dataFile))), registry.surroundingVegetation.dataSha256, 'Vegetation data changed');
+  assert.deepEqual(vegetation.trees, registry.surroundingVegetation.trees);
+  assert.deepEqual(vegetation.crop, registry.surroundingVegetation.crop);
+  assert.equal(registry.mapLayers.utilityRadiusM, 150);
   const houses = [{ ...icon, parcel: '193' }, ...neighbors.houses];
   for (const expected of registry.houses) {
     const actual = houses.find((house) => house.parcel === expected.parcel);

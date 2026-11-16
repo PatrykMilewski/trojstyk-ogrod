@@ -73,10 +73,16 @@ Budynek /41 ma źródłowy ośmiowierzchołkowy obrys EGiB Starosty Kartuskiego 
 
 [Rzut kontrolny SVG](https://patrykmilewski.github.io/trojstyk-ogrod/trzy-domy-3d/plan-kontrolny.svg) pokazuje działki, obrysy budynków, przyjęte odsunięcia i osobny podgląd całej drogi. Odcisk pliku planu również podlega kontroli.
 
-## Słońce i podkłady Geoportalu (2026-11-16.4)
+## Słońce i podkłady Geoportalu (2026-11-16.5)
 
 Przycisk **Słońce i mapy** otwiera datę i godzinę Europe/Warsaw, podkład ortofoto lub wysokości NMT, oraz niezależne warstwy wody i prądu. Zegar nie zależy od strefy przeglądarki. Obliczenia NOAA/Meeus sprawdzono z sześcioma niezależnymi pozycjami NREL SPA; uwzględniono zbieżność południków EPSG:2177. Nocą wyłącza się bezpośrednie światło słońca, lecz pozostaje oświetlenie podglądu. Teren jest płaski, przeszkody spoza modelu i refrakcja pominięte.
 
-Ortofotomapa GUGiK ma prawidłową georeferencję EPSG:2177 i obszar 360 × 360 m. Indeks wskazuje 2024 w centrum; dokładna data nalotu nie jest dostępna. Cienie zdjęcia są stałe. NMT WCS ma siatkę 1 m i wysokości PL-EVRF2007-NH; kolory nie deformują budynków ani terenu. Woda i prąd są oryginalnym obrazem publicznego WMS Starosty Kartuskiego, przyciętym do 100 m od rzeczywistego styku działek. Brak linii nie potwierdza braku sieci. Warstwy nie określają głębokości, przepustowości ani możliwości przyłączenia. Szczegóły i adresy zapytań zapisano w `trzy-domy-3d/map-sources.json`.
+Ortofotomapa GUGiK ma prawidłową georeferencję EPSG:2177 i obszar 360 × 360 m. Indeks wskazuje 2024 w centrum; dokładna data nalotu nie jest dostępna. Cienie zdjęcia są stałe. NMT WCS ma siatkę 1 m i wysokości PL-EVRF2007-NH; kolory nie deformują budynków ani terenu. Woda i prąd są oryginalnym obrazem publicznego WMS Starosty Kartuskiego, przyciętym do 150 m od rzeczywistego styku działek. Brak linii nie potwierdza braku sieci. Warstwy nie określają głębokości, przepustowości ani możliwości przyłączenia. Szczegóły i adresy zapytań zapisano w `trzy-domy-3d/map-sources.json`.
 
 Na każdym podjeździe pozostał jeden samochód, na drodze dwa. Ściana /41 zwrócona ku /191 ma tylko lewe górne okno. Wymiary domów i wyposażenia oraz ustawienie domów pozostają zgodne z wersją .3. Nowe moduły są w `src/model/`; HTML osadza ich kopie, a `npm run check` kontroluje ich zgodność, algorytm słońca i rejestr danych.
+
+Tryb cieni automatycznie wybiera „Bez podkładu”. Suwaki dnia roku i godziny synchronizują się z datą i czasem. Odtwarzanie/Pauza przesuwa bezwzględny czas zgodnie z zegarem monotonicznym: domyślnie 1 h / 3 s, regulacja 1–15 s na godzinę. Obsługiwane są zmiany daty i DST; ukrycie karty zatrzymuje odtwarzanie. Obniżone oświetlenie rozproszone zwiększa kontrast cieni.
+
+Media obejmują 150 m; linie mają graficzne pogrubienie i jasną obwódkę. Wodę odzyskano z urzędowego WMS EPSG:2180 i przeliczono do EPSG:2177, bez dopasowywania geometrii. Dokładne zapytania i ograniczenia zapisano w `map-sources.json`. Grubość grafiki nie oznacza średnicy przewodu.
+
+Na otwartych polach rośnie modelowe zboże 0,8–1 m; maski wykluczają drogi i zabudowę. Pięć drzew przy /41 ma wysokości 11, 10,5, 10, 9 i 9 m oraz orientacyjne pozycje z ortofotomapy. Wymiary i założenia są w rejestrze, a geometria pól i pozycje drzew w `trzy-domy-3d/vegetation-data.json`.
