@@ -7,7 +7,7 @@ const html = await readFile(new URL('../trzy-domy-3d/index.html', import.meta.ur
 const imports = JSON.parse(html.split('<script type="importmap">')[1].split('</script>')[0]).imports;
 const threeSource = Buffer.from(imports.three.split(',')[1], 'base64').toString('utf8');
 const THREE = await import(moduleUrl(threeSource.replaceAll("'three/core'", `'${imports['three/core']}'`)));
-for (const file of process.argv.includes('--source-only') ? [] : ['solar.js', 'map-layers.js', 'vegetation.js']) {
+for (const file of process.argv.includes('--source-only') ? [] : ['solar.js', 'map-layers.js', 'vegetation.js', 'view-ui.js']) {
   assert.ok(html.includes((await readFile(new URL('../src/model/'+file, import.meta.url), 'utf8')).replaceAll('export ', '')), file+' embedded source');
 }
 const near = (actual, expected, tolerance, message) => assert.ok(Math.abs(actual - expected) <= tolerance, `${message}: ${actual} vs ${expected}`);

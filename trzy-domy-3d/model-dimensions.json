@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-16.7",
+  "modelVersion": "2026-11-16.8",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1451,10 +1451,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "b967ebf892991498e646774f5a004b96e913e516819401991d6f0ab74b634fa0",
-    "proceduralCodeSha256": "a28ccc06037a7774bd051fd58f64beade19caa89e49aac41c71921394ed20930",
+    "proceduralCodeSha256": "ac4bc94551c124940bc8916e95213a8b7b8848fcbdd3659cfc50f9c75d278b6b",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "426140b9e29c7b44a98258b31e23e939a3789b4b671d8536079a11c746c93047",
-    "runtimeSha256": "a29818f2b151783035ee032fdaedb16e684e68736d005746001d822f7bac0666"
+    "runtimeSha256": "d0a06b87ac746192131e0097ef4bdcd1d728fd4f7d473f89d7289f72685efa51"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -2614,7 +2614,7 @@
       "lengthAxis": "x"
     }
   ],
-  "geometryBaselineCommit": "19b7b7972d86d4b5b8457c51d2919d6832ada269",
+  "geometryBaselineCommit": "495d490698e841dfb7988a0bfa6a25fe94207715",
   "mapLayers": {
     "crs": "EPSG:2177",
     "origin2177": [
@@ -3249,7 +3249,11 @@
     ],
     "fencesPassable": true,
     "otherGardenObjectsPassable": true,
-    "orbitClipping": "Scene bounds fitted in camera depth without changing orthographic framing"
+    "orbitClipping": "Scene bounds fitted in camera depth without changing orthographic framing",
+    "sprintMultiplier": 2.2,
+    "sprintSpeedMPerSecond": 4.84,
+    "jumpApexM": 0.6,
+    "gravityMPerSecondSquared": 9.81
   },
   "northIndicator": {
     "centerLocalM": [

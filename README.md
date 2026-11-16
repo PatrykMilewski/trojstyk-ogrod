@@ -101,3 +101,10 @@ Zapisane lokalnie układy odwiedzających pozostają zachowane. Aby zobaczyć no
 Zakres głębokości kamery obejmuje scenę również po przybliżeniu do psa i późniejszym oddaleniu. Widoczne deski płotów nie rzucają oddzielnych cieni: odcinki płotu i otwarte furtki używają ciągłych paneli cienia. Suwak ciemności steruje intensywnością cieni w zakresie 0–100%. Daty przesileń i równonocy są obliczane w przybliżeniu dla wybranego roku, z zachowaniem wybranej godziny; „Dzisiaj” ustawia aktualny czas polski.
 
 Trzy drzewa przy /41 przesunięto bliżej siebie i domu na podstawie połączonej korony widocznej na ortofotomapie. Pnie są ukryte, więc pozycje są reprezentatywnymi założeniami, nie pomiarem. Wysokości 11 / 10,5 / 10 / 9 / 9 m i geometria pól zostały zachowane. Czerwona strzałka N o szerokości trzonu 0,44 m leży w środku skrzyżowania działki drogowej /133. Usunięto etykietę bramy /191.
+
+
+## Sterowanie i zegar 2026-11-16.8
+
+Skróty działek, psów, trójstyku, spaceru i pozostałych widoków znajdują się w menu „Widoki i sterowanie”. „Słońce i mapy” oraz „Reset widoku” pozostają osobno. Po aktywacji słońca u dołu wyświetla się bieżąca godzina symulacji, również po zamknięciu panelu; status w panelu mówi tylko, czy słońce jest nad/pod horyzontem. Usunięto górny baner i pionową adnotację wysokości /193. Dokumenty „Wymiary” i „Rzut 2D” oraz dotychczasowy opis są w dwóch sekcjach „Informacje”.
+
+Podczas spaceru Shift zwiększa prędkość z 2,2 do 4,84 m/s, a spacja rozpoczyna skok o wysokości 0,6 m. Po lądowaniu oczy wracają do 1,70 m. Przytrzymanie spacji nie powoduje kolejnych skoków, a skok w powietrzu jest zablokowany. Kolizje z domami pozostają aktywne podczas biegu i skoku. Na ekranach dotykowych dodano przyciski sprintu i skoku.

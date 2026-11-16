@@ -82,7 +82,8 @@ content += section('Symulacja słońca i mapy', '<p>Pozycja słońca dla wybrane
 content += section('Spacer i widoczność', table(['Parametr', 'Wartość'], [
     ['Wysokość oczu', number(registry['navigation']['walkEyeHeightM'])+' m'],
     ['Promień kolizji', number(registry['navigation']['walkCollisionRadiusM'])+' m'],
-    ['Prędkość chodu', number(registry['navigation']['walkSpeedMPerSecond'])+' m/s'],
+    ['Prędkość chodu / sprintu', number(registry['navigation']['walkSpeedMPerSecond'])+' / '+number(registry['navigation']['sprintSpeedMPerSecond'])+' m/s'],
+    ['Skok — maksymalne podniesienie oczu', number(registry['navigation']['jumpApexM'])+' m ponad poziom 1,70 m'],
     ['Przeszkody', 'Domy /190, /191, /193 i /41; przez płoty i wyposażenie można przechodzić'],
     ['Cienie płotu', 'Ciągły panel odpowiadający przebiegowi płotu, bez cieni pojedynczych desek'],
     ['Regulacja cieni', '0–100%; daty przesileń i równonocy dla wybranego roku, przybliżone']]))

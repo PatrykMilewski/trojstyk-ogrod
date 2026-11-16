@@ -55,6 +55,6 @@ test('rejects changing the fixed sedan dimensions', (t) => {
 });
 
 test('accepts UI copy changes that leave geometry untouched', (t) => {
-  const result = runCandidate(t, (html) => html.replace('Trzy domy + trójstyk', 'Trzy domy i wspólny ogród'));
+  const result = runCandidate(t, (html) => html.replace('O modelu i założeniach', 'Opis modelu'));
   assert.equal(result.status, 0, result.stderr);
 });

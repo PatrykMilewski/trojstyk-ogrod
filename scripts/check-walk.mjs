@@ -7,7 +7,7 @@ const core = Buffer.from(imports.three.split(',')[1], 'base64').toString('utf8')
 const THREE = await import(`data:text/javascript;base64,${Buffer.from(core).toString('base64')}`);
 const source = await readFile(new URL('../src/model/walk.js', import.meta.url), 'utf8');
 assert(html.includes(source.replaceAll('export ', '')), 'Walking source must match the published runtime');
-const { createOrbitDepthGuard, createWalkCollision, walkHouseFootprints } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+const { createOrbitDepthGuard, createWalkCollision, createWalkMotion, walkHouseFootprints } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
 const marker = 'const [source,garden,house,neighbors]=';
 const start = html.indexOf(marker) + marker.length;
 const [, , house, neighbors] = JSON.parse(html.slice(start, html.indexOf(';\nconst landscaping=', start)));
@@ -92,5 +92,61 @@ test('depth guard fixes Mops clipping without changing orthographic framing', ()
       const projected = new THREE.Vector3(...point).project(camera);
       assert.ok(projected.z > -1 && projected.z < 1);
     }
+  }
+});
+
+
+test('sprint uses 2.2 times walking speed with normalized diagonals and released controls', () => {
+  const motion = createWalkMotion(createWalkCollision([]));
+  motion.reset([0, 0]); motion.move(1, 0, 1);
+  assert.equal(motion.getState().position[1], 2.2);
+  motion.reset([0, 0]); motion.move(1, 0, 1, 0, true);
+  assert.ok(Math.abs(motion.getState().position[1] - 4.84) < 1e-12);
+  assert.equal(motion.getState().sprinting, true);
+  motion.clearSprint(); assert.equal(motion.getState().sprinting, false);
+  motion.reset([0, 0]); motion.move(1, 1, 1, 0, true);
+  assert.ok(Math.abs(Math.hypot(...motion.getState().position.slice(0, 2)) - 4.84) < 1e-12);
+  motion.move(0, 0, 1, 0, true); assert.equal(motion.getState().sprinting, false);
+  assert.throws(() => motion.move(1, 0, -1), TypeError);
+});
+
+test('jump reaches 0.6 m, rejects air jumps, and lands exactly at the base eye height', () => {
+  const motion = createWalkMotion(createWalkCollision([])), initial = motion.getState();
+  const apexTime = Math.sqrt(2 * initial.jumpHeightM / initial.gravityMps2);
+  assert.equal(motion.jump(), true); assert.equal(motion.jump(), false);
+  motion.move(0, 0, apexTime);
+  assert.ok(Math.abs(motion.getState().jumpHeight - .6) < 1e-12);
+  assert.equal(motion.getState().grounded, false); assert.equal(motion.jump(), false);
+  motion.move(0, 0, apexTime + .01);
+  assert.equal(motion.getState().position[2], 1.7);
+  assert.equal(motion.getState().jumpHeight, 0); assert.equal(motion.getState().grounded, true);
+  motion.move(0, 0, 10); assert.equal(motion.getState().position[2], 1.7);
+  assert.equal(motion.jump(), true); motion.reset([10, 20]);
+  assert.deepEqual(motion.getState().position, [10, 20, 1.7]); assert.equal(motion.getState().grounded, true);
+});
+
+test('sprint and ballistic jump are independent of frame size in open ground', () => {
+  function simulate(steps) {
+    const motion = createWalkMotion(createWalkCollision([])); motion.reset([20, 20]); motion.jump();
+    for (let i = 0; i < steps; i++) motion.move(1, 1, .45 / steps, .7, true);
+    return motion.getState();
+  }
+  const one = simulate(1);
+  for (const steps of [2, 30, 144]) {
+    const sampled = simulate(steps);
+    sampled.position.forEach((value, index) => assert.ok(Math.abs(value - one.position[index]) < 1e-10));
+    assert.equal(sampled.grounded, false); assert.ok(sampled.jumpHeight > 0 && sampled.jumpHeight <= .6);
+  }
+});
+
+test('jumping and sprinting never bypass any real house footprint', () => {
+  for (const item of footprints) {
+    const collision = createWalkCollision([item]), motion = createWalkMotion(collision);
+    const xs = item.ring.map(point => point[0]), ys = item.ring.map(point => point[1]);
+    const start = [Math.min(...xs) - 1, (Math.min(...ys) + Math.max(...ys)) / 2];
+    motion.reset(start); motion.jump();
+    const end = motion.move(1, 0, .35, Math.PI / 2, true);
+    assert.ok(end[2] > 1.7); assert.equal(collision.blocked(end), false);
+    assert.equal(collision.pathBlocked(start, end), false);
   }
 });

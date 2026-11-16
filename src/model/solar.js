@@ -271,8 +271,7 @@ function syncSolarControls(controls, state) {
   controls['speed-label'].textContent = `1 h / ${state.secondsPerHour} s`;
   controls.play.textContent = state.playing ? '❚❚ Pauza' : '▶ Odtwórz';
   controls.play.setAttribute('aria-pressed', String(state.playing));
-  controls.status.textContent = `${state.time}:${state.seconds} ${state.zone} · azymut ${state.azimuthDeg.toFixed(1)}° · wysokość ${state.elevationDeg.toFixed(1)}°`
-    + (state.daylight ? (state.elevationDeg < 5 ? ' · niskie słońce: cień orientacyjny' : '') : ' · słońce pod horyzontem: brak bezpośredniego światła');
+  controls.status.textContent = state.daylight ? 'Słońce nad horyzontem' : 'Słońce pod horyzontem';
 }
 
 function applySolarLight({ THREE, sun, bounds, renderer, intensity }, instant) {
@@ -303,7 +302,7 @@ export function setupSolar({ THREE, scene, sun, renderer, requestDraw, container
     sync(); requestDraw();
     return getState();
   }
-  function activate() { active = true; onActivate(); return getState(); }
+  function activate() { active = true; onActivate(); requestDraw(); return getState(); }
   function setLocal(date, time) {
     activate();
     const instant = warsawInstant(date, time);
@@ -326,7 +325,7 @@ export function setupSolar({ THREE, scene, sun, renderer, requestDraw, container
   playback = createSolarPlayback({ ...playbackClock, apply, onChange: sync });
   const api = { activate, setLocal, setPreset, setShadowStrength, getState, pause: playback.pause,
     play() { activate(); playback.play(); }, setPlaybackSpeed: playback.setPlaybackSpeed,
-    deactivate() { playback.pause(); active = false; },
+    deactivate() { playback.pause(); active = false; requestDraw(); },
     dispose() { playback.dispose(); controls?.dispose(); } };
   if (container) controls = solarControls(container, api);
   const initial = warsawInstant('2026-07-20', '15:50');
