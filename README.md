@@ -18,7 +18,7 @@ Interaktywny rzut wspólnej przestrzeni działek 775/193, 775/190 i 775/191 w Ch
 
 Zmiany zapisują się automatycznie **tylko w lokalnej pamięci przeglądarki**. Nie zmieniają strony ani układów innych osób. Przycisk „Zapisz układ” pobiera JSON — można przesłać go komuś i użyć „Wczytaj”. Nie jest to edycja współdzielona w czasie rzeczywistym. Wyczyszczenie danych przeglądarki usuwa zapis lokalny, dlatego warto pobierać kopie JSON.
 
-Domyślny wariant pochodzi z pliku `moj-ogrod (11).json`. „Przywróć układ startowy” przywraca ten wariant. Podkład działek jest stały; konfigurator nie pobiera innych działek po adresie.
+Domyślny wariant pochodzi z pliku `moj-ogrod (1).json`. „Przywróć układ startowy” przywraca ten wariant. Podkład działek jest stały; konfigurator nie pobiera innych działek po adresie.
 
 Spacja + przeciągnięcie przesuwa widok, kółko myszy zmienia przybliżenie. R / Shift+R obraca wybrany element o 15°. Przycisk „Wymiary elementów” pokazuje rozmiary na mapie i w tabeli, osobno dla sauny i podestu.
 
@@ -86,3 +86,9 @@ Tryb cieni automatycznie wybiera „Bez podkładu”. Suwaki dnia roku i godziny
 Media obejmują 150 m; linie mają graficzne pogrubienie i jasną obwódkę. Wodę odzyskano z urzędowego WMS EPSG:2180 i przeliczono do EPSG:2177, bez dopasowywania geometrii. Dokładne zapytania i ograniczenia zapisano w `map-sources.json`. Grubość grafiki nie oznacza średnicy przewodu.
 
 Na otwartych polach rośnie modelowe zboże 0,8–1 m; maski wykluczają drogi i zabudowę. Pięć drzew przy /41 ma wysokości 11, 10,5, 10, 9 i 9 m oraz orientacyjne pozycje z ortofotomapy. Wymiary i założenia są w rejestrze, a geometria pól i pozycje drzew w `trzy-domy-3d/vegetation-data.json`.
+
+## Układ wspólnego ogrodu 2026-11-16.6
+
+Plik `moj-ogrod (1).json` zapisano bez zmian w `src/default-layout.json` i przeniesiono do modelu 3D z tym samym obrysem, wyposażeniem, częściami zestawów, furtkami i chodnikiem. Powierzchnia wspólna wynosi 156,189 m². Zachowano ostrzeżenie o piasku poza płotem (około 0,233 m²); piasek nie jest przycinany. Dojścia prywatne połączono z nowymi pozycjami furtek, bez przesuwania domów. Zboże ma ciemniejszą, bardziej zieloną barwę.
+
+Zapisane lokalnie układy odwiedzających pozostają zachowane. Aby zobaczyć nowy domyślny układ w dotychczas używanej przeglądarce, wybierz „Przywróć układ startowy”. Rejestr wymiarów kontroluje odcisk źródłowego pliku, aby konfigurator i model 3D nie rozchodziły się przy kolejnych aktualizacjach.

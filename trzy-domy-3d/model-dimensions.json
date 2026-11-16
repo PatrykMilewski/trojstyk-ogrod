@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-16.5",
+  "modelVersion": "2026-11-16.6",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -23,7 +23,8 @@
     "Publiczne WMS wody i prądu pokazano w promieniu 150 m od rzeczywistego styku działek. Brak linii nie dowodzi braku sieci.",
     "Zboże: 0,8–1 m wysokości, na polach wyznaczonych orientacyjnie z ortofotomapy; bez dróg i zabudowy. Nie oznacza rzeczywistego stanu upraw.",
     "Pięć drzew przy /41: 11, 10,5, 10, 9 i 9 m. Wysokości przyjęte według użytkownika; pozycje i korony orientacyjne na podstawie zdjęcia lotniczego.",
-    "Odtwarzanie słońca domyślnie 1 godzina na 3 sekundy, regulacja 1–15 sekund. Rozpoczęcie sterowania cieniem przełącza podkład na brak mapy."
+    "Odtwarzanie słońca domyślnie 1 godzina na 3 sekundy, regulacja 1–15 sekund. Rozpoczęcie sterowania cieniem przełącza podkład na brak mapy.",
+    "Układ wspólnego ogrodu zsynchronizowany z dokładnym plikiem moj-ogrod (1).json. Zachowano ostrzeżenie o piasku poza płotem (około 0,23 m²); geometria nie jest automatycznie przycinana."
   ],
   "sources": {
     "catalogue-193": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
@@ -1446,14 +1447,14 @@
       ]
     }
   },
-  "sharedAreaM2": 148.32612022495755,
+  "sharedAreaM2": 156.18903025919093,
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
-    "inputsSha256": "d66e4e1695d8ff9a870d2990af96c0eec43148a8ab32be91741ddd9706d6e962",
+    "inputsSha256": "b967ebf892991498e646774f5a004b96e913e516819401991d6f0ab74b634fa0",
     "proceduralCodeSha256": "78958bc957689eefa02843f0b9cc71e4af983e2f8ba2c8f0f84cfa2048142b5d",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
-    "planSha256": "4899af2a47ba217c59d63bea9630fa1aee1ee3f65d3aa0e298388ce981bedda8",
-    "runtimeSha256": "8b8521e7d61759f876927cdfe61abee13461744694ce568a6541af104f241dcd"
+    "planSha256": "426140b9e29c7b44a98258b31e23e939a3789b4b671d8536079a11c746c93047",
+    "runtimeSha256": "7a95e5488d24fbeae8dfb859493d1ef5a1c955bc04908555f2e1d3fb27a93934"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -2613,7 +2614,7 @@
       "lengthAxis": "x"
     }
   ],
-  "geometryBaselineCommit": "823eaec8b743b9546d5e507e31f486045e54e1e0",
+  "geometryBaselineCommit": "4827cdbccc4db320d936cbc2e234fe2d59406420",
   "mapLayers": {
     "crs": "EPSG:2177",
     "origin2177": [
@@ -2753,6 +2754,482 @@
     ],
     "positionsApproximate": true,
     "treeHeightsUserPrescribed": true,
-    "fieldCount": 6
+    "fieldCount": 6,
+    "cropColors": {
+      "background": "#73834d",
+      "stroke": "#647744",
+      "accent": "#8e9c62",
+      "baseMultiplier": "#a2b17c",
+      "grain": "#899c58"
+    }
+  },
+  "sharedLayout": {
+    "sourceFile": "src/default-layout.json",
+    "sourceName": "moj-ogrod (1).json",
+    "sha256": "ad3960c3b57252bca8d1f7f7d38713f36cfaa130e82753ae2948f29171d6c973",
+    "state": {
+      "version": 1,
+      "fence": [
+        [
+          -0.6,
+          -5.8
+        ],
+        [
+          9.417679115410845,
+          -5.853680631539312
+        ],
+        [
+          9.417966866008232,
+          -0.00034325251795467226
+        ],
+        [
+          7.3,
+          2.5
+        ],
+        [
+          5.4,
+          4.9
+        ],
+        [
+          4.3,
+          6.6
+        ],
+        [
+          0.0015282460047515286,
+          6.618896307969319
+        ],
+        [
+          0.0017035941795902729,
+          7.378336465797853
+        ],
+        [
+          -3.7,
+          7.4
+        ],
+        [
+          -5.8,
+          3.2
+        ],
+        [
+          -5.8012199044030694,
+          5.399657869115701e-16
+        ],
+        [
+          -4.4,
+          -1.5
+        ]
+      ],
+      "objects": [
+        {
+          "id": "item-2",
+          "kind": "piasek",
+          "name": "Piasek",
+          "w": 10,
+          "h": 6.5,
+          "color": "#eee0af",
+          "category": "podłoże",
+          "x": 4.4,
+          "y": -2.6,
+          "angle": 0,
+          "locked": false,
+          "shape": "rounded",
+          "radius": 1.4,
+          "corners": [
+            true,
+            true,
+            false,
+            false
+          ]
+        },
+        {
+          "id": "item-4",
+          "kind": "sauna",
+          "name": "Sauna",
+          "w": 3,
+          "h": 2.4,
+          "color": "#b88b61",
+          "category": "budynek",
+          "x": 1.5,
+          "y": 5.4,
+          "angle": -180,
+          "locked": false,
+          "shape": "rect",
+          "parts": [
+            {
+              "id": "item-3",
+              "kind": "podest",
+              "name": "Podest",
+              "w": 1.4,
+              "h": 2.4,
+              "color": "#e4c59c",
+              "category": "podłoże",
+              "x": -2.2,
+              "y": 0,
+              "angle": 0,
+              "locked": false,
+              "shape": "rect"
+            }
+          ]
+        },
+        {
+          "id": "item-5",
+          "kind": "balia",
+          "name": "Balia",
+          "w": 2.2,
+          "h": 2.2,
+          "color": "#83b6c2",
+          "category": "woda",
+          "shape": "circle",
+          "x": -1.8,
+          "y": 5.6,
+          "angle": -50,
+          "locked": false,
+          "parts": [
+            {
+              "id": "item-1",
+              "kind": "baza",
+              "name": "Podbudowa balii",
+              "w": 2.8,
+              "h": 2.8,
+              "color": "#c9cbbf",
+              "category": "podłoże",
+              "shape": "circle",
+              "x": 0,
+              "y": 0,
+              "angle": 0,
+              "locked": false
+            }
+          ]
+        },
+        {
+          "id": "item-6",
+          "kind": "drabinka",
+          "name": "Drabinka",
+          "w": 0.7,
+          "h": 3,
+          "color": "#ad926e",
+          "category": "urządzenie",
+          "x": 8.2,
+          "y": -2.5,
+          "angle": 0,
+          "locked": false,
+          "shape": "rect"
+        },
+        {
+          "id": "item-7",
+          "kind": "drazki",
+          "name": "Drążki",
+          "w": 2,
+          "h": 1.2,
+          "color": "#6f8a78",
+          "category": "urządzenie",
+          "x": 5.7,
+          "y": -0.8,
+          "angle": 0,
+          "locked": false,
+          "shape": "rect"
+        },
+        {
+          "id": "item-8",
+          "kind": "siatka",
+          "name": "Siatka",
+          "w": 1.5,
+          "h": 1.5,
+          "color": "#b6a98a",
+          "category": "urządzenie",
+          "x": 4.4,
+          "y": -3.3,
+          "angle": 0,
+          "locked": false,
+          "shape": "rect"
+        },
+        {
+          "id": "item-9",
+          "kind": "scianka",
+          "name": "Miniścianka",
+          "w": 2,
+          "h": 0.6,
+          "color": "#bf9673",
+          "category": "urządzenie",
+          "x": 6.6,
+          "y": -5.1,
+          "angle": 0,
+          "locked": false,
+          "shape": "rect"
+        },
+        {
+          "id": "item-10",
+          "kind": "hustawka",
+          "name": "Huśtawka",
+          "w": 2.2,
+          "h": 2,
+          "color": "#ba936b",
+          "category": "urządzenie",
+          "safetyW": 3,
+          "safetyH": 6,
+          "x": 1.5,
+          "y": -2.7,
+          "angle": -180,
+          "locked": false,
+          "shape": "rect"
+        },
+        {
+          "id": "dom-190",
+          "kind": "dom",
+          "name": "Dom /190",
+          "x": -20.690439070407542,
+          "y": 15.063540628623832,
+          "w": 12.273910956261645,
+          "h": 14.930499295860127,
+          "angle": 0,
+          "locked": true,
+          "shape": "polygon",
+          "category": "dom",
+          "color": "#fffdf8",
+          "vertices": [
+            [
+              -0.4925108843730547,
+              0.49610920514741663
+            ],
+            [
+              0.24265748580915003,
+              0.5
+            ],
+            [
+              0.24374631861269783,
+              0.06206475018731028
+            ],
+            [
+              0.4986992240804256,
+              0.09364065354837868
+            ],
+            [
+              0.5,
+              -0.496017193106984
+            ],
+            [
+              -0.41998740593602096,
+              -0.5000000000000001
+            ],
+            [
+              -0.4212275106431288,
+              0.012073294162493368
+            ],
+            [
+              -0.5,
+              0.051433416144169776
+            ]
+          ]
+        },
+        {
+          "id": "dom-191",
+          "kind": "dom",
+          "name": "Dom /191",
+          "x": 12.600000000000001,
+          "y": 19.85,
+          "w": 15.000000000000002,
+          "h": 10.500000000000002,
+          "angle": 0,
+          "locked": true,
+          "shape": "polygon",
+          "category": "dom",
+          "color": "#fffdf8",
+          "vertices": [
+            [
+              0.49999999999999994,
+              -0.5000000000000001
+            ],
+            [
+              0.49999999999999994,
+              0.4999999999999999
+            ],
+            [
+              -0.5000000000000001,
+              0.4999999999999999
+            ],
+            [
+              -0.5000000000000001,
+              -0.5000000000000001
+            ]
+          ]
+        },
+        {
+          "id": "dom-193",
+          "kind": "dom",
+          "name": "Dom /193",
+          "x": -19.813030069254797,
+          "y": -11.390708436564601,
+          "w": 18.20613354943277,
+          "h": 14.781416325176847,
+          "angle": 0,
+          "locked": true,
+          "shape": "polygon",
+          "category": "dom",
+          "color": "#fffdf8",
+          "vertices": [
+            [
+              -0.4957558030534352,
+              0.49999999999999994
+            ],
+            [
+              -0.5,
+              0.033226913146843264
+            ],
+            [
+              -0.2687737490148564,
+              0.030037357328451586
+            ],
+            [
+              -0.2735346308118396,
+              -0.49356027922951495
+            ],
+            [
+              0.1933117192159449,
+              -0.5000000000000001
+            ],
+            [
+              0.19708843938734877,
+              -0.08463960099385108
+            ],
+            [
+              0.494771641393041,
+              -0.08874587006025934
+            ],
+            [
+              0.4999999999999999,
+              0.4862644542985527
+            ]
+          ]
+        },
+        {
+          "id": "obj-44df8e1f-d905-4a92-a4cc-12a31a2ab48e",
+          "kind": "trampolina",
+          "name": "Trampolina",
+          "w": 2.2,
+          "h": 2.2,
+          "color": "#82a59a",
+          "category": "urządzenie",
+          "x": -4,
+          "y": 1.1,
+          "angle": 0,
+          "locked": false,
+          "shape": "circle"
+        }
+      ],
+      "gates": [
+        {
+          "id": "brama-193",
+          "name": "Furtka /193",
+          "edge": 11,
+          "t": 0.4213949564677749,
+          "width": 1.2,
+          "open": true,
+          "kind": "wicket"
+        },
+        {
+          "id": "brama-190",
+          "name": "Furtka /190",
+          "edge": 8,
+          "t": 0.5,
+          "width": 1.2,
+          "open": true,
+          "kind": "wicket"
+        },
+        {
+          "id": "brama-191",
+          "name": "Furtka /191",
+          "edge": 3,
+          "t": 0.5,
+          "width": 1.2,
+          "open": true,
+          "kind": "wicket"
+        }
+      ],
+      "grouped": true,
+      "walkway": {
+        "x": -1,
+        "y": 1.9,
+        "width": 1.8,
+        "gateIds": [
+          "brama-193",
+          "brama-190",
+          "brama-191"
+        ],
+        "bends": [
+          {
+            "gateId": "brama-191",
+            "dx": 1.0750000000000002,
+            "dy": -0.44999999999999973
+          },
+          {
+            "gateId": "brama-193",
+            "dx": 0.046749202314889216,
+            "dy": 0.13076277771451428
+          },
+          {
+            "gateId": "brama-190",
+            "dx": -0.625,
+            "dy": 0.04999999999999982
+          }
+        ]
+      }
+    },
+    "rotation": [
+      [
+        0.7326670089036766,
+        0.680587286146413
+      ],
+      [
+        -0.6805872861464128,
+        0.7326670089036768
+      ]
+    ],
+    "translation": [
+      17.83214945811778,
+      1.5048668971285242
+    ],
+    "sourceMetrics": {
+      "total": 156.18903025919101,
+      "shares": [
+        {
+          "id": "190",
+          "area": 38.478095401990196,
+          "parcelArea": 1001.2982500069418
+        },
+        {
+          "id": "191",
+          "area": 44.4191572580098,
+          "parcelArea": 999.8940500379285
+        },
+        {
+          "id": "193",
+          "area": 73.292000645,
+          "parcelArea": 1145.3712000470011
+        }
+      ],
+      "outside": [],
+      "occupied": 84.42462436198409,
+      "walkwayArea": 31.619017988514745,
+      "walkwayOverlap": 0,
+      "free": 71.76440589720693,
+      "perimeter": 48.680455192433826,
+      "gateLength": 3.5999999999999996,
+      "fenceLength": 45.080455192433824,
+      "violations": [
+        "Elementy poza wspólną częścią: Piasek."
+      ]
+    },
+    "outsideSharedM2": {
+      "item-2": 0.2332703348523997,
+      "item-4": 0.007727272727272845,
+      "item-5": 0.0,
+      "item-6": 0.0,
+      "item-7": 0.0,
+      "item-8": 0.0,
+      "item-9": 0.0,
+      "item-10": 0.0,
+      "obj-44df8e1f-d905-4a92-a4cc-12a31a2ab48e": 0.0
+    },
+    "fullSandGeometryPreserved": true
   }
 }

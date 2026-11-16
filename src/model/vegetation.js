@@ -38,9 +38,9 @@ function cropTexture(THREE) {
   const canvas = document.createElement('canvas');
   canvas.width = 128; canvas.height = 128;
   const ctx = canvas.getContext('2d'), random = seeded(173);
-  ctx.fillStyle = '#a7a45f'; ctx.fillRect(0, 0, 128, 128);
+  ctx.fillStyle = '#73834d'; ctx.fillRect(0, 0, 128, 128);
   for (let i = 0; i < 1800; i++) {
-    ctx.strokeStyle = i % 3 ? '#999953' : '#c4ba78';
+    ctx.strokeStyle = i % 3 ? '#647744' : '#8e9c62';
     const x = random() * 128, y = random() * 128;
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 2, y + 5); ctx.stroke();
   }
@@ -52,7 +52,7 @@ function cropTexture(THREE) {
 
 function addFieldBases(THREE, group, data) {
   const texture = cropTexture(THREE);
-  const material = new THREE.MeshStandardMaterial({ color: 0xd0cf9b, map: texture, roughness: 1 });
+  const material = new THREE.MeshStandardMaterial({ color: 0xa2b17c, map: texture, roughness: 1 });
   for (const field of data.fields) {
     const rings = field.geometry.coordinates;
     const shape = new THREE.Shape(rings[0].map(p => new THREE.Vector2(...p)));
@@ -85,7 +85,7 @@ function grainGeometry(THREE) {
 
 function addGrain(THREE, group, data) {
   const points = cropPoints(data), dummy = new THREE.Object3D();
-  const material = new THREE.MeshStandardMaterial({color: 0xb8b170, roughness: 1, side: THREE.DoubleSide});
+  const material = new THREE.MeshStandardMaterial({color: 0x899c58, roughness: 1, side: THREE.DoubleSide});
   const mesh = new THREE.InstancedMesh(grainGeometry(THREE), material, points.length);
   points.forEach(([x,y,h,angle],i) => {
     dummy.position.set(x,y,data.crop.baseZ); dummy.rotation.set(0,0,angle);

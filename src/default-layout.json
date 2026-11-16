@@ -2,43 +2,39 @@
   "version": 1,
   "fence": [
     [
-      -1.4,
-      -4.1
+      -0.6,
+      -5.8
     ],
     [
-      0.1,
-      -6.2
-    ],
-    [
-      9.417663797195608,
-      -6.165279226438209
+      9.417679115410845,
+      -5.853680631539312
     ],
     [
       9.417966866008232,
       -0.00034325251795467226
     ],
     [
-      7.4,
-      1.9
+      7.3,
+      2.5
     ],
     [
-      5.6,
-      4.8
+      5.4,
+      4.9
     ],
     [
-      4.4,
-      6.1
+      4.3,
+      6.6
     ],
     [
-      0.0014141173841780287,
-      6.1246005578093925
+      0.0015282460047515286,
+      6.618896307969319
     ],
     [
       0.0017035941795902729,
       7.378336465797853
     ],
     [
-      -3.9,
+      -3.7,
       7.4
     ],
     [
@@ -46,12 +42,12 @@
       3.2
     ],
     [
-      -5.71163173397569,
-      5.316271016453781e-16
+      -5.8012199044030694,
+      5.399657869115701e-16
     ],
     [
-      -4.2,
-      -1.2
+      -4.4,
+      -1.5
     ]
   ],
   "objects": [
@@ -59,18 +55,18 @@
       "id": "item-2",
       "kind": "piasek",
       "name": "Piasek",
-      "w": 9.3,
-      "h": 6.2,
+      "w": 10,
+      "h": 6.5,
       "color": "#eee0af",
       "category": "podłoże",
-      "x": 4.8,
-      "y": -3.1,
+      "x": 4.4,
+      "y": -2.6,
       "angle": 0,
       "locked": false,
       "shape": "rounded",
       "radius": 1.4,
       "corners": [
-        false,
+        true,
         true,
         false,
         false
@@ -85,7 +81,7 @@
       "color": "#b88b61",
       "category": "budynek",
       "x": 1.5,
-      "y": 4.9,
+      "y": 5.4,
       "angle": -180,
       "locked": false,
       "shape": "rect",
@@ -94,11 +90,11 @@
           "id": "item-3",
           "kind": "podest",
           "name": "Podest",
-          "w": 1.2,
+          "w": 1.4,
           "h": 2.4,
           "color": "#e4c59c",
           "category": "podłoże",
-          "x": -2.1,
+          "x": -2.2,
           "y": 0,
           "angle": 0,
           "locked": false,
@@ -144,8 +140,8 @@
       "h": 3,
       "color": "#ad926e",
       "category": "urządzenie",
-      "x": 4.6,
-      "y": -3.1,
+      "x": 8.2,
+      "y": -2.5,
       "angle": 0,
       "locked": false,
       "shape": "rect"
@@ -158,8 +154,8 @@
       "h": 1.2,
       "color": "#6f8a78",
       "category": "urządzenie",
-      "x": 6.8,
-      "y": -4.8,
+      "x": 5.7,
+      "y": -0.8,
       "angle": 0,
       "locked": false,
       "shape": "rect"
@@ -172,8 +168,8 @@
       "h": 1.5,
       "color": "#b6a98a",
       "category": "urządzenie",
-      "x": 8.4,
-      "y": -2.8,
+      "x": 4.4,
+      "y": -3.3,
       "angle": 0,
       "locked": false,
       "shape": "rect"
@@ -187,7 +183,7 @@
       "color": "#bf9673",
       "category": "urządzenie",
       "x": 6.6,
-      "y": -1.2,
+      "y": -5.1,
       "angle": 0,
       "locked": false,
       "shape": "rect"
@@ -202,8 +198,8 @@
       "category": "urządzenie",
       "safetyW": 3,
       "safetyH": 6,
-      "x": 2.5,
-      "y": -3.1,
+      "x": 1.5,
+      "y": -2.7,
       "angle": -180,
       "locked": false,
       "shape": "rect"
@@ -345,7 +341,7 @@
       "color": "#82a59a",
       "category": "urządzenie",
       "x": -4,
-      "y": 0.9,
+      "y": 1.1,
       "angle": 0,
       "locked": false,
       "shape": "circle"
@@ -355,8 +351,8 @@
     {
       "id": "brama-193",
       "name": "Furtka /193",
-      "edge": 12,
-      "t": 0.5029552706228277,
+      "edge": 11,
+      "t": 0.4213949564677749,
       "width": 1.2,
       "open": true,
       "kind": "wicket"
@@ -364,8 +360,8 @@
     {
       "id": "brama-190",
       "name": "Furtka /190",
-      "edge": 9,
-      "t": 0.4999999999999999,
+      "edge": 8,
+      "t": 0.5,
       "width": 1.2,
       "open": true,
       "kind": "wicket"
@@ -373,8 +369,8 @@
     {
       "id": "brama-191",
       "name": "Furtka /191",
-      "edge": 4,
-      "t": 0.49999999999999994,
+      "edge": 3,
+      "t": 0.5,
       "width": 1.2,
       "open": true,
       "kind": "wicket"
@@ -382,8 +378,8 @@
   ],
   "grouped": true,
   "walkway": {
-    "x": -0.3,
-    "y": 1.7,
+    "x": -1,
+    "y": 1.9,
     "width": 1.8,
     "gateIds": [
       "brama-193",

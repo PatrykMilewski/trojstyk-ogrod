@@ -78,6 +78,10 @@ function checkDimensions(model, registry) {
   assert.equal(model.inputsHash, registry.integrity.inputsSha256, 'Model data changed: review dimensions and placements before updating the registry');
   assert.equal(model.codeHash, registry.integrity.proceduralCodeSha256, 'Procedural geometry changed: measure and review before updating the registry');
   const [, garden, icon, neighbors] = model.data;
+  assert.equal(hash(readFileSync(resolve(root, registry.sharedLayout.sourceFile))), registry.sharedLayout.sha256, '2D default changed without synchronizing 3D');
+  assert.deepEqual(JSON.parse(readFileSync(resolve(root, registry.sharedLayout.sourceFile), 'utf8')), registry.sharedLayout.state);
+  assert.equal(garden.metadata.areasM2.shared, registry.sharedAreaM2);
+  assert.deepEqual(garden.metadata.sourceMetrics, registry.sharedLayout.sourceMetrics);
   checkContext(neighbors, registry);
   checkVehicles(neighbors, registry);
   assert.equal(model.runtimeHash, registry.integrity.runtimeSha256, 'Simulation or map runtime changed without review');

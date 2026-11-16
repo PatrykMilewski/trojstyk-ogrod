@@ -49,6 +49,13 @@ content += section('Dodatkowe działki i droga /133', '<p>/192 pozostaje pusta. 
     ['Działka', 'Powierzchnia geometrii (m²)', 'Długości boków (m)'], [
         ['/'+p['parcel'], number(p['areaM2']), '; '.join(number(v) for v in p['edgeLengthsM'])]
         for p in [*registry['contextParcels'], registry['road']]]))
+content += section('Aktualny układ wspólnego ogrodu', '<p>Źródło: dokładny plik moj-ogrod (1).json, wspólny dla konfiguratora 2D i modelu 3D. Zachowano około 0,23 m² piasku poza płotem; układ nie jest automatycznie poprawiany.</p>' + table(
+    ['Parametr', 'Wartość'], [
+        ['Powierzchnia wspólna (m²)', number(registry['sharedAreaM2'])],
+        ['Chodnik wspólny (m²)', number(registry['sharedLayout']['sourceMetrics']['walkwayArea'])],
+        ['Długość stałego płotu (m)', number(registry['sharedLayout']['sourceMetrics']['fenceLength'])],
+        ['Furtki', '3 × 1,2 m'],
+        ['Piasek — gabaryt przed zaokrągleniem (m)', '10 × 6,5']]))
 content += section('Wyposażenie — rzut i pełny model', '<p>Rzut nie obejmuje wystających detali. Gabaryt 3D obejmuje np. parapet, uchwyty i siatkę; jest mierzony w osiach obiektu, po usunięciu jego obrotu na działce.</p>' + table(
     ['Obiekt / działka', 'Rzut W × D (m)', 'Pełny model W × D × H (m)', 'Podstawa wymiaru'], [
         [f"{o['name']} · {'trójstyk' if o['parcel'] == 'shared' else '/' + o['parcel']}", dimensions(o['planFootprintM']), dimensions(o['boundsLocalM']['size']), o['source']]
