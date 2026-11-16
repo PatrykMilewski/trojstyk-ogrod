@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-16.3",
+  "modelVersion": "2026-11-16.4",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -15,7 +15,12 @@
     "Jeżeli opis nie podaje inaczej, wysokość wyposażenia jest liczona od podstawy obiektu (baseElevationM), a nie od globalnego poziomu Z=0.",
     "Pomiary obwiedni zapisano do 0,000001 m wyłącznie dla kontroli numerycznej modelu, nie jako dokładność projektu wykonawczego.",
     "Nie wolno automatycznie nadpisywać rejestru podczas budowania. Zmiana skali, geometrii lub ustawienia wymaga porównania, ponownego pomiaru i jawnej zmiany wersji.",
-    "Kierunek góra działki to +Y schematu; północ mapy to +Y EPSG:2177. Przesunięcie190 to w osiach mapy około2.961m na wschód i0.075m na północ."
+    "Kierunek góra działki to +Y schematu; północ mapy to +Y EPSG:2177. Przesunięcie190 to w osiach mapy około2.961m na wschód i0.075m na północ.",
+    "Na każdym podjeździe jest dokładnie jeden samochód; dwa samochody na drodze /133.",
+    "Elewacja /41 skierowana ku /191: jedno lewe górne okno, 1,6 × 1,3 m, parapet 3,15 m.",
+    "Symulacja słońca: czas Europe/Warsaw, współrzędne użytkownika i poprawka północy siatkowej EPSG:2177. Teren modelu pozostaje płaski; przeszkody spoza modelu i refrakcja pominięte.",
+    "Mapy Geoportalu są nieruchomymi podkładami we właściwym układzie współrzędnych; cienie na ortofotomapie nie są cieniami symulowanymi. NMT pokazano barwami, bez deformacji sceny.",
+    "Publiczne WMS wody i prądu pokazano w promieniu 100 m od rzeczywistego styku działek. Brak linii nie dowodzi braku sieci."
   ],
   "sources": {
     "catalogue-193": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
@@ -24,7 +29,11 @@
     "shared-plan": "https://patrykmilewski.github.io/trojstyk-ogrod/",
     "model": "Uzgodniona koncepcja 3D: pomiar geometrii i parametry renderera, 16.11.2026.",
     "county-egib": "https://kartuski-wms.webewid.pl/iip/ows?service=WFS&request=GetCapabilities",
-    "uldk": "https://uldk.gugik.gov.pl/opis.html"
+    "uldk": "https://uldk.gugik.gov.pl/opis.html",
+    "ortofotomapa": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528383.77%2C6033436.61%2C6528743.77%2C6033796.61&WIDTH=2048&HEIGHT=2048&FORMAT=image%2Fjpeg",
+    "NMT": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WCS/DigitalTerrainModel?SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&FORMAT=image%2Fx-aaigrid&COVERAGE=DTM_PL-EVRF2007-NH&BBOX=463514.0%2C729730.0%2C463880.0%2C730095.0&CRS=EPSG%3A2180&RESPONSE_CRS=EPSG%3A2180&RESX=1&RESY=1",
+    "media": "https://kartuski-wms.webewid.pl/iip/ows",
+    "slonce": "https://gml.noaa.gov/grad/solcalc/calcdetails.html"
   },
   "houses": [
     {
@@ -1437,10 +1446,11 @@
   "sharedAreaM2": 148.32612022495755,
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
-    "inputsSha256": "df334b840f8db3482eccd949fedb599b2b935f7d69de9ae83ed8b5a14aa874fd",
+    "inputsSha256": "d66e4e1695d8ff9a870d2990af96c0eec43148a8ab32be91741ddd9706d6e962",
     "proceduralCodeSha256": "750aa52af7d97abed5c932472ead50072dcdbc1b68c111715bbb93aaa9ec29c4",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
-    "planSha256": "4899af2a47ba217c59d63bea9630fa1aee1ee3f65d3aa0e298388ce981bedda8"
+    "planSha256": "4899af2a47ba217c59d63bea9630fa1aee1ee3f65d3aa0e298388ce981bedda8",
+    "runtimeSha256": "4d07c58e3baa54e69881aa20a1febd9b7b91013ca5c6284b9b5b165eb23f4a81"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1724,7 +1734,15 @@
       "chimneyTopM": 6.05,
       "geometryAccuracy": "Coordinates served to 0.01 m; source positional accuracy not provided. This is data precision, not survey accuracy.",
       "appearanceBasis": "Two supplied photos: light horizontal siding, gray plinth, flat roof and dark balcony railings. Facade openings, balconies and chimneys are approximate.",
-      "heightBasis": "User-confirmed fallback: ground floor + first floor, 2.6m each. Roof/parapet/chimneys are separate model assumptions."
+      "heightBasis": "User-confirmed fallback: ground floor + first floor, 2.6m each. Roof/parapet/chimneys are separate model assumptions.",
+      "facadeToward191": {
+        "edgeIndex": 1,
+        "windowCount": 1,
+        "position": "upper-left viewed from outside",
+        "widthM": 1.6,
+        "heightM": 1.3,
+        "sillM": 3.15
+      }
     }
   ],
   "road": {
@@ -2263,44 +2281,6 @@
       }
     },
     {
-      "id": "car-190-1",
-      "kind": "sedan",
-      "position": [
-        5.244051571742828,
-        29.469449063150385,
-        0.055
-      ],
-      "angleRad": -0.7598634395529511,
-      "location": "driveway-190",
-      "footprint": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              2.939551609266469,
-              30.38318038194517
-            ],
-            [
-              6.274229992917939,
-              27.214597090060987
-            ],
-            [
-              7.548551534219187,
-              28.5557177443556
-            ],
-            [
-              4.213873150567717,
-              31.724301036239783
-            ],
-            [
-              2.939551609266469,
-              30.38318038194517
-            ]
-          ]
-        ]
-      }
-    },
-    {
       "id": "car-191-0",
       "kind": "sedan",
       "position": [
@@ -2339,44 +2319,6 @@
       }
     },
     {
-      "id": "car-191-1",
-      "kind": "sedan",
-      "position": [
-        41.390515675672404,
-        17.323080755314628,
-        0.055
-      ],
-      "angleRad": -2.3193429127766985,
-      "location": "driveway-191",
-      "footprint": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              42.27810935181238,
-              19.637773492175466
-            ],
-            [
-              39.147466221308356,
-              16.26745101659128
-            ],
-            [
-              40.502921999532425,
-              15.00838801845379
-            ],
-            [
-              43.63356513003645,
-              18.37871049403797
-            ],
-            [
-              42.27810935181238,
-              19.637773492175466
-            ]
-          ]
-        ]
-      }
-    },
-    {
       "id": "car-193-0",
       "kind": "sedan",
       "position": [
@@ -2409,44 +2351,6 @@
             [
               -11.79788330799121,
               19.091039079158044
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "id": "car-193-1",
-      "kind": "sedan",
-      "position": [
-        -11.077415120620863,
-        16.510041095627777,
-        0.055
-      ],
-      "angleRad": -0.7597627547843719,
-      "location": "driveway-193",
-      "footprint": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -13.382007070242597,
-              17.4235403817461
-            ],
-            [
-              -10.047009675418721,
-              14.255292857243328
-            ],
-            [
-              -8.772823170999128,
-              15.596541809509452
-            ],
-            [
-              -12.107820565823005,
-              18.764789334012228
-            ],
-            [
-              -13.382007070242597,
-              17.4235403817461
             ]
           ]
         ]
@@ -2566,41 +2470,6 @@
       "lengthAxis": "x"
     },
     {
-      "id": "car-190-1",
-      "kind": "sedan",
-      "location": "driveway-190",
-      "sceneObjectName": "car-190-1",
-      "nominalDimensions": {
-        "length": 4.6,
-        "width": 1.85,
-        "height": 1.48
-      },
-      "measuredLocalBounds": {
-        "min": [
-          -2.299999952316284,
-          -0.925000011920929,
-          7.152557379708213e-09
-        ],
-        "max": [
-          2.299999952316284,
-          0.925000011920929,
-          1.4800000190734863
-        ]
-      },
-      "measuredLength": 4.599999904632568,
-      "measuredWidth": 1.850000023841858,
-      "measuredHeight": 1.480000011920929,
-      "groundPosition": [
-        5.244051571742828,
-        29.469449063150385,
-        0.055
-      ],
-      "angleRad": -0.7598634395529511,
-      "units": "metres",
-      "upAxis": "z",
-      "lengthAxis": "x"
-    },
-    {
       "id": "car-191-0",
       "kind": "sedan",
       "location": "driveway-191",
@@ -2636,41 +2505,6 @@
       "lengthAxis": "x"
     },
     {
-      "id": "car-191-1",
-      "kind": "sedan",
-      "location": "driveway-191",
-      "sceneObjectName": "car-191-1",
-      "nominalDimensions": {
-        "length": 4.6,
-        "width": 1.85,
-        "height": 1.48
-      },
-      "measuredLocalBounds": {
-        "min": [
-          -2.299999952316284,
-          -0.925000011920929,
-          7.152557379708213e-09
-        ],
-        "max": [
-          2.299999952316284,
-          0.925000011920929,
-          1.4800000190734863
-        ]
-      },
-      "measuredLength": 4.599999904632568,
-      "measuredWidth": 1.850000023841858,
-      "measuredHeight": 1.480000011920929,
-      "groundPosition": [
-        41.390515675672404,
-        17.323080755314628,
-        0.055
-      ],
-      "angleRad": -2.3193429127766985,
-      "units": "metres",
-      "upAxis": "z",
-      "lengthAxis": "x"
-    },
-    {
       "id": "car-193-0",
       "kind": "sedan",
       "location": "driveway-193",
@@ -2698,41 +2532,6 @@
       "groundPosition": [
         -9.493291358369476,
         18.17753979303972,
-        0.055
-      ],
-      "angleRad": -0.7597627547843719,
-      "units": "metres",
-      "upAxis": "z",
-      "lengthAxis": "x"
-    },
-    {
-      "id": "car-193-1",
-      "kind": "sedan",
-      "location": "driveway-193",
-      "sceneObjectName": "car-193-1",
-      "nominalDimensions": {
-        "length": 4.6,
-        "width": 1.85,
-        "height": 1.48
-      },
-      "measuredLocalBounds": {
-        "min": [
-          -2.299999952316284,
-          -0.925000011920929,
-          7.152557379708213e-09
-        ],
-        "max": [
-          2.299999952316284,
-          0.925000011920929,
-          1.4800000190734863
-        ]
-      },
-      "measuredLength": 4.599999904632568,
-      "measuredWidth": 1.850000023841858,
-      "measuredHeight": 1.480000011920929,
-      "groundPosition": [
-        -11.077415120620863,
-        16.510041095627777,
         0.055
       ],
       "angleRad": -0.7597627547843719,
@@ -2810,5 +2609,44 @@
       "upAxis": "z",
       "lengthAxis": "x"
     }
-  ]
+  ],
+  "geometryBaselineCommit": "3898269855f42de6a04c71c702981b54bee29b2e",
+  "mapLayers": {
+    "crs": "EPSG:2177",
+    "origin2177": [
+      6528545.937850511,
+      6033615.105133102
+    ],
+    "orthophotoBounds2177": [
+      6528383.77,
+      6033436.61,
+      6528743.77,
+      6033796.61
+    ],
+    "utilityCenter2177": [
+      6528563.77,
+      6033616.61
+    ],
+    "utilityRadiusM": 100,
+    "nmtGridM": 1,
+    "nmtVerticalDatum": "PL-EVRF2007-NH",
+    "terrainGeometry": "flat",
+    "metadataFile": "map-sources.json",
+    "metadataSha256": "4726c88c57e968b31dbff65786bfa9b4f8008743b1aaaac3830fd45d4481d18b"
+  },
+  "solarSimulation": {
+    "latitude": 54.43205555555555,
+    "longitude": 18.440694444444446,
+    "timeZone": "Europe/Warsaw",
+    "gridConvergenceDeg": 0.3584748670196551,
+    "algorithm": "NOAA/Meeus geometric solar center; no refraction",
+    "validation": "Independent NREL SPA via pvlib, six reference instants",
+    "dateRange": [
+      2000,
+      2100
+    ],
+    "defaultLocalDateTime": "2026-07-20T15:50",
+    "terrainGeometry": "flat",
+    "externalObstaclesIncluded": false
+  }
 }

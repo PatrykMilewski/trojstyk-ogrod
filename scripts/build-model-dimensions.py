@@ -59,6 +59,17 @@ content += section('Detale i przyjęte wymiary', table(['Element', 'Wymiary / pa
 content += section('Samochody w skali', table(['Pojazd / miejsce', 'Długość × szerokość × wysokość (m)'], [
     [c['id']+' · '+c['location'].replace('driveway-','podjazd /').replace('road-133','droga /133'),
      dimensions([c['measuredLength'],c['measuredWidth'],c['measuredHeight']])] for c in registry['cars']]))
+solar = registry['solarSimulation']
+content += section('Symulacja słońca i mapy', '<p>Pozycja słońca dla wybranej daty i godziny lokalnej. Cienie zależą od geometrii modelu; teren pozostaje płaski. Ortofotomapa zawiera własne, utrwalone cienie. Warstwa NMT pokazuje wysokości barwami i nie zmienia poziomu budynków.</p>' + table(
+    ['Parametr', 'Wartość'], [
+        ['Szerokość / długość geograficzna (°)', number(solar['latitude'])+' / '+number(solar['longitude'])],
+        ['Strefa czasowa', solar['timeZone']+' — automatyczny czas letni i zimowy'],
+        ['Zbieżność południków EPSG:2177', number(solar['gridConvergenceDeg'])+'°'],
+        ['Algorytm', solar['algorithm']],
+        ['Początkowa data i godzina', solar['defaultLocalDateTime']],
+        ['Promień mapy wody i prądu', '100 m od rzeczywistego wspólnego wierzchołka działek'],
+        ['Siatka NMT / układ wysokości', '1 m / PL-EVRF2007-NH'],
+        ['Ortofotomapa', '360 × 360 m; indeks 2024 w centrum, dokładna data nalotu nieznana']]) + '<p><a href="map-sources.json">Pełne źródła map, współrzędne i parametry eksportu</a></p>')
 content += section('Ludzie i psy w skali', table(['Osoba', 'Wzrost (m)'], [
     [p['id'], number(p['heightM'])] for p in registry['people']]) + table(
     ['Pies / działka', 'Wysokość w kłębie (m)', 'Długość samego tułowia (m)'], [

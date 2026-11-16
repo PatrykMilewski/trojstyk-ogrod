@@ -14,7 +14,7 @@ function extractModel(html) {
   const codeEnd = html.indexOf('\nlet descriptions=', end);
   assert.ok(start >= 0 && end > start && codeEnd > end, 'Missing model geometry markers');
   const inputs = html.slice(start + marker.length, end);
-  return { data: JSON.parse(inputs), inputsHash: hash(inputs), codeHash: hash(html.slice(end + 2, codeEnd)) };
+  return { data: JSON.parse(inputs), inputsHash: hash(inputs), codeHash: hash(html.slice(end + 2, codeEnd)), runtimeHash: hash(html.split('<script type="module">')[1].split('</script>')[0]) };
 }
 
 function checkContext(neighbors, registry) {
@@ -28,6 +28,11 @@ function checkContext(neighbors, registry) {
   for (const expected of registry.contextBuildings) {
     const actual = neighbors.context.buildings.find((b) => b.id === expected.id);
     assert.deepEqual(actual.footprint, expected.footprintLocal, expected.id);
+    assert.deepEqual(actual.metadata.facadeToward191, expected.facadeToward191);
+    const facade = actual.metadata.facadeToward191;
+    const windows = actual.meshes.filter(mesh => mesh.id.startsWith(`41-window-${facade.edgeIndex}-`) && mesh.id.endsWith('-glass'));
+    assert.equal(windows.length, 1, 'Only one window on facade toward /191');
+    assert.equal(windows[0].id, `41-window-${facade.edgeIndex}-0-1-glass`);
     for (const key of ['officialHeightM', 'officialStoreys', 'assumedStoreys', 'assumedStoreyHeightM', 'wallHeightM', 'roofEdgeHeightM', 'chimneyTopM']) {
       assert.equal(actual.metadata[key], expected[key], `${expected.id}: ${key}`);
     }
@@ -51,6 +56,9 @@ function checkVehicles(neighbors, registry) {
   assert.deepEqual(neighbors.vehicleTypes, registry.vehicleTypes);
   assert.deepEqual(neighbors.cars, registry.carPlacements);
   assert.equal(neighbors.cars.length, registry.cars.length);
+  for (const parcel of ['190', '191', '193']) {
+    assert.equal(neighbors.cars.filter(car => car.location === 'driveway-' + parcel).length, 1, 'One car per driveway /' + parcel);
+  }
   for (const car of registry.cars) {
     assert.deepEqual(car.nominalDimensions, registry.vehicleTypes[car.kind], car.id);
     assert.ok(Math.abs(car.measuredLength - car.nominalDimensions.length) < .00001, car.id);
@@ -72,6 +80,8 @@ function checkDimensions(model, registry) {
   const [, garden, icon, neighbors] = model.data;
   checkContext(neighbors, registry);
   checkVehicles(neighbors, registry);
+  assert.equal(model.runtimeHash, registry.integrity.runtimeSha256, 'Simulation or map runtime changed without review');
+  assert.equal(hash(readFileSync(resolve(root, 'trzy-domy-3d', registry.mapLayers.metadataFile))), registry.mapLayers.metadataSha256, 'Map provenance changed');
   const houses = [{ ...icon, parcel: '193' }, ...neighbors.houses];
   for (const expected of registry.houses) {
     const actual = houses.find((house) => house.parcel === expected.parcel);

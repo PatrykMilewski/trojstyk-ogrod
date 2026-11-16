@@ -2,10 +2,10 @@
   "name": "trojstyk-ogrod",
   "version": "1.0.0",
   "private": true,
-  "description": "Interaktywny edytor wsp\u00f3lnego ogrodu",
+  "description": "Interaktywny edytor wspólnego ogrodu",
   "scripts": {
     "build": "python3 scripts/build.py && python3 scripts/build-model-dimensions.py",
-    "check": "node --check src/app.js && node scripts/check-model-dimensions.mjs && node --test scripts/check-model-dimensions.test.mjs"
+    "check": "node --check src/app.js && node scripts/check-model-dimensions.mjs && node --test scripts/check-model-dimensions.test.mjs && node scripts/check-solar.mjs"
   },
   "dependencies": {
     "polygon-clipping": "^0.15.7"

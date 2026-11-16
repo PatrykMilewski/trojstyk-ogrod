@@ -72,3 +72,11 @@ Dodano pustą /192, /41 oraz pełny urzędowy wielokąt drogi /133 bez bufora i 
 Budynek /41 ma źródłowy ośmiowierzchołkowy obrys EGiB Starosty Kartuskiego `220508_5.0004.2159_BUD`, 104,3313 m². Usługa nie podała wysokości ani liczby kondygnacji. Przyjęto uzgodnione parter i piętro po 2,6 m: ściany 5,2 m, attyka 5,5 m, kominy 6,05 m. Elewacja, balkony i otwory są poglądowe według zdjęć. Rejestr zawiera źródłowe współrzędne, adresy usług, długości boków i jawne założenia. Precyzja współrzędnych 0,01 m nie potwierdza dokładności pomiaru terenowego.
 
 [Rzut kontrolny SVG](https://patrykmilewski.github.io/trojstyk-ogrod/trzy-domy-3d/plan-kontrolny.svg) pokazuje działki, obrysy budynków, przyjęte odsunięcia i osobny podgląd całej drogi. Odcisk pliku planu również podlega kontroli.
+
+## Słońce i podkłady Geoportalu (2026-11-16.4)
+
+Przycisk **Słońce i mapy** otwiera datę i godzinę Europe/Warsaw, podkład ortofoto lub wysokości NMT, oraz niezależne warstwy wody i prądu. Zegar nie zależy od strefy przeglądarki. Obliczenia NOAA/Meeus sprawdzono z sześcioma niezależnymi pozycjami NREL SPA; uwzględniono zbieżność południków EPSG:2177. Nocą wyłącza się bezpośrednie światło słońca, lecz pozostaje oświetlenie podglądu. Teren jest płaski, przeszkody spoza modelu i refrakcja pominięte.
+
+Ortofotomapa GUGiK ma prawidłową georeferencję EPSG:2177 i obszar 360 × 360 m. Indeks wskazuje 2024 w centrum; dokładna data nalotu nie jest dostępna. Cienie zdjęcia są stałe. NMT WCS ma siatkę 1 m i wysokości PL-EVRF2007-NH; kolory nie deformują budynków ani terenu. Woda i prąd są oryginalnym obrazem publicznego WMS Starosty Kartuskiego, przyciętym do 100 m od rzeczywistego styku działek. Brak linii nie potwierdza braku sieci. Warstwy nie określają głębokości, przepustowości ani możliwości przyłączenia. Szczegóły i adresy zapytań zapisano w `trzy-domy-3d/map-sources.json`.
+
+Na każdym podjeździe pozostał jeden samochód, na drodze dwa. Ściana /41 zwrócona ku /191 ma tylko lewe górne okno. Wymiary domów i wyposażenia oraz ustawienie domów pozostają zgodne z wersją .3. Nowe moduły są w `src/model/`; HTML osadza ich kopie, a `npm run check` kontroluje ich zgodność, algorytm słońca i rejestr danych.
