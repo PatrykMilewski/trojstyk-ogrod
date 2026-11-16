@@ -36,6 +36,12 @@ test('rejects a procedural sauna size change', (t) => {
   assert.match(result.stderr, /Procedural geometry changed/);
 });
 
+test('rejects an unreviewed existing-building height assumption change', (t) => {
+  const result = runCandidate(t, (html) => html.replace('"assumedStoreyHeightM": 2.6', '"assumedStoreyHeightM": 2.9'));
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Model data changed/);
+});
+
 test('accepts UI copy changes that leave geometry untouched', (t) => {
   const result = runCandidate(t, (html) => html.replace('Trzy domy + trójstyk', 'Trzy domy i wspólny ogród'));
   assert.equal(result.status, 0, result.stderr);

@@ -60,3 +60,13 @@ Podstrona jest samodzielna, działa offline i nie korzysta z zapisów lokalnych 
 `npm run check` porównuje model z rejestrem i uruchamia testy wykrywania zmian. Odciski SHA-256 obejmują dane sceny (również ustawienie i granice) oraz kod proceduralnej geometrii. Zmiana wymiaru, skali lub ustawienia powoduje błąd kontroli; odcisk kodu jest celowo czuły także na jego inne zmiany. Sam tekst interfejsu można zmienić bez naruszenia blokady. GitHub Actions wykonuje tę kontrolę po pushu i w pull requestach; jest ona niezależna od mechanizmu wdrożenia Pages.
 
 Rejestru **nie regeneruje się automatycznie**. Przy uzgodnionej zmianie należy porównać geometrię z poprzednią wersją, zmierzyć ją ponownie, zaktualizować odpowiednie liczby i odciski oraz zwiększyć `modelVersion`. Sama aktualizacja odcisku bez przeglądu wymiarów nie jest weryfikacją. `npm run build` odświeża tabelę, lecz nie zmienia rejestru ani modelu 3D.
+
+### Kontekst i ustawienie — wersja 2026-11-16.2
+
+Oba projekty /190 i /191 są zweryfikowanymi odbiciami lustrzanymi katalogów. /190 przesunięto o 2,070252 m ku górze działki i 2,117915 m w bok w osiach schematu; /191 już zajmował najwyższe dopuszczalne położenie przy 5 m od drogi i minimum 10,5 m od SE. Optymalizacja dotyczy przesunięć przy zachowanych kątach i przyjętych rezerwach domu/ganku. Góra schematu nie jest północą siatki EPSG:2177. /190 ma głębszy dolny pas ogrodu, ale dłuższy podjazd; nie deklarujemy wzrostu całkowitej powierzchni ogrodu.
+
+Dodano pustą /192, /41 oraz pełny urzędowy wielokąt drogi /133 bez bufora i poszerzania. Przycisk „Droga /133” obejmuje całą drogę; pozostałe przyciski pokazują szczegóły. Jest to granica działki drogowej, nie obrys utwardzonej jezdni.
+
+Budynek /41 ma źródłowy ośmiowierzchołkowy obrys EGiB Starosty Kartuskiego `220508_5.0004.2159_BUD`, 104,3313 m². Usługa nie podała wysokości ani liczby kondygnacji. Przyjęto uzgodnione parter i piętro po 2,6 m: ściany 5,2 m, attyka 5,5 m, kominy 6,05 m. Elewacja, balkony i otwory są poglądowe według zdjęć. Rejestr zawiera źródłowe współrzędne, adresy usług, długości boków i jawne założenia. Precyzja współrzędnych 0,01 m nie potwierdza dokładności pomiaru terenowego.
+
+[Rzut kontrolny SVG](https://patrykmilewski.github.io/trojstyk-ogrod/trzy-domy-3d/plan-kontrolny.svg) pokazuje działki, obrysy budynków, przyjęte odsunięcia i osobny podgląd całej drogi. Odcisk pliku planu również podlega kontroli.

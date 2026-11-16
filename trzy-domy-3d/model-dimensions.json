@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-16.1",
+  "modelVersion": "2026-11-16.2",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -14,14 +14,17 @@
     "boundsLocalM to obwiednia faktycznych wierzchołków 3D po usunięciu obrotu i przesunięcia całego obiektu; uwzględnia m.in. parapet, uchwyty i siatkę.",
     "Jeżeli opis nie podaje inaczej, wysokość wyposażenia jest liczona od podstawy obiektu (baseElevationM), a nie od globalnego poziomu Z=0.",
     "Pomiary obwiedni zapisano do 0,000001 m wyłącznie dla kontroli numerycznej modelu, nie jako dokładność projektu wykonawczego.",
-    "Nie wolno automatycznie nadpisywać rejestru podczas budowania. Zmiana skali, geometrii lub ustawienia wymaga porównania, ponownego pomiaru i jawnej zmiany wersji."
+    "Nie wolno automatycznie nadpisywać rejestru podczas budowania. Zmiana skali, geometrii lub ustawienia wymaga porównania, ponownego pomiaru i jawnej zmiany wersji.",
+    "Kierunek góra działki to +Y schematu; północ mapy to +Y EPSG:2177. Przesunięcie190 to w osiach mapy około2.961m na wschód i0.075m na północ."
   ],
   "sources": {
     "catalogue-193": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "catalogue-190": "https://www.mgprojekt.com.pl/willa-floryda-6",
     "catalogue-191": "https://www.archon.pl/projekty-domow/projekt-dom-w-felicjach-6-g2-mcf528419ecef9",
     "shared-plan": "https://patrykmilewski.github.io/trojstyk-ogrod/",
-    "model": "Uzgodniona koncepcja 3D: pomiar geometrii i parametry renderera, 16.11.2026."
+    "model": "Uzgodniona koncepcja 3D: pomiar geometrii i parametry renderera, 16.11.2026.",
+    "county-egib": "https://kartuski-wms.webewid.pl/iip/ows?service=WFS&request=GetCapabilities",
+    "uldk": "https://uldk.gugik.gov.pl/opis.html"
   },
   "houses": [
     {
@@ -38,7 +41,7 @@
     },
     {
       "parcel": "190",
-      "name": "Willa Floryda 6",
+      "name": "Willa Floryda 6 — lustro",
       "source": "catalogue-190",
       "catalogueEnvelopeM": {
         "width": 15.5,
@@ -50,7 +53,7 @@
     },
     {
       "parcel": "191",
-      "name": "Dom w felicjach 6 (G2) — V1",
+      "name": "Dom w felicjach 6 (G2) — lustro",
       "source": "catalogue-191",
       "catalogueEnvelopeM": {
         "width": 15.3,
@@ -1151,9 +1154,27 @@
         ]
       ],
       "translation": [
-        -28.533296597646547,
-        7.5731536501132615
-      ]
+        -26.415381431530896,
+        9.643405154666652
+      ],
+      "variant": "odbicie lustrzane",
+      "northernPlacement": {
+        "objective": "maximum common-plot +Y; geographic north tie-break",
+        "previousTranslation": [
+          -28.533296597646547,
+          7.5731536501132615
+        ],
+        "movementCommonM": [
+          2.117915166115651,
+          2.070251504553391
+        ],
+        "movementEastNorthM": [
+          2.960713422994208,
+          0.07537884232448944
+        ],
+        "mirroredDeterminant": -1.0,
+        "upperBoundaryOptimalityGapM": 0.0
+      }
     },
     "191": {
       "matrix": [
@@ -1169,7 +1190,25 @@
       "translation": [
         7.110858085287692,
         25.143165350240658
-      ]
+      ],
+      "variant": "odbicie lustrzane",
+      "northernPlacement": {
+        "objective": "maximum common-plot +Y; geographic north tie-break",
+        "previousTranslation": [
+          7.110858085287692,
+          25.143165350240658
+        ],
+        "movementCommonM": [
+          0.0,
+          0.0
+        ],
+        "movementEastNorthM": [
+          0.0,
+          0.0
+        ],
+        "mirroredDeterminant": -1.0,
+        "upperBoundaryOptimalityGapM": 0.0
+      }
     },
     "193": {
       "mirror": "x -> 14.64-x",
@@ -1191,9 +1230,777 @@
   },
   "sharedAreaM2": 148.32612022495755,
   "integrity": {
-    "geometryBaselineCommit": "ee9c01f7f5a8a82bb4bea1d08194cd80ed92e3ad",
-    "inputsSha256": "343cd15db53c917140f96d0c974927506bf4ab6920880469f1f4b7b0da5a1509",
-    "proceduralCodeSha256": "db7d26bedd363f7e4fdfdb83d480aa73044a320040a64fba10348dafc6c751f1",
-    "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu."
+    "geometryBaselineCommit": "7e42d0bb78fbd7379ed77550eeeb691f552a5715",
+    "inputsSha256": "6e324a14dc2fb569dca91ce8f79df7daaab185539576aa105cdda2fcbdf71b71",
+    "proceduralCodeSha256": "dac7bdd1cbdb24bba73baacde82e952656f1cf920b01fe402a445ceb36ab922f",
+    "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
+    "planSha256": "526980d2717effafe4533db3b8f8b3e5947b73473667a1e4fd3723bfeba73393"
+  },
+  "revisionNotes": [
+    "Oba projekty zweryfikowane jako katalogowe lustra; brak dodatkowego podwójnego odbicia.",
+    "190: przesunięcie +2.117915m w bok i +2.070252m ku górnej granicy w osiach schematu;191 już na górnym limicie5m.",
+    "Brak zmiany skali trzech projektów,23 obiektów wyposażenia, ludzi i psów.",
+    "Dodane źródłowe działki41 i192,pełny obrys133 oraz budynek41 z EGiB. Wysokość41 to uzgodnione założenie2x2.6m."
+  ],
+  "contextParcels": [
+    {
+      "parcel": "41",
+      "id": "220508_5.0004.775/41",
+      "sourceURL": "https://uldk.gugik.gov.pl/?request=GetParcelById&id=220508_5.0004.775%2F41&result=geom_wkt&srid=2177",
+      "areaM2": 468.6612000051105,
+      "edgeLengthsM": [
+        25.961236488404683,
+        18.040623603256048,
+        25.96891410962615,
+        18.06172195558131
+      ],
+      "perimeterM": 88.03249615686819,
+      "geometryLocal": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              57.06214948929846,
+              -30.455133101902902
+            ],
+            [
+              75.93214948941022,
+              -12.625133101828396
+            ],
+            [
+              63.382149489596486,
+              0.3348668981343508
+            ],
+            [
+              44.49214948900044,
+              -17.485133102163672
+            ],
+            [
+              57.06214948929846,
+              -30.455133101902902
+            ]
+          ]
+        ]
+      },
+      "geometry2177": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              6528603.0,
+              6033584.65
+            ],
+            [
+              6528621.87,
+              6033602.48
+            ],
+            [
+              6528609.32,
+              6033615.44
+            ],
+            [
+              6528590.43,
+              6033597.62
+            ],
+            [
+              6528603.0,
+              6033584.65
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "parcel": "192",
+      "id": "220508_5.0004.775/192",
+      "sourceURL": "https://uldk.gugik.gov.pl/?request=GetParcelById&id=220508_5.0004.775%2F192&result=geom_wkt&srid=2177",
+      "areaM2": 1140.1707999968817,
+      "edgeLengthsM": [
+        39.283525809503516,
+        30.109349046625542,
+        18.06172195558131,
+        4.244549446047997,
+        22.755856389168056,
+        26.725502801330865
+      ],
+      "perimeterM": 141.1805054482573,
+      "geometryLocal": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              6.542149489745498,
+              -24.485133102163672
+            ],
+            [
+              35.2921494897455,
+              -51.25513310264796
+            ],
+            [
+              57.06214948929846,
+              -30.455133101902902
+            ],
+            [
+              44.49214948900044,
+              -17.485133102163672
+            ],
+            [
+              41.40214948914945,
+              -20.395133102312684
+            ],
+            [
+              24.732149489223957,
+              -4.905133102089167
+            ],
+            [
+              6.542149489745498,
+              -24.485133102163672
+            ]
+          ]
+        ]
+      },
+      "geometry2177": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              6528552.48,
+              6033590.62
+            ],
+            [
+              6528581.23,
+              6033563.85
+            ],
+            [
+              6528603.0,
+              6033584.65
+            ],
+            [
+              6528590.43,
+              6033597.62
+            ],
+            [
+              6528587.34,
+              6033594.71
+            ],
+            [
+              6528570.67,
+              6033610.2
+            ],
+            [
+              6528552.48,
+              6033590.62
+            ]
+          ]
+        ]
+      }
+    }
+  ],
+  "contextBuildings": [
+    {
+      "id": "220508_5.0004.2159_BUD",
+      "parcel": "41",
+      "footprintLocal": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              64.12214948888868,
+              -14.835133102722466
+            ],
+            [
+              57.42214948963374,
+              -7.4451331021264195
+            ],
+            [
+              50.222149489447474,
+              -14.465133102610707
+            ],
+            [
+              57.252149489708245,
+              -21.675133102573454
+            ],
+            [
+              59.65214948914945,
+              -19.31513310223818
+            ],
+            [
+              61.03214948903769,
+              -20.765133102424443
+            ],
+            [
+              63.002149489708245,
+              -18.8851331025362
+            ],
+            [
+              61.352149489335716,
+              -17.765133102424443
+            ],
+            [
+              64.12214948888868,
+              -14.835133102722466
+            ]
+          ]
+        ]
+      },
+      "footprint2177": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              6528610.06,
+              6033600.27
+            ],
+            [
+              6528603.36,
+              6033607.66
+            ],
+            [
+              6528596.16,
+              6033600.64
+            ],
+            [
+              6528603.19,
+              6033593.43
+            ],
+            [
+              6528605.59,
+              6033595.79
+            ],
+            [
+              6528606.97,
+              6033594.34
+            ],
+            [
+              6528608.94,
+              6033596.22
+            ],
+            [
+              6528607.29,
+              6033597.34
+            ],
+            [
+              6528610.06,
+              6033600.27
+            ]
+          ]
+        ]
+      },
+      "sourceAttributes": {
+        "RODZAJ": "m",
+        "ID_BUDYNKU": "220508_5.0004.2159_BUD",
+        "KONDYGNACJE_NADZIEMNE": null,
+        "KONDYGNACJE_PODZIEMNE": null,
+        "DATA": "2026-11-15 21:53:03"
+      },
+      "sourceURL": "https://kartuski-wms.webewid.pl/iip/ows?service=WFS&version=1.1.0&request=GetFeature&typename=ms%3Abudynki&filter=%3CFilter+xmlns%3D%22http%3A%2F%2Fwww.opengis.net%2Fogc%22%3E%3CPropertyIsEqualTo%3E%3CPropertyName%3EID_BUDYNKU%3C%2FPropertyName%3E%3CLiteral%3E220508_5.0004.2159_BUD%3C%2FLiteral%3E%3C%2FPropertyIsEqualTo%3E%3C%2FFilter%3E",
+      "source": "Starosta Kartuski EGiB WFS",
+      "sourceDate": "2026-11-15 21:53:03",
+      "footprintAreaM2": 104.33129999829809,
+      "edgeLengthsM": [
+        9.975073934504234,
+        10.05586396136511,
+        10.070004965397448,
+        3.3659471176624707,
+        2.0017242567925564,
+        2.7231048459840403,
+        1.9942166385525133,
+        4.0320962284867425
+      ],
+      "officialHeightM": null,
+      "officialStoreys": null,
+      "assumedStoreys": 2,
+      "assumedStoreyHeightM": 2.6,
+      "wallHeightM": 5.2,
+      "roofEdgeHeightM": 5.5,
+      "chimneyTopM": 6.05,
+      "geometryAccuracy": "Coordinates served to 0.01 m; source positional accuracy not provided. This is data precision, not survey accuracy.",
+      "appearanceBasis": "Two supplied photos: light horizontal siding, gray plinth, flat roof and dark balcony railings. Facade openings, balconies and chimneys are approximate.",
+      "heightBasis": "User-confirmed fallback: ground floor + first floor, 2.6m each. Roof/parapet/chimneys are separate model assumptions."
+    }
+  ],
+  "road": {
+    "parcel": "133",
+    "id": "220508_5.0004.775/133",
+    "sourceURL": "https://uldk.gugik.gov.pl/?request=GetParcelById&id=220508_5.0004.775%2F133&result=geom_wkt&srid=2177",
+    "areaM2": 5398.704549969441,
+    "edgeLengthsM": [
+      23.67551477789734,
+      26.420874323035285,
+      26.34288708518344,
+      26.243957399637164,
+      26.151837412175176,
+      26.052907706774885,
+      15.842477710009923,
+      9.99011511451923,
+      11.405937049924125,
+      39.283525809503516,
+      38.512009815584705,
+      6.946481123032672,
+      21.7931204745175,
+      25.202430438259444,
+      7.072291001090577,
+      28.459082907794404,
+      34.16230964108039,
+      18.040623603256048,
+      17.82866231643486,
+      5.775326830338942,
+      20.29544283841284,
+      5.899321994848625,
+      10.992451955816717,
+      22.529751440870847,
+      22.52936972083934,
+      8.00038124061837,
+      8.014143747187523,
+      1.9948433518185236,
+      22.543888306438344,
+      23.22284435643008,
+      24.191800264514274,
+      35.62960847387164,
+      25.226963748739802,
+      39.42903752293166,
+      7.072291001090577,
+      25.06794367278361,
+      24.191056198650607,
+      23.214844389089837,
+      23.68863229434681,
+      10.037255600625905,
+      28.272440645018804,
+      28.215890912514077,
+      27.671053466898197,
+      27.678303778083002,
+      27.664166353133208,
+      23.653469089798374,
+      7.1037243749258545,
+      31.51640207960591,
+      30.99978225700731,
+      10.028539275231568
+    ],
+    "perimeterM": 1061.778016892192,
+    "geometryLocal": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -88.2078505102545,
+            49.93486689776182
+          ],
+          [
+            -70.86785051040351,
+            33.81486689765006
+          ],
+          [
+            -51.51785051077604,
+            15.824866897426546
+          ],
+          [
+            -32.22785051073879,
+            -2.1151331020519137
+          ],
+          [
+            -13.00785051099956,
+            -19.985133102163672
+          ],
+          [
+            6.142149489372969,
+            -37.79513310268521
+          ],
+          [
+            25.222149489447474,
+            -55.53513310197741
+          ],
+          [
+            36.822149489074945,
+            -66.32513310201466
+          ],
+          [
+            43.64214948937297,
+            -59.025133102200925
+          ],
+          [
+            35.2921494897455,
+            -51.25513310264796
+          ],
+          [
+            6.542149489745498,
+            -24.485133102163672
+          ],
+          [
+            -21.6378505108878,
+            1.7648668978363276
+          ],
+          [
+            -21.937850510701537,
+            8.704866897314787
+          ],
+          [
+            -6.9278505109250546,
+            24.504866898059845
+          ],
+          [
+            10.432149489410222,
+            42.77486689761281
+          ],
+          [
+            17.502149489708245,
+            42.95486689731479
+          ],
+          [
+            38.352149489335716,
+            23.58486689813435
+          ],
+          [
+            63.382149489596486,
+            0.3348668981343508
+          ],
+          [
+            75.93214948941022,
+            -12.625133101828396
+          ],
+          [
+            89.17214948963374,
+            -0.685133102349937
+          ],
+          [
+            94.55214948952198,
+            1.414866897277534
+          ],
+          [
+            113.46214948967099,
+            8.784866897389293
+          ],
+          [
+            117.52214948926121,
+            13.064866897650063
+          ],
+          [
+            125.08214948885143,
+            21.044866898097098
+          ],
+          [
+            140.57214948907495,
+            37.40486689750105
+          ],
+          [
+            156.07214948907495,
+            53.754866898059845
+          ],
+          [
+            161.57214948907495,
+            59.56486689765006
+          ],
+          [
+            155.76214948948473,
+            65.08486689813435
+          ],
+          [
+            154.31214948929846,
+            66.45486689731479
+          ],
+          [
+            138.81214948929846,
+            50.08486689813435
+          ],
+          [
+            122.84214948955923,
+            33.224866897799075
+          ],
+          [
+            106.20214948896319,
+            15.664866897277534
+          ],
+          [
+            71.83214948885143,
+            6.27486689761281
+          ],
+          [
+            53.322149489074945,
+            23.414866897277534
+          ],
+          [
+            24.39214948937297,
+            50.20486689731479
+          ],
+          [
+            24.212149489670992,
+            57.27486689761281
+          ],
+          [
+            41.48214948922396,
+            75.4448668975383
+          ],
+          [
+            58.14214948937297,
+            92.98486689757556
+          ],
+          [
+            74.13214948959649,
+            109.81486689765006
+          ],
+          [
+            90.45214948896319,
+            126.98486689757556
+          ],
+          [
+            83.17214948963374,
+            133.89486689772457
+          ],
+          [
+            63.70214948896319,
+            113.39486689772457
+          ],
+          [
+            44.27214948926121,
+            92.93486689776182
+          ],
+          [
+            25.212149489670992,
+            72.8748668981716
+          ],
+          [
+            6.152149489149451,
+            52.80486689787358
+          ],
+          [
+            -12.897850510664284,
+            32.74486689735204
+          ],
+          [
+            -29.187850510701537,
+            15.594866897910833
+          ],
+          [
+            -36.28785051032901,
+            15.364866897463799
+          ],
+          [
+            -59.3878505108878,
+            36.80486689787358
+          ],
+          [
+            -82.10785051062703,
+            57.89486689772457
+          ],
+          [
+            -88.2078505102545,
+            49.93486689776182
+          ]
+        ]
+      ]
+    },
+    "geometry2177": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            6528457.73,
+            6033665.04
+          ],
+          [
+            6528475.07,
+            6033648.92
+          ],
+          [
+            6528494.42,
+            6033630.93
+          ],
+          [
+            6528513.71,
+            6033612.99
+          ],
+          [
+            6528532.93,
+            6033595.12
+          ],
+          [
+            6528552.08,
+            6033577.31
+          ],
+          [
+            6528571.16,
+            6033559.57
+          ],
+          [
+            6528582.76,
+            6033548.78
+          ],
+          [
+            6528589.58,
+            6033556.08
+          ],
+          [
+            6528581.23,
+            6033563.85
+          ],
+          [
+            6528552.48,
+            6033590.62
+          ],
+          [
+            6528524.3,
+            6033616.87
+          ],
+          [
+            6528524.0,
+            6033623.81
+          ],
+          [
+            6528539.01,
+            6033639.61
+          ],
+          [
+            6528556.37,
+            6033657.88
+          ],
+          [
+            6528563.44,
+            6033658.06
+          ],
+          [
+            6528584.29,
+            6033638.69
+          ],
+          [
+            6528609.32,
+            6033615.44
+          ],
+          [
+            6528621.87,
+            6033602.48
+          ],
+          [
+            6528635.11,
+            6033614.42
+          ],
+          [
+            6528640.49,
+            6033616.52
+          ],
+          [
+            6528659.4,
+            6033623.89
+          ],
+          [
+            6528663.46,
+            6033628.17
+          ],
+          [
+            6528671.02,
+            6033636.15
+          ],
+          [
+            6528686.51,
+            6033652.51
+          ],
+          [
+            6528702.01,
+            6033668.86
+          ],
+          [
+            6528707.51,
+            6033674.67
+          ],
+          [
+            6528701.7,
+            6033680.19
+          ],
+          [
+            6528700.25,
+            6033681.56
+          ],
+          [
+            6528684.75,
+            6033665.19
+          ],
+          [
+            6528668.78,
+            6033648.33
+          ],
+          [
+            6528652.14,
+            6033630.77
+          ],
+          [
+            6528617.77,
+            6033621.38
+          ],
+          [
+            6528599.26,
+            6033638.52
+          ],
+          [
+            6528570.33,
+            6033665.31
+          ],
+          [
+            6528570.15,
+            6033672.38
+          ],
+          [
+            6528587.42,
+            6033690.55
+          ],
+          [
+            6528604.08,
+            6033708.09
+          ],
+          [
+            6528620.07,
+            6033724.92
+          ],
+          [
+            6528636.39,
+            6033742.09
+          ],
+          [
+            6528629.11,
+            6033749.0
+          ],
+          [
+            6528609.64,
+            6033728.5
+          ],
+          [
+            6528590.21,
+            6033708.04
+          ],
+          [
+            6528571.15,
+            6033687.98
+          ],
+          [
+            6528552.09,
+            6033667.91
+          ],
+          [
+            6528533.04,
+            6033647.85
+          ],
+          [
+            6528516.75,
+            6033630.7
+          ],
+          [
+            6528509.65,
+            6033630.47
+          ],
+          [
+            6528486.55,
+            6033651.91
+          ],
+          [
+            6528463.83,
+            6033673.0
+          ],
+          [
+            6528457.73,
+            6033665.04
+          ]
+        ]
+      ]
+    },
+    "fullOfficialPolygon": true,
+    "widened": false,
+    "meaning": "Granica działki drogowej, nie szerokość utwardzonej jezdni."
   }
 }

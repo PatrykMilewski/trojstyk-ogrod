@@ -17,6 +17,32 @@ function extractModel(html) {
   return { data: JSON.parse(inputs), inputsHash: hash(inputs), codeHash: hash(html.slice(end + 2, codeEnd)) };
 }
 
+function checkContext(neighbors, registry) {
+  assert.deepEqual(neighbors.road, registry.road.geometryLocal, 'Full road133 geometry');
+  assert.equal(registry.road.fullOfficialPolygon, true);
+  assert.equal(registry.road.widened, false);
+  for (const parcel of registry.contextParcels) {
+    assert.deepEqual(neighbors.context.parcels[parcel.parcel], parcel.geometryLocal, parcel.id);
+  }
+  assert.equal(neighbors.context.buildings.length, registry.contextBuildings.length);
+  for (const expected of registry.contextBuildings) {
+    const actual = neighbors.context.buildings.find((b) => b.id === expected.id);
+    assert.deepEqual(actual.footprint, expected.footprintLocal, expected.id);
+    for (const key of ['officialHeightM', 'officialStoreys', 'assumedStoreys', 'assumedStoreyHeightM', 'wallHeightM', 'roofEdgeHeightM', 'chimneyTopM']) {
+      assert.equal(actual.metadata[key], expected[key], `${expected.id}: ${key}`);
+    }
+    assert.equal(Math.max(...actual.meshes.flatMap((mesh) => mesh.vertices.map((v) => v[2]))), expected.chimneyTopM);
+  }
+  for (const house of neighbors.houses) {
+    const pin = registry.placementPins[house.parcel];
+    assert.deepEqual(house.placement.matrix, pin.matrix);
+    assert.deepEqual(house.placement.translation, pin.translation);
+    const [[a, b], [c, d]] = pin.matrix;
+    assert.ok(Math.abs(a * d - b * c + 1) < 1e-10, `Catalogue mirror /${house.parcel}`);
+    assert.ok(Math.abs(a * a + c * c - 1) < 1e-10 && Math.abs(b * b + d * d - 1) < 1e-10 && Math.abs(a * b + c * d) < 1e-10, 'Rigid scale');
+  }
+}
+
 function checkDimensions(model, registry) {
   assert.equal(registry.schemaVersion, 1);
   assert.equal(registry.units.length, 'm');
@@ -27,6 +53,7 @@ function checkDimensions(model, registry) {
   assert.equal(model.inputsHash, registry.integrity.inputsSha256, 'Model data changed: review dimensions and placements before updating the registry');
   assert.equal(model.codeHash, registry.integrity.proceduralCodeSha256, 'Procedural geometry changed: measure and review before updating the registry');
   const [, garden, icon, neighbors] = model.data;
+  checkContext(neighbors, registry);
   const houses = [{ ...icon, parcel: '193' }, ...neighbors.houses];
   for (const expected of registry.houses) {
     const actual = houses.find((house) => house.parcel === expected.parcel);
@@ -49,4 +76,5 @@ const htmlPath = resolve(process.argv[2] || `${root}/trzy-domy-3d/index.html`);
 const registryPath = resolve(process.argv[3] || `${root}/trzy-domy-3d/model-dimensions.json`);
 const registry = JSON.parse(readFileSync(registryPath, 'utf8'));
 checkDimensions(extractModel(readFileSync(htmlPath, 'utf8')), registry);
+assert.equal(hash(readFileSync(`${root}/trzy-domy-3d/plan-kontrolny.svg`)), registry.integrity.planSha256, 'Control plan changed');
 console.log(`Model dimensions OK: ${registry.houses.length} houses, ${registry.objects.length} objects; version ${registry.modelVersion}`);
