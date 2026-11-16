@@ -4,8 +4,8 @@
   "private": true,
   "description": "Interaktywny edytor wsp\u00f3lnego ogrodu",
   "scripts": {
-    "build": "python3 scripts/build.py",
-    "check": "node --check src/app.js"
+    "build": "python3 scripts/build.py && python3 scripts/build-model-dimensions.py",
+    "check": "node --check src/app.js && node scripts/check-model-dimensions.mjs && node --test scripts/check-model-dimensions.test.mjs"
   },
   "dependencies": {
     "polygon-clipping": "^0.15.7"

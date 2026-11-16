@@ -1,0 +1,1199 @@
+{
+  "schemaVersion": 1,
+  "modelVersion": "2026-11-16.1",
+  "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
+  "units": {
+    "length": "m",
+    "area": "m²",
+    "angle": "deg"
+  },
+  "conventions": [
+    "Model ma jednakową skalę X/Y/Z; jednostką jest metr, Z biegnie w górę.",
+    "Wymiary katalogowe dotyczą wskazanego gabarytu projektu; detal rekonstrukcji pozostaje poglądowy.",
+    "planFootprintM oznacza szerokość i głębokość z rzutu, bez wystających detali.",
+    "boundsLocalM to obwiednia faktycznych wierzchołków 3D po usunięciu obrotu i przesunięcia całego obiektu; uwzględnia m.in. parapet, uchwyty i siatkę.",
+    "Jeżeli opis nie podaje inaczej, wysokość wyposażenia jest liczona od podstawy obiektu (baseElevationM), a nie od globalnego poziomu Z=0.",
+    "Pomiary obwiedni zapisano do 0,000001 m wyłącznie dla kontroli numerycznej modelu, nie jako dokładność projektu wykonawczego.",
+    "Nie wolno automatycznie nadpisywać rejestru podczas budowania. Zmiana skali, geometrii lub ustawienia wymaga porównania, ponownego pomiaru i jawnej zmiany wersji."
+  ],
+  "sources": {
+    "catalogue-193": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
+    "catalogue-190": "https://www.mgprojekt.com.pl/willa-floryda-6",
+    "catalogue-191": "https://www.archon.pl/projekty-domow/projekt-dom-w-felicjach-6-g2-mcf528419ecef9",
+    "shared-plan": "https://patrykmilewski.github.io/trojstyk-ogrod/",
+    "model": "Uzgodniona koncepcja 3D: pomiar geometrii i parametry renderera, 16.11.2026."
+  },
+  "houses": [
+    {
+      "parcel": "193",
+      "name": "Stodoła Icon — lustro",
+      "source": "catalogue-193",
+      "catalogueEnvelopeM": {
+        "width": 14.64,
+        "depth": 18.13
+      },
+      "modelMinZM": 0,
+      "modelMaxZM": 8.3,
+      "heightBasis": "Wysokość faktycznych wierzchołków modelu nad jego poziomem Z=0, nie automatyczne doliczenie cokołu."
+    },
+    {
+      "parcel": "190",
+      "name": "Willa Floryda 6",
+      "source": "catalogue-190",
+      "catalogueEnvelopeM": {
+        "width": 15.5,
+        "depth": 17.66
+      },
+      "modelMinZM": -0.2,
+      "modelMaxZM": 8.23,
+      "heightBasis": "Wysokość faktycznych wierzchołków modelu nad jego poziomem Z=0, nie automatyczne doliczenie cokołu."
+    },
+    {
+      "parcel": "191",
+      "name": "Dom w felicjach 6 (G2) — V1",
+      "source": "catalogue-191",
+      "catalogueEnvelopeM": {
+        "width": 15.3,
+        "depth": 16.94
+      },
+      "modelMinZM": 0.15,
+      "modelMaxZM": 8.45,
+      "heightBasis": "Wysokość faktycznych wierzchołków modelu nad jego poziomem Z=0, nie automatyczne doliczenie cokołu."
+    }
+  ],
+  "objects": [
+    {
+      "id": "item-4",
+      "kind": "sauna",
+      "parcel": "shared",
+      "name": "Sauna",
+      "planFootprintM": [
+        3,
+        2.4
+      ],
+      "boundsLocalM": {
+        "min": [
+          -1.5,
+          -1.222,
+          0
+        ],
+        "max": [
+          1.5,
+          1.365,
+          3.2
+        ],
+        "size": [
+          3,
+          2.587,
+          3.2
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "shared-plan + model"
+    },
+    {
+      "id": "item-5",
+      "kind": "balia",
+      "parcel": "shared",
+      "name": "Balia",
+      "planFootprintM": [
+        2.2,
+        2.2
+      ],
+      "boundsLocalM": {
+        "min": [
+          -1.12,
+          -1.12,
+          -0.0
+        ],
+        "max": [
+          1.12,
+          1.12,
+          1.17
+        ],
+        "size": [
+          2.24,
+          2.24,
+          1.17
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "shared-plan + model"
+    },
+    {
+      "id": "item-6",
+      "kind": "drabinka",
+      "parcel": "shared",
+      "name": "Drabinka",
+      "planFootprintM": [
+        0.7,
+        3
+      ],
+      "boundsLocalM": {
+        "min": [
+          -0.4,
+          -1.55,
+          0.0
+        ],
+        "max": [
+          0.4,
+          1.55,
+          2.55
+        ],
+        "size": [
+          0.8,
+          3.1,
+          2.55
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "shared-plan + model"
+    },
+    {
+      "id": "item-7",
+      "kind": "drazki",
+      "parcel": "shared",
+      "name": "Drążki",
+      "planFootprintM": [
+        2,
+        1.2
+      ],
+      "boundsLocalM": {
+        "min": [
+          -1.045,
+          -0.045,
+          -0.0
+        ],
+        "max": [
+          1.045,
+          0.045,
+          2.225
+        ],
+        "size": [
+          2.09,
+          0.09,
+          2.225
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "shared-plan + model"
+    },
+    {
+      "id": "item-8",
+      "kind": "siatka",
+      "parcel": "shared",
+      "name": "Siatka",
+      "planFootprintM": [
+        1.5,
+        1.5
+      ],
+      "boundsLocalM": {
+        "min": [
+          -0.8,
+          -0.05,
+          -0.0
+        ],
+        "max": [
+          0.8,
+          0.05,
+          2.2
+        ],
+        "size": [
+          1.6,
+          0.1,
+          2.2
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "shared-plan + model"
+    },
+    {
+      "id": "item-9",
+      "kind": "scianka",
+      "parcel": "shared",
+      "name": "Miniścianka",
+      "planFootprintM": [
+        2,
+        0.6
+      ],
+      "boundsLocalM": {
+        "min": [
+          -1,
+          -0.06,
+          0.0
+        ],
+        "max": [
+          1,
+          0.121,
+          1.3
+        ],
+        "size": [
+          2,
+          0.181,
+          1.3
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "shared-plan + model"
+    },
+    {
+      "id": "item-10",
+      "kind": "hustawka",
+      "parcel": "shared",
+      "name": "Huśtawka",
+      "planFootprintM": [
+        2.2,
+        2
+      ],
+      "boundsLocalM": {
+        "min": [
+          -1.165,
+          -1.06,
+          -0.025
+        ],
+        "max": [
+          1.165,
+          1.06,
+          2.48
+        ],
+        "size": [
+          2.33,
+          2.12,
+          2.505
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "shared-plan + model"
+    },
+    {
+      "id": "obj-44df8e1f-d905-4a92-a4cc-12a31a2ab48e",
+      "kind": "trampolina",
+      "parcel": "shared",
+      "name": "Trampolina",
+      "planFootprintM": [
+        2.2,
+        2.2
+      ],
+      "boundsLocalM": {
+        "min": [
+          -1.125,
+          -1.1,
+          -0.16
+        ],
+        "max": [
+          1.125,
+          1.1,
+          1.55
+        ],
+        "size": [
+          2.25,
+          2.2,
+          1.71
+        ]
+      },
+      "baseElevationM": 0.022,
+      "source": "shared-plan + model"
+    },
+    {
+      "id": "fire-seat-0",
+      "kind": "chair",
+      "parcel": "193",
+      "name": "Fotel przy palenisku",
+      "planFootprintM": [
+        0.72,
+        0.8
+      ],
+      "boundsLocalM": {
+        "min": [
+          -0.362844,
+          -0.4,
+          0.0
+        ],
+        "max": [
+          0.362844,
+          0.4,
+          0.93
+        ],
+        "size": [
+          0.725689,
+          0.8,
+          0.93
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "model"
+    },
+    {
+      "id": "fire-seat-1",
+      "kind": "chair",
+      "parcel": "193",
+      "name": "Fotel przy palenisku",
+      "planFootprintM": [
+        0.72,
+        0.8
+      ],
+      "boundsLocalM": {
+        "min": [
+          -0.362844,
+          -0.4,
+          0.0
+        ],
+        "max": [
+          0.362844,
+          0.4,
+          0.93
+        ],
+        "size": [
+          0.725689,
+          0.8,
+          0.93
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "model"
+    },
+    {
+      "id": "fire-seat-2",
+      "kind": "chair",
+      "parcel": "193",
+      "name": "Fotel przy palenisku",
+      "planFootprintM": [
+        0.72,
+        0.8
+      ],
+      "boundsLocalM": {
+        "min": [
+          -0.362844,
+          -0.4,
+          0.0
+        ],
+        "max": [
+          0.362844,
+          0.4,
+          0.93
+        ],
+        "size": [
+          0.725689,
+          0.8,
+          0.93
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "model"
+    },
+    {
+      "id": "fire-seat-3",
+      "kind": "chair",
+      "parcel": "193",
+      "name": "Fotel przy palenisku",
+      "planFootprintM": [
+        0.72,
+        0.8
+      ],
+      "boundsLocalM": {
+        "min": [
+          -0.362844,
+          -0.4,
+          0.0
+        ],
+        "max": [
+          0.362844,
+          0.4,
+          0.93
+        ],
+        "size": [
+          0.725689,
+          0.8,
+          0.93
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "model"
+    },
+    {
+      "id": "outdoor-kitchen",
+      "kind": "grill",
+      "parcel": "193",
+      "name": "Grill i blat ogrodowy",
+      "planFootprintM": [
+        2.4,
+        0.7
+      ],
+      "boundsLocalM": {
+        "min": [
+          -1.23,
+          -0.38,
+          0.0
+        ],
+        "max": [
+          1.23,
+          0.38,
+          1.27
+        ],
+        "size": [
+          2.46,
+          0.76,
+          1.27
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "model"
+    },
+    {
+      "id": "190-grill",
+      "kind": "grill",
+      "parcel": "190",
+      "name": "Grill ogrodowy",
+      "planFootprintM": [
+        1.35,
+        0.75
+      ],
+      "boundsLocalM": {
+        "min": [
+          -0.99,
+          -0.405,
+          -0.0
+        ],
+        "max": [
+          0.8,
+          0.405,
+          1.47
+        ],
+        "size": [
+          1.79,
+          0.81,
+          1.47
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "model"
+    },
+    {
+      "id": "190-chair-0",
+      "kind": "chair",
+      "parcel": "190",
+      "name": "Fotel ogrodowy",
+      "planFootprintM": [
+        0.65,
+        0.7
+      ],
+      "boundsLocalM": {
+        "min": [
+          -0.327956,
+          -0.35,
+          0.0
+        ],
+        "max": [
+          0.327956,
+          0.355812,
+          0.93
+        ],
+        "size": [
+          0.655913,
+          0.705812,
+          0.93
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "model"
+    },
+    {
+      "id": "190-chair-1",
+      "kind": "chair",
+      "parcel": "190",
+      "name": "Fotel ogrodowy",
+      "planFootprintM": [
+        0.65,
+        0.7
+      ],
+      "boundsLocalM": {
+        "min": [
+          -0.327956,
+          -0.35,
+          0.0
+        ],
+        "max": [
+          0.327956,
+          0.355812,
+          0.93
+        ],
+        "size": [
+          0.655913,
+          0.705812,
+          0.93
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "model"
+    },
+    {
+      "id": "190-chair-2",
+      "kind": "chair",
+      "parcel": "190",
+      "name": "Fotel ogrodowy",
+      "planFootprintM": [
+        0.65,
+        0.7
+      ],
+      "boundsLocalM": {
+        "min": [
+          -0.327956,
+          -0.35,
+          0.0
+        ],
+        "max": [
+          0.327956,
+          0.355812,
+          0.93
+        ],
+        "size": [
+          0.655913,
+          0.705812,
+          0.93
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "model"
+    },
+    {
+      "id": "190-chair-3",
+      "kind": "chair",
+      "parcel": "190",
+      "name": "Fotel ogrodowy",
+      "planFootprintM": [
+        0.65,
+        0.7
+      ],
+      "boundsLocalM": {
+        "min": [
+          -0.327956,
+          -0.35,
+          0.0
+        ],
+        "max": [
+          0.327956,
+          0.355812,
+          0.93
+        ],
+        "size": [
+          0.655913,
+          0.705812,
+          0.93
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "model"
+    },
+    {
+      "id": "191-grill",
+      "kind": "grill",
+      "parcel": "191",
+      "name": "Grill ogrodowy",
+      "planFootprintM": [
+        1.35,
+        0.75
+      ],
+      "boundsLocalM": {
+        "min": [
+          -0.99,
+          -0.405,
+          -0.0
+        ],
+        "max": [
+          0.8,
+          0.405,
+          1.47
+        ],
+        "size": [
+          1.79,
+          0.81,
+          1.47
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "model"
+    },
+    {
+      "id": "191-chair-0",
+      "kind": "chair",
+      "parcel": "191",
+      "name": "Fotel ogrodowy",
+      "planFootprintM": [
+        0.65,
+        0.7
+      ],
+      "boundsLocalM": {
+        "min": [
+          -0.327956,
+          -0.35,
+          0.0
+        ],
+        "max": [
+          0.327956,
+          0.355812,
+          0.93
+        ],
+        "size": [
+          0.655913,
+          0.705812,
+          0.93
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "model"
+    },
+    {
+      "id": "191-chair-1",
+      "kind": "chair",
+      "parcel": "191",
+      "name": "Fotel ogrodowy",
+      "planFootprintM": [
+        0.65,
+        0.7
+      ],
+      "boundsLocalM": {
+        "min": [
+          -0.327956,
+          -0.35,
+          0.0
+        ],
+        "max": [
+          0.327956,
+          0.355812,
+          0.93
+        ],
+        "size": [
+          0.655913,
+          0.705812,
+          0.93
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "model"
+    },
+    {
+      "id": "191-chair-2",
+      "kind": "chair",
+      "parcel": "191",
+      "name": "Fotel ogrodowy",
+      "planFootprintM": [
+        0.65,
+        0.7
+      ],
+      "boundsLocalM": {
+        "min": [
+          -0.327956,
+          -0.35,
+          0.0
+        ],
+        "max": [
+          0.327956,
+          0.355812,
+          0.93
+        ],
+        "size": [
+          0.655913,
+          0.705812,
+          0.93
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "model"
+    },
+    {
+      "id": "191-chair-3",
+      "kind": "chair",
+      "parcel": "191",
+      "name": "Fotel ogrodowy",
+      "planFootprintM": [
+        0.65,
+        0.7
+      ],
+      "boundsLocalM": {
+        "min": [
+          -0.327956,
+          -0.35,
+          0.0
+        ],
+        "max": [
+          0.327956,
+          0.355812,
+          0.93
+        ],
+        "size": [
+          0.655913,
+          0.705812,
+          0.93
+        ]
+      },
+      "baseElevationM": 0.08,
+      "source": "model"
+    }
+  ],
+  "details": [
+    {
+      "id": "sauna",
+      "name": "Sauna — bryła",
+      "values": [
+        3,
+        2.4,
+        2,
+        3.2,
+        45
+      ],
+      "labels": [
+        "szerokość m",
+        "głębokość m",
+        "ściana m",
+        "kalenica m",
+        "dach °"
+      ],
+      "source": "shared-plan + model"
+    },
+    {
+      "id": "sauna-door",
+      "name": "Drzwi sauny od wspólnego chodnika",
+      "values": [
+        0.8,
+        1.85
+      ],
+      "labels": [
+        "szerokość zewnętrzna ramy m",
+        "wysokość ramy m"
+      ],
+      "source": "model"
+    },
+    {
+      "id": "sauna-window",
+      "name": "Okno sauny",
+      "values": [
+        1.1,
+        0.7,
+        1
+      ],
+      "labels": [
+        "szerokość ramy m",
+        "wysokość ramy m",
+        "dolna krawędź nad podstawą sauny m"
+      ],
+      "source": "model"
+    },
+    {
+      "id": "wickets",
+      "name": "Trzy furtki trójstyku",
+      "values": [
+        1.2,
+        1.2,
+        20
+      ],
+      "labels": [
+        "światło między słupkami m",
+        "wysokość skrzydła m",
+        "uchylenie °"
+      ],
+      "source": "shared-plan + model"
+    },
+    {
+      "id": "pergola-193",
+      "name": "Pergola nad stołem /193",
+      "values": [
+        6.3,
+        4.38,
+        2.86,
+        3.04,
+        14,
+        55,
+        6.02,
+        0.2,
+        0.036
+      ],
+      "labels": [
+        "szerokość zewnętrzna m",
+        "głębokość zewnętrzna m",
+        "spód ramy m",
+        "góra ramy m",
+        "liczba lameli",
+        "uchylenie lameli °",
+        "długość lameli m",
+        "szerokość lameli m",
+        "grubość lameli m"
+      ],
+      "source": "model"
+    },
+    {
+      "id": "pergola-191",
+      "name": "Pergola /191 — osie podpór",
+      "values": [
+        4.5,
+        5.64,
+        17
+      ],
+      "labels": [
+        "rozstaw szerokości m",
+        "rozstaw głębokości m",
+        "liczba listew"
+      ],
+      "source": "catalogue-191 + model"
+    },
+    {
+      "id": "rooflights-191",
+      "name": "Okna dachowe /191 — poglądowy wymiar przeszklenia",
+      "values": [
+        0.94,
+        1.4,
+        6
+      ],
+      "labels": [
+        "szerokość m",
+        "długość po połaci m",
+        "liczba"
+      ],
+      "source": "model"
+    },
+    {
+      "id": "mullions",
+      "name": "Ciemne podziały przeszkleń /193 i /191",
+      "values": [
+        0.07
+      ],
+      "labels": [
+        "średnica profilu w modelu m"
+      ],
+      "source": "model"
+    },
+    {
+      "id": "hot-tub",
+      "name": "Balia",
+      "values": [
+        2.2,
+        1.1,
+        1.98,
+        1.012
+      ],
+      "labels": [
+        "nominalna średnica m",
+        "wysokość ściany m",
+        "średnica wody m",
+        "góra powierzchni wody nad podstawą m"
+      ],
+      "source": "shared-plan + model"
+    },
+    {
+      "id": "trampoline",
+      "name": "Trampolina wkopana",
+      "values": [
+        2.2,
+        1.96,
+        0.018,
+        1.55
+      ],
+      "labels": [
+        "nominalna średnica m",
+        "średnica maty m",
+        "góra maty nad gruntem m",
+        "góra słupków siatki nad gruntem m"
+      ],
+      "source": "shared-plan + model"
+    },
+    {
+      "id": "table-193",
+      "name": "Stół na tarasie /193",
+      "values": [
+        2.5,
+        1,
+        0.8,
+        0.08
+      ],
+      "labels": [
+        "długość blatu m",
+        "szerokość blatu m",
+        "wysokość do góry blatu m",
+        "grubość blatu m"
+      ],
+      "source": "model"
+    },
+    {
+      "id": "private-paths",
+      "name": "Prywatne chodniki",
+      "values": [
+        1.2
+      ],
+      "labels": [
+        "szerokość nominalna m"
+      ],
+      "source": "model"
+    },
+    {
+      "id": "shared-paths",
+      "name": "Wspólny chodnik",
+      "values": [
+        1.8
+      ],
+      "labels": [
+        "szerokość nominalna m"
+      ],
+      "source": "shared-plan"
+    },
+    {
+      "id": "fire-gravel",
+      "name": "Trzy kręgi żwirowe wokół palenisk",
+      "values": [
+        5,
+        1.06
+      ],
+      "labels": [
+        "średnica kręgu m",
+        "średnica paleniska m"
+      ],
+      "source": "model"
+    },
+    {
+      "id": "fences",
+      "name": "Ogrodzenia",
+      "values": [
+        1.6,
+        1.2
+      ],
+      "labels": [
+        "wysokość desek ogrodzenia działek m",
+        "wysokość desek wspólnego płotu m"
+      ],
+      "source": "model"
+    },
+    {
+      "id": "grill-pads",
+      "name": "Podesty grilla /190 i /191",
+      "values": [
+        3,
+        3
+      ],
+      "labels": [
+        "szerokość m",
+        "głębokość m"
+      ],
+      "source": "model"
+    }
+  ],
+  "trees": [
+    {
+      "height": 4.2,
+      "crownRadius": 1.5,
+      "id": "193-tree-0",
+      "source": "model",
+      "meaning": "Nominalna wysokość i promień korony koncepcji, nie rozmiar sadzonki."
+    },
+    {
+      "height": 3.8,
+      "crownRadius": 1.3,
+      "id": "193-tree-1",
+      "source": "model",
+      "meaning": "Nominalna wysokość i promień korony koncepcji, nie rozmiar sadzonki."
+    },
+    {
+      "height": 4.0,
+      "crownRadius": 1.4,
+      "id": "193-tree-2",
+      "source": "model",
+      "meaning": "Nominalna wysokość i promień korony koncepcji, nie rozmiar sadzonki."
+    },
+    {
+      "height": 3.8,
+      "crownRadius": 1.3,
+      "id": "193-tree-3",
+      "source": "model",
+      "meaning": "Nominalna wysokość i promień korony koncepcji, nie rozmiar sadzonki."
+    },
+    {
+      "height": 4.2,
+      "crownRadius": 1.4,
+      "id": "193-tree-4",
+      "source": "model",
+      "meaning": "Nominalna wysokość i promień korony koncepcji, nie rozmiar sadzonki."
+    },
+    {
+      "height": 4.3,
+      "crownRadius": 1.5,
+      "id": "193-tree-5",
+      "source": "model",
+      "meaning": "Nominalna wysokość i promień korony koncepcji, nie rozmiar sadzonki."
+    },
+    {
+      "height": 3.7,
+      "crownRadius": 1.2,
+      "id": "193-tree-6",
+      "source": "model",
+      "meaning": "Nominalna wysokość i promień korony koncepcji, nie rozmiar sadzonki."
+    },
+    {
+      "height": 4.2,
+      "crownRadius": 1.3,
+      "id": "190-tree-0",
+      "source": "model",
+      "meaning": "Nominalna wysokość i promień korony koncepcji, nie rozmiar sadzonki."
+    },
+    {
+      "height": 4.2,
+      "crownRadius": 1.4,
+      "id": "190-tree-1",
+      "source": "model",
+      "meaning": "Nominalna wysokość i promień korony koncepcji, nie rozmiar sadzonki."
+    },
+    {
+      "height": 4.2,
+      "crownRadius": 1.3,
+      "id": "190-tree-2",
+      "source": "model",
+      "meaning": "Nominalna wysokość i promień korony koncepcji, nie rozmiar sadzonki."
+    },
+    {
+      "height": 4.2,
+      "crownRadius": 1.6,
+      "id": "191-tree-0",
+      "source": "model",
+      "meaning": "Nominalna wysokość i promień korony koncepcji, nie rozmiar sadzonki."
+    },
+    {
+      "height": 4.2,
+      "crownRadius": 1.3,
+      "id": "191-tree-1",
+      "source": "model",
+      "meaning": "Nominalna wysokość i promień korony koncepcji, nie rozmiar sadzonki."
+    },
+    {
+      "height": 4.2,
+      "crownRadius": 1.3,
+      "id": "191-tree-2",
+      "source": "model",
+      "meaning": "Nominalna wysokość i promień korony koncepcji, nie rozmiar sadzonki."
+    }
+  ],
+  "people": [
+    {
+      "id": "person-garden-1",
+      "heightM": 1.78,
+      "source": "model"
+    },
+    {
+      "id": "person-garden-2",
+      "heightM": 1.66,
+      "source": "model"
+    },
+    {
+      "id": "person-garden-child",
+      "heightM": 1.2,
+      "source": "model"
+    },
+    {
+      "id": "person-shared-1",
+      "heightM": 1.83,
+      "source": "model"
+    },
+    {
+      "id": "person-shared-2",
+      "heightM": 1.69,
+      "source": "model"
+    },
+    {
+      "id": "person-190-path",
+      "heightM": 1.75,
+      "source": "model"
+    },
+    {
+      "id": "person-190-garden",
+      "heightM": 1.71,
+      "source": "model"
+    },
+    {
+      "id": "person-191-garden",
+      "heightM": 1.79,
+      "source": "model"
+    },
+    {
+      "id": "person-191-front",
+      "heightM": 1.72,
+      "source": "model"
+    }
+  ],
+  "dogs": [
+    {
+      "id": "goldenretriever",
+      "breed": "golden retriever",
+      "parcel": "190",
+      "shoulderHeightM": 0.56,
+      "torsoLengthM": 0.9,
+      "source": "model"
+    },
+    {
+      "id": "whitepug",
+      "breed": "white pug",
+      "parcel": "193",
+      "shoulderHeightM": 0.28,
+      "torsoLengthM": 0.42,
+      "source": "model"
+    }
+  ],
+  "clearances": {
+    "roadM": 5,
+    "otherBoundariesAssumedM": 4,
+    "parcel191SoutheastM": 10.5,
+    "basis": "Odsunięcia przyjęte w tej koncepcji, w tym 10,5 m SE według instrukcji użytkownika."
+  },
+  "placementPins": {
+    "190": {
+      "matrix": [
+        [
+          0.0,
+          1.0
+        ],
+        [
+          1.0,
+          0.0
+        ]
+      ],
+      "translation": [
+        -28.533296597646547,
+        7.5731536501132615
+      ]
+    },
+    "191": {
+      "matrix": [
+        [
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.0
+        ]
+      ],
+      "translation": [
+        7.110858085287692,
+        25.143165350240658
+      ]
+    },
+    "193": {
+      "mirror": "x -> 14.64-x",
+      "matrix": [
+        [
+          0.688749461848429,
+          0.7249994336573646
+        ],
+        [
+          0.7249994336573646,
+          -0.688749461848429
+        ]
+      ],
+      "translation": [
+        -16.102748693765037,
+        7.587545565865379
+      ]
+    }
+  },
+  "sharedAreaM2": 148.32612022495755,
+  "integrity": {
+    "geometryBaselineCommit": "ee9c01f7f5a8a82bb4bea1d08194cd80ed92e3ad",
+    "inputsSha256": "343cd15db53c917140f96d0c974927506bf4ab6920880469f1f4b7b0da5a1509",
+    "proceduralCodeSha256": "db7d26bedd363f7e4fdfdb83d480aa73044a320040a64fba10348dafc6c751f1",
+    "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu."
+  }
+}

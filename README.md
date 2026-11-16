@@ -52,3 +52,11 @@ Osobna podstrona `trzy-domy-3d/index.html` przedstawia trzy domy, prywatne ogrod
 Model zachowuje metryczną geometrię i gabaryty katalogowe. Dachy, stolarka, wyposażenie i zieleń są koncepcją; teren przyjęto płaski. Sauna ma rzut 3 × 2,4 m i czerwony dach 45° bez okapu; trampolina jest na poziomie gruntu. Sauna ma oddzielne drzwi i okno, a trzy furtki wspólnego ogrodu mają światło 1,2 m i są uchylone o 20°. Nad stołem na /193 jest ażurowa pergola z lamelami ustawionymi pod kątem 55°. Podziały przeszkleń mają przestrzenne ciemne ramy. Okna dachowe /191 powiększono poglądowo do 94 × 140 cm (wymiar po połaci). Golden retriever jest na /190, mops na /193, a każda działka ma co najmniej dwie osoby w skali.
 
 Podstrona jest samodzielna, działa offline i nie korzysta z zapisów lokalnych konfiguratora. Three.js r186 i OrbitControls (MIT) oraz dane modelu są osadzone w HTML; informacje licencyjne pozostają w dołączonym kodzie bibliotek. Zwykły build edytora nie nadpisuje tej podstrony.
+
+### Stały rejestr wymiarów
+
+[Czytelna tabela wymiarów](https://patrykmilewski.github.io/trojstyk-ogrod/trzy-domy-3d/wymiary.html) powstaje wyłącznie z pliku [`trzy-domy-3d/model-dimensions.json`](trzy-domy-3d/model-dimensions.json). Ten plik przechowuje gabaryty trzech domów, 23 obiektów wyposażenia, detale, odsunięcia, drzewa, ludzi i psy. Rozróżnia gabaryt katalogowy, nominalny rzut i zmierzoną obwiednię wierzchołków modelu, która uwzględnia wystające detale. Część wymiarów jest założeniem koncepcji, co wskazano przy danych.
+
+`npm run check` porównuje model z rejestrem i uruchamia testy wykrywania zmian. Odciski SHA-256 obejmują dane sceny (również ustawienie i granice) oraz kod proceduralnej geometrii. Zmiana wymiaru, skali lub ustawienia powoduje błąd kontroli; odcisk kodu jest celowo czuły także na jego inne zmiany. Sam tekst interfejsu można zmienić bez naruszenia blokady. GitHub Actions wykonuje tę kontrolę po pushu i w pull requestach; jest ona niezależna od mechanizmu wdrożenia Pages.
+
+Rejestru **nie regeneruje się automatycznie**. Przy uzgodnionej zmianie należy porównać geometrię z poprzednią wersją, zmierzyć ją ponownie, zaktualizować odpowiednie liczby i odciski oraz zwiększyć `modelVersion`. Sama aktualizacja odcisku bez przeglądu wymiarów nie jest weryfikacją. `npm run build` odświeża tabelę, lecz nie zmienia rejestru ani modelu 3D.
