@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-17.1",
+  "modelVersion": "2026-11-17.2",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1451,10 +1451,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "b967ebf892991498e646774f5a004b96e913e516819401991d6f0ab74b634fa0",
-    "proceduralCodeSha256": "89ea0f70724e1d85cb967212374276c3ce3f451188b4e5e553a7974b4c7bd5a6",
+    "proceduralCodeSha256": "b4182d064a2a7d6a8f62911dcd4a224ea4587691d18b768fb5d2ef7dc2da0e24",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "426140b9e29c7b44a98258b31e23e939a3789b4b671d8536079a11c746c93047",
-    "runtimeSha256": "f3fdf1ea15147cbcc23ecd7ea95ece40ae771303b0050bc094322100219c1694"
+    "runtimeSha256": "4aaab1390d813bc608a9fe35e7d51eaf47a49c317ba58e6d91aca1480714414b"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1463,7 +1463,8 @@
     "Osiem samochodów: po dwa na trzech podjazdach i dwa na drodze. Wymiary pobierane z vehicleTypes.",
     "Touchpad: dwa palce przesuwają widok; Ctrl lub gest szczypnięcia zmienia zoom.",
     "Zachowano wymiary 23 obiektów ogrodu, drzew, ludzi i psów oraz kontekst /41, /192 i /133.",
-    "Wnętrze /193: przejścia drzwiowe, schody na +3,20 m, ściany, pustka nad salonem i poglądowe meble. Sauna: wejście od podestu i okno 2 × 1,4 m."
+    "Wnętrze /193: przejścia drzwiowe, schody na +3,20 m, ściany, pustka nad salonem i poglądowe meble. Sauna: wejście od podestu i okno 2 × 1,4 m.",
+    "Wnętrze /190 według Willa Floryda6: oba poziomy i schody +3,35m. Review /193: poprawione orientacje i pozycje mebli oraz pełna ściana przy antresoli. Inwentarze wyposażenia i ich źródła w kontrolowanych plikach danych."
   ],
   "contextParcels": [
     {
@@ -3276,7 +3277,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "632b4d47749c56f80866f0aa638e306fc0dad2ae9d9219a501102fe4c2152b14",
+    "dataSha256": "d24ce0461f11256b86975917e97d10394af3ff8f6c79a6810e0d0c855af7783a",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,
@@ -3286,7 +3287,21 @@
     "stairRises": 18,
     "stairFlightWidthM": 0.9,
     "stairTreadM": 0.26,
-    "reconstruction": "Raster-derived approximate walls/openings; illustrative furniture; exact external envelope retained",
+    "reconstruction": "Publisher-plan review: corrected furniture orientation and wall contacts, missing Room2 void partition and hall-only railing; item bounds/orientations/source uncertainty pinned in data.",
     "originalShell": "Original roof, garden piers, pergola and rooflights retained; solid walls replaced with doorway/window cutouts"
+  },
+  "florydaInterior": {
+    "dataFile": "floryda-interior-data.json",
+    "dataSha256": "620bd764cf15343df4f17eb4f85c082d7c7bb0895c4e67996ba7ef68052eb330",
+    "source": "https://www.mgprojekt.com.pl/willa-floryda-6",
+    "floorHeightsM": [
+      0,
+      3.35
+    ],
+    "groundCeilingM": 3,
+    "upperCeilingM": 6.05,
+    "stairRises": 18,
+    "stairTreadM": 0.27,
+    "reconstruction": "Rooms and furnishings traced from publisher plans; heights from section A-A. Raster uncertainty recorded per item. Current mirrored exterior placement retained."
   }
 }

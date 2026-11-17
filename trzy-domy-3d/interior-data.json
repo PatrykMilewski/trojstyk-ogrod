@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "coordinateSystem": "Original unmirrored catalogue coordinates, metres; x=0 left main facade, y=0 garage front. Apply house.metadata transform exactly once.",
   "levels": {
     "ground": 0,
@@ -501,8 +501,8 @@
       "level": 1,
       "doors": [
         [
-          0.6,
-          1.5
+          0.9,
+          1.8
         ],
         [
           3.2,
@@ -571,10 +571,6 @@
       "level": 1,
       "doors": [
         [
-          0.35,
-          1.25
-        ],
-        [
           3.4,
           4.3
         ],
@@ -602,6 +598,20 @@
           1.1
         ]
       ]
+    },
+    {
+      "id": "u-room2-void",
+      "a": [
+        0.5,
+        10.25
+      ],
+      "b": [
+        4.91,
+        10.25
+      ],
+      "thickness": 0.14,
+      "level": 1,
+      "doors": []
     }
   ],
   "stairs": {
@@ -653,11 +663,1079 @@
       "Room areas, 18 stair rises, 26cm treads, 90cm flight widths, 2.80m ceiling and +3.20m floor come from publisher drawings. Coordinates and door placement are manually traced approximations, typically 10–20cm uncertainty.",
       "Source stair label18×17.68cm sums to3.1824m; visual model uses section+3.20m and uniform18rises.",
       "Published room usable areas on sloped upper floor differ from rectangular floor footprints.",
-      "Furnishings are illustrative inspired by publisher floorplan; exact products and dimensions unknown.",
       "Upper slope follows unchanged exterior roof; interior roof finish thickness and installation void estimated.",
       "Private-bath doorway traced position shifted25cm within the same partition to provide walk-camera clearance at the perpendicular suite wall; raster-derived design remains approximate.",
       "Existing rooflights remain exterior glazing overlays without roof or interior-lining cutouts; they are not transparent openings from inside. Pale roof lining follows the unchanged exterior planes45mm below them.",
-      "Main entrance, internal doorways and one terrace sliding panel are held open for walking; garage door and remaining glazing stay closed."
-    ]
-  }
+      "Main entrance, internal doorways and one terrace sliding panel are held open for walking; garage door and remaining glazing stay closed.",
+      "Furniture inventory records approximate source footprints and front direction; beds face from head to foot. Dimensions are visual traces, typically uncertain by15–30cm, not product or execution dimensions.",
+      "Room2 upper partition beside the void is solid; the hall alone has a guardrail. Laundry entry is through the side hall; its rear partition is solid as drawn.",
+      "Ground main-side glazing traced to y9.23–12.23m; terrace glazing traced to y13.90–16.60m. These refine openings only, preserving the exterior envelope.",
+      "Private bathroom front sanitary fixture symbols overlap a rooflight in the public plan. Shower and WC remain explicit approximations; two wall basins follow the visible source.",
+      "Furniture under roof slopes uses schematic heights; source footprints and wall contacts are more reliable than catalogue symbol sizes. No unsupported furniture is inferred from rooflight symbols.",
+      "Shared upper bathroom doorway refined to y4.64–5.54m against the source opening, leaving the shower approach clear."
+    ],
+    "furnitureSources": {
+      "ground-plan": "work/sources/icon-parter-zwykly.jpg, publisher original ground floor, rooms 0.1–0.9",
+      "upper-plan": "work/icon3d-research/attic-mirror.jpg, publisher mirrored upper floor, converted once into original coordinates",
+      "living-render": "work/icon3d-research/top-original.png, publisher living room and kitchen render"
+    },
+    "furnitureCoordinateUncertaintyM": 0.3
+  },
+  "furniture": [
+    {
+      "id": "pantry-left",
+      "type": "cabinet",
+      "room": "0.2",
+      "box": [
+        0.5,
+        6.79,
+        1.0,
+        8.39
+      ],
+      "facing": "+x",
+      "source": "ground-plan",
+      "height": 2.1
+    },
+    {
+      "id": "pantry-right",
+      "type": "cabinet",
+      "room": "0.2",
+      "box": [
+        3.11,
+        6.79,
+        3.61,
+        8.39
+      ],
+      "facing": "-x",
+      "source": "ground-plan",
+      "height": 2.1
+    },
+    {
+      "id": "pantry-rear",
+      "type": "cabinet",
+      "room": "0.2",
+      "box": [
+        1.98,
+        7.89,
+        3.11,
+        8.39
+      ],
+      "facing": "-y",
+      "source": "ground-plan",
+      "height": 2.1
+    },
+    {
+      "id": "utility-left",
+      "type": "cabinet",
+      "room": "0.3",
+      "box": [
+        3.87,
+        6.79,
+        4.47,
+        7.79
+      ],
+      "facing": "+x",
+      "source": "ground-plan",
+      "height": 1.6
+    },
+    {
+      "id": "utility-plant",
+      "type": "cabinet",
+      "room": "0.3",
+      "box": [
+        3.87,
+        7.79,
+        5.45,
+        8.39
+      ],
+      "facing": "-y",
+      "source": "ground-plan",
+      "height": 1.6
+    },
+    {
+      "id": "heat-pump-module",
+      "type": "appliance",
+      "room": "0.3",
+      "box": [
+        5.45,
+        7.79,
+        6.4,
+        8.39
+      ],
+      "facing": "-y",
+      "source": "ground-plan",
+      "height": 1.8,
+      "approximation": "Schematic plant equipment; catalogue gives position, not product dimensions."
+    },
+    {
+      "id": "kitchen-back",
+      "type": "counter",
+      "room": "0.4",
+      "box": [
+        2.05,
+        8.65,
+        5.15,
+        9.27
+      ],
+      "facing": "+y",
+      "source": "ground-plan",
+      "height": 0.95
+    },
+    {
+      "id": "kitchen-tall",
+      "type": "cabinet",
+      "room": "0.4",
+      "box": [
+        5.15,
+        8.65,
+        6.45,
+        9.27
+      ],
+      "facing": "+y",
+      "source": "ground-plan",
+      "height": 2.3
+    },
+    {
+      "id": "kitchen-sink",
+      "type": "basin",
+      "room": "0.4",
+      "box": [
+        3.5,
+        8.73,
+        4.4,
+        9.2
+      ],
+      "facing": "+y",
+      "source": "ground-plan",
+      "height": 0.1,
+      "support": "kitchen-back",
+      "elevation": 0.95
+    },
+    {
+      "id": "kitchen-island",
+      "type": "counter",
+      "room": "0.4",
+      "box": [
+        2.1,
+        10.35,
+        6.45,
+        11.5
+      ],
+      "facing": "+y",
+      "source": "ground-plan",
+      "height": 0.96
+    },
+    {
+      "id": "hob",
+      "type": "hob",
+      "room": "0.4",
+      "box": [
+        4.0,
+        10.43,
+        4.65,
+        11.05
+      ],
+      "facing": "+y",
+      "source": "ground-plan",
+      "height": 0.025,
+      "support": "kitchen-island",
+      "elevation": 0.96
+    },
+    {
+      "id": "island-stool-0",
+      "type": "stool",
+      "room": "0.4",
+      "box": [
+        3.5799999999999996,
+        11.729999999999999,
+        4.02,
+        12.17
+      ],
+      "facing": "-y",
+      "source": "ground-plan"
+    },
+    {
+      "id": "island-stool-1",
+      "type": "stool",
+      "room": "0.4",
+      "box": [
+        4.430000000000001,
+        11.729999999999999,
+        4.87,
+        12.17
+      ],
+      "facing": "-y",
+      "source": "ground-plan"
+    },
+    {
+      "id": "island-stool-2",
+      "type": "stool",
+      "room": "0.4",
+      "box": [
+        5.28,
+        11.729999999999999,
+        5.72,
+        12.17
+      ],
+      "facing": "-y",
+      "source": "ground-plan"
+    },
+    {
+      "id": "living-rug",
+      "type": "rug",
+      "room": "0.4",
+      "box": [
+        1.1,
+        12.65,
+        4.25,
+        16.25
+      ],
+      "facing": "+y",
+      "source": "ground-plan",
+      "height": 0.015
+    },
+    {
+      "id": "sofa",
+      "type": "sofa",
+      "room": "0.4",
+      "box": [
+        3.05,
+        12.8,
+        4.05,
+        16.1
+      ],
+      "facing": "-x",
+      "source": "ground-plan"
+    },
+    {
+      "id": "chaise",
+      "type": "ottoman",
+      "room": "0.4",
+      "box": [
+        2.25,
+        12.8,
+        3.05,
+        13.8
+      ],
+      "facing": "-x",
+      "source": "ground-plan"
+    },
+    {
+      "id": "coffee-table",
+      "type": "table",
+      "room": "0.4",
+      "box": [
+        1.55,
+        14.55,
+        2.55,
+        15.35
+      ],
+      "facing": "+y",
+      "source": "ground-plan",
+      "height": 0.45
+    },
+    {
+      "id": "media-console",
+      "type": "cabinet",
+      "room": "0.4",
+      "box": [
+        0.5,
+        13.55,
+        0.9,
+        15.75
+      ],
+      "facing": "+x",
+      "source": "ground-plan",
+      "height": 0.55
+    },
+    {
+      "id": "tv",
+      "type": "screen",
+      "room": "0.4",
+      "box": [
+        0.53,
+        13.8,
+        0.6,
+        15.5
+      ],
+      "facing": "+x",
+      "source": "ground-plan",
+      "height": 0.95,
+      "elevation": 0.7,
+      "support": "media-console"
+    },
+    {
+      "id": "dining-table",
+      "type": "table",
+      "room": "0.4",
+      "box": [
+        5.55,
+        13,
+        6.65,
+        15.6
+      ],
+      "facing": "+y",
+      "source": "ground-plan"
+    },
+    {
+      "id": "dining-left-0",
+      "type": "chair",
+      "room": "0.4",
+      "box": [
+        4.91,
+        13.129999999999999,
+        5.35,
+        13.57
+      ],
+      "facing": "+x",
+      "source": "ground-plan"
+    },
+    {
+      "id": "dining-right-0",
+      "type": "chair",
+      "room": "0.4",
+      "box": [
+        6.8500000000000005,
+        13.129999999999999,
+        7.29,
+        13.57
+      ],
+      "facing": "-x",
+      "source": "ground-plan"
+    },
+    {
+      "id": "dining-left-1",
+      "type": "chair",
+      "room": "0.4",
+      "box": [
+        4.91,
+        14.08,
+        5.35,
+        14.520000000000001
+      ],
+      "facing": "+x",
+      "source": "ground-plan"
+    },
+    {
+      "id": "dining-right-1",
+      "type": "chair",
+      "room": "0.4",
+      "box": [
+        6.8500000000000005,
+        14.08,
+        7.29,
+        14.520000000000001
+      ],
+      "facing": "-x",
+      "source": "ground-plan"
+    },
+    {
+      "id": "dining-left-2",
+      "type": "chair",
+      "room": "0.4",
+      "box": [
+        4.91,
+        15.03,
+        5.35,
+        15.47
+      ],
+      "facing": "+x",
+      "source": "ground-plan"
+    },
+    {
+      "id": "dining-right-2",
+      "type": "chair",
+      "room": "0.4",
+      "box": [
+        6.8500000000000005,
+        15.03,
+        7.29,
+        15.47
+      ],
+      "facing": "-x",
+      "source": "ground-plan"
+    },
+    {
+      "id": "dining-front",
+      "type": "chair",
+      "room": "0.4",
+      "box": [
+        5.88,
+        12.36,
+        6.319999999999999,
+        12.8
+      ],
+      "facing": "+y",
+      "source": "ground-plan"
+    },
+    {
+      "id": "dining-rear",
+      "type": "chair",
+      "room": "0.4",
+      "box": [
+        5.88,
+        15.799999999999999,
+        6.319999999999999,
+        16.24
+      ],
+      "facing": "-y",
+      "source": "ground-plan"
+    },
+    {
+      "id": "entry-wardrobe-rear",
+      "type": "cabinet",
+      "room": "0.6",
+      "box": [
+        8.48,
+        5.39,
+        10.55,
+        5.99
+      ],
+      "facing": "-y",
+      "source": "ground-plan",
+      "height": 2.2
+    },
+    {
+      "id": "entry-wardrobe-side",
+      "type": "cabinet",
+      "room": "0.6",
+      "box": [
+        10.55,
+        4.71,
+        11.05,
+        5.99
+      ],
+      "facing": "-x",
+      "source": "ground-plan",
+      "height": 2.2
+    },
+    {
+      "id": "entry-bench",
+      "type": "ottoman",
+      "room": "0.6",
+      "box": [
+        6.72,
+        6.65,
+        7.08,
+        7.55
+      ],
+      "facing": "+x",
+      "source": "ground-plan"
+    },
+    {
+      "id": "ground-bath",
+      "type": "sink",
+      "room": "0.7",
+      "box": [
+        9.45,
+        6.27,
+        10.05,
+        6.77
+      ],
+      "facing": "+y",
+      "source": "ground-plan"
+    },
+    {
+      "id": "ground-wc",
+      "type": "toilet",
+      "room": "0.7",
+      "box": [
+        8.5,
+        7.02,
+        9.16,
+        7.42
+      ],
+      "facing": "+x",
+      "source": "ground-plan"
+    },
+    {
+      "id": "ground-shower",
+      "type": "shower",
+      "room": "0.7",
+      "box": [
+        10.15,
+        6.27,
+        11.05,
+        7.87
+      ],
+      "facing": "-x",
+      "source": "ground-plan"
+    },
+    {
+      "id": "guest-sofa-bed",
+      "type": "sofa",
+      "room": "0.8",
+      "box": [
+        13.3,
+        5.05,
+        14.13,
+        7.15
+      ],
+      "facing": "-x",
+      "source": "ground-plan",
+      "approximation": "Publisher symbol reads as sofa or convertible bed; compact footprint and wall-facing orientation retained."
+    },
+    {
+      "id": "guest-wardrobe",
+      "type": "cabinet",
+      "room": "0.8",
+      "box": [
+        11.33,
+        5.2,
+        11.69,
+        7.2
+      ],
+      "facing": "+x",
+      "source": "ground-plan",
+      "height": 2.2
+    },
+    {
+      "id": "guest-armchair",
+      "type": "sofa",
+      "room": "0.8",
+      "box": [
+        13.15,
+        8.2,
+        13.85,
+        8.9
+      ],
+      "facing": "-x",
+      "source": "ground-plan"
+    },
+    {
+      "id": "office-desk",
+      "type": "table",
+      "room": "0.9",
+      "box": [
+        11.2,
+        10.4,
+        12.9,
+        11.1
+      ],
+      "facing": "+y",
+      "source": "ground-plan"
+    },
+    {
+      "id": "office-chair",
+      "type": "chair",
+      "room": "0.9",
+      "box": [
+        12.229999999999999,
+        11.33,
+        12.67,
+        11.770000000000001
+      ],
+      "facing": "-y",
+      "source": "ground-plan"
+    },
+    {
+      "id": "office-armchair",
+      "type": "sofa",
+      "room": "0.9",
+      "box": [
+        13.1,
+        9.65,
+        13.85,
+        10.35
+      ],
+      "facing": "-x",
+      "source": "ground-plan"
+    },
+    {
+      "id": "bedroom-one",
+      "type": "bed",
+      "room": "1.1",
+      "box": [
+        0.52,
+        1.3,
+        2.52,
+        2.7
+      ],
+      "facing": "+x",
+      "source": "upper-plan"
+    },
+    {
+      "id": "upper-bath",
+      "type": "sink",
+      "room": "1.2",
+      "box": [
+        2.9,
+        3.74,
+        3.8,
+        4.24
+      ],
+      "facing": "+y",
+      "source": "upper-plan"
+    },
+    {
+      "id": "upper-wc",
+      "type": "toilet",
+      "room": "1.2",
+      "box": [
+        2.1,
+        3.74,
+        2.5,
+        4.42
+      ],
+      "facing": "+y",
+      "source": "upper-plan"
+    },
+    {
+      "id": "bath-tub",
+      "type": "tub",
+      "room": "1.2",
+      "box": [
+        0.5,
+        3.74,
+        1.4,
+        5.64
+      ],
+      "facing": "+x",
+      "source": "upper-plan"
+    },
+    {
+      "id": "upper-shower",
+      "type": "shower",
+      "room": "1.2",
+      "box": [
+        3.87,
+        3.74,
+        4.77,
+        4.64
+      ],
+      "facing": "+y",
+      "source": "upper-plan"
+    },
+    {
+      "id": "bedroom-two",
+      "type": "bed",
+      "room": "1.3",
+      "box": [
+        0.52,
+        7.65,
+        2.52,
+        9.05
+      ],
+      "facing": "+x",
+      "source": "upper-plan"
+    },
+    {
+      "id": "bedroom-two-desk",
+      "type": "table",
+      "room": "1.3",
+      "box": [
+        0.5,
+        5.78,
+        2.5,
+        6.38
+      ],
+      "facing": "+y",
+      "source": "upper-plan"
+    },
+    {
+      "id": "bedroom-two-chair",
+      "type": "chair",
+      "room": "1.3",
+      "box": [
+        1.43,
+        6.58,
+        1.8699999999999999,
+        7.02
+      ],
+      "facing": "-y",
+      "source": "upper-plan"
+    },
+    {
+      "id": "bedroom-two-wardrobe-rear",
+      "type": "cabinet",
+      "room": "1.3",
+      "box": [
+        0.5,
+        9.58,
+        4.17,
+        10.18
+      ],
+      "facing": "-y",
+      "source": "upper-plan",
+      "height": 1.2
+    },
+    {
+      "id": "bedroom-two-wardrobe-side",
+      "type": "cabinet",
+      "room": "1.3",
+      "box": [
+        4.17,
+        8.1,
+        4.77,
+        10.18
+      ],
+      "facing": "-x",
+      "source": "upper-plan",
+      "height": 2.2
+    },
+    {
+      "id": "laundry-sink",
+      "type": "sink",
+      "room": "1.5",
+      "box": [
+        6.4,
+        7.39,
+        7.1,
+        7.89
+      ],
+      "facing": "-y",
+      "source": "upper-plan"
+    },
+    {
+      "id": "laundry-machine-0",
+      "type": "washer",
+      "room": "1.5",
+      "box": [
+        7.15,
+        7.21,
+        7.800000000000001,
+        7.89
+      ],
+      "facing": "-y",
+      "source": "upper-plan",
+      "height": 0.87
+    },
+    {
+      "id": "laundry-machine-1",
+      "type": "washer",
+      "room": "1.5",
+      "box": [
+        7.9,
+        7.21,
+        8.55,
+        7.89
+      ],
+      "facing": "-y",
+      "source": "upper-plan",
+      "height": 0.87
+    },
+    {
+      "id": "private-shower",
+      "type": "shower",
+      "room": "1.6",
+      "box": [
+        8.95,
+        5.4,
+        10,
+        6.4
+      ],
+      "facing": "+y",
+      "source": "upper-plan",
+      "approximation": "Front sanitary zone is obscured by the rooflight symbol; this shower is an explicitly approximate fixture."
+    },
+    {
+      "id": "private-wc",
+      "type": "toilet",
+      "room": "1.6",
+      "box": [
+        10.3,
+        5.13,
+        10.7,
+        5.81
+      ],
+      "facing": "+y",
+      "source": "upper-plan",
+      "approximation": "Front sanitary zone is obscured by the rooflight symbol; exact WC placement is approximate."
+    },
+    {
+      "id": "private-sink-one",
+      "type": "sink",
+      "room": "1.6",
+      "box": [
+        11.05,
+        6.2,
+        11.55,
+        6.9
+      ],
+      "facing": "-x",
+      "source": "upper-plan"
+    },
+    {
+      "id": "private-sink-two",
+      "type": "sink",
+      "room": "1.6",
+      "box": [
+        11.05,
+        7.05,
+        11.55,
+        7.75
+      ],
+      "facing": "-x",
+      "source": "upper-plan"
+    },
+    {
+      "id": "master-dressing-left",
+      "type": "cabinet",
+      "room": "1.7",
+      "box": [
+        11.69,
+        5.11,
+        12.29,
+        7.89
+      ],
+      "facing": "+x",
+      "source": "upper-plan",
+      "height": 1.6
+    },
+    {
+      "id": "master-dressing-right",
+      "type": "cabinet",
+      "room": "1.7",
+      "box": [
+        13.54,
+        5.11,
+        14.14,
+        7.89
+      ],
+      "facing": "-x",
+      "source": "upper-plan",
+      "height": 1.6
+    },
+    {
+      "id": "master-bed",
+      "type": "bed",
+      "room": "1.8",
+      "box": [
+        11.15,
+        10.28,
+        13.15,
+        12.26
+      ],
+      "facing": "-y",
+      "source": "upper-plan"
+    },
+    {
+      "id": "master-bedside-left",
+      "type": "cabinet",
+      "room": "1.8",
+      "box": [
+        10.55,
+        11.7,
+        11,
+        12.26
+      ],
+      "facing": "-y",
+      "source": "upper-plan",
+      "height": 0.5
+    },
+    {
+      "id": "master-bedside-right",
+      "type": "cabinet",
+      "room": "1.8",
+      "box": [
+        13.3,
+        11.7,
+        13.75,
+        12.26
+      ],
+      "facing": "-y",
+      "source": "upper-plan",
+      "height": 0.5
+    }
+  ],
+  "rails": [
+    {
+      "id": "upper-void-edge",
+      "a": [
+        4.91,
+        10.3
+      ],
+      "b": [
+        7.94,
+        10.3
+      ],
+      "level": 1
+    },
+    {
+      "id": "upper-stair-edge",
+      "a": [
+        7.94,
+        10.3
+      ],
+      "b": [
+        7.94,
+        12.21
+      ],
+      "level": 1
+    }
+  ],
+  "facades": [
+    {
+      "id": "facade-garage",
+      "a": [
+        0,
+        0
+      ],
+      "b": [
+        6.9,
+        0
+      ],
+      "openings": [
+        {
+          "start": 1.06,
+          "end": 6.06,
+          "bottom": 0,
+          "top": 2.35,
+          "glass": false
+        }
+      ]
+    },
+    {
+      "id": "facade-garage-side",
+      "a": [
+        6.9,
+        0
+      ],
+      "b": [
+        6.9,
+        4.21
+      ],
+      "openings": []
+    },
+    {
+      "id": "facade-front-wing",
+      "a": [
+        6.9,
+        4.21
+      ],
+      "b": [
+        14.64,
+        4.21
+      ],
+      "openings": [
+        {
+          "start": 0,
+          "end": 1,
+          "bottom": 0,
+          "top": 2.35,
+          "glass": false
+        },
+        {
+          "start": 1.6,
+          "end": 3.6,
+          "bottom": 0,
+          "top": 2.35,
+          "glass": true
+        },
+        {
+          "start": 4.8,
+          "end": 6.3,
+          "bottom": 0,
+          "top": 2.35,
+          "glass": true
+        }
+      ]
+    },
+    {
+      "id": "facade-wing-end",
+      "a": [
+        14.64,
+        4.21
+      ],
+      "b": [
+        14.64,
+        12.71
+      ],
+      "openings": [
+        {
+          "start": 4.29,
+          "end": 4.99,
+          "bottom": 0,
+          "top": 2.35,
+          "glass": true
+        },
+        {
+          "start": 5.25,
+          "end": 7.39,
+          "bottom": 0,
+          "top": 2.35,
+          "glass": true
+        }
+      ]
+    },
+    {
+      "id": "facade-wing-rear",
+      "a": [
+        8.5,
+        12.71
+      ],
+      "b": [
+        14.64,
+        12.71
+      ],
+      "openings": []
+    },
+    {
+      "id": "facade-terrace",
+      "a": [
+        8.5,
+        12.71
+      ],
+      "b": [
+        8.5,
+        17.09
+      ],
+      "openings": [
+        {
+          "start": 1.19,
+          "end": 2.54,
+          "bottom": 0,
+          "top": 2.35,
+          "glass": true
+        },
+        {
+          "start": 2.54,
+          "end": 3.89,
+          "bottom": 0,
+          "top": 2.35,
+          "glass": false
+        }
+      ]
+    },
+    {
+      "id": "facade-garden",
+      "a": [
+        0,
+        17.09
+      ],
+      "b": [
+        8.5,
+        17.09
+      ],
+      "openings": [
+        {
+          "start": 0.74,
+          "end": 7.76,
+          "bottom": 0,
+          "top": 2.35,
+          "glass": true
+        }
+      ]
+    },
+    {
+      "id": "facade-main-side",
+      "a": [
+        0,
+        0
+      ],
+      "b": [
+        0,
+        17.09
+      ],
+      "openings": [
+        {
+          "start": 9.23,
+          "end": 12.23,
+          "bottom": 0,
+          "top": 2.35,
+          "glass": true
+        }
+      ]
+    }
+  ]
 }

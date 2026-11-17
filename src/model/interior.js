@@ -75,16 +75,9 @@ function iconInteriorFloorsAndPartitions(context) {
 }
 
 function iconInteriorFacades(context) {
- const {wall, opening, box, obstacle, mats, beam} = context;
- wall('facade-garage',[0,0],[6.9,0],0,2.8,.48,[opening(1.06,6.06,0,2.35,false)]);
+ const {data, wall, box, obstacle, mats, beam, opening} = context;
+ for(const facade of data.facades)wall(facade.id,facade.a,facade.b,0,2.8,.48,facade.openings);
  box('garage-sectional-door',[1.08,-.05,6.04,.05],0,2.32,mats.dark);obstacle('garage-door',[1.06,-.1,6.06,.1],0,2.35);
- wall('facade-garage-side',[6.9,0],[6.9,4.21],0,2.8,.48);
- wall('facade-front-wing',[6.9,4.21],[14.64,4.21],0,2.8,.48,[opening(0,1,0,2.35,false),opening(1.6,3.6),opening(4.8,6.3)]);
- wall('facade-wing-end',[14.64,4.21],[14.64,12.71],0,2.8,.48,[opening(4.29,4.99),opening(5.25,7.39)]);
- wall('facade-wing-rear',[8.5,12.71],[14.64,12.71],0,2.8,.48);
- wall('facade-terrace',[8.5,12.71],[8.5,17.09],0,2.8,.48,[opening(.29,1.79,0,2.35,true),opening(1.79,3.39,0,2.35,false)]);
- wall('facade-garden',[0,17.09],[8.5,17.09],0,2.8,.48,[opening(.74,7.76,0,2.35,true)]);
- wall('facade-main-side',[0,0],[0,17.09],0,2.8,.48,[opening(10.3,13.3)]);
  // These three walls include the upper gable and its asymmetrical glazing.
  wall('front-gable',[0,0],[8.5,0],2.8,8.3,.36,[{...opening(.9,4.25,3.2,7.25),poly:[[.9,3.2],[4.25,3.2],[4.25,7.25],[.9,3.9]]}],[[0,2.8],[8.5,2.8],[8.5,4.07],[4.25,8.3],[0,4.07]]);
  wall('garden-gable',[0,18.13],[8.5,18.13],2.8,8.3,.36,[{...opening(.9,7.6,3.2,7.35),poly:[[.9,3.2],[7.6,3.2],[7.6,3.95],[4.25,7.35],[.9,3.95]]}],[[0,2.8],[8.5,2.8],[8.5,4.07],[4.25,8.3],[0,4.07]]);
@@ -105,34 +98,111 @@ function iconInteriorStairs(context) {
  box('stair-landing',[sx,sy+run,ex,ey],half-.15,.15,mats.oak);floor('stair-landing',[sx,sy+run,ex,ey],half);
  navigation.ramps.push({id:'stair-lower',start:world([sx+s.width/2,sy]).slice(0,2),end:world([sx+s.width/2,sy+run]).slice(0,2),width:s.width,z0:0,z1:half},{id:'stair-upper',start:world([ex-s.width/2,sy+run]).slice(0,2),end:world([ex-s.width/2,sy]).slice(0,2),width:s.width,z0:half,z1:3.2});
  for(const [id,x,z0,z1] of [['lower',sx,0,half],['upper',ex,3.2,half]])beam('stair-handrail-'+id,[x,sy,z0+1.02],[x,sy+run,z1+1.02],.025);
- rail('landing-back',[sx,ey],[ex,ey],half);rail('upper-void-edge',[.5,10.3],[7.94,10.3],3.2);rail('upper-stair-edge',[7.94,10.3],[7.94,12.21],3.2);
+ rail('landing-back',[sx,ey],[ex,ey],half);
+ for(const guard of data.rails)rail(guard.id,guard.a,guard.b,guard.level?3.2:0);
  obstacle('stair-divider',[sx+s.width,sy,sx+s.width+s.gap,sy+run],0,3.2);
 }
 
+function iconInteriorFurnitureFrame(context, item) {
+ const {box, beam, mats} = context, [x0,y0,x1,y1] = item.box;
+ const alongX = item.facing.endsWith('x'), width = alongX ? y1-y0 : x1-x0, depth = alongX ? x1-x0 : y1-y0;
+ const z = (item.room.startsWith('1.') ? 3.2 : 0) + (item.elevation || 0);
+ const point = (u,v,h=0) => ({'+y':[x0+u,y0+v,z+h],'-y':[x1-u,y1-v,z+h],'+x':[x0+v,y1-u,z+h],'-x':[x1-v,y0+u,z+h]}[item.facing]);
+ const part = (name,b,h,t,mat=mats.wood) => {
+  const a=point(b[0],b[1]),c=point(b[2],b[3]);
+  return box(item.id+'-'+name,[Math.min(a[0],c[0]),Math.min(a[1],c[1]),Math.max(a[0],c[0]),Math.max(a[1],c[1])],z+h,t,mat);
+ };
+ const line = (name,a,b,r=.025,mat=mats.metal) => beam(item.id+'-'+name,point(...a),point(...b),r,mat);
+ return {item,width,depth,z,part,line,point,mats};
+}
+
+function iconInteriorFurnitureBed(frame) {
+ const {width:w,depth:d,part,mats}=frame;
+ part('frame',[0,0,w,d],.15,.23);
+ part('mattress',[.04,.08,w-.04,d-.02],.38,.21,mats.white);
+ part('duvet',[.04,Math.min(.55,d*.3),w-.04,d-.02],.59,.09,mats.linen);
+ for(const u of [.08,w/2+.03])part('pillow',[u,.12,u+w/2-.12,.48],.6,.09,mats.white);
+ part('headboard',[0,0,w,.06],0,.95);
+}
+
+function iconInteriorFurnitureSeating(frame) {
+ const {item,width:w,depth:d,part,mats}=frame;
+ if(item.type==='ottoman'){part('cushion',[0,0,w,d],.1,.38,mats.sofa);return;}
+ const sofa=item.type==='sofa',seat=item.type==='stool'?.68:.43,backDepth=sofa?.18:.07;
+ part('seat',[0,0,w,d],sofa?.1:seat,sofa?.35:.07,sofa?mats.sofa:mats.linen);
+ part('back',[0,0,w,backDepth],sofa?.45:seat+.07,sofa?.45:.42,mats.wood);
+ if(sofa){
+  const count=Math.max(1,Math.round(w/.85));
+  for(let i=0;i<count;i++)part('cushion-'+i,[i*w/count+.015,backDepth,(i+1)*w/count-.015,d-.02],.45,.15,mats.linen);
+ }else for(const u of [.05,w-.05])for(const v of [.05,d-.05])part('leg-'+u+'-'+v,[u-.025,v-.025,u+.025,v+.025],0,seat,mats.dark);
+}
+
+function iconInteriorFurnitureStorage(frame) {
+ const {item,width:w,depth:d,part,mats}=frame,h=item.height||2.2;
+ part('body',[0,0,w,d],0,h,item.type==='appliance'?mats.white:mats.wood);
+ if(item.type==='counter')part('top',[0,0,w,d],h-.05,.05,mats.counter);
+ for(let u=.15;u<w;u+=.6)part('handle-'+u,[u,d-.035,Math.min(u+.025,w),d],Math.min(1,h*.55),Math.min(.3,h*.25),mats.dark);
+}
+
+function iconInteriorFurnitureTable(frame) {
+ const {item,width:w,depth:d,part,mats}=frame,h=item.height||.73;
+ part('top',[0,0,w,d],h,.06);
+ for(const u of [.12,w-.12])for(const v of [.12,d-.12])part('leg-'+u+'-'+v,[u-.04,v-.04,u+.04,v+.04],0,h,mats.dark);
+}
+
+function iconInteriorFurnitureSanitary(frame) {
+ const {item,width:w,depth:d,part,line,mats}=frame;
+ if(item.type==='sink'||item.type==='basin'){
+  const h=item.type==='sink'?.8:0;
+  if(h)part('vanity',[0,0,w,d],0,h);
+  part('bowl',[w*.1,d*.08,w*.9,d*.88],h,.1,mats.white);
+  line('tap',[w/2,d*.15,h+.1],[w/2,d*.15,h+.3]);
+ }else if(item.type==='toilet'){
+  part('base',[0,0,w,d],0,.42,mats.white);
+  part('cistern',[0,0,w,Math.min(.18,d*.3)],.42,.4,mats.white);
+ }else if(item.type==='tub'){
+  part('shell',[0,0,w,d],0,.55,mats.white);
+  part('water',[.09,.09,w-.09,d-.09],.48,.025,mats.glass).castShadow=false;
+ }else{
+  part('tray',[0,0,w,d],0,.05,mats.white);
+  part('screen',[w-.02,0,w,d],.05,1.95,mats.glass).castShadow=false;
+  line('head',[w*.2,.1,1.95],[w*.65,.1,1.95],.035);
+ }
+}
+
+function iconInteriorFurnitureWasher(context, frame) {
+ const {THREE,mesh}=context,{item,width:w,depth:d,part,point,mats}=frame,h=item.height||.87;
+ part('body',[0,0,w,d],0,h,mats.white);
+ const drum=mesh(new THREE.CylinderGeometry(.22,.22,.035,24),mats.dark,item.id+'-drum');
+ const a=point(w/2,d-.02,h*.52),b=point(w/2,d,h*.52);
+ drum.position.set(...a);
+ drum.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(b[0]-a[0],b[1]-a[1],0).normalize());
+}
+
+function iconInteriorFurnitureObject(context, frame) {
+ const {item,width:w,depth:d,part,mats}=frame;
+ if(item.type==='bed')iconInteriorFurnitureBed(frame);
+ else if(['sofa','chair','stool','ottoman'].includes(item.type))iconInteriorFurnitureSeating(frame);
+ else if(['cabinet','counter','appliance'].includes(item.type))iconInteriorFurnitureStorage(frame);
+ else if(item.type==='table')iconInteriorFurnitureTable(frame);
+ else if(['sink','basin','toilet','shower','tub'].includes(item.type))iconInteriorFurnitureSanitary(frame);
+ else if(item.type==='washer')iconInteriorFurnitureWasher(context,frame);
+ else if(item.type==='rug')part('surface',[0,0,w,d],.026,item.height||.015,mats.rug);
+ else if(item.type==='screen'||item.type==='hob')part('panel',[0,0,w,d],0,item.height||.025,mats.dark);
+ else throw new Error('Unsupported furniture type: '+item.type);
+}
+
 function iconInteriorFurnishings(context) {
- const {THREE, box, mats, beam, mesh} = context;
- // Furniture uses simple recognisable parts, leaving doors and circulation clear.
- const chair=(id,x,y,z=0)=>{box(id+'-seat',[x-.22,y-.22,x+.22,y+.22],z+.43,.07,mats.linen);box(id+'-back',[x-.22,y+.17,x+.22,y+.24],z+.5,.42,mats.wood);for(const dx of [-.17,.17])for(const dy of [-.17,.17])box(id+'-leg',[x+dx-.025,y+dy-.025,x+dx+.025,y+dy+.025],z,.43,mats.dark);};
- const table=(id,b,z=0,height=.73)=>{box(id+'-top',b,z+height,.06,mats.wood);for(const x of [b[0]+.12,b[2]-.12])for(const y of [b[1]+.12,b[3]-.12])box(id+'-leg',[x-.04,y-.04,x+.04,y+.04],z,height,mats.dark);};
- const bed=(id,x,y,z,width=1.6)=>{box(id+'-frame',[x,y,x+width,y+2],z+.15,.23,mats.wood);box(id+'-mattress',[x+.04,y+.03,x+width-.04,y+1.98],z+.38,.21,mats.white);box(id+'-duvet',[x+.04,y+.5,x+width-.04,y+1.98],z+.59,.09,mats.linen);for(const dx of [.08,width/2+.03])box(id+'-pillow',[x+dx,y+.1,x+dx+width/2-.12,y+.48],z+.6,.09,mats.white);box(id+'-headboard',[x-.03,y-.09,x+width+.03,y],z,.95,mats.wood);};
- const cabinet=(id,b,z=0,h=2.2)=>{box(id,b,z,h,mats.wood);for(let x=b[0]+.42;x<b[2];x+=.6)box(id+'-handle-'+x,[x,b[1]-.025,x+.025,b[1]-.005],z+Math.min(1,h*.55),Math.min(.3,h*.25),mats.dark);};
- const sink=(id,x,y,z=0)=>{box(id+'-vanity',[x,y,x+.9,y+.5],z,.8,mats.wood);box(id+'-bowl',[x+.12,y+.05,x+.78,y+.43],z+.8,.1,mats.white);beam(id+'-tap',[x+.45,y+.38,z+.9],[x+.45,y+.38,z+1.15],.025);};
- const toilet=(id,x,y,z=0)=>{box(id+'-base',[x,y,x+.38,y+.62],z,.42,mats.white);box(id+'-cistern',[x-.02,y+.48,x+.4,y+.68],z+.42,.4,mats.white);};
- const shower=(id,x,y,z=0)=>{box(id+'-tray',[x,y,x+.9,y+.9],z,.05,mats.white);box(id+'-screen',[x+.88,y,x+.9,y+.9],z+.05,1.95,mats.glass).castShadow=false;beam(id+'-head',[x+.1,y+.85,z+2],[x+.55,y+.85,z+2],.035);};
- cabinet('kitchen-back',[2.2,8.65,6.4,9.27],0,.91);box('kitchen-counter',[2.15,8.6,6.45,9.3],.91,.055,mats.counter);sink('kitchen-sink',3.5,8.7,.05);
- cabinet('kitchen-island',[2.1,10.45,6.25,11.45],0,.9);box('island-counter',[2.02,10.39,6.33,11.52],.9,.065,mats.counter);box('hob',[3.2,10.55,4.1,11.1],.969,.02,mats.dark);for(let i=0;i<4;i++)chair('island-stool-'+i,2.45+i*.95,11.85);
- cabinet('kitchen-tall',[.55,7.15,1.15,8.3]);cabinet('pantry-shelf',[.6,6.92,1.05,8.28],0,2.1);cabinet('pantry-shelf2',[2.95,6.92,3.45,8.25],0,2.1);
- cabinet('utility-plant',[4.2,7.7,5.2,8.22],0,1.6);box('heat-pump-module',[5.45,7.6,6.2,8.25],0,1.8,mats.white);
- box('living-rug',[1.05,13,4.6,16.1],.026,.015,mats.rug);box('sofa-base',[1.2,13.1,3.05,16.0],.1,.35,mats.sofa);box('sofa-back',[1.2,13.1,1.55,16.0],.45,.5,mats.sofa);for(let i=0;i<3;i++)box('sofa-cushion-'+i,[1.55,13.15+i*.91,3,14+i*.91],.45,.16,mats.linen);box('chaise',[3.05,13.1,3.8,14.15],.1,.48,mats.sofa);table('coffee-table',[3.3,14.65,4.5,15.4],0,.45);box('media-console',[.5,14.2,.9,16],0,.55,mats.wood);box('tv',[.53,14.25,.6,15.85],.7,.95,mats.dark);
- table('dining-table',[5.55,13,6.65,15.6]);for(let i=0;i<3;i++){chair('dining-left-'+i,5.2,13.35+i*.9);chair('dining-right-'+i,7.0,13.35+i*.9);}
- table('office-desk',[10.8,10.2,12.8,11.0]);chair('office-chair',11.7,11.45);box('office-monitor',[11.35,10.55,12.1,10.65],.82,.5,mats.dark);cabinet('office-books',[13.5,9.6,14.05,11.9]);
- bed('guest-bed',12.35,5.1,0,1.35);table('guest-desk',[11.5,7.15,12.65,7.75]);chair('guest-chair',12.0,6.6);cabinet('guest-wardrobe',[13.55,7.4,14.05,9.0]);cabinet('entry-wardrobe',[8.6,4.75,10.85,5.4]);box('entry-bench',[7.3,6.6,7.8,7.6],0,.45,mats.wood);
- sink('ground-bath',9.2,6.4);toilet('ground-wc',10.3,7.1);
- bed('bedroom-one',1.25,.8,3.2,1.4);table('bedroom-one-desk',[6.5,1.05,7.7,1.7],3.2);chair('bedroom-one-chair',6.9,2.1,3.2);cabinet('bedroom-one-wardrobe',[5.25,.6,7.8,1.05],3.2,1.8);
- bed('bedroom-two',1.2,6.35,3.2,1.2);table('bedroom-two-desk',[3.3,8.7,4.4,9.4],3.2);chair('bedroom-two-chair',3.7,8.3,3.2);cabinet('bedroom-two-books',[.6,8.7,1.15,9.8],3.2,1.5);
- bed('master-bed',11.25,9.1,3.2,1.8);for(const x of [10.65,13.25])box('master-bedside',[x,9.1,x+.45,9.65],3.2,.5,mats.wood);cabinet('master-dressing',[12.05,5.35,13.9,5.95],3.2);cabinet('master-dressing2',[13.5,6.1,14,7.65],3.2);
- sink('upper-bath',3.2,3.9,3.2);toilet('upper-wc',1.4,4.05,3.2);box('bath-tub',[.7,4.5,2.4,5.4],3.2,.55,mats.white);shower('private-shower',9.1,5.4,3.2);sink('private-sink',10.3,6.2,3.2);toilet('private-wc',10.7,5.4,3.2);
- for(let i=0;i<2;i++){box('laundry-machine-'+i,[6.65+i*.7,5.35,7.25+i*.7,5.98],3.2,.87,mats.white);const drum=mesh(new THREE.CylinderGeometry(.22,.22,.035,24),mats.dark,'washing-machine-drum-'+i);drum.rotation.x=Math.PI/2;drum.position.set(6.95+i*.7,5.335,3.65);}cabinet('laundry-store',[8.15,6.0,8.65,7.2],3.2,1.8);
+ const {data,group,obstacle}=context;
+ for(const item of data.furniture){
+  const start=group.children.length,frame=iconInteriorFurnitureFrame(context,item);
+  iconInteriorFurnitureObject(context,frame);
+  const objects=group.children.slice(start);
+  for(const object of objects)object.userData={furnitureId:item.id,room:item.room,facing:item.facing,source:item.source,approximation:item.approximation||null};
+  if(item.type==='rug'||item.support)continue;
+  const bounds=objects.reduce((max,object)=>{object.updateMatrix();object.geometry.computeBoundingBox();return Math.max(max,object.geometry.boundingBox.clone().applyMatrix4(object.matrix).max.z);},frame.z);
+  obstacle('furniture-'+item.id,item.box,frame.z,bounds);
+ }
 }
 
 function iconInteriorLightingAndRoof(context) {

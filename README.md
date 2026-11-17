@@ -123,3 +123,11 @@ Spacer uwzględnia wysokość podłogi, kolizje ze ścianami i nadprożami oraz 
 ## Spacer na telefonie 2026-11-17.1
 
 Na małych ekranach oraz urządzeniach dotykowych dolny panel spaceru pokazuje przyciski „Przód” i „Tył”. Przytrzymanie uruchamia ruch, a puszczenie go zatrzymuje; drugim palcem można równocześnie rozglądać się po scenie. Na komputerze pozostaje kompaktowy tekst skrótów.
+
+## Dwa dostępne wnętrza 2026-11-17.2
+
+Menu „Widoki i sterowanie” umożliwia wejście do /190 i /193. Willa Floryda 6 ma odtworzony parter i piętro +3,35 m, z meblami, przejściami i schodami; wysokości pomieszczeń wynoszą 3,00 i 2,70 m. Zachowano obecne odbicie i ustawienie na działce.
+
+Układ /193 porównano ponownie z rzutami wydawcy: poprawiono kierunki łóżek i sofy, szafy przy ścianach, wyposażenie kuchni i łazienek oraz pełną ścianę pokoju przy antresoli. Pozycje, gabaryty i kierunki mebli zapisano w plikach `trzy-domy-3d/interior-data.json` i `trzy-domy-3d/floryda-interior-data.json`, kontrolowanych odciskami w rejestrze. Rysunki rastrowe i symbole wyposażenia nie zapewniają dokładności wykonawczej; niepewności opisano w danych.
+
+Spacer działa w obu budynkach, z kolizjami ścian i stropów; /191 i /41 pozostają zamknięte. Zachowano sprint, skok oraz przyciski Przód/Tył na telefonie.

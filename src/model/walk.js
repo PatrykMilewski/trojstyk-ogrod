@@ -325,10 +325,21 @@ function createWalkView(THREE, requestDraw) {
     face: direction => { yaw = Math.atan2(direction.x, direction.y); pitch = 0; } };
 }
 
-export function setupWalk({ THREE, house, neighbors, camera, controls, renderer, requestDraw, onCameraChange, button, interior }) {
+export function mergeInteriorNavigation(interiors) {
+  const sources = interiors.filter(item => item.navigation);
+  if (!sources.length) return undefined;
+  const merge = kind => sources.flatMap(({ parcel, navigation }) => navigation[kind].map(item =>
+    ({ ...item, id: `${parcel}:${item.id}` })));
+  return { obstacles: merge('obstacles'), floors: merge('floors'), ramps: merge('ramps'),
+    ceilingHeight: point => Math.min(Infinity, ...sources.map(({ navigation }) => navigation.ceilingHeight?.(point) ?? Infinity)) };
+}
+
+export function setupWalk({ THREE, house, neighbors, camera, controls, renderer, requestDraw, onCameraChange, button, interior, interiors }) {
   const view = createWalkView(THREE, requestDraw), perspective = view.camera;
-  const navigation = interior?.navigation;
-  const footprints = walkHouseFootprints(house, neighbors).filter(item => !navigation || item.parcel !== '193');
+  const sources = interiors ?? [{ parcel: '193', navigation: interior?.navigation }];
+  const navigation = mergeInteriorNavigation(sources);
+  const navigableParcels = new Set(sources.filter(item => item.navigation).map(item => item.parcel));
+  const footprints = walkHouseFootprints(house, neighbors).filter(item => !navigableParcels.has(item.parcel));
   const collision = createWalkCollision(footprints), motion = createWalkMotion(collision, navigation);
   const panel = walkMarkup(button), canvas = renderer.domElement;
   canvas.tabIndex = 0; canvas.setAttribute('aria-label', 'Interaktywny model 3D');

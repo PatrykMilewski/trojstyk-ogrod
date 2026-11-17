@@ -85,8 +85,8 @@ function checkDimensions(model, registry) {
   checkContext(neighbors, registry);
   checkVehicles(neighbors, registry);
   assert.equal(model.runtimeHash, registry.integrity.runtimeSha256, 'Simulation or map runtime changed without review');
-  if (registry.interior) {
-    assert.equal(hash(readFileSync(resolve(root, 'trzy-domy-3d', registry.interior.dataFile))), registry.interior.dataSha256, 'Interior dimensions changed without review');
+  for (const interior of [registry.interior, registry.florydaInterior].filter(Boolean)) {
+    assert.equal(hash(readFileSync(resolve(root, 'trzy-domy-3d', interior.dataFile))), interior.dataSha256, `Interior dimensions changed without review: ${interior.dataFile}`);
   }
   assert.equal(hash(readFileSync(resolve(root, 'trzy-domy-3d', registry.mapLayers.metadataFile))), registry.mapLayers.metadataSha256, 'Map provenance changed');
   const vegetation = JSON.parse(readFileSync(resolve(root, 'trzy-domy-3d', registry.surroundingVegetation.dataFile), 'utf8'));

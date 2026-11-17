@@ -1,0 +1,4195 @@
+{
+  "metadata": {
+    "project": "MGProjekt Willa Floryda 6",
+    "officialUrl": "https://www.mgprojekt.com.pl/willa-floryda-6",
+    "variant": "canonical basic plan; apply existing parcel190 placement exactly once",
+    "sources": [
+      {
+        "url": "https://www.mgprojekt.com.pl/media/catalog/product/p/r/projekt_domu_willa_floryda_6_-_rzut_parteru.png",
+        "id": "ground",
+        "supports": "rooms, furniture and opening locations"
+      },
+      {
+        "url": "https://www.mgprojekt.com.pl/media/catalog/product/p/r/projekt_domu_willa_floryda_6_-_rzut_pietra.png",
+        "id": "upper",
+        "supports": "rooms, furniture and opening locations"
+      },
+      {
+        "url": "https://www.mgprojekt.com.pl/media/catalog/product/files/p/s/ps-projekt-domu-willa-floryda-6.pdf",
+        "id": "details",
+        "supports": "pages1/2 room numbers and opening sizes; page3 finished floors0,+3.35,ceilings3.00,+6.05;18 rises and27cm treads"
+      }
+    ],
+    "uncertainties": [
+      "Interpretive visual model, not construction drawings; raster positions approx +/-0.15m, furniture symbol bounds approx +/-0.20m.",
+      "Upper catalogue raster rectified to shared exterior envelope: ground-equivalent pixelX=250+(px-227)*505/508, pixelY=170+(py-199)*480/462. Common stair and rear wall anchors agree within approximately0.10m.",
+      "Heights of furniture, finishes and colours are illustrative; placement and orientation follow publisher plan symbols.",
+      "Stone tower above ceiling retains existing approximate XY and cap at+7.08; source elevation supports feature and height, not exact inherited XY.",
+      "Utility south partition below staircase is clipped to1.40m so it stays below the half landing. Stair undercroft, handrail profiles and exact wall build-ups need construction documentation.",
+      "Open interior doors and terrace slider halves are visual open-state choices; garage shutter is shown open for walk access."
+    ],
+    "excludedExistingMeshes": [
+      "ground-storey",
+      "upper-storey",
+      "entry-tower",
+      "upper-white-fascia-1",
+      "ground-plinth"
+    ],
+    "excludedExistingKinds": [
+      "window",
+      "door"
+    ],
+    "excludedExistingLineKinds": [
+      "frame"
+    ],
+    "levels": {
+      "ground": 0,
+      "groundCeiling": 3,
+      "upper": 3.35,
+      "upperCeiling": 6.05,
+      "ridge": 8.23
+    }
+  },
+  "rooms": [
+    {
+      "id": "1",
+      "name": "Sień",
+      "level": 0,
+      "box": [
+        6.1295,
+        3.4288,
+        8.0083,
+        6.3644
+      ],
+      "target": [
+        6.9985,
+        4.697
+      ],
+      "finish": "oak",
+      "source": {
+        "id": "ground",
+        "pixels": [
+          615,
+          351,
+          740,
+          431
+        ]
+      }
+    },
+    {
+      "id": "2",
+      "name": "Szatnia",
+      "level": 0,
+      "box": [
+        8.0083,
+        3.4523,
+        8.9008,
+        6.3644
+      ],
+      "target": [
+        8.4311,
+        4.9788
+      ],
+      "finish": "oak",
+      "source": {
+        "id": "ground",
+        "pixels": [
+          615,
+          313,
+          739,
+          351
+        ]
+      }
+    },
+    {
+      "id": "3",
+      "name": "Spiżarnia",
+      "level": 0,
+      "box": [
+        4.9083,
+        3.4758,
+        5.9417,
+        6.3644
+      ],
+      "target": [
+        5.4015,
+        4.8144
+      ],
+      "finish": "oak",
+      "source": {
+        "id": "ground",
+        "pixels": [
+          615,
+          439,
+          738,
+          483
+        ]
+      }
+    },
+    {
+      "id": "4",
+      "name": "Kuchnia",
+      "level": 0,
+      "box": [
+        1.503,
+        2.7477,
+        4.7439,
+        6.5523
+      ],
+      "target": [
+        3.1,
+        4.3917
+      ],
+      "finish": "oak",
+      "source": {
+        "id": "ground",
+        "pixels": [
+          607,
+          490,
+          769,
+          628
+        ]
+      }
+    },
+    {
+      "id": "5",
+      "name": "Łazienka",
+      "level": 0,
+      "box": [
+        7.3273,
+        10.803,
+        8.9712,
+        12.5879
+      ],
+      "target": [
+        8.2432,
+        11.2492
+      ],
+      "finish": "tile",
+      "source": {
+        "id": "ground",
+        "pixels": [
+          350,
+          310,
+          426,
+          380
+        ]
+      }
+    },
+    {
+      "id": "6",
+      "name": "Salon i jadalnia",
+      "level": 0,
+      "box": [
+        1.5265,
+        6.6462,
+        6.9045,
+        14.7015
+      ],
+      "target": [
+        3.5462,
+        9.5348
+      ],
+      "finish": "oak",
+      "source": {
+        "id": "ground",
+        "pixels": [
+          260,
+          398,
+          603,
+          627
+        ]
+      }
+    },
+    {
+      "id": "7",
+      "name": "Hol",
+      "level": 0,
+      "box": [
+        6.1061,
+        6.6462,
+        7.8674,
+        10.6152
+      ],
+      "target": [
+        7.0455,
+        8.1492
+      ],
+      "finish": "oak",
+      "source": {
+        "id": "ground",
+        "pixels": [
+          434,
+          357,
+          603,
+          432
+        ]
+      }
+    },
+    {
+      "id": "8",
+      "name": "Pomieszczenie gospodarcze",
+      "level": 0,
+      "box": [
+        10.4977,
+        6.6697,
+        11.8598,
+        8.7833
+      ],
+      "target": [
+        10.9909,
+        7.5386
+      ],
+      "finish": "tile",
+      "source": {
+        "id": "ground",
+        "pixels": [
+          512,
+          187,
+          602,
+          245
+        ]
+      }
+    },
+    {
+      "id": "9",
+      "name": "Gabinet",
+      "level": 0,
+      "box": [
+        9.253,
+        9.1121,
+        11.7659,
+        12.5879
+      ],
+      "target": [
+        10.2864,
+        10.4038
+      ],
+      "finish": "oak",
+      "source": {
+        "id": "ground",
+        "pixels": [
+          350,
+          191,
+          498,
+          298
+        ]
+      }
+    },
+    {
+      "id": "10",
+      "name": "Kotłownia",
+      "level": 0,
+      "box": [
+        12.0712,
+        6.6697,
+        15.0068,
+        8.8303
+      ],
+      "target": [
+        12.8227,
+        8.1492
+      ],
+      "finish": "tile",
+      "source": {
+        "id": "ground",
+        "pixels": [
+          510,
+          53,
+          602,
+          178
+        ]
+      }
+    },
+    {
+      "id": "11",
+      "name": "Garaż",
+      "level": 0,
+      "box": [
+        9.3235,
+        0.6576,
+        15.0068,
+        6.2705
+      ],
+      "target": [
+        12.3295,
+        3.5227
+      ],
+      "finish": "tile",
+      "source": {
+        "id": "ground",
+        "pixels": [
+          619,
+          53,
+          858,
+          295
+        ]
+      }
+    },
+    {
+      "id": "12",
+      "name": "Hol piętra",
+      "level": 1,
+      "box": [
+        5.3783,
+        5.5045,
+        7.7207,
+        8.7963
+      ],
+      "target": [
+        6.2323,
+        7.0921
+      ],
+      "finish": "oak",
+      "source": {
+        "id": "upper",
+        "pixels": [
+          490,
+          385,
+          631,
+          481
+        ]
+      }
+    },
+    {
+      "id": "13",
+      "name": "Sypialnia rodziców",
+      "level": 1,
+      "box": [
+        1.3036,
+        11.3177,
+        6.8423,
+        14.6329
+      ],
+      "target": [
+        5.3051,
+        13.6523
+      ],
+      "finish": "oak",
+      "source": {
+        "id": "upper",
+        "pixels": [
+          240,
+          421,
+          382,
+          648
+        ]
+      }
+    },
+    {
+      "id": "14",
+      "name": "Garderoba otwarta",
+      "level": 1,
+      "box": [
+        6.1103,
+        9.0765,
+        7.6963,
+        11.2243
+      ],
+      "target": [
+        6.5983,
+        10.0804
+      ],
+      "finish": "oak",
+      "source": {
+        "id": "upper",
+        "pixels": [
+          386,
+          386,
+          478,
+          451
+        ]
+      }
+    },
+    {
+      "id": "15",
+      "name": "Garderoba",
+      "level": 1,
+      "box": [
+        7.2815,
+        10.8975,
+        9.0383,
+        12.5551
+      ],
+      "target": [
+        8.3551,
+        11.5278
+      ],
+      "finish": "oak",
+      "source": {
+        "id": "upper",
+        "pixels": [
+          329,
+          331,
+          400,
+          403
+        ]
+      }
+    },
+    {
+      "id": "16",
+      "name": "Łazienka rodziców",
+      "level": 1,
+      "box": [
+        9.3799,
+        9.1699,
+        11.9419,
+        12.5551
+      ],
+      "target": [
+        10.6243,
+        10.4072
+      ],
+      "finish": "tile",
+      "source": {
+        "id": "upper",
+        "pixels": [
+          329,
+          212,
+          474,
+          317
+        ]
+      }
+    },
+    {
+      "id": "17",
+      "name": "Sypialnia",
+      "level": 1,
+      "box": [
+        1.2792,
+        7.8158,
+        4.6219,
+        11.1076
+      ],
+      "target": [
+        3.2555,
+        9.1932
+      ],
+      "finish": "oak",
+      "source": {
+        "id": "upper",
+        "pixels": [
+          391,
+          512,
+          532,
+          649
+        ]
+      }
+    },
+    {
+      "id": "18",
+      "name": "Sypialnia",
+      "level": 1,
+      "box": [
+        1.2792,
+        3.6602,
+        4.1095,
+        7.3722
+      ],
+      "target": [
+        3.2555,
+        5.9014
+      ],
+      "finish": "oak",
+      "source": {
+        "id": "upper",
+        "pixels": [
+          551,
+          533,
+          710,
+          649
+        ]
+      }
+    },
+    {
+      "id": "19",
+      "name": "Pralnia",
+      "level": 1,
+      "box": [
+        5.4271,
+        3.6368,
+        6.2811,
+        5.1543
+      ],
+      "target": [
+        5.8907,
+        4.3372
+      ],
+      "finish": "tile",
+      "source": {
+        "id": "upper",
+        "pixels": [
+          646,
+          444,
+          711,
+          479
+        ]
+      }
+    },
+    {
+      "id": "20",
+      "name": "Sauna",
+      "level": 1,
+      "box": [
+        6.8423,
+        2.8431,
+        8.3307,
+        5.1543
+      ],
+      "target": [
+        7.9159,
+        4.4072
+      ],
+      "finish": "tile",
+      "source": {
+        "id": "upper",
+        "pixels": [
+          646,
+          360,
+          745,
+          421
+        ]
+      }
+    },
+    {
+      "id": "21",
+      "name": "Łazienka",
+      "level": 1,
+      "box": [
+        8.5015,
+        3.6368,
+        11.9419,
+        6.3917
+      ],
+      "target": [
+        9.9167,
+        4.8508
+      ],
+      "finish": "tile",
+      "source": {
+        "id": "upper",
+        "pixels": [
+          593,
+          212,
+          711,
+          353
+        ]
+      }
+    }
+  ],
+  "walls": [
+    {
+      "id": "g-garage-service",
+      "a": [
+        15.0068,
+        6.4818
+      ],
+      "b": [
+        9.0886,
+        6.4818
+      ],
+      "level": 0,
+      "thickness": 0.25,
+      "height": 3,
+      "openings": [
+        {
+          "id": "g-garage-service-door-0",
+          "start": 0.5401000000000007,
+          "end": 1.4326000000000008,
+          "bottom": 0,
+          "top": 2.05,
+          "kind": "door",
+          "open": true
+        }
+      ],
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            610,
+            53
+          ],
+          [
+            610,
+            305
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g-garage-rear",
+      "a": [
+        9.0886,
+        6.4818
+      ],
+      "b": [
+        9.0886,
+        0.6341
+      ],
+      "level": 0,
+      "thickness": 0.25,
+      "height": 3,
+      "openings": [
+        {
+          "id": "g-garage-rear-door-0",
+          "start": 1.4325999999999999,
+          "end": 2.3484999999999996,
+          "bottom": 0,
+          "top": 2.05,
+          "kind": "door",
+          "open": true
+        }
+      ],
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            610,
+            305
+          ],
+          [
+            859,
+            305
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g-plant-utility",
+      "a": [
+        11.9538,
+        8.8538
+      ],
+      "b": [
+        11.9538,
+        6.4818
+      ],
+      "level": 0,
+      "thickness": 0.15,
+      "height": 3,
+      "openings": [
+        {
+          "id": "g-plant-utility-door-0",
+          "start": 0.14090000000000025,
+          "end": 1.0568,
+          "bottom": 0,
+          "top": 2.05,
+          "kind": "door",
+          "open": true
+        }
+      ],
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            509,
+            183
+          ],
+          [
+            610,
+            183
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g-office-service",
+      "a": [
+        11.9773,
+        8.9712
+      ],
+      "b": [
+        9.0417,
+        8.9712
+      ],
+      "level": 0,
+      "thickness": 0.25,
+      "height": 3,
+      "openings": [],
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            504,
+            182
+          ],
+          [
+            504,
+            307
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g-utility-stair",
+      "a": [
+        10.3803,
+        8.8303
+      ],
+      "b": [
+        10.3803,
+        6.5523
+      ],
+      "level": 0,
+      "thickness": 0.15,
+      "height": 1.4,
+      "openings": [],
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            510,
+            250
+          ],
+          [
+            607,
+            250
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g-office-hall",
+      "a": [
+        9.0886,
+        12.7053
+      ],
+      "b": [
+        9.0886,
+        8.9712
+      ],
+      "level": 0,
+      "thickness": 0.25,
+      "height": 3,
+      "openings": [
+        {
+          "id": "g-office-hall-door-0",
+          "start": 2.043199999999999,
+          "end": 2.9590999999999994,
+          "bottom": 0,
+          "top": 2.05,
+          "kind": "door",
+          "open": true
+        }
+      ],
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            345,
+            305
+          ],
+          [
+            504,
+            305
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g-bath-hall",
+      "a": [
+        9.0417,
+        10.7561
+      ],
+      "b": [
+        7.2568,
+        10.7561
+      ],
+      "level": 0,
+      "thickness": 0.15,
+      "height": 3,
+      "openings": [
+        {
+          "id": "g-bath-hall-door-0",
+          "start": 0.44620000000000104,
+          "end": 1.3622000000000005,
+          "bottom": 0,
+          "top": 2.05,
+          "kind": "door",
+          "open": true
+        }
+      ],
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            428,
+            307
+          ],
+          [
+            428,
+            383
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g-bath-living",
+      "a": [
+        7.2098,
+        12.7288
+      ],
+      "b": [
+        7.2098,
+        10.7561
+      ],
+      "level": 0,
+      "thickness": 0.25,
+      "height": 3,
+      "openings": [],
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            344,
+            385
+          ],
+          [
+            428,
+            385
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g-hall-entry",
+      "a": [
+        8.0318,
+        6.5288
+      ],
+      "b": [
+        6.0356,
+        6.5288
+      ],
+      "level": 0,
+      "thickness": 0.25,
+      "height": 3,
+      "openings": [
+        {
+          "id": "g-hall-entry-door-0",
+          "start": 0.2113000000000005,
+          "end": 1.7144000000000004,
+          "bottom": 0,
+          "top": 2.05,
+          "kind": "door",
+          "open": true
+        }
+      ],
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            608,
+            350
+          ],
+          [
+            608,
+            435
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g-wardrobe-entry",
+      "a": [
+        7.9614,
+        6.4818
+      ],
+      "b": [
+        7.9614,
+        3.4288
+      ],
+      "level": 0,
+      "thickness": 0.15,
+      "height": 3,
+      "openings": [
+        {
+          "id": "g-wardrobe-entry-door-0",
+          "start": 1.8317999999999994,
+          "end": 2.8181999999999996,
+          "bottom": 0,
+          "top": 2.05,
+          "kind": "door",
+          "open": true
+        }
+      ],
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            610,
+            353
+          ],
+          [
+            740,
+            353
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g-pantry-top",
+      "a": [
+        6.0356,
+        6.4818
+      ],
+      "b": [
+        6.0356,
+        3.4288
+      ],
+      "level": 0,
+      "thickness": 0.15,
+      "height": 3,
+      "openings": [
+        {
+          "id": "g-pantry-top-door-0",
+          "start": 1.4090999999999996,
+          "end": 2.3484999999999996,
+          "bottom": 0,
+          "top": 2.05,
+          "kind": "door",
+          "open": true
+        }
+      ],
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            610,
+            435
+          ],
+          [
+            740,
+            435
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g-pantry-kitchen",
+      "a": [
+        4.8379,
+        6.4818
+      ],
+      "b": [
+        4.8379,
+        3.4288
+      ],
+      "level": 0,
+      "thickness": 0.15,
+      "height": 3,
+      "openings": [],
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            610,
+            486
+          ],
+          [
+            740,
+            486
+          ]
+        ]
+      }
+    },
+    {
+      "id": "u-stair-left",
+      "a": [
+        11.9907,
+        8.9831
+      ],
+      "b": [
+        6.9399,
+        8.9831
+      ],
+      "level": 1,
+      "thickness": 0.25,
+      "height": 2.7,
+      "openings": [],
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            482,
+            210
+          ],
+          [
+            482,
+            417
+          ]
+        ]
+      }
+    },
+    {
+      "id": "u-stair-right",
+      "a": [
+        11.9907,
+        6.5551
+      ],
+      "b": [
+        7.9159,
+        6.5551
+      ],
+      "level": 1,
+      "thickness": 0.25,
+      "height": 2.7,
+      "openings": [],
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            586,
+            210
+          ],
+          [
+            586,
+            377
+          ]
+        ]
+      }
+    },
+    {
+      "id": "u-bath-dressing",
+      "a": [
+        9.2579,
+        12.6484
+      ],
+      "b": [
+        9.2579,
+        9.0298
+      ],
+      "level": 1,
+      "thickness": 0.15,
+      "height": 2.7,
+      "openings": [
+        {
+          "id": "u-bath-dressing-door-0",
+          "start": 2.1011000000000006,
+          "end": 3.035,
+          "bottom": 0,
+          "top": 2.05,
+          "kind": "door",
+          "open": true
+        }
+      ],
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            325,
+            322
+          ],
+          [
+            480,
+            322
+          ]
+        ]
+      }
+    },
+    {
+      "id": "u-dressing-private",
+      "a": [
+        9.1847,
+        10.7807
+      ],
+      "b": [
+        7.1351,
+        10.7807
+      ],
+      "level": 1,
+      "thickness": 0.15,
+      "height": 2.7,
+      "openings": [
+        {
+          "id": "u-dressing-private-door-0",
+          "start": 0.5367999999999995,
+          "end": 1.5127999999999995,
+          "bottom": 0,
+          "top": 2.05,
+          "kind": "door",
+          "open": true
+        }
+      ],
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            405,
+            325
+          ],
+          [
+            405,
+            409
+          ]
+        ]
+      }
+    },
+    {
+      "id": "u-dressing-bedroom",
+      "a": [
+        7.0619,
+        12.6484
+      ],
+      "b": [
+        7.0619,
+        10.7574
+      ],
+      "level": 1,
+      "thickness": 0.15,
+      "height": 2.7,
+      "openings": [],
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            325,
+            412
+          ],
+          [
+            406,
+            412
+          ]
+        ]
+      }
+    },
+    {
+      "id": "u-master-child",
+      "a": [
+        6.0127,
+        11.2477
+      ],
+      "b": [
+        6.0127,
+        8.8664
+      ],
+      "level": 1,
+      "thickness": 0.15,
+      "height": 2.7,
+      "openings": [],
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            385,
+            455
+          ],
+          [
+            487,
+            455
+          ]
+        ]
+      }
+    },
+    {
+      "id": "u-master-child-side",
+      "a": [
+        6.0127,
+        11.2477
+      ],
+      "b": [
+        1.1572,
+        11.2477
+      ],
+      "level": 1,
+      "thickness": 0.15,
+      "height": 2.7,
+      "openings": [],
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            385,
+            455
+          ],
+          [
+            385,
+            654
+          ]
+        ]
+      }
+    },
+    {
+      "id": "u-child17-top",
+      "a": [
+        5.3051,
+        11.2477
+      ],
+      "b": [
+        5.3051,
+        7.6057
+      ],
+      "level": 1,
+      "thickness": 0.15,
+      "height": 2.7,
+      "openings": [
+        {
+          "id": "u-child17-top-door-0",
+          "start": 2.428000000000001,
+          "end": 3.3619000000000003,
+          "bottom": 0,
+          "top": 2.05,
+          "kind": "door",
+          "open": true
+        }
+      ],
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            385,
+            484
+          ],
+          [
+            541,
+            484
+          ]
+        ]
+      }
+    },
+    {
+      "id": "u-children-divider",
+      "a": [
+        5.2807,
+        7.6057
+      ],
+      "b": [
+        1.1572,
+        7.6057
+      ],
+      "level": 1,
+      "thickness": 0.15,
+      "height": 2.7,
+      "openings": [],
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            541,
+            485
+          ],
+          [
+            541,
+            654
+          ]
+        ]
+      }
+    },
+    {
+      "id": "u-child18-top",
+      "a": [
+        5.2807,
+        7.6057
+      ],
+      "b": [
+        5.2807,
+        5.3411
+      ],
+      "level": 1,
+      "thickness": 0.15,
+      "height": 2.7,
+      "openings": [
+        {
+          "id": "u-child18-top-door-0",
+          "start": 1.1205999999999996,
+          "end": 2.0545,
+          "bottom": 0,
+          "top": 2.05,
+          "kind": "door",
+          "open": true
+        }
+      ],
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            541,
+            485
+          ],
+          [
+            638,
+            485
+          ]
+        ]
+      }
+    },
+    {
+      "id": "u-laundry-bedroom",
+      "a": [
+        4.7683,
+        5.3177
+      ],
+      "b": [
+        4.7683,
+        3.5434
+      ],
+      "level": 1,
+      "thickness": 0.15,
+      "height": 2.7,
+      "openings": [],
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            639,
+            506
+          ],
+          [
+            715,
+            506
+          ]
+        ]
+      }
+    },
+    {
+      "id": "u-laundry-hall",
+      "a": [
+        6.7447,
+        5.3411
+      ],
+      "b": [
+        4.7439,
+        5.3411
+      ],
+      "level": 1,
+      "thickness": 0.15,
+      "height": 2.7,
+      "openings": [
+        {
+          "id": "u-laundry-hall-door-0",
+          "start": 0.5611999999999995,
+          "end": 1.5372000000000003,
+          "bottom": 0,
+          "top": 2.05,
+          "kind": "door",
+          "open": true
+        }
+      ],
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            638,
+            425
+          ],
+          [
+            638,
+            507
+          ]
+        ]
+      }
+    },
+    {
+      "id": "u-sauna-laundry",
+      "a": [
+        6.7447,
+        5.3177
+      ],
+      "b": [
+        6.7447,
+        2.6796
+      ],
+      "level": 1,
+      "thickness": 0.15,
+      "height": 2.7,
+      "openings": [],
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            639,
+            425
+          ],
+          [
+            752,
+            425
+          ]
+        ]
+      }
+    },
+    {
+      "id": "u-sauna-bath",
+      "a": [
+        8.4527,
+        5.3177
+      ],
+      "b": [
+        8.4527,
+        2.6796
+      ],
+      "level": 1,
+      "thickness": 0.15,
+      "height": 2.7,
+      "openings": [
+        {
+          "id": "u-sauna-bath-door-0",
+          "start": 0.11670000000000069,
+          "end": 0.9805000000000001,
+          "bottom": 0,
+          "top": 2.05,
+          "kind": "door",
+          "open": true
+        }
+      ],
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            639,
+            355
+          ],
+          [
+            752,
+            355
+          ]
+        ]
+      }
+    },
+    {
+      "id": "u-sauna-hall",
+      "a": [
+        8.4527,
+        5.3644
+      ],
+      "b": [
+        6.7691,
+        5.3644
+      ],
+      "level": 1,
+      "thickness": 0.15,
+      "height": 2.7,
+      "openings": [],
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            637,
+            355
+          ],
+          [
+            637,
+            424
+          ]
+        ]
+      }
+    },
+    {
+      "id": "u-bath21-hall",
+      "a": [
+        7.9159,
+        6.5317
+      ],
+      "b": [
+        7.9159,
+        5.3644
+      ],
+      "level": 1,
+      "thickness": 0.15,
+      "height": 2.7,
+      "openings": [
+        {
+          "id": "u-bath21-hall-door-0",
+          "start": 0.09330000000000016,
+          "end": 1.0271999999999997,
+          "bottom": 0,
+          "top": 2.05,
+          "kind": "door",
+          "open": true
+        }
+      ],
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            587,
+            377
+          ],
+          [
+            637,
+            377
+          ]
+        ]
+      }
+    }
+  ],
+  "furniture": [
+    {
+      "id": "entry-wardrobe",
+      "kind": "cabinet",
+      "room": "2",
+      "level": 0,
+      "bounds": [
+        8.0788,
+        5.8008,
+        8.8068,
+        6.3644
+      ],
+      "height": 2.2,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          615,
+          317,
+          639,
+          348
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "yMin"
+    },
+    {
+      "id": "pantry-left",
+      "kind": "cabinet",
+      "room": "3",
+      "level": 0,
+      "bounds": [
+        5.0258,
+        5.8008,
+        5.8712,
+        6.3644
+      ],
+      "height": 2.1,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          615,
+          442,
+          639,
+          478
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "yMin"
+    },
+    {
+      "id": "pantry-right",
+      "kind": "cabinet",
+      "room": "3",
+      "level": 0,
+      "bounds": [
+        5.0258,
+        3.5227,
+        5.8712,
+        4.0629
+      ],
+      "height": 2.1,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          713,
+          442,
+          736,
+          478
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "yMax"
+    },
+    {
+      "id": "kitchen-tall",
+      "kind": "cabinet",
+      "room": "4",
+      "level": 0,
+      "bounds": [
+        0.9159,
+        2.7947,
+        1.4326,
+        6.5053
+      ],
+      "height": 2.2,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          609,
+          631,
+          767,
+          653
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "xMax"
+    },
+    {
+      "id": "kitchen-counter",
+      "kind": "counter",
+      "room": "4",
+      "level": 0,
+      "bounds": [
+        1.503,
+        2.7477,
+        4.697,
+        3.3348
+      ],
+      "height": 0.9,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          744,
+          492,
+          769,
+          628
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "kitchen-island",
+      "kind": "island",
+      "room": "4",
+      "level": 0,
+      "bounds": [
+        2.5833,
+        4.9788,
+        4.2273,
+        6.153
+      ],
+      "height": 0.92,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          624,
+          512,
+          674,
+          582
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "kitchen-hob",
+      "kind": "hob",
+      "room": "4",
+      "level": 0,
+      "bounds": [
+        1.9023,
+        2.7947,
+        2.5833,
+        3.2409
+      ],
+      "height": 0.94,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          748,
+          582,
+          767,
+          611
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "kitchen-sink",
+      "kind": "sink",
+      "room": "4",
+      "level": 0,
+      "bounds": [
+        3.4523,
+        2.7712,
+        4.0864,
+        3.2409
+      ],
+      "height": 0.95,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          748,
+          518,
+          768,
+          545
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "collision": false
+    },
+    {
+      "id": "island-stool-0",
+      "kind": "chair",
+      "room": "4",
+      "level": 0,
+      "bounds": [
+        3.7341,
+        6.247,
+        4.1098,
+        6.7167
+      ],
+      "height": 0.75,
+      "angle": -90,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          600,
+          517,
+          620,
+          533
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMax"
+    },
+    {
+      "id": "island-stool-1",
+      "kind": "chair",
+      "room": "4",
+      "level": 0,
+      "bounds": [
+        3.2174,
+        6.247,
+        3.5932,
+        6.7167
+      ],
+      "height": 0.75,
+      "angle": -90,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          600,
+          539,
+          620,
+          555
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMax"
+    },
+    {
+      "id": "island-stool-2",
+      "kind": "chair",
+      "room": "4",
+      "level": 0,
+      "bounds": [
+        2.7008,
+        6.247,
+        3.0765,
+        6.7167
+      ],
+      "height": 0.75,
+      "angle": -90,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          600,
+          561,
+          620,
+          577
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMax"
+    },
+    {
+      "id": "dining",
+      "kind": "table",
+      "room": "6",
+      "level": 0,
+      "bounds": [
+        2.7242,
+        7.9379,
+        4.9083,
+        8.6894
+      ],
+      "height": 0.75,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          516,
+          483,
+          548,
+          576
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "dining-chair-0-500",
+      "kind": "chair",
+      "room": "6",
+      "level": 0,
+      "bounds": [
+        4.3212,
+        8.8773,
+        4.697,
+        9.253
+      ],
+      "height": 0.9,
+      "angle": 90,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          492,
+          492,
+          508,
+          508
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMax"
+    },
+    {
+      "id": "dining-chair-0-559",
+      "kind": "chair",
+      "room": "6",
+      "level": 0,
+      "bounds": [
+        4.3212,
+        7.4917,
+        4.697,
+        7.8674
+      ],
+      "height": 0.9,
+      "angle": -90,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          551,
+          492,
+          567,
+          508
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMin"
+    },
+    {
+      "id": "dining-chair-1-500",
+      "kind": "chair",
+      "room": "6",
+      "level": 0,
+      "bounds": [
+        3.7811,
+        8.8773,
+        4.1568,
+        9.253
+      ],
+      "height": 0.9,
+      "angle": 90,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          492,
+          515,
+          508,
+          531
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMax"
+    },
+    {
+      "id": "dining-chair-1-559",
+      "kind": "chair",
+      "room": "6",
+      "level": 0,
+      "bounds": [
+        3.7811,
+        7.4917,
+        4.1568,
+        7.8674
+      ],
+      "height": 0.9,
+      "angle": -90,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          551,
+          515,
+          567,
+          531
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMin"
+    },
+    {
+      "id": "dining-chair-2-500",
+      "kind": "chair",
+      "room": "6",
+      "level": 0,
+      "bounds": [
+        3.2409,
+        8.8773,
+        3.6167,
+        9.253
+      ],
+      "height": 0.9,
+      "angle": 90,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          492,
+          538,
+          508,
+          554
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMax"
+    },
+    {
+      "id": "dining-chair-2-559",
+      "kind": "chair",
+      "room": "6",
+      "level": 0,
+      "bounds": [
+        3.2409,
+        7.4917,
+        3.6167,
+        7.8674
+      ],
+      "height": 0.9,
+      "angle": -90,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          551,
+          538,
+          567,
+          554
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMin"
+    },
+    {
+      "id": "dining-chair-3-500",
+      "kind": "chair",
+      "room": "6",
+      "level": 0,
+      "bounds": [
+        2.7242,
+        8.8773,
+        3.1,
+        9.253
+      ],
+      "height": 0.9,
+      "angle": 90,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          492,
+          560,
+          508,
+          576
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMax"
+    },
+    {
+      "id": "dining-chair-3-559",
+      "kind": "chair",
+      "room": "6",
+      "level": 0,
+      "bounds": [
+        2.7242,
+        7.4917,
+        3.1,
+        7.8674
+      ],
+      "height": 0.9,
+      "angle": -90,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          551,
+          560,
+          567,
+          576
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMin"
+    },
+    {
+      "id": "living-sofa",
+      "kind": "sofa",
+      "room": "6",
+      "level": 0,
+      "bounds": [
+        2.7947,
+        10.2394,
+        3.6871,
+        13.9735
+      ],
+      "height": 0.85,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          291,
+          535,
+          450,
+          573
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "xMin"
+    },
+    {
+      "id": "living-chaise",
+      "kind": "sofa",
+      "room": "6",
+      "level": 0,
+      "bounds": [
+        3.6871,
+        10.2159,
+        4.5795,
+        11.0848
+      ],
+      "height": 0.85,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          414,
+          497,
+          451,
+          535
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMin"
+    },
+    {
+      "id": "living-coffee",
+      "kind": "table",
+      "room": "6",
+      "level": 0,
+      "bounds": [
+        4.1098,
+        11.5545,
+        5.0727,
+        12.5644
+      ],
+      "height": 0.42,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          351,
+          476,
+          394,
+          517
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "living-tv",
+      "kind": "tv",
+      "room": "6",
+      "level": 0,
+      "bounds": [
+        6.7636,
+        11.2023,
+        6.9515,
+        12.7053
+      ],
+      "height": 1.45,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          345,
+          396,
+          409,
+          404
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "fireplace",
+      "kind": "fireplace",
+      "room": "7",
+      "level": 0,
+      "bounds": [
+        6.6227,
+        9.253,
+        7.4447,
+        10.6386
+      ],
+      "height": 1.05,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          433,
+          375,
+          492,
+          410
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "office-desk",
+      "kind": "desk",
+      "room": "9",
+      "level": 0,
+      "bounds": [
+        10.3568,
+        10.7795,
+        11.0614,
+        12.2356
+      ],
+      "height": 0.75,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          365,
+          221,
+          427,
+          251
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "office-chair",
+      "kind": "chair",
+      "room": "9",
+      "level": 0,
+      "bounds": [
+        11.1553,
+        11.2727,
+        11.6015,
+        11.7424
+      ],
+      "height": 0.9,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          386,
+          198,
+          406,
+          217
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "xMax"
+    },
+    {
+      "id": "office-cabinet",
+      "kind": "cabinet",
+      "room": "9",
+      "level": 0,
+      "bounds": [
+        9.2765,
+        9.1356,
+        11.6955,
+        9.6758
+      ],
+      "height": 2.2,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          474,
+          194,
+          497,
+          297
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "yMax"
+    },
+    {
+      "id": "office-books",
+      "kind": "cabinet",
+      "room": "9",
+      "level": 0,
+      "bounds": [
+        9.253,
+        10.7326,
+        9.5818,
+        12.1886
+      ],
+      "height": 0.95,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          367,
+          284,
+          429,
+          298
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "xMax"
+    },
+    {
+      "id": "ground-shower",
+      "kind": "shower",
+      "room": "5",
+      "level": 0,
+      "bounds": [
+        7.3273,
+        11.8129,
+        8.478,
+        12.5409
+      ],
+      "height": 2,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          352,
+          331,
+          383,
+          380
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "ground-wc",
+      "kind": "toilet",
+      "room": "5",
+      "level": 0,
+      "bounds": [
+        7.3742,
+        11.2258,
+        7.9144,
+        11.6485
+      ],
+      "height": 0.8,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          390,
+          355,
+          408,
+          378
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "xMin"
+    },
+    {
+      "id": "ground-sink",
+      "kind": "sink",
+      "room": "5",
+      "level": 0,
+      "bounds": [
+        8.6189,
+        11.1788,
+        8.9477,
+        11.6485
+      ],
+      "height": 0.85,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          390,
+          311,
+          410,
+          325
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "collision": true
+    },
+    {
+      "id": "plant-boiler",
+      "kind": "plant",
+      "room": "10",
+      "level": 0,
+      "bounds": [
+        13.1045,
+        7.3977,
+        13.997,
+        7.9144
+      ],
+      "height": 1.8,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          549,
+          96,
+          571,
+          134
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "plant-tank",
+      "kind": "plant",
+      "room": "10",
+      "level": 0,
+      "bounds": [
+        12.2121,
+        6.928,
+        12.7992,
+        7.5152
+      ],
+      "height": 1.4,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          566,
+          147,
+          591,
+          172
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "master-bed",
+      "kind": "bed",
+      "room": "13",
+      "level": 1,
+      "bounds": [
+        3.2555,
+        11.4111,
+        4.9879,
+        13.0687
+      ],
+      "height": 0.72,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          307,
+          497,
+          378,
+          568
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "master-tv",
+      "kind": "tv",
+      "room": "13",
+      "level": 1,
+      "bounds": [
+        3.5239,
+        14.4461,
+        4.9879,
+        14.6095
+      ],
+      "height": 1.4,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          241,
+          497,
+          248,
+          557
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "master-armchair-0",
+      "kind": "chair",
+      "room": "13",
+      "level": 1,
+      "bounds": [
+        1.5476,
+        12.9986,
+        2.2552,
+        13.699
+      ],
+      "height": 0.9,
+      "angle": -45,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          280,
+          609,
+          310,
+          638
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "xMin"
+    },
+    {
+      "id": "master-armchair-1",
+      "kind": "chair",
+      "room": "13",
+      "level": 1,
+      "bounds": [
+        1.5232,
+        11.7379,
+        2.2552,
+        12.4383
+      ],
+      "height": 0.9,
+      "angle": 45,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          334,
+          609,
+          364,
+          639
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "xMin"
+    },
+    {
+      "id": "master-open-dressing",
+      "kind": "cabinet",
+      "room": "14",
+      "level": 1,
+      "bounds": [
+        7.1839,
+        9.0298,
+        9.1359,
+        9.5201
+      ],
+      "height": 2.25,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          459,
+          327,
+          480,
+          407
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "yMax"
+    },
+    {
+      "id": "private-wardrobe-a",
+      "kind": "cabinet",
+      "room": "15",
+      "level": 1,
+      "bounds": [
+        7.8427,
+        12.0181,
+        9.0139,
+        12.5317
+      ],
+      "height": 2.25,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          330,
+          332,
+          352,
+          380
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "yMin"
+    },
+    {
+      "id": "private-wardrobe-b",
+      "kind": "cabinet",
+      "room": "15",
+      "level": 1,
+      "bounds": [
+        7.2327,
+        11.0142,
+        7.6963,
+        12.5317
+      ],
+      "height": 2.25,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          330,
+          386,
+          395,
+          405
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "xMax"
+    },
+    {
+      "id": "child17-bed",
+      "kind": "bed",
+      "room": "17",
+      "level": 1,
+      "bounds": [
+        1.328,
+        10.2671,
+        2.9384,
+        11.0376
+      ],
+      "height": 0.65,
+      "angle": 90,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          394,
+          581,
+          427,
+          647
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "child17-wardrobe",
+      "kind": "cabinet",
+      "room": "17",
+      "level": 1,
+      "bounds": [
+        4.6707,
+        8.9831,
+        5.2075,
+        11.1076
+      ],
+      "height": 2.2,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          391,
+          488,
+          482,
+          510
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "xMin"
+    },
+    {
+      "id": "child17-desk",
+      "kind": "desk",
+      "room": "17",
+      "level": 1,
+      "bounds": [
+        2.0112,
+        7.7924,
+        2.914,
+        8.2127
+      ],
+      "height": 0.75,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          515,
+          582,
+          533,
+          619
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "child17-chair",
+      "kind": "chair",
+      "room": "17",
+      "level": 1,
+      "bounds": [
+        2.3284,
+        8.2827,
+        2.792,
+        8.6796
+      ],
+      "height": 0.9,
+      "angle": 90,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          495,
+          587,
+          512,
+          606
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMax"
+    },
+    {
+      "id": "child18-bed",
+      "kind": "bed",
+      "room": "18",
+      "level": 1,
+      "bounds": [
+        1.328,
+        6.5084,
+        2.9384,
+        7.2788
+      ],
+      "height": 0.65,
+      "angle": 90,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          555,
+          581,
+          588,
+          647
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "child18-wardrobe",
+      "kind": "cabinet",
+      "room": "18",
+      "level": 1,
+      "bounds": [
+        3.8655,
+        6.7886,
+        5.1099,
+        7.3722
+      ],
+      "height": 2.2,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          551,
+          492,
+          576,
+          543
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "yMin"
+    },
+    {
+      "id": "child18-desk",
+      "kind": "desk",
+      "room": "18",
+      "level": 1,
+      "bounds": [
+        1.3524,
+        4.3839,
+        2.0356,
+        5.5746
+      ],
+      "height": 0.75,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          628,
+          618,
+          679,
+          646
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "child18-chair",
+      "kind": "chair",
+      "room": "18",
+      "level": 1,
+      "bounds": [
+        2.1332,
+        4.8742,
+        2.548,
+        5.2477
+      ],
+      "height": 0.9,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          642,
+          597,
+          658,
+          614
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "xMax"
+    },
+    {
+      "id": "child18-shelf",
+      "kind": "cabinet",
+      "room": "18",
+      "level": 1,
+      "bounds": [
+        4.1827,
+        3.6835,
+        4.6463,
+        5.131
+      ],
+      "height": 0.75,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          647,
+          511,
+          709,
+          530
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "xMin"
+    },
+    {
+      "id": "child18-armchair",
+      "kind": "chair",
+      "room": "18",
+      "level": 1,
+      "bounds": [
+        3.0604,
+        3.6835,
+        3.9143,
+        4.2905
+      ],
+      "height": 0.9,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          683,
+          541,
+          709,
+          576
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "xMin"
+    },
+    {
+      "id": "master-shower",
+      "kind": "shower",
+      "room": "16",
+      "level": 1,
+      "bounds": [
+        11.1611,
+        11.4344,
+        11.9175,
+        12.5317
+      ],
+      "height": 2,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          330,
+          213,
+          377,
+          244
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "master-bath",
+      "kind": "tub",
+      "room": "16",
+      "level": 1,
+      "bounds": [
+        9.4531,
+        10.7807,
+        10.2827,
+        12.485
+      ],
+      "height": 0.55,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          332,
+          280,
+          405,
+          314
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "master-vanity",
+      "kind": "sink",
+      "room": "16",
+      "level": 1,
+      "bounds": [
+        11.4783,
+        9.8469,
+        11.8931,
+        11.3644
+      ],
+      "height": 0.85,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          380,
+          214,
+          445,
+          231
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "collision": true
+    },
+    {
+      "id": "master-wc",
+      "kind": "toilet",
+      "room": "16",
+      "level": 1,
+      "bounds": [
+        9.4531,
+        9.2166,
+        9.9655,
+        9.7302
+      ],
+      "height": 0.8,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          450,
+          293,
+          472,
+          314
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMin"
+    },
+    {
+      "id": "master-bidet",
+      "kind": "toilet",
+      "room": "16",
+      "level": 1,
+      "bounds": [
+        10.4047,
+        9.2399,
+        10.8195,
+        9.7302
+      ],
+      "height": 0.45,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          450,
+          258,
+          471,
+          275
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMin"
+    },
+    {
+      "id": "shared-shower",
+      "kind": "shower",
+      "room": "21",
+      "level": 1,
+      "bounds": [
+        11.0391,
+        5.5279,
+        11.9175,
+        6.3917
+      ],
+      "height": 2,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          593,
+          213,
+          630,
+          249
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "shared-bath",
+      "kind": "tub",
+      "room": "21",
+      "level": 1,
+      "bounds": [
+        11.0391,
+        3.7069,
+        11.8931,
+        5.3644
+      ],
+      "height": 0.55,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          637,
+          214,
+          708,
+          249
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "shared-sink",
+      "kind": "sink",
+      "room": "21",
+      "level": 1,
+      "bounds": [
+        10.1119,
+        3.5668,
+        10.6975,
+        3.917
+      ],
+      "height": 0.85,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          699,
+          263,
+          714,
+          287
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "collision": true
+    },
+    {
+      "id": "shared-wc",
+      "kind": "toilet",
+      "room": "21",
+      "level": 1,
+      "bounds": [
+        9.2579,
+        3.7536,
+        9.6727,
+        4.2905
+      ],
+      "height": 0.8,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          683,
+          305,
+          706,
+          322
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMin"
+    },
+    {
+      "id": "laundry-machine-a",
+      "kind": "laundry",
+      "room": "19",
+      "level": 1,
+      "bounds": [
+        4.8659,
+        4.1271,
+        5.3539,
+        4.594
+      ],
+      "height": 0.88,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          670,
+          482,
+          690,
+          502
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "xMax"
+    },
+    {
+      "id": "laundry-machine-b",
+      "kind": "laundry",
+      "room": "19",
+      "level": 1,
+      "bounds": [
+        4.8659,
+        3.6135,
+        5.3539,
+        4.0804
+      ],
+      "height": 0.88,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          692,
+          482,
+          712,
+          502
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "xMax"
+    },
+    {
+      "id": "laundry-cabinet",
+      "kind": "cabinet",
+      "room": "19",
+      "level": 1,
+      "bounds": [
+        6.3055,
+        3.6135,
+        6.6715,
+        5.1543
+      ],
+      "height": 1.1,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          646,
+          428,
+          712,
+          443
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "xMin"
+    },
+    {
+      "id": "sauna-bench",
+      "kind": "bench",
+      "room": "20",
+      "level": 1,
+      "bounds": [
+        6.8667,
+        2.8197,
+        7.5255,
+        5.131
+      ],
+      "height": 0.5,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          647,
+          393,
+          746,
+          420
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    },
+    {
+      "id": "sauna-heater",
+      "kind": "plant",
+      "room": "20",
+      "level": 1,
+      "bounds": [
+        7.7207,
+        2.9831,
+        8.2575,
+        3.4734
+      ],
+      "height": 0.8,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          718,
+          363,
+          739,
+          385
+        ],
+        "position": "traced publisher plan symbol",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
+    }
+  ],
+  "entry": {
+    "position": [
+      7.022,
+      3.7341
+    ],
+    "direction": [
+      0,
+      1
+    ],
+    "source": {
+      "id": "ground",
+      "pixels": [
+        727,
+        393
+      ]
+    }
+  },
+  "stairs": {
+    "box": [
+      7.82,
+      6.62,
+      11.08,
+      8.83
+    ],
+    "width": 1.04,
+    "gap": 0.13,
+    "tread": 0.27,
+    "rises": 18,
+    "floorHeight": 3.35,
+    "direction": "lower increases x in low-y lane; upper returns decreasing x in high-y lane",
+    "source": {
+      "id": "details",
+      "page": 1,
+      "annotation": "18,6x27 x18; landing inferred from plan, total rise matches section+3.35"
+    }
+  },
+  "exterior": {
+    "ground": [
+      [
+        15.5,
+        9.3235
+      ],
+      [
+        15.5,
+        0.0
+      ],
+      [
+        14.6311,
+        0.0
+      ],
+      [
+        14.6311,
+        0.6341
+      ],
+      [
+        9.5818,
+        0.6341
+      ],
+      [
+        9.5818,
+        0.0
+      ],
+      [
+        8.7833,
+        0.0
+      ],
+      [
+        8.7833,
+        3.0765
+      ],
+      [
+        4.9788,
+        3.0765
+      ],
+      [
+        4.9788,
+        2.2545
+      ],
+      [
+        0.0,
+        2.2545
+      ],
+      [
+        0.0,
+        2.7242
+      ],
+      [
+        0.4227,
+        2.7242
+      ],
+      [
+        0.4227,
+        7.1159
+      ],
+      [
+        0.9864,
+        7.1159
+      ],
+      [
+        0.9864,
+        14.9364
+      ],
+      [
+        6.975,
+        14.9364
+      ],
+      [
+        6.975,
+        13.1045
+      ],
+      [
+        12.2591,
+        13.1045
+      ],
+      [
+        12.2591,
+        9.3235
+      ]
+    ],
+    "upper": [
+      [
+        12.2591,
+        13.1045
+      ],
+      [
+        12.2591,
+        3.0765
+      ],
+      [
+        9.0871,
+        3.0765
+      ],
+      [
+        9.0871,
+        2.3294
+      ],
+      [
+        6.4275,
+        2.3294
+      ],
+      [
+        6.4275,
+        3.0765
+      ],
+      [
+        0.9864,
+        3.0765
+      ],
+      [
+        0.9864,
+        14.9364
+      ],
+      [
+        6.975,
+        14.9364
+      ],
+      [
+        6.975,
+        13.1045
+      ]
+    ]
+  },
+  "lights": [
+    {
+      "id": "1",
+      "position": [
+        7.0689,
+        4.896599999999999,
+        2.8
+      ]
+    },
+    {
+      "id": "2",
+      "position": [
+        8.454550000000001,
+        4.90835,
+        2.8
+      ]
+    },
+    {
+      "id": "3",
+      "position": [
+        5.425,
+        4.9201,
+        2.8
+      ]
+    },
+    {
+      "id": "4",
+      "position": [
+        3.12345,
+        4.65,
+        2.8
+      ]
+    },
+    {
+      "id": "5",
+      "position": [
+        8.14925,
+        11.695450000000001,
+        2.8
+      ]
+    },
+    {
+      "id": "6",
+      "position": [
+        4.2155,
+        10.67385,
+        2.8
+      ]
+    },
+    {
+      "id": "7",
+      "position": [
+        6.98675,
+        8.630700000000001,
+        2.8
+      ]
+    },
+    {
+      "id": "8",
+      "position": [
+        11.17875,
+        7.7265,
+        2.8
+      ]
+    },
+    {
+      "id": "9",
+      "position": [
+        10.509450000000001,
+        10.85,
+        2.8
+      ]
+    },
+    {
+      "id": "10",
+      "position": [
+        13.539,
+        7.75,
+        2.8
+      ]
+    },
+    {
+      "id": "11",
+      "position": [
+        12.16515,
+        3.4640500000000003,
+        2.8
+      ]
+    },
+    {
+      "id": "12",
+      "position": [
+        6.5495,
+        7.1504,
+        5.85
+      ]
+    },
+    {
+      "id": "13",
+      "position": [
+        4.07295,
+        12.9753,
+        5.85
+      ]
+    },
+    {
+      "id": "14",
+      "position": [
+        6.9033,
+        10.1504,
+        5.85
+      ]
+    },
+    {
+      "id": "15",
+      "position": [
+        8.1599,
+        11.7263,
+        5.85
+      ]
+    },
+    {
+      "id": "16",
+      "position": [
+        10.6609,
+        10.8625,
+        5.85
+      ]
+    },
+    {
+      "id": "17",
+      "position": [
+        2.95055,
+        9.4617,
+        5.85
+      ]
+    },
+    {
+      "id": "18",
+      "position": [
+        2.69435,
+        5.5162,
+        5.85
+      ]
+    },
+    {
+      "id": "19",
+      "position": [
+        5.854100000000001,
+        4.39555,
+        5.85
+      ]
+    },
+    {
+      "id": "20",
+      "position": [
+        7.5865,
+        3.9987000000000004,
+        5.85
+      ]
+    },
+    {
+      "id": "21",
+      "position": [
+        10.2217,
+        5.0142500000000005,
+        5.85
+      ]
+    }
+  ],
+  "towerAboveCeiling": {
+    "bounds": [
+      6.7,
+      2.75,
+      7.45,
+      3.15
+    ],
+    "bottom": 6.05,
+    "top": 6.98,
+    "thickness": 0.12,
+    "source": {
+      "id": "details",
+      "page": 4,
+      "annotation": "stone feature and cap+7.08 shown on front/side elevations; XY inherited from existing approximate tower; rebuilt above ceiling only so entrance remains clear"
+    }
+  },
+  "plinth": {
+    "bottom": -0.2,
+    "height": 0.28,
+    "width": 0.16,
+    "source": {
+      "id": "details",
+      "page": 3,
+      "annotation": "outside plinth; preserve old silhouette without a filled floor-covering prism"
+    }
+  },
+  "replacementCornice": {
+    "segments": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "bottom": 5.7,
+    "height": 0.9,
+    "width": 0.18,
+    "source": {
+      "id": "details",
+      "page": 4,
+      "annotation": "+5.70 to+6.60; follows corrected sauna projection"
+    }
+  },
+  "openings": [
+    {
+      "id": "garage",
+      "level": 0,
+      "segment": 3,
+      "start": 0,
+      "end": 5.0493,
+      "bottom": 0,
+      "top": 2.28,
+      "kind": "door",
+      "open": true,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            859,
+            69
+          ],
+          [
+            859,
+            284
+          ]
+        ]
+      }
+    },
+    {
+      "id": "entry",
+      "level": 0,
+      "segment": 7,
+      "start": 1.2212,
+      "end": 2.3015,
+      "bottom": 0,
+      "top": 2.35,
+      "kind": "door",
+      "open": true,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            755,
+            370
+          ],
+          [
+            755,
+            416
+          ]
+        ]
+      }
+    },
+    {
+      "id": "plant",
+      "level": 0,
+      "segment": 19,
+      "start": 1.3151,
+      "end": 2.1841,
+      "bottom": 0,
+      "top": 2.05,
+      "kind": "door",
+      "open": true,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            489,
+            77
+          ],
+          [
+            489,
+            114
+          ]
+        ]
+      }
+    },
+    {
+      "id": "kitchen-front",
+      "level": 0,
+      "segment": 9,
+      "start": 0.4697,
+      "end": 3.2879,
+      "bottom": 0.9,
+      "top": 2.4,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            790,
+            500
+          ],
+          [
+            790,
+            620
+          ]
+        ]
+      }
+    },
+    {
+      "id": "kitchen-side",
+      "level": 0,
+      "segment": 12,
+      "start": 0.3523,
+      "end": 3.7576,
+      "bottom": 0.9,
+      "top": 2.4,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            610,
+            674
+          ],
+          [
+            755,
+            674
+          ]
+        ]
+      }
+    },
+    {
+      "id": "living-rear-a",
+      "level": 0,
+      "segment": 14,
+      "start": 4.5326,
+      "end": 7.3508,
+      "bottom": 0,
+      "top": 2.4,
+      "kind": "slider",
+      "open": true,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            270,
+            650
+          ],
+          [
+            390,
+            650
+          ]
+        ]
+      }
+    },
+    {
+      "id": "living-rear-b",
+      "level": 0,
+      "segment": 14,
+      "start": 0.5402,
+      "end": 3.5932,
+      "bottom": 0,
+      "top": 2.4,
+      "kind": "slider",
+      "open": true,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            430,
+            650
+          ],
+          [
+            560,
+            650
+          ]
+        ]
+      }
+    },
+    {
+      "id": "living-side-a",
+      "level": 0,
+      "segment": 15,
+      "start": 3.1704,
+      "end": 5.6363,
+      "bottom": 0,
+      "top": 2.4,
+      "kind": "slider",
+      "open": true,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            250,
+            410
+          ],
+          [
+            250,
+            515
+          ]
+        ]
+      }
+    },
+    {
+      "id": "living-side-b",
+      "level": 0,
+      "segment": 15,
+      "start": 0.5166,
+      "end": 1.8788,
+      "bottom": 0,
+      "top": 2.4,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            250,
+            570
+          ],
+          [
+            250,
+            628
+          ]
+        ]
+      }
+    },
+    {
+      "id": "office",
+      "level": 0,
+      "segment": 17,
+      "start": 2.5833,
+      "end": 4.1098,
+      "bottom": 1,
+      "top": 2.4,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            328,
+            220
+          ],
+          [
+            328,
+            285
+          ]
+        ]
+      }
+    },
+    {
+      "id": "bath16",
+      "level": 1,
+      "segment": 9,
+      "start": 2.4049,
+      "end": 3.9909,
+      "bottom": 0,
+      "top": 2.3,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            317,
+            252
+          ],
+          [
+            317,
+            317
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wardrobe15",
+      "level": 1,
+      "segment": 9,
+      "start": 0.6969,
+      "end": 1.4777,
+      "bottom": 0,
+      "top": 2.3,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            317,
+            355
+          ],
+          [
+            317,
+            387
+          ]
+        ]
+      }
+    },
+    {
+      "id": "master-side-a",
+      "level": 1,
+      "segment": 7,
+      "start": 4.5383,
+      "end": 5.6363,
+      "bottom": 0,
+      "top": 2.3,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            227,
+            430
+          ],
+          [
+            227,
+            475
+          ]
+        ]
+      }
+    },
+    {
+      "id": "master-side-b",
+      "level": 1,
+      "segment": 7,
+      "start": 0.2928,
+      "end": 1.8544,
+      "bottom": 0,
+      "top": 2.3,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            227,
+            585
+          ],
+          [
+            227,
+            649
+          ]
+        ]
+      }
+    },
+    {
+      "id": "master-rear",
+      "level": 1,
+      "segment": 6,
+      "start": 8.4046,
+      "end": 10.0389,
+      "bottom": 0,
+      "top": 2.3,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            305,
+            661
+          ],
+          [
+            375,
+            661
+          ]
+        ]
+      }
+    },
+    {
+      "id": "child17-rear",
+      "level": 1,
+      "segment": 6,
+      "start": 4.7393,
+      "end": 6.5369,
+      "bottom": 0,
+      "top": 2.3,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            455,
+            661
+          ],
+          [
+            532,
+            661
+          ]
+        ]
+      }
+    },
+    {
+      "id": "child18-rear",
+      "level": 1,
+      "segment": 6,
+      "start": 1.9144,
+      "end": 3.2451,
+      "bottom": 0,
+      "top": 2.3,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            596,
+            661
+          ],
+          [
+            653,
+            661
+          ]
+        ]
+      }
+    },
+    {
+      "id": "child18-side",
+      "level": 1,
+      "segment": 5,
+      "start": 3.4647,
+      "end": 5.1483,
+      "bottom": 0,
+      "top": 2.3,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            724,
+            580
+          ],
+          [
+            724,
+            649
+          ]
+        ]
+      }
+    },
+    {
+      "id": "child18-front",
+      "level": 1,
+      "segment": 5,
+      "start": 1.6348,
+      "end": 2.2936,
+      "bottom": 1.6,
+      "top": 2.3,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            724,
+            505
+          ],
+          [
+            724,
+            532
+          ]
+        ]
+      }
+    },
+    {
+      "id": "laundry",
+      "level": 1,
+      "segment": 5,
+      "start": 0.3416,
+      "end": 1.0248,
+      "bottom": 1.6,
+      "top": 2.3,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            724,
+            452
+          ],
+          [
+            724,
+            480
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sauna",
+      "level": 1,
+      "segment": 3,
+      "start": 0.0976,
+      "end": 0.61,
+      "bottom": 0.4,
+      "top": 2.5,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            752,
+            333
+          ],
+          [
+            752,
+            354
+          ]
+        ]
+      }
+    },
+    {
+      "id": "bath21",
+      "level": 1,
+      "segment": 1,
+      "start": 1.342,
+      "end": 2.318,
+      "bottom": 0,
+      "top": 2.3,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            724,
+            254
+          ],
+          [
+            724,
+            294
+          ]
+        ]
+      }
+    },
+    {
+      "id": "bath21-front",
+      "level": 1,
+      "segment": 0,
+      "start": 8.7439,
+      "end": 9.5377,
+      "bottom": 0,
+      "top": 2.3,
+      "kind": "window",
+      "open": false,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          [
+            680,
+            199
+          ],
+          [
+            714,
+            199
+          ]
+        ]
+      }
+    }
+  ],
+  "registration": {
+    "rotation": [
+      [
+        0.7326670089036766,
+        0.680587286146413
+      ],
+      [
+        -0.6805872861464128,
+        0.7326670089036768
+      ]
+    ],
+    "translation": [
+      17.83214945811778,
+      1.5048668971285242
+    ]
+  }
+}
