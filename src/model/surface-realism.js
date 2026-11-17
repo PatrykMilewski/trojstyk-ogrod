@@ -331,6 +331,20 @@ function surfaceFenceUvs(material) {
   };
 }
 
+function applyBarkScan(material, textures) {
+  Object.assign(material, textures, {bumpScale: .014});
+  material.color.setHex(0xd9d1bd);
+  material.onBeforeCompile = shader => {
+    shader.vertexShader = shader.vertexShader.replace('#include <uv_vertex>', `
+      #include <uv_vertex>
+      vec2 barkSize = vec2(6.28318 * length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz));
+      vec2 barkUv = uv * barkSize + fract(instanceMatrix[3].xy);
+      vMapUv = barkUv;
+      vBumpMapUv = barkUv;
+    `);
+  };
+}
+
 const scannedSurfaces = {
   grass: {metres: 2, tint: 0xa0e4a1},
   planting: {metres: 1.3, tint: 0xd3bba3},
@@ -359,6 +373,10 @@ export async function applyRealisticSurfaces({THREE, scene, mats, renderer, scan
   const textures = await loadSurfaceScans(THREE, scans, anisotropy);
   scene.traverse(object => {
     if (!object.isMesh || !object.geometry?.getAttribute('position')) return;
+    if (object.isInstancedMesh && object.name.endsWith('-trunks') && textures.has('bark')) {
+      applyBarkScan(object.material, textures.get('bark'));
+      return;
+    }
     const originals = Array.isArray(object.material) ? object.material : [object.material];
     const types = originals.map((material, i) => surfaceProfileFor(object, material, keys.get(material), i));
     const type = types.find(Boolean);

@@ -41,7 +41,8 @@
     "Poly Haven · leafy_grass": "https://polyhaven.com/a/leafy_grass",
     "Poly Haven · brown_mud": "https://polyhaven.com/a/brown_mud",
     "Poly Haven · gravel_floor": "https://polyhaven.com/a/gravel_floor",
-    "Poly Haven · wood_planks_grey": "https://polyhaven.com/a/wood_planks_grey"
+    "Poly Haven · wood_planks_grey": "https://polyhaven.com/a/wood_planks_grey",
+    "Poly Haven · bark_brown_02": "https://polyhaven.com/a/bark_brown_02"
   },
   "houses": [
     {
@@ -1458,7 +1459,7 @@
     "proceduralCodeSha256": "1c3568d0707aba13e28b3b27f53cefbd4acfd82be7154a7d3804b4eb4bd94c3b",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "426140b9e29c7b44a98258b31e23e939a3789b4b671d8536079a11c746c93047",
-    "runtimeSha256": "58e4381ea40e443b3c80aa7632762b7c65481a790d60d2de68529e299df091d7"
+    "runtimeSha256": "f03aee68a24dfdd55c41d1e48db83a94082672df96396087b0469f4f3b25c613"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",

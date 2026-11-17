@@ -27,7 +27,16 @@ function woodySprayTexture(THREE) {
     ctx.bezierCurveTo(length * .63, length * .34, length * .25, length * .30, 0, 0);
     ctx.fillStyle = ['#b2c975', '#95b05d', '#bdce89', '#9cb66c', '#adc47b'][Math.floor(random() * 5)];
     ctx.fill();
-    stroke(0, 0, length * .9, 0, 1, '#a6b77a');
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(length * .25, length * .30, length * .63, length * .34, length, 0);
+    ctx.fillStyle = 'rgba(40,70,28,.15)';
+    ctx.fill();
+    for (const fraction of [.27,.47,.67]) {
+      const reach = length * .16 * Math.sin(fraction * Math.PI);
+      for (const side of [-1,1]) stroke(length*fraction, 0, length*fraction+reach, side*reach, .65, '#98a86b');
+    }
+    stroke(0, 0, length * .9, 0, .8, '#bace8c');
     ctx.restore();
   }
   const stems = [[122,245,119,168],[119,168,85,112],[85,112,44,65],
