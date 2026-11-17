@@ -36,6 +36,7 @@ const solarSkyVertex = `
 `;
 const solarSkyFragment = `
   varying vec2 skyUv;
+  uniform sampler2D cloudField;
   uniform mat4 inverseProjection;
   uniform mat3 cameraRotation;
   uniform bool orthographic;
@@ -54,6 +55,16 @@ const solarSkyFragment = `
     float height = clamp(ray.z, 0.0, 1.0);
     vec3 color = mix(horizonColor, zenithColor, pow(height, 0.55));
     color = mix(color, lowerColor, (1.0 - smoothstep(-0.16, 0.0, ray.z)));
+    if (!orthographic && ray.z > 0.012) {
+      vec2 uv = ray.xy * vec2(.18,.26) / (ray.z + .17);
+      float cloud = texture2D(cloudField, uv).r;
+      float wisps = texture2D(cloudField, uv * vec2(.58,2.8) + .34).r;
+      float cover = smoothstep(.50,.72,cloud + .08 * (wisps-.5)) * .57
+        + smoothstep(.55,.8,wisps) * .12;
+      vec3 cloudLight = mix(vec3(.085,.093,.12), vec3(.97,.95,.88), smoothstep(-.13,.2,sunDirection.z));
+      cloudLight = mix(cloudLight, vec3(.94,.60,.36), sunset * .64);
+      color = mix(color,cloudLight,cover * smoothstep(.012,.13,ray.z));
+    }
     float alignment = dot(ray, sunDirection);
     float distanceToSun = length(cross(ray, sunDirection));
     float aboveHorizon = smoothstep(-0.0002, 0.0002, ray.z);
@@ -71,6 +82,7 @@ const solarSkyFragment = `
 
 function solarSkyUniforms(THREE) {
   return {
+    cloudField: { value: daylightCloudTexture(THREE) },
     inverseProjection: { value: new THREE.Matrix4() },
     cameraRotation: { value: new THREE.Matrix3() },
     orthographic: { value: false },
@@ -116,7 +128,7 @@ export function setupSolarSky({ THREE }) {
       }
       return true;
     },
-    dispose() { disposed = true; geometry.dispose(); material.dispose(); },
+    dispose() { disposed = true; uniforms.cloudField.value.dispose(); geometry.dispose(); material.dispose(); },
   };
 }
 

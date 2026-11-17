@@ -6,8 +6,8 @@ const html = await readFile(new URL('../trzy-domy-3d/index.html', import.meta.ur
 const imports = JSON.parse(html.split('<script type="importmap">')[1].split('</script>')[0]).imports;
 const THREE = await load(Buffer.from(imports.three.split(',')[1], 'base64').toString('utf8')
   .replaceAll("'three/core'", `'${imports['three/core']}'`));
-const { solarAppearance, setupSolarSky, setupSolarAtmosphere } = await load(await readFile(
-  new URL('../src/model/solar-sky.js', import.meta.url), 'utf8'));
+const { solarAppearance, setupSolarSky, setupSolarAtmosphere } = await load((await Promise.all(['daylight-finish.js','solar-sky.js'].map(file =>
+  readFile(new URL('../src/model/'+file, import.meta.url),'utf8')))).join('\n'));
 const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-10, `${a} != ${b}`);
 const channel = (hex, shift) => (hex >> shift) & 255;
 function captureSky() {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-17.9",
+  "modelVersion": "2026-11-17.10",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -37,7 +37,11 @@
     "ortofotomapa": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528383.77%2C6033436.61%2C6528743.77%2C6033796.61&WIDTH=2048&HEIGHT=2048&FORMAT=image%2Fjpeg",
     "NMT": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WCS/DigitalTerrainModel?SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&FORMAT=image%2Fx-aaigrid&COVERAGE=DTM_PL-EVRF2007-NH&BBOX=463514.0%2C729730.0%2C463880.0%2C730095.0&CRS=EPSG%3A2180&RESPONSE_CRS=EPSG%3A2180&RESX=1&RESY=1",
     "media": "https://kartuski-wms.webewid.pl/iip/ows",
-    "slonce": "https://gml.noaa.gov/grad/solcalc/calcdetails.html"
+    "slonce": "https://gml.noaa.gov/grad/solcalc/calcdetails.html",
+    "Poly Haven · leafy_grass": "https://polyhaven.com/a/leafy_grass",
+    "Poly Haven · brown_mud": "https://polyhaven.com/a/brown_mud",
+    "Poly Haven · gravel_floor": "https://polyhaven.com/a/gravel_floor",
+    "Poly Haven · wood_planks_grey": "https://polyhaven.com/a/wood_planks_grey"
   },
   "houses": [
     {
@@ -1451,10 +1455,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "b967ebf892991498e646774f5a004b96e913e516819401991d6f0ab74b634fa0",
-    "proceduralCodeSha256": "ff868cb0e73178ae29ddcfa51879c79d71a840135ab139fa249e463ec4eb745a",
+    "proceduralCodeSha256": "1c3568d0707aba13e28b3b27f53cefbd4acfd82be7154a7d3804b4eb4bd94c3b",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "426140b9e29c7b44a98258b31e23e939a3789b4b671d8536079a11c746c93047",
-    "runtimeSha256": "62d02c187620a836890ea8fc1dc4bb35a38853581539d36f1758b27d4f575fdc"
+    "runtimeSha256": "58e4381ea40e443b3c80aa7632762b7c65481a790d60d2de68529e299df091d7"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1471,7 +1475,8 @@
     "Widoczna tarcza słońca o średnicy kątowej 0,53°, zgodna z datą, godziną i kierunkiem astronomicznym. Ciepłe barwy przy horyzoncie, niebo dzienne i zmierzch; poglądowa atmosfera. Play/pause także przy dolnym zegarze, wspólny stan z panelem słońca. Gabaryty, geometria, wnętrza i układ działek bez zmian.",
     "Tarczę słońca powiększono wizualnie 2× do średnicy kątowej 1,06°, aby była wyraźniejsza podczas spaceru. Kierunek astronomiczny i geometria cieni bez zmian.",
     "Niebo i słońce widoczne od startu modelu; zegar nadal ukryty do otwarcia panelu Słońce i mapy. Domyślna data i godzina bez zmian.",
-    "Przycisk Spacer na głównym pasku uruchamia i wyłącza ten sam tryb chodzenia co dotychczasowy przycisk w menu. Geometria i parametry spaceru bez zmian."
+    "Przycisk Spacer na głównym pasku uruchamia i wyłącza ten sam tryb chodzenia co dotychczasowy przycisk w menu. Geometria i parametry spaceru bez zmian.",
+    "Nowe korony i gałęzie zachowują pozycje, wysokość i promień 12 drzew. Na rabatach dodano krzewy, byliny i wysokie trawy, a na trawnikach źdźbła 2–5 cm. Materiały powierzchni i wyposażenia odwzorowują detale w metrach."
   ],
   "contextParcels": [
     {

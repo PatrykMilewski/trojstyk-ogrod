@@ -66,69 +66,93 @@ function addFieldBases(THREE, group, data) {
   }
 }
 
-function grainGeometry(THREE) {
-  const vertices = [];
-  const quad = (a,b,c,d) => vertices.push(...a,...b,...c,...a,...c,...d);
-  for (let i = 0; i < 5; i++) {
-    const angle = i * 2.39996, x = Math.cos(angle) * 0.17, y = Math.sin(angle) * 0.17;
-    const top = 0.78 + i * 0.035, w = 0.012;
-    quad([x-w,y,0],[x+w,y,0],[x+0.07+w,y,top],[x+0.07-w,y,top]);
-    quad([x,y-w,0],[x,y+w,0],[x+0.07,y+w,top],[x+0.07,y-w,top]);
-    quad([x+0.04,y,top-0.03],[x+0.1,y,top-0.03],[x+0.085,y,1],[x+0.055,y,1]);
-    quad([x+0.07,y-0.03,top-0.03],[x+0.07,y+0.03,top-0.03],[x+0.07,y+0.015,1],[x+0.07,y-0.015,1]);
+function grainSprayTexture(THREE) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  const random = seeded(465018);
+  const bladeColors = ['#738947','#80954f','#93a65c','#849f51','#9aad64'];
+  const earColors = ['#a0af69','#aebe78','#9fae62','#b5bf76','#9ba962'];
+  function blade(x,y,dx,dy,width) {
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+    ctx.quadraticCurveTo(x + dx*.3 - width, y + dy*.6, x+dx, y+dy);
+    ctx.quadraticCurveTo(x + dx*.34 + width, y + dy*.55, x,y);
+    ctx.fillStyle=bladeColors[Math.floor(random()*bladeColors.length)];
+    ctx.fill();
   }
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices,3));
+  function ear(x,y,angle,size) {
+    ctx.save(); ctx.translate(x,y); ctx.rotate(angle); ctx.scale(size,size);
+    ctx.strokeStyle='#a1ae69'; ctx.lineWidth=1.9;
+    ctx.beginPath(); ctx.moveTo(0,4); ctx.lineTo(0,-58); ctx.stroke();
+    for (let i=0; i<12; i++) {
+      const side=i%2 ? -1 : 1, v=-4.35*i;
+      const w=side*(5.8 + 2.5*Math.sin(i*.27));
+      ctx.fillStyle=earColors[Math.floor(random()*earColors.length)];
+      ctx.beginPath(); ctx.moveTo(0,v+3);
+      ctx.quadraticCurveTo(w*1.15,v-2,w,v-12);
+      ctx.quadraticCurveTo(w*.16,v-10,0,v+3); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(w,v-11); ctx.lineTo(w*1.5,v-22); ctx.lineWidth=1; ctx.stroke();
+    }
+    ctx.restore();
+  }
+  for (let panel=0; panel<3; panel++) {
+    ctx.save(); ctx.translate(panel*256,0);
+    ctx.beginPath(); ctx.rect(2,1,252,511); ctx.clip();
+    for (let i=0; i<11; i++) {
+      const x=32+random()*182, bend=(random()-.47)*55;
+      const tipY= i===10 ? 81 : 105+random()*128;
+      const tipX=x+bend;
+      ctx.strokeStyle=bladeColors[Math.floor(random()*bladeColors.length)];
+      ctx.lineWidth=1.8+random()*1.7;
+      ctx.beginPath(); ctx.moveTo(x,514);
+      ctx.quadraticCurveTo(x-bend*.16,285,tipX,tipY); ctx.stroke();
+      for (let j=0; j<4; j++) {
+        const t=.14+j*.18;
+        const bx=x+bend*(t*t-.32*t*(1-t));
+        const by=(1-t)**2*514+2*(1-t)*t*285+t*t*tipY;
+        blade(bx,by,(j%2 ? 1 : -1)*(21+random()*36),-(42+random()*51),3.5+random()*3);
+      }
+      ear(tipX,tipY,Math.atan2(bend*1.16,285-tipY),.83+random()*.26);
+    }
+    ctx.restore();
+  }
+  const texture=new THREE.CanvasTexture(canvas);
+  texture.colorSpace=THREE.SRGBColorSpace;
+  return texture;
+}
+
+function grainGeometry(THREE) {
+  const vertices=[], uv=[], indices=[];
+  for (let i=0; i<3; i++) {
+    const a=i*Math.PI/3, dx=.32*Math.cos(a), dy=.32*Math.sin(a);
+    const offset=vertices.length/3, left=(256*i+.5)/1024, right=(256*i+255.5)/1024;
+    vertices.push(-dx,-dy,0,dx,dy,0,dx,dy,1,-dx,-dy,1);
+    uv.push(left,0,right,0,right,1,left,1);
+    indices.push(offset,offset+1,offset+2,offset,offset+2,offset+3);
+  }
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+  geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+  geometry.setIndex(indices);
   geometry.computeVertexNormals();
   return geometry;
 }
 
-function addGrain(THREE, group, data) {
-  const points = cropPoints(data), dummy = new THREE.Object3D();
-  const material = new THREE.MeshStandardMaterial({color: 0x899c58, roughness: 1, side: THREE.DoubleSide});
-  const mesh = new THREE.InstancedMesh(grainGeometry(THREE), material, points.length);
-  points.forEach(([x,y,h,angle],i) => {
+function addGrain(THREE,group,data) {
+  const points=cropPoints(data), dummy=new THREE.Object3D();
+  const material=new THREE.MeshStandardMaterial({
+    map:grainSprayTexture(THREE),side:THREE.DoubleSide,alphaTest:.20,roughness:1
+  });
+  const mesh=new THREE.InstancedMesh(grainGeometry(THREE),material,points.length);
+  points.forEach(([x,y,h,angle],i)=>{
     dummy.position.set(x,y,data.crop.baseZ); dummy.rotation.set(0,0,angle);
     dummy.scale.set(1,1,h); dummy.updateMatrix(); mesh.setMatrixAt(i,dummy.matrix);
   });
-  mesh.name = 'growing-grain-clumps'; mesh.castShadow = false; mesh.receiveShadow = true;
-  mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); group.add(mesh);
+  mesh.name='growing-grain-clumps'; mesh.castShadow=false; mesh.receiveShadow=true;
+  mesh.instanceMatrix.needsUpdate=true; mesh.computeBoundingSphere(); group.add(mesh);
   return points.length;
-}
-
-function addTreeInstances(THREE, group, trees) {
-  const trunkGeometry = new THREE.CylinderGeometry(0.17,0.27,1,7);
-  trunkGeometry.rotateX(Math.PI / 2);
-  const trunk = new THREE.InstancedMesh(trunkGeometry,
-    new THREE.MeshStandardMaterial({color: 0x675442, roughness: 1}), trees.length);
-  const crownGeometry = new THREE.IcosahedronGeometry(1,2);
-  crownGeometry.computeBoundingBox();
-  const bounds = crownGeometry.boundingBox;
-  crownGeometry.scale(1 / bounds.max.x,1 / bounds.max.y,1 / bounds.max.z);
-  const crowns = new THREE.InstancedMesh(crownGeometry,
-    new THREE.MeshStandardMaterial({color:0xffffff, roughness:1}), trees.length * 7);
-  const dummy = new THREE.Object3D(), color = new THREE.Color(), random = seeded(41911);
-  trees.forEach((tree,i) => {
-    const [x,y] = tree.center, h = tree.height, r = tree.crownRadius;
-    dummy.position.set(x,y,h * 0.25); dummy.rotation.set(0,0,0);
-    dummy.scale.set(1,1,h * 0.5); dummy.updateMatrix(); trunk.setMatrixAt(i,dummy.matrix);
-    for (let j = 0; j < 7; j++) {
-      const angle = j * Math.PI / 3, offset = j === 0 ? 0 : r * 0.43;
-      const radius = j === 0 ? r * 0.68 : r * 0.57;
-      const zRadius = j === 0 ? h * 0.30 : h * (0.18 + random() * 0.04);
-      const centerZ = j === 0 ? h - zRadius : h * (0.60 + random() * 0.08);
-      dummy.position.set(x + Math.cos(angle)*offset,y + Math.sin(angle)*offset,centerZ);
-      dummy.scale.set(radius,radius,zRadius); dummy.updateMatrix();
-      crowns.setMatrixAt(i*7+j,dummy.matrix);
-      color.setHSL(0.22 + random()*0.045,0.26 + random()*0.12,0.22 + random()*0.07);
-      crowns.setColorAt(i*7+j,color);
-    }
-  });
-  trunk.name='existing-41-trunks'; crowns.name='existing-41-deciduous-crowns';
-  for (const mesh of [trunk,crowns]) {
-    mesh.castShadow=true; mesh.receiveShadow=true; mesh.instanceMatrix.needsUpdate=true;
-    mesh.computeBoundingSphere(); group.add(mesh);
-  }
 }
 
 export function addSurroundingVegetation({ THREE, scene, data }) {
@@ -136,7 +160,7 @@ export function addSurroundingVegetation({ THREE, scene, data }) {
   group.name='surrounding-vegetation'; crops.name='surrounding-grain'; trees.name='existing-trees-41';
   addFieldBases(THREE,crops,data);
   const grainClumps = addGrain(THREE,crops,data);
-  addTreeInstances(THREE,trees,data.trees);
+  addRealisticTrees(THREE,trees,data.trees,'existing-41');
   group.add(crops,trees); scene.add(group);
   const meta = {grainClumps, treeCount:data.trees.length, cropHeightRangeM:data.crop.heightRangeM,
     treeHeightRangeM:[Math.min(...data.trees.map(t=>t.height)),Math.max(...data.trees.map(t=>t.height))],
