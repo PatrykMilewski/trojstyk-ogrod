@@ -5,6 +5,7 @@ export function addIconInterior(options) {
  iconInteriorStairs(context);
  iconInteriorFurnishings(context);
  iconInteriorLightingAndRoof(context);
+ options.joinStory?.(options.THREE,context.group);
  const {group,navigation,data,world} = context;
  return {group,navigation,rooms:data.rooms,metadata:data.metadata,localToWorld:world};
 }
@@ -34,10 +35,11 @@ function iconInteriorSetup({THREE,scene,house,data,cutRoof=geometry=>geometry}) 
  const ceilingAt = (x,y) => {const slope=(8.3-4.07)/4.25;return Math.max(x<=8.5?8.3-slope*Math.abs(x-4.25):-Infinity,x>=4.25&&y>=4.21&&y<=12.71?8.3-slope*Math.abs(y-8.46):-Infinity)-.045;};
  const wall = (id,a,b,z0,z1,thickness,openings=[],profile=null) => {
   const external=id.startsWith('facade-')||id.startsWith('upper-')||id.endsWith('-gable');
+  const omitCaps=external?[a,b].map(p=>iconInteriorConvexCorner(p,z0===0?data.exterior.ground:data.exterior.upper)):[false,false];
   let nx=0,ny=0;if(external){if(Math.abs(a[0]-b[0])<.01)nx=a[0]<.1?-1:1;else ny=a[1]<5?-1:1;a=[a[0]-nx*thickness/2,a[1]-ny*thickness/2];b=[b[0]-nx*thickness/2,b[1]-ny*thickness/2];}
   const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L;
-  const outer=profile||[[0,z0],[L,z0],[L,z1],[0,z1]],holes=openings.map(o=>o.poly||[[o.start,o.bottom],[o.end,o.bottom],[o.end,o.top],[o.start,o.top]]);
-  const geometry=iconInteriorWallGeometry(THREE,{a,ux,uy,L,z0,z1,thickness,outer,holes,ceilingAt,sloped:id.startsWith('u-'),external,nx,ny});
+  const outer=profile||[[0,z0],[L,z0],[L,z1],[0,z1]],holes=openings.map(o=>o.wallPoly||o.poly||[[o.start,o.bottom],[o.end,o.bottom],[o.end,o.top],[o.start,o.top]]);
+  const geometry=iconInteriorWallGeometry(THREE,{a,ux,uy,L,z0,z1,thickness,outer,holes,ceilingAt,sloped:id.startsWith('u-'),external,nx,ny,omitCaps});
   mesh(geometry,external?[mats.wall,mats.dark]:mats.wall,id);
   const cuts=[0,L,...openings.flatMap(o=>[o.start,o.end])].sort((x,y)=>x-y);
   for(let i=1;i<cuts.length;i++){const start=cuts[i-1],end=cuts[i];if(end-start<.001)continue;const opening=openings.find(o=>(start+end)/2>o.start&&(start+end)/2<o.end);const ax=a[0]+ux*start,ay=a[1]+uy*start,bx=a[0]+ux*end,by=a[1]+uy*end,bounds=[Math.min(ax,bx)-Math.abs(uy)*thickness/2,Math.min(ay,by)-Math.abs(ux)*thickness/2,Math.max(ax,bx)+Math.abs(uy)*thickness/2,Math.max(ay,by)+Math.abs(ux)*thickness/2];
@@ -45,7 +47,7 @@ function iconInteriorSetup({THREE,scene,house,data,cutRoof=geometry=>geometry}) 
   }
   for(const [i,o] of openings.entries()){
    const points=o.poly||[[o.start,o.bottom],[o.end,o.bottom],[o.end,o.top],[o.start,o.top]],recess=o.recess||0,to3=p=>[a[0]+ux*p[0]-nx*recess,a[1]+uy*p[0]-ny*recess,p[1]];
-   if(recess>thickness/2)iconInteriorWindowReveal({THREE,mesh,mats,id:id+'-reveal-'+i,points,to3,normal:[nx,ny],depth:recess-thickness/2});
+   if(recess>thickness/2)iconInteriorWindowReveal({THREE,mesh,mats,id:id+'-reveal-'+i,points:o.wallPoly||points,to3,normal:[nx,ny],depth:recess-thickness/2});
    for(let j=0;j<points.length;j++)beam(id+'-opening-'+i+'-frame-'+j,to3(points[j]),to3(points[(j+1)%points.length]),.025,mats.dark);
    if(o.glass){const g=new THREE.ShapeGeometry(new THREE.Shape(points.map(p=>new THREE.Vector2(...p)))),ps=g.getAttribute('position');for(let j=0;j<ps.count;j++){const p=to3([ps.getX(j),ps.getY(j)]);ps.setXYZ(j,...p);}g.computeVertexNormals();mesh(g,mats.glass,id+'-glass-'+i).castShadow=false;
     const mid=(o.start+o.end)/2;if(o.end-o.start>2&&id!=='garden-gable')beam(id+'-mullion-'+i,to3([mid,o.bottom]),to3([mid,Math.min(o.top,4.0)]),.025,mats.dark);
@@ -56,6 +58,13 @@ function iconInteriorSetup({THREE,scene,house,data,cutRoof=geometry=>geometry}) 
  const opening = (start,end,bottom=0,top=2.35,glass=true) => ({start,end,bottom,top,glass});
  const contains = iconInteriorContains;
  return {THREE, scene, house, data, group, world, ring, navigation, mats, mesh, box, obstacle, floor, slab, beam, rail, wall, opening, contains, ceilingAt, cutRoof};
+}
+
+function iconInteriorConvexCorner(point,ring) {
+ const i=ring.findIndex(p=>Math.hypot(p[0]-point[0],p[1]-point[1])<1e-7);
+ if(i<0)return false;
+ const a=ring[(i+ring.length-1)%ring.length],b=ring[i],c=ring[(i+1)%ring.length];
+ return (b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0])>0;
 }
 
 function iconInteriorWindowReveal({THREE,mesh,mats,id,points,to3,normal,depth}) {
@@ -70,9 +79,13 @@ function iconInteriorWindowReveal({THREE,mesh,mats,id,points,to3,normal,depth}) 
 }
 
 function iconInteriorWallGeometry(THREE,options) {
- const {a,ux,uy,L,z0,z1,thickness,outer,holes,ceilingAt,sloped,external,nx,ny}=options;
+ const {a,ux,uy,L,z0,z1,thickness,outer,holes,ceilingAt,sloped,external,nx,ny,omitCaps}=options;
  const vertices=[],groups=[],cuts=[0,L,...outer.map(p=>p[0]),...holes.flatMap(p=>p.map(v=>v[0]))];
- const point=(u,d,h)=>[a[0]+ux*u-uy*d,a[1]+uy*u+ux*d,h];
+ const point=(u,d,h)=>{
+  const inset=external?thickness/2-(-uy*d*nx+ux*d*ny):0;
+  const along=Math.max(omitCaps[0]?inset:0,Math.min(omitCaps[1]?L-inset:L,u));
+  return [a[0]+ux*along-uy*d,a[1]+uy*along+ux*d,h];
+ };
  const height=(u,d,h)=>{const roof=ceilingAt(...point(u,d,0).slice(0,2));if(sloped)return Math.min(h,roof);const inner=external&&z0===2.8&&(-uy*d*nx+ux*d*ny)<0,top=bounds(outer,u,Math.max(1e-7,Math.min(L-1e-7,u)))?.[1];return inner&&Math.abs(h-top)<1e-6?roof:h;};
  if(sloped||external&&z0===2.8)for(const d of [-thickness/2,thickness/2]){
   const [x,y]=point(0,d,0);
@@ -93,10 +106,27 @@ function iconInteriorWallGeometry(THREE,options) {
   }
  }
  for(let i=0;i<xs.length;i++){
+  if(i===0&&omitCaps[0]||i===xs.length-1&&omitCaps[1])continue;
   const u=xs[i],left=i?bands(u,(xs[i-1]+u)/2):[],right=i<xs.length-1?bands(u,(u+xs[i+1])/2):[],heights=[...new Set([...left.flat(),...right.flat()])].sort((x,y)=>x-y);
   for(let j=1;j<heights.length;j++){const bottom=heights[j-1],top=heights[j],mid=(bottom+top)/2,solid=band=>band.some(([lo,hi])=>mid>lo&&mid<hi);if(solid(left)===solid(right))continue;quad(point(u,-thickness/2,height(u,-thickness/2,bottom)),point(u,thickness/2,height(u,thickness/2,bottom)),point(u,thickness/2,height(u,thickness/2,top)),point(u,-thickness/2,height(u,-thickness/2,top)));}
  }
  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));for(const group of groups)geometry.addGroup(group.start,group.count,group.material);geometry.computeVertexNormals();return geometry;
+}
+
+function iconInteriorInsetSlab(outline,exterior,distance) {
+ const onEdge=(p,a,b)=>Math.abs((b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0]))<1e-7&&p.every((v,k)=>v>=Math.min(a[k],b[k])-1e-7&&v<=Math.max(a[k],b[k])+1e-7);
+ const edges=outline.map((a,i)=>{
+  const b=outline[(i+1)%outline.length],dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
+  const exteriorEdge=exterior.some((p,j)=>onEdge(a,p,exterior[(j+1)%exterior.length])&&onEdge(b,p,exterior[(j+1)%exterior.length]));
+  const offset=exteriorEdge?[-dy/length*distance,dx/length*distance]:[0,0];
+  return {a:a.map((v,k)=>v+offset[k]),direction:[dx,dy]};
+ });
+ return edges.map((edge,i)=>{
+  const previous=edges[(i+edges.length-1)%edges.length],a=previous.a,b=edge.a,u=previous.direction,v=edge.direction,cross=u[0]*v[1]-u[1]*v[0];
+  if(Math.abs(cross)<1e-8)return b;
+  const t=((b[0]-a[0])*v[1]-(b[1]-a[1])*v[0])/cross;
+  return [a[0]+t*u[0],a[1]+t*u[1]];
+ });
 }
 
 function iconInteriorFloorsAndPartitions(context) {
@@ -106,8 +136,9 @@ function iconInteriorFloorsAndPartitions(context) {
 
  navigation.floors.push({id:'ground',ring:data.exterior.ground.map(p=>world(p).slice(0,2)),z:0});
  const upperOutline=[[0,0],[8.5,0],[8.5,4.21],[14.64,4.21],[14.64,12.71],[8.5,12.71],[8.5,12.21],[9.8,12.21],[9.8,9.23],[7.94,9.23],[7.94,10.3],[0,10.3]];
- slab('upper-structure',upperOutline,[],2.8,.4,mats.ceiling);
- slab('upper-oak-finish',upperOutline,[],3.2,.015,mats.oak);
+ const structureOutline=iconInteriorInsetSlab(upperOutline,data.exterior.upper,.18);
+ slab('upper-structure',structureOutline,[],2.8,.4,mats.ceiling);
+ slab('upper-oak-finish',structureOutline,[],3.2,.015,mats.oak);
  const xs=[...new Set([0,.5,7.94,8.5,9.8,14.64])].sort((a,b)=>a-b),ys=[0,4.21,9.23,10.3,12.21,12.71,17.63,18.13];
  for(let i=1;i<xs.length;i++)for(let j=1;j<ys.length;j++){const b=[xs[i-1],ys[j-1],xs[i],ys[j]],p=[(b[0]+b[2])/2,(b[1]+b[3])/2];if(contains(p,data.exterior.upper)&&!contains(p,stairHole)&&!contains(p,livingHole)){floor('upper-'+i+'-'+j,b,3.2);obstacle('upper-slab-'+i+'-'+j,b,2.8,3.2);navigation.obstacles[navigation.obstacles.length-1].kind='slab';}}
  for(const room of data.rooms){const z=room.id.startsWith('1.')?3.215:0;if(room.finish==='tile')slab('finish-'+room.id,ring(room.box),[],z,.008,mats.tile);}
@@ -116,13 +147,16 @@ function iconInteriorFloorsAndPartitions(context) {
 
 function iconInteriorFacades(context) {
  const {data, wall, box, obstacle, mats, beam, opening} = context;
- for(const facade of data.facades)wall(facade.id,facade.a,facade.b,0,2.8,.48,facade.openings);
+ for(const facade of data.facades){
+  const openings=facade.id==='facade-garden'?facade.openings.map(o=>({...o,wallPoly:[[o.start,0],[o.end,0],[o.end,2.8],[o.start,2.8]]})):facade.openings;
+  wall(facade.id,facade.a,facade.b,0,2.8,.48,openings);
+ }
  box('garage-sectional-door',[1.08,-.05,6.04,.05],0,2.32,mats.dark);obstacle('garage-door',[1.06,-.1,6.06,.1],0,2.35);
  // These three walls include the upper gable and its asymmetrical glazing.
  wall('front-gable',[0,0],[8.5,0],2.8,8.3,.36,[{...opening(.9,4.25,3.2,7.25),poly:[[.9,3.2],[4.25,3.2],[4.25,7.25],[.9,3.9]]}],[[0,2.8],[8.5,2.8],[8.5,4.07],[4.25,8.3],[0,4.07]]);
  const gardenGlassY=data.facades.find(f=>f.id==='facade-garden').a[1]-.24;
- wall('garden-gable',[0,18.13],[8.5,18.13],2.8,8.3,.36,[{...opening(.9,7.6,3.2,7.35),recess:18.13-.18-gardenGlassY,poly:[[.9,3.2],[7.6,3.2],[7.6,3.95],[4.25,7.35],[.9,3.95]]}],[[0,2.8],[8.5,2.8],[8.5,4.07],[4.25,8.3],[0,4.07]]);
- box('garden-window-sill-recess',[.9,gardenGlassY,7.6,18.13-.36],2.8,.4,mats.wall);
+ wall('garden-gable',[0,18.13],[8.5,18.13],2.8,8.3,.36,[{...opening(.9,7.6,3.2,7.35),recess:18.13-.18-gardenGlassY,wallPoly:[[.74,2.8],[7.76,2.8],[7.76,3.2],[7.6,3.2],[7.6,3.95],[4.25,7.35],[.9,3.95],[.9,3.2],[.74,3.2]],poly:[[.9,3.2],[7.6,3.2],[7.6,3.95],[4.25,7.35],[.9,3.95]]}],[[0,2.8],[8.5,2.8],[8.5,4.07],[4.25,8.3],[0,4.07]]);
+ box('garden-window-transom',[.74,gardenGlassY-.12,7.76,gardenGlassY],2.35,.85,mats.dark);
  for(const x of [3.1,5.4])beam('garden-upper-triangle-mullion-'+x,[x,gardenGlassY,3.2],[x,gardenGlassY,7.35-Math.abs(x-4.25)],.025,mats.dark);
  wall('wing-gable',[14.64,4.21],[14.64,12.71],2.8,8.3,.36,[{...opening(4.25,7.39,3.2,7.3),poly:[[4.25,3.2],[7.39,3.2],[7.39,4.15],[4.25,7.3]]}],[[0,2.8],[8.5,2.8],[8.5,4.07],[4.25,8.3],[0,4.07]]);
  for(const [id,a,b] of [['upper-main-side',[0,0],[0,18.13]],['upper-front-wing',[8.5,4.21],[14.64,4.21]],['upper-rear-wing',[8.5,12.71],[14.64,12.71]],['upper-garage-side',[8.5,0],[8.5,4.21]],['upper-terrace-side',[8.5,12.71],[8.5,18.13]]])wall(id,a,b,2.8,4.07,.36);

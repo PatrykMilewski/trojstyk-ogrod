@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-17.4",
+  "modelVersion": "2026-11-17.5",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1341,7 +1341,7 @@
         "bodyCentroidMovementLengthM": 4.531846050174537,
         "relativeReflectionDeterminant": -1,
         "matrixDeterminant": 1,
-        "upperBoundaryOptimalityGapM": 0.00005379068285904509,
+        "upperBoundaryOptimalityGapM": 5.379068285904509e-05,
         "northTieBreakOptimalityGapM": 0,
         "globalMapNorthOptimalityGapM": 0,
         "activeSetbacks": [
@@ -1454,7 +1454,7 @@
     "proceduralCodeSha256": "ff868cb0e73178ae29ddcfa51879c79d71a840135ab139fa249e463ec4eb745a",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "426140b9e29c7b44a98258b31e23e939a3789b4b671d8536079a11c746c93047",
-    "runtimeSha256": "1788251061d164572e47d875e7ad1ee3b1570482b7460bff599447f142cfc064"
+    "runtimeSha256": "bf61218bcec087ce396457b2221e1ed359915acf6107ce0a69449a51cfa52f14"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1466,7 +1466,8 @@
     "Wnętrze /193: przejścia drzwiowe, schody na +3,20 m, ściany, pustka nad salonem i poglądowe meble. Sauna: wejście od podestu i okno 2 × 1,4 m.",
     "Wnętrze /190 według Willa Floryda6: oba poziomy i schody +3,35m. Review /193: poprawione orientacje i pozycje mebli oraz pełna ściana przy antresoli. Inwentarze wyposażenia i ich źródła w kontrolowanych plikach danych.",
     "Usunięto nakładanie trawy/map i podłóg obu wnętrz, powierzchni blatów i ram. /193: otwarte drzwi, ściany do skosów, 6 krzeseł 6cm od stołu. /190: niezależny przegląd 21 pomieszczeń, schody 12+6 i spocznik +2,23m. Oba domy: podparte i połączone balustrady bez zdublowanych słupków.",
-    "Pełne górne przeszklenie salonu /193 cofnięte o 1,10m do dolnych szyb; usunięte błędne trójkąty ściany i domknięta wnęka. 13 istniejących okien dachowych ma rzeczywiste otwory; dodano okno 1,14×1,40m nad salonem na zachodniej połaci /193. Pozycje i wymiary wszystkich 14 okien zamrożone."
+    "Pełne górne przeszklenie salonu /193 cofnięte o 1,10m do dolnych szyb; usunięte błędne trójkąty ściany i domknięta wnęka. 13 istniejących okien dachowych ma rzeczywiste otwory; dodano okno 1,14×1,40m nad salonem na zachodniej połaci /193. Pozycje i wymiary wszystkich 14 okien zamrożone.",
+    "Elewacja /193: usunięto zdublowane powierzchnie na wypukłych narożnikach i styku kondygnacji, zachowano zamknięcia wklęsłe i widoczne spody nadwieszeń. Strop cofnięty 0,18m wewnątrz ściany. Pas między szybami salonu ma lico y=16,85m wspólne z szybami i grubość 0,12m za nimi; wystająca półka usunięta."
   ],
   "contextParcels": [
     {
@@ -2456,7 +2457,7 @@
         "min": [
           -2.4000000953674316,
           -0.9750000238418579,
-          -1.4305114759416426e-8
+          -1.4305114759416426e-08
         ],
         "max": [
           2.4000000953674316,
@@ -2491,7 +2492,7 @@
         "min": [
           -2.299999952316284,
           -0.925000011920929,
-          7.152557379708213e-9
+          7.152557379708213e-09
         ],
         "max": [
           2.299999952316284,
@@ -2526,7 +2527,7 @@
         "min": [
           -2.299999952316284,
           -0.925000011920929,
-          7.152557379708213e-9
+          7.152557379708213e-09
         ],
         "max": [
           2.299999952316284,
@@ -2561,7 +2562,7 @@
         "min": [
           -2.299999952316284,
           -0.925000011920929,
-          7.152557379708213e-9
+          7.152557379708213e-09
         ],
         "max": [
           2.299999952316284,
@@ -2596,7 +2597,7 @@
         "min": [
           -2.299999952316284,
           -0.925000011920929,
-          7.152557379708213e-9
+          7.152557379708213e-09
         ],
         "max": [
           2.299999952316284,
@@ -3320,7 +3321,26 @@
           0.9,
           3.95
         ]
-      ]
+      ],
+      "transom": {
+        "boundsLocalM": [
+          0.74,
+          16.73,
+          7.76,
+          16.85
+        ],
+        "bottomM": 2.35,
+        "topM": 3.2,
+        "depthM": 0.12,
+        "frontMatchesGlassPlane": true
+      }
+    },
+    "envelope": {
+      "upperSlabExteriorInsetM": 0.18,
+      "storyJointElevationM": 2.8,
+      "cornerTreatment": "Convex walls join at mitred inner corners without duplicate end caps; exposed concave caps retained.",
+      "storyJointTreatment": "Only exposed union boundary retained at 2.8m; buried opposing faces removed, exposed soffits preserved.",
+      "jointModuleSha256": "f258b6a378a1bf40db0228dc21a102e1a2df6f692546d60b7d9c51db951196d6"
     }
   },
   "florydaInterior": {

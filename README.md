@@ -145,3 +145,9 @@ Niezależny przegląd /190 objął wszystkie 21 pomieszczeń i porównanie z rzu
 Górne okno salonu /193 zachowuje cały kształt i podziały; jego szyby cofnięto o 1,10 m do płaszczyzny dolnego przeszklenia (lokalne y=16,85 m). Usunięto błędne trójkąty ściany powstające przy wierzchołku obrysu i domknięto wnękę, pozostawiając zewnętrzny szczyt w dawnym miejscu.
 
 Siedem istniejących okien dachowych /193 i sześć /191 ma rzeczywiste otwory w połaciach. Wycięcia /193 przechodzą również przez okładzinę widoczną od wnętrza; linie rąbków omijają otwory. Przezroczyste szyby przepuszczają bezpośrednie światło, a ramy zachowują cienie. Dodano okno nad salonem /193, 1,14 × 1,40 m po połaci, na zachodniej stronie dachu zwróconej na południowy zachód. Jego rozmiar i lokalny środek (6,25; 14,40) m są założeniem koncepcyjnym, zapisanym razem z pozostałymi oknami w rejestrze wymiarów.
+
+## Elewacja i płaski pas między szybami 2026-11-17.5
+
+Usunięto zewnętrzne powierzchnie zamykające ściany na wypukłych narożnikach, które pokrywały się z ciemną elewacją. Wklęsłe połączenia zachowują potrzebne zamknięcia od środka. Wewnętrzne powierzchnie kończą się na wewnętrznych narożnikach. Na poziomie 2,80 m usunięto zakryte, zdublowane powierzchnie połączenia ścian i stropu, zachowując widoczne spody nadwieszeń. Krawędź stropu i podłogi piętra cofnięto o 0,18 m do wnętrza grubości ściany; otwory schodów i antresoli oraz zewnętrzny obrys domu pozostają bez zmian.
+
+Pas między dolnym i górnym przeszkleniem salonu ma lico na y=16,85 m, wspólne z szybami. Jego grubość 0,12 m mieści się za tą płaszczyzną, wysokość obejmuje z=2,35–3,20 m. Usunięto wysuniętą półkę i zasłaniający ją dawny pas ściany. Zachowano pełne górne okno i wszystkie okna dachowe.

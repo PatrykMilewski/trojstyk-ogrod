@@ -10,8 +10,9 @@ const marker = 'const [source,garden,house,neighbors]=';
 const start = html.indexOf(marker) + marker.length;
 const [, , house] = JSON.parse(html.slice(start, html.indexOf(';\nconst landscaping=', start)));
 const { addIconInterior } = await load(await readFile(new URL('../src/model/interior.js', import.meta.url), 'utf8'));
+const { joinIconStorySurfaces } = await load(await readFile(new URL('../src/model/story-joints.js', import.meta.url), 'utf8'));
 const data = JSON.parse(await readFile(new URL('../trzy-domy-3d/interior-data.json', import.meta.url), 'utf8'));
-const interior = addIconInterior({ THREE, scene: new THREE.Scene(), house, data });
+const interior = addIconInterior({ THREE, scene: new THREE.Scene(), house, data, joinStory: joinIconStorySurfaces });
 interior.group.updateMatrixWorld(true);
 const object = name => { const mesh = interior.group.getObjectByName(name); assert(mesh, name); return mesh; };
 const close = (a, b, message) => assert(Math.abs(a - b) < 1e-5, `${message}: ${a} versus ${b}`);
@@ -55,8 +56,11 @@ test('single upper floor has no holes or extra surfaces across the declared walk
     const world = interior.localToWorld([x, y]);
     const expected = interior.navigation.floors.some(f => f.z === 3.2 && contains(world, f.ring));
     const finishHits = hits(top, [x, y, 3.5], [0, 0, -1], .29);
-    assert.equal(finishHits.length > 0, expected, `Floor/nav mismatch at ${x},${y}`);
-    if (expected) { close(finishHits[0].point.z, 3.215, 'Oak floor top'); assert(hits(base, [x, y, 2.7], [0, 0, 1], .11).length, 'Continuous ground ceiling'); }
+    const edgeDistance=Math.min(...data.exterior.upper.map((a,i)=>{const b=data.exterior.upper[(i+1)%data.exterior.upper.length],dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((x-a[0])*dx+(y-a[1])*dy)/(dx*dx+dy*dy)));return Math.hypot(x-a[0]-t*dx,y-a[1]-t*dy);}));
+    if(expected&&edgeDistance<.18)continue;
+    assert.equal(finishHits.length > 0, expected, `Accessible floor/nav mismatch at ${x},${y}`);
+    if (expected) { close(finishHits[0].point.z, 3.215, 'Oak floor top'); const insideLowerWall=interior.navigation.obstacles.some(o=>o.id.startsWith('facade-')&&o.minZ<2.8&&o.maxZ>=2.8&&contains(world,o.ring));
+      if(!insideLowerWall)assert(hits(base, [x, y, 2.7], [0, 0, 1], .11).length, 'Exposed ground ceiling remains continuous'); }
   }
   assert(!interior.group.children.some(mesh => /^upper-(slab|finish)-\d/.test(mesh.name)), 'No coincident per-cell floor surfaces');
 });

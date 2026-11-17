@@ -10,8 +10,9 @@ const marker = 'const [source,garden,house,neighbors]=';
 const start = html.indexOf(marker) + marker.length;
 const [, , house] = JSON.parse(html.slice(start, html.indexOf(';\nconst landscaping=', start)));
 const { addIconInterior } = await load(await readFile(new URL('../src/model/interior.js', import.meta.url), 'utf8'));
+const { joinIconStorySurfaces } = await load(await readFile(new URL('../src/model/story-joints.js', import.meta.url), 'utf8'));
 const data = JSON.parse(await readFile(new URL('../trzy-domy-3d/interior-data.json', import.meta.url), 'utf8'));
-const interior = addIconInterior({ THREE, scene: new THREE.Scene(), house, data });
+const interior = addIconInterior({ THREE, scene: new THREE.Scene(), house, data, joinStory: joinIconStorySurfaces });
 interior.group.updateMatrixWorld(true);
 const object = name => { const mesh = interior.group.getObjectByName(name); assert(mesh, name); return mesh; };
 const close = (a, b, message) => assert(Math.abs(a - b) < 1e-5, `${message}: ${a} versus ${b}`);
@@ -40,7 +41,7 @@ test('recess keeps the full glass polygon and does not cover it with reveal surf
  close(outline.min.x,.9,'glazing left');close(outline.max.x,7.6,'glazing right');close(outline.min.z,3.2,'glazing sill');close(outline.max.z,7.35,'glazing apex');
  assert(glass.material.transparent);assert.equal(glass.castShadow,false);
  assert(!interior.group.getObjectByName('garden-gable-mullion-0'),'No extra floating half-height mullion between the two original full dividers');
- const reveal=object('garden-gable-reveal-0'),sill=object('garden-window-sill-recess');
+ const reveal=object('garden-gable-reveal-0'),sill=object('garden-window-transom');
  for(const x of [1.1,2,3,4.25,5.5,6.5,7.4]) {
   const top=x<4.25?3.95+(x-.9)*3.4/3.35:7.35-(x-4.25)*3.4/3.35;
   for(let z=3.3;z<top-.08;z+=.23) {
@@ -50,7 +51,7 @@ test('recess keeps the full glass polygon and does not cover it with reveal surf
  }
  close(bounds(object('garden-gable')).max.y,18.13,'original gable face preserved');
  for(const x of [3.1,5.4])close(bounds(object('garden-upper-triangle-mullion-'+x)).min.y,outline.min.y-.025,'mullion follows glass');
- close(bounds(sill).min.y,outline.min.y,'sill joins recessed glazing');close(bounds(sill).max.y,18.13-.36,'sill meets front wall');
+ close(bounds(sill).max.y,outline.min.y,'transom flush with glazing');close(bounds(sill).min.y,outline.min.y-.12,'transom lies behind glass plane');
  assert.equal(hits(reveal,[4,17.3,3.5],[0,0,-1],.4).length,0,'No duplicate plane atop sill box');
- assert(hits(sill,[4,17.3,3.5],[0,0,-1],.4).length,'Sill closes former horizontal gap');
+ assert.equal(hits(sill,[4,17.3,3.5],[0,0,-1],.4).length,0,'No projecting shelf in front of glazing');
 });
