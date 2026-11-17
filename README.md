@@ -119,3 +119,7 @@ Dolny panel spaceru zawiera wyłącznie tekst ze skrótami sterowania, bez przyc
 Menu „Widoki i sterowanie” zawiera wejście do wnętrza /193. Parter i poddasze odtworzono z rzutów oraz przekroju Stodoły Icon, z otwartymi przejściami, ścianami, meblami i schodami. Poziom poddasza to +3,20 m; salon zachowuje pustkę do dachu. Dane, źródła i przybliżenia są w `trzy-domy-3d/interior-data.json`, a ich hash w rejestrze wymiarów. To rekonstrukcja poglądowa rysunków rastrowych, nie dokumentacja wykonawcza.
 
 Spacer uwzględnia wysokość podłogi, kolizje ze ścianami i nadprożami oraz schody w obie strony. Shift i spacja zachowują sprint i skok. Drzwi sauny przeniesiono na szczyt od podestu; okno ma 2 × 1,4 m. Zachowano gabaryty sauny oraz ustawienie i gabaryty domów.
+
+## Spacer na telefonie 2026-11-17.1
+
+Na małych ekranach oraz urządzeniach dotykowych dolny panel spaceru pokazuje przyciski „Przód” i „Tył”. Przytrzymanie uruchamia ruch, a puszczenie go zatrzymuje; drugim palcem można równocześnie rozglądać się po scenie. Na komputerze pozostaje kompaktowy tekst skrótów.

@@ -231,7 +231,8 @@ function walkMarkup(button) {
   button.setAttribute('aria-pressed', 'false'); button.setAttribute('aria-controls', 'walk-controls');
   const panel = document.createElement('section'); panel.id = 'walk-controls'; panel.hidden = true;
   panel.setAttribute('aria-label', 'Sterowanie spacerem');
-  panel.innerHTML = `<p id="walk-help">Wysokość oczu 1,70 m · WASD / strzałki: ruch · Shift: sprint · Spacja: skok · przeciągnij widok: rozglądanie · Esc: wyjście</p>`;
+  panel.innerHTML = `<p id="walk-help">Wysokość oczu 1,70 m · WASD / strzałki: ruch · Shift: sprint · Spacja: skok · przeciągnij widok: rozglądanie · Esc: wyjście</p>
+    <div class="walk-touch" aria-label="Ruch na ekranie dotykowym"><button type="button" data-walk="forward" aria-label="Przytrzymaj, aby iść do przodu">↑ Przód</button><button type="button" data-walk="back" aria-label="Przytrzymaj, aby iść do tyłu">↓ Tył</button></div>`;
   document.body.append(panel);
   return panel;
 }
@@ -280,6 +281,7 @@ function walkPointers({ canvas, panel, pointers, isActive, look, jump }) {
     canvas.addEventListener(type, event => { if (drag?.id === event.pointerId) drag = null; });
     panel.addEventListener(type, event => pointers.delete(event.pointerId));
   }
+  panel.addEventListener('contextmenu', event => { if (event.target.closest('[data-walk]')) event.preventDefault(); });
   panel.addEventListener('pointerdown', event => {
     const button = event.target.closest('[data-walk]');
     if (!isActive() || !button) return;
