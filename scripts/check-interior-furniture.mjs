@@ -85,8 +85,8 @@ test('dining chairs face the table and kitchen has three correctly oriented stoo
 
 test('source wall storage contacts are preserved and cabinet handles face into rooms', () => {
   for (const [id, edge, expected] of [
-    ['guest-wardrobe', 'min.x', 11.33], ['entry-wardrobe-rear', 'max.y', 5.99],
-    ['entry-wardrobe-side', 'max.x', 11.05], ['bedroom-two-wardrobe-rear', 'max.y', 10.18],
+    ['guest-wardrobe', 'min.x', 11.33], ['entry-wardrobe-rear', 'max.y', 6.31],
+    ['entry-wardrobe-side', 'max.x', 11.19], ['bedroom-two-wardrobe-rear', 'max.y', 10.18],
     ['bedroom-two-wardrobe-side', 'max.x', 4.77], ['master-dressing-left', 'min.x', 11.69],
     ['master-dressing-right', 'max.x', 14.14], ['kitchen-tall', 'min.y', 8.65],
     ['laundry-machine-0', 'max.y', 7.89], ['laundry-machine-1', 'max.y', 7.89],
@@ -187,4 +187,107 @@ test('furniture collision boxes follow real rendered heights and mirror only onc
     close(actual.x, m[0][0] * (14.64 - center.x) + m[0][1] * center.y + t[0], item.id + ' mirrored world x');
     close(actual.y, m[1][0] * (14.64 - center.x) + m[1][1] * center.y + t[1], item.id + ' mirrored world y');
   }
+});
+
+test('mirrored vestibule dimensions and office storage follow the supplied ground plan', () => {
+  const entry = rooms.get('0.6'), office = rooms.get('0.9');
+  const [a,b,c,d,e] = entry.outline;
+  close(b[0]-a[0],4.61,'Entry width');
+  close(c[1]-b[1],1.60,'Shallow wardrobe alcove');
+  close(e[0]-a[0],1.91,'Entry leg width');
+  close(e[1]-a[1],3.17,'Entry leg depth');
+  close(entry.area,10.29,'Entry schedule');
+  close(office.area,13.45,'Office schedule');
+  const cabinets=data.furniture.filter(item=>item.id.startsWith('office-under-stair-'));
+  const [sx,sy,ex]=data.stairs.box, run=8*data.stairs.tread, half=data.stairs.floorHeight/2;
+  close(office.box[2]-ex,4.34,'Clear office width');
+  close(office.box[3]-office.box[1],2.85,'Office depth');
+  let y=office.box[1];
+  for(const item of cabinets){
+    const [x0,y0,x1,y1]=item.box;
+    close(y0,y,'Continuous run');
+    close(x1,ex,'Front at edge of upper flight');
+    close(x1-x0,.76,'Cabinet depth');
+    assert(x0>sx+data.stairs.width && item.facing==='+x');
+    assert(itemBounds(item.id).max.z < (y1>sy+run ? half-.15 : 3.2-half/9-.22-(y1-sy)*half/9/data.stairs.tread));
+    assert(parts(item.id).some(mesh=>mesh.name.includes('-door-')));
+    y=y1;
+  }
+  close(y,12.23,'Run reaches actual back wall');
+  close(y-office.box[1],2.81,'Built cabinet length');
+});
+
+test('each entry wardrobe door has an accessible handle and space to open beside the return', () => {
+  for (const [id, otherId, count, axis] of [
+    ['entry-wardrobe-side', 'entry-wardrobe-rear', 2, 'y'],
+    ['entry-wardrobe-rear', 'entry-wardrobe-side', 4, 'x'],
+  ]) {
+    const doors = parts(id).filter(mesh => mesh.name.includes('-door-'));
+    const handles = parts(id).filter(mesh => mesh.name.includes('-handle-'));
+    assert.equal(doors.length, count);
+    assert.equal(handles.length, count);
+    doors.forEach((mesh, index) => {
+      const door = bounds(mesh), handle = partCenter(id, 'handle-' + index);
+      close(handle[axis], (door.min[axis] + door.max[axis]) / 2, 'Handle sits on its door');
+      const leafWidth = door.max[axis] - door.min[axis];
+      const clearance = [door.min.x, door.min.y, door.max.x, door.max.y];
+      clearance[axis === 'y' ? 0 : 1] -= leafWidth;
+      assert(!overlaps(clearance, furniture.get(otherId).box), mesh.name + ' can swing clear of the other cabinet');
+      if (axis === 'y') assert(door.min.y >= 4.71 && door.max.y <= 5.71);
+    });
+  }
+});
+
+test('opaque office backing seals the gap above the cabinets up to the flight, landing and rear wall', () => {
+  const segments = interior.group.children.filter(mesh => mesh.name.startsWith('office-backing-'));
+  const group = new THREE.Group();
+  for (const segment of segments) group.add(segment.clone());
+  group.updateMatrixWorld(true);
+  function hits(y, z) {
+    const ray = new THREE.Raycaster(new THREE.Vector3(10.20, y, z), new THREE.Vector3(-1, 0, 0), 0, 1.55);
+    return ray.intersectObjects(group.children).length > 0;
+  }
+  assert(hits(10.50, 1.90), 'Office-to-stair sightline above cabinet is blocked');
+  assert(hits(11.92, 1.42), 'Wall meets landing underside');
+  assert(hits(12.22, 2.60), 'Short infill closes the room at the facade');
+  assert(!hits(11.92, 1.65), 'Backing stays below the landing walking surface');
+  for (const segment of segments) {
+    const actual = bounds(segment);
+    close(actual.max.x, 9.04, 'Backing contacts the cabinet rear');
+    assert(interior.navigation.obstacles.some(obstacle => obstacle.id === segment.name));
+  }
+});
+
+test('office privacy partition and fitted fascia close the stair view above each usable cabinet', () => {
+  const wall = interior.group.getObjectByName('office-stair-partition');
+  const cabinets = data.furniture.filter(item => item.id.startsWith('office-under-stair-'));
+  const group = new THREE.Group();
+  group.add(wall.clone(), ...cabinets.map(item => interior.group.getObjectByName(item.id + '-filler').clone()));
+  group.updateMatrixWorld(true);
+  function hits(y, z) {
+    return new THREE.Raycaster(new THREE.Vector3(10.20,y,z), new THREE.Vector3(-1,0,0), 0,1.55).intersectObjects(group.children);
+  }
+  assert.equal(hits(10.65,2.58)[0].object.name, wall.name);
+  close(bounds(wall).min.x,data.stairs.box[2],'Partition stays outside the stair walking width');
+  close(bounds(wall).max.z,data.levels.groundCeiling,'Partition meets the ceiling');
+  for (const item of cabinets) {
+    const y = (item.box[1]+item.box[3])/2;
+    assert(hits(y, item.height+.04).length, 'Fascia closes gap immediately above ' + item.id);
+    assert(hits(y, 2.78).length, 'Closed at ceiling ' + item.id);
+    assert.equal(hits(y,item.height-.03).length,0,'Cabinet door remains accessible');
+  }
+});
+
+test('plaster return finishes flush with the vestibule wardrobe and keeps the passage clear', () => {
+  const returnWall = bounds(interior.group.getObjectByName('bath-left'));
+  const cabinet = itemBounds('entry-wardrobe-rear');
+  close(returnWall.min.x,8.49,'Finished passage face');
+  close(returnWall.max.x,cabinet.min.x,'Carcass butts against plaster');
+  close(returnWall.min.y,cabinet.min.y,'Return meets the cabinet front');
+  assert(returnWall.max.y > cabinet.max.y,'Return continues to bathroom');
+  close(returnWall.max.z,2.80,'Full-height plaster');
+  const collider = createWalkCollision(interior.navigation.obstacles.filter(wall=>wall.id.startsWith('bath-left-')));
+  const point = (x,y) => interior.localToWorld([x,y]).slice(0,2);
+  assert(collider.pathBlocked(point(8.12,5.93),point(8.78,5.93)));
+  assert(!collider.pathBlocked(point(7.4,5.25),point(7.4,8.1)));
 });

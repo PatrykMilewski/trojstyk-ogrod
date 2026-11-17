@@ -58,8 +58,7 @@ export function applyFigureFinishes(THREE,scene) {
   scene.traverse(group=>{
     if (group.userData.figureFinishApplied) return;
     if (group.userData.kind==='person') {
-      // The vertically rotated taper is the polo torso; its material also colours the sleeves.
-      const torso=group.children.find(m=>m.geometry?.type==='CylinderGeometry'&&m.geometry.parameters.radiusTop!==m.geometry.parameters.radiusBottom);
+      const torso=group.children.find(m=>m.userData.garment==='shirt');
       if (!torso) return;
       const shirt=torso.material;
       for (const mesh of group.children.filter(m=>m.material===shirt)) finish(mesh,'woven-shirt',cloth,.94);

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-17.10",
+  "modelVersion": "2026-11-17.11",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1092,47 +1092,209 @@
     {
       "id": "person-garden-1",
       "heightM": 1.78,
-      "source": "model"
+      "source": "model",
+      "boundsLocalM": {
+        "min": [
+          -0.3346776445876443,
+          -0.29815,
+          0
+        ],
+        "max": [
+          0.3346776445876443,
+          0.20915,
+          1.78
+        ]
+      },
+      "groundPosition": [
+        2,
+        -7,
+        0.035
+      ],
+      "rotationRad": -0.4
     },
     {
       "id": "person-garden-2",
       "heightM": 1.66,
-      "source": "model"
+      "source": "model",
+      "boundsLocalM": {
+        "min": [
+          -0.31211510675027504,
+          -0.20916,
+          0
+        ],
+        "max": [
+          0.44155999999999995,
+          0.1328,
+          1.6599999999999997
+        ]
+      },
+      "groundPosition": [
+        3.2,
+        -6.5,
+        0.035
+      ],
+      "rotationRad": 1.5
     },
     {
       "id": "person-garden-child",
       "heightM": 1.2,
-      "source": "model"
+      "source": "model",
+      "boundsLocalM": {
+        "min": [
+          -0.22562537837369281,
+          -0.20099999999999998,
+          0
+        ],
+        "max": [
+          0.22562537837369281,
+          0.14100000000000001,
+          1.1999999999999997
+        ]
+      },
+      "groundPosition": [
+        6,
+        -6,
+        0.035
+      ],
+      "rotationRad": -1.7
     },
     {
       "id": "person-shared-1",
       "heightM": 1.83,
-      "source": "model"
+      "source": "model",
+      "boundsLocalM": {
+        "min": [
+          -0.34407870201988155,
+          -0.23058,
+          0
+        ],
+        "max": [
+          0.48678,
+          0.13725,
+          1.8299999999999998
+        ]
+      },
+      "groundPosition": [
+        20.26628468238749,
+        2.655947133241303,
+        0.045
+      ],
+      "rotationRad": -0.7
     },
     {
       "id": "person-shared-2",
       "heightM": 1.69,
-      "source": "model"
+      "source": "model",
+      "boundsLocalM": {
+        "min": [
+          -0.31775574120961736,
+          -0.16477499999999998,
+          0
+        ],
+        "max": [
+          0.31775574120961736,
+          0.1352,
+          1.69
+        ]
+      },
+      "groundPosition": [
+        21.33924533436437,
+        2.341693351546729,
+        0.045
+      ],
+      "rotationRad": 2.5
     },
     {
       "id": "person-190-path",
       "heightM": 1.75,
-      "source": "model"
+      "source": "model",
+      "boundsLocalM": {
+        "min": [
+          -0.329037010128302,
+          -0.29312499999999997,
+          0
+        ],
+        "max": [
+          0.329037010128302,
+          0.205625,
+          1.75
+        ]
+      },
+      "groundPosition": [
+        4.5,
+        34.3,
+        0.06
+      ],
+      "rotationRad": -2.4
     },
     {
       "id": "person-190-garden",
       "heightM": 1.71,
-      "source": "model"
+      "source": "model",
+      "boundsLocalM": {
+        "min": [
+          -0.3215161641825123,
+          -0.21546,
+          0
+        ],
+        "max": [
+          0.45486,
+          0.12825,
+          1.71
+        ]
+      },
+      "groundPosition": [
+        24.535283230188178,
+        19.30003471408741,
+        0.04
+      ],
+      "rotationRad": 1.2
     },
     {
       "id": "person-191-garden",
       "heightM": 1.79,
-      "source": "model"
+      "source": "model",
+      "boundsLocalM": {
+        "min": [
+          -0.33655785607409183,
+          -0.299825,
+          0
+        ],
+        "max": [
+          0.33655785607409183,
+          0.210325,
+          1.79
+        ]
+      },
+      "groundPosition": [
+        46.87014579010827,
+        -6.906718507734617,
+        0.04
+      ],
+      "rotationRad": -1.6
     },
     {
       "id": "person-191-front",
       "heightM": 1.72,
-      "source": "model"
+      "source": "model",
+      "boundsLocalM": {
+        "min": [
+          -0.3233963756689597,
+          -0.28809999999999997,
+          0
+        ],
+        "max": [
+          0.3233963756689597,
+          0.2021,
+          1.72
+        ]
+      },
+      "groundPosition": [
+        47.261217162995194,
+        13.203156260182467,
+        0.055
+      ],
+      "rotationRad": 0.8
     }
   ],
   "dogs": [
@@ -1142,7 +1304,25 @@
       "parcel": "190",
       "shoulderHeightM": 0.56,
       "torsoLengthM": 0.9,
-      "source": "model"
+      "source": "model",
+      "boundsLocalM": {
+        "min": [
+          -0.9173085689544678,
+          -0.16,
+          0
+        ],
+        "max": [
+          0.683,
+          0.16,
+          0.775
+        ]
+      },
+      "groundPosition": [
+        25.090169003656758,
+        19.60351746220033,
+        0.04
+      ],
+      "rotationRad": 0.65
     },
     {
       "id": "whitepug",
@@ -1150,7 +1330,25 @@
       "parcel": "193",
       "shoulderHeightM": 0.28,
       "torsoLengthM": 0.42,
-      "source": "model"
+      "source": "model",
+      "boundsLocalM": {
+        "min": [
+          -0.2624532878398895,
+          -0.11343308350833178,
+          0
+        ],
+        "max": [
+          0.364,
+          0.11343308350833178,
+          0.43
+        ]
+      },
+      "groundPosition": [
+        7,
+        -6,
+        0.035
+      ],
+      "rotationRad": -2.5
     }
   ],
   "clearances": {
@@ -1456,10 +1654,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "b967ebf892991498e646774f5a004b96e913e516819401991d6f0ab74b634fa0",
-    "proceduralCodeSha256": "1c3568d0707aba13e28b3b27f53cefbd4acfd82be7154a7d3804b4eb4bd94c3b",
+    "proceduralCodeSha256": "32c8b748abcddefc76a0896ed730454385bf7da24ec523f9b6c6e0d49f5f7162",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "426140b9e29c7b44a98258b31e23e939a3789b4b671d8536079a11c746c93047",
-    "runtimeSha256": "f03aee68a24dfdd55c41d1e48db83a94082672df96396087b0469f4f3b25c613"
+    "runtimeSha256": "8c4462f55a5d980cff47a8fd45ac98e2adb301f463646faf05a1e2e4cc4c4d73"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1477,7 +1675,8 @@
     "Tarczę słońca powiększono wizualnie 2× do średnicy kątowej 1,06°, aby była wyraźniejsza podczas spaceru. Kierunek astronomiczny i geometria cieni bez zmian.",
     "Niebo i słońce widoczne od startu modelu; zegar nadal ukryty do otwarcia panelu Słońce i mapy. Domyślna data i godzina bez zmian.",
     "Przycisk Spacer na głównym pasku uruchamia i wyłącza ten sam tryb chodzenia co dotychczasowy przycisk w menu. Geometria i parametry spaceru bez zmian.",
-    "Nowe korony i gałęzie zachowują pozycje, wysokość i promień 12 drzew. Na rabatach dodano krzewy, byliny i wysokie trawy, a na trawnikach źdźbła 2–5 cm. Materiały powierzchni i wyposażenia odwzorowują detale w metrach."
+    "Nowe korony i gałęzie zachowują pozycje, wysokość i promień 12 drzew. Na rabatach dodano krzewy, byliny i wysokie trawy, a na trawnikach źdźbła 2–5 cm. Materiały powierzchni i wyposażenia odwzorowują detale w metrach.",
+    "Wiatrołap i gabinet na /193 dopasowano do rzutu lustrzanego. Okno ogrodowe salonu ma trzy pola w otworze 6,50 × 2,35 m. Wysokości frontów zabudowy pod schodami są oszacowane na podstawie biegu i spocznika. Pomiar przed zmianą zapisano dla postaci i psów. Grille, paleniska, sauna, balia, trampolina, plac zabaw i samochody zachowują skalę."
   ],
   "contextParcels": [
     {
@@ -3316,7 +3515,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "657c16f4f680073bf79221475fd6db4a5f12c256408228c8e6ace975807192ec",
+    "dataSha256": "287e31c65f8c34da52efc59b53f963fc2c0f22ed7c976e6ac0edefc95cecba69",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,
@@ -3367,6 +3566,13 @@
         "topM": 3.2,
         "depthM": 0.12,
         "frontMatchesGlassPlane": true
+      },
+      "lowerOpening": {
+        "widthM": 6.5,
+        "heightM": 2.35,
+        "panels": 3,
+        "panePitchM": 2.1666666666666665,
+        "source": "Projekt Stodoła Icon, mirrored ground floor, garden opening marked 650/235."
       }
     },
     "envelope": {
@@ -3375,6 +3581,25 @@
       "cornerTreatment": "Convex walls join at mitred inner corners without duplicate end caps; exposed concave caps retained.",
       "storyJointTreatment": "Only exposed union boundary retained at 2.8m; buried opposing faces removed, exposed soffits preserved.",
       "jointModuleSha256": "f258b6a378a1bf40db0228dc21a102e1a2df6f692546d60b7d9c51db951196d6"
+    },
+    "entranceWardrobe": {
+      "catalogueAreaM2": 10.29,
+      "outerSizeM": [
+        4.61,
+        3.17
+      ],
+      "shallowDepthM": 1.6,
+      "returnWidthM": 1.91,
+      "plasterReturnDepthM": 0.6
+    },
+    "officeStorage": {
+      "catalogueAreaM2": 13.45,
+      "clearOfficeWidthM": 4.34,
+      "roomDepthM": 2.85,
+      "cabinetDepthM": 0.76,
+      "cabinetRunM": 2.81,
+      "numberOfModules": 4,
+      "moduleHeightsEstimated": true
     }
   },
   "florydaInterior": {
@@ -4124,5 +4349,13 @@
       }
     ],
     "lightModel": "Through apertures in outer roof and Icon inner lining; transparent glass does not cast opaque shadows; frames cast shadows. Geometric direct sunlight, without optical or thermal glazing calculation."
+  },
+  "fireBowls": {
+    "quantity": 3,
+    "diameterM": 1.06,
+    "basinDepthM": 0.35,
+    "standInclusiveHeightM": 0.565,
+    "lowestZM": 0.1,
+    "highestZM": 0.665
   }
 }

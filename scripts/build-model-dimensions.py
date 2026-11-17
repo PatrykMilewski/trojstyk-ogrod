@@ -90,8 +90,15 @@ content += section('Spacer i widoczność', table(['Parametr', 'Wartość'], [
     ['Cienie płotu', 'Ciągły panel odpowiadający przebiegowi płotu, bez cieni pojedynczych desek'],
     ['Regulacja cieni', '0–100%; daty przesileń i równonocy dla wybranego roku, przybliżone']]))
 if 'interior' in registry:
+    interior = registry['interior']
+    vestibule = interior['entranceWardrobe']
+    office = interior['officeStorage']
+    glazing = interior['gardenGlazing']['lowerOpening']
     content += section('Wnętrze Stodoła Icon /193', '<p>Odtworzenie z publicznych rzutów i przekroju; położenia ścian i otworów są przybliżone. Pozycje i orientacje mebli porównano z rzutami; wymiary symboli są przybliżone i zapisane w danych. Pokój przy antresoli oddziela pełna ściana. Salon zachowuje pustkę do dachu.</p>' + table(['Element', 'Wartość'], [
         ['Podłoga poddasza', '3,20 m'], ['Sufit parteru', '2,80 m'], ['Schody', '18 podniesień po 3,20/18 m; szerokość biegu 0,90 m; stopnica 0,26 m'],
+        ['Wiatrołap z garderobą', f"{number(vestibule['catalogueAreaM2'])} m² według rzutu, obrys L w prostokącie {dimensions(vestibule['outerSizeM'])} m"],
+        ['Zabudowa od strony gabinetu', f"{office['numberOfModules']} moduły, długość {number(office['cabinetRunM'])} m, głębokość {number(office['cabinetDepthM'])} m"],
+        ['Dolne okno salonu od ogrodu', f"{glazing['panels']} równe pola, otwór {dimensions([glazing['widthM'], glazing['heightM']])} m"],
         ['Krzesła przy stole', '6 sztuk, po 3 przy długich bokach; odstęp siedziska od blatu 0,06 m'], ['Drzwi', 'Otwarte przejścia zgodnie z zapisanym układem'], ['Dane i źródła', 'interior-data.json']]) + '<p><a href="interior-data.json">Pobierz współrzędne, wymiary i założenia wnętrza</a></p>')
 if 'florydaInterior' in registry:
     content += section('Wnętrze Willa Floryda 6 /190', '<p>Ściany, otwory i wyposażenie odtworzono z rzutów MG Projekt. Wysokości pochodzą z przekroju; położenia ścian i mebli odczytane z rastra są przybliżone. Zachowano obecne odbicie i ustawienie domu.</p>' + table(['Element', 'Wartość'], [

@@ -55,3 +55,24 @@ test('recess keeps the full glass polygon and does not cover it with reveal surf
  assert.equal(hits(reveal,[4,17.3,3.5],[0,0,-1],.4).length,0,'No duplicate plane atop sill box');
  assert.equal(hits(sill,[4,17.3,3.5],[0,0,-1],.4).length,0,'No projecting shelf in front of glazing');
 });
+
+test('garden slider has three equal clear panels and two full-height dividers', () => {
+ const panes=interior.group.children.filter(o=>o.name.startsWith('facade-garden-glass-'));
+ const dividers=interior.group.children.filter(o=>o.name.startsWith('facade-garden-mullion-'));
+ assert.equal(panes.length,3);
+ assert.equal(dividers.length,2);
+ const left=1,right=7.5,width=(right-left)/3;
+ panes.forEach((pane,i)=>{
+  const b=bounds(pane);
+  close(b.min.x,left+i*width,'panel start');
+  close(b.max.x,left+(i+1)*width,'panel end');
+  close(b.min.y,16.85,'glazing recess');
+  close(b.min.z,0,'sill');close(b.max.z,2.35,'head');
+  assert(pane.material.transparent);assert.equal(pane.castShadow,false);
+ });
+ dividers.forEach((divider,i)=>{
+  const b=bounds(divider);
+  close((b.min.x+b.max.x)/2,left+(i+1)*width,'divider between panels');
+  close(b.min.z,0,'divider base');close(b.max.z,2.35,'divider top');
+ });
+});
