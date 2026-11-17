@@ -139,3 +139,9 @@ Usunięto nakładające się powierzchnie trawy, podłóg, blatów i ram okienny
 W /193 otwory drzwiowe są wycięte w rzeczywistej geometrii ścian, a ściany poddasza dochodzą do skosów. Przy stole jest sześć krzeseł, po trzy przy długich bokach, z odstępem siedziska od blatu 6 cm. Poprawiono ciągłość podłóg oraz podparcie i połączenia balustrad.
 
 Niezależny przegląd /190 objął wszystkie 21 pomieszczeń i porównanie z rzutami oraz przekrojem MG Projekt. Schody skorygowano do 12 + 6 podniesień ze spocznikiem +2,23 m; poprawiono otwór w stropie, przejście do pomieszczenia pod schodami, ścianę garderoby, wyposażenie i kierunki mebli. Usunięto nieobecne w rzucie boczne okno kuchni. Geometria ścian pod schodami i symbole wyposażenia pozostają przybliżeniem rysunków źródłowych.
+
+## Przeszklenia i światło 2026-11-17.4
+
+Górne okno salonu /193 zachowuje cały kształt i podziały; jego szyby cofnięto o 1,10 m do płaszczyzny dolnego przeszklenia (lokalne y=16,85 m). Usunięto błędne trójkąty ściany powstające przy wierzchołku obrysu i domknięto wnękę, pozostawiając zewnętrzny szczyt w dawnym miejscu.
+
+Siedem istniejących okien dachowych /193 i sześć /191 ma rzeczywiste otwory w połaciach. Wycięcia /193 przechodzą również przez okładzinę widoczną od wnętrza; linie rąbków omijają otwory. Przezroczyste szyby przepuszczają bezpośrednie światło, a ramy zachowują cienie. Dodano okno nad salonem /193, 1,14 × 1,40 m po połaci, na zachodniej stronie dachu zwróconej na południowy zachód. Jego rozmiar i lokalny środek (6,25; 14,40) m są założeniem koncepcyjnym, zapisanym razem z pozostałymi oknami w rejestrze wymiarów.

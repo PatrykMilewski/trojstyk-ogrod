@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-17.3",
+  "modelVersion": "2026-11-17.4",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -120,7 +120,7 @@
         "min": [
           -1.12,
           -1.12,
-          -0.0
+          0
         ],
         "max": [
           1.12,
@@ -149,7 +149,7 @@
         "min": [
           -0.4,
           -1.55,
-          0.0
+          0
         ],
         "max": [
           0.4,
@@ -178,7 +178,7 @@
         "min": [
           -1.045,
           -0.045,
-          -0.0
+          0
         ],
         "max": [
           1.045,
@@ -207,7 +207,7 @@
         "min": [
           -0.8,
           -0.05,
-          -0.0
+          0
         ],
         "max": [
           0.8,
@@ -236,7 +236,7 @@
         "min": [
           -1,
           -0.06,
-          0.0
+          0
         ],
         "max": [
           1,
@@ -323,7 +323,7 @@
         "min": [
           -0.362844,
           -0.4,
-          0.0
+          0
         ],
         "max": [
           0.362844,
@@ -352,7 +352,7 @@
         "min": [
           -0.362844,
           -0.4,
-          0.0
+          0
         ],
         "max": [
           0.362844,
@@ -381,7 +381,7 @@
         "min": [
           -0.362844,
           -0.4,
-          0.0
+          0
         ],
         "max": [
           0.362844,
@@ -410,7 +410,7 @@
         "min": [
           -0.362844,
           -0.4,
-          0.0
+          0
         ],
         "max": [
           0.362844,
@@ -439,7 +439,7 @@
         "min": [
           -1.23,
           -0.38,
-          0.0
+          0
         ],
         "max": [
           1.23,
@@ -468,7 +468,7 @@
         "min": [
           -0.99,
           -0.405,
-          -0.0
+          0
         ],
         "max": [
           0.8,
@@ -497,7 +497,7 @@
         "min": [
           -0.327956,
           -0.35,
-          0.0
+          0
         ],
         "max": [
           0.327956,
@@ -526,7 +526,7 @@
         "min": [
           -0.327956,
           -0.35,
-          0.0
+          0
         ],
         "max": [
           0.327956,
@@ -555,7 +555,7 @@
         "min": [
           -0.327956,
           -0.35,
-          0.0
+          0
         ],
         "max": [
           0.327956,
@@ -584,7 +584,7 @@
         "min": [
           -0.327956,
           -0.35,
-          0.0
+          0
         ],
         "max": [
           0.327956,
@@ -613,7 +613,7 @@
         "min": [
           -0.99,
           -0.405,
-          -0.0
+          0
         ],
         "max": [
           0.8,
@@ -642,7 +642,7 @@
         "min": [
           -0.327956,
           -0.35,
-          0.0
+          0
         ],
         "max": [
           0.327956,
@@ -671,7 +671,7 @@
         "min": [
           -0.327956,
           -0.35,
-          0.0
+          0
         ],
         "max": [
           0.327956,
@@ -700,7 +700,7 @@
         "min": [
           -0.327956,
           -0.35,
-          0.0
+          0
         ],
         "max": [
           0.327956,
@@ -729,7 +729,7 @@
         "min": [
           -0.327956,
           -0.35,
-          0.0
+          0
         ],
         "max": [
           0.327956,
@@ -1006,7 +1006,7 @@
       "meaning": "Nominalna wysokość i promień korony koncepcji, nie rozmiar sadzonki."
     },
     {
-      "height": 4.0,
+      "height": 4,
       "crownRadius": 1.4,
       "id": "193-tree-2",
       "source": "model",
@@ -1154,18 +1154,18 @@
     "parcel191SoutheastM": 10.5,
     "basis": "Odsunięcia przyjęte w tej koncepcji, w tym 10,5 m SE według instrukcji użytkownika.",
     "actualParcel191SoutheastM": 13.598287378209555,
-    "parcel191NorthwestM": 4.0
+    "parcel191NorthwestM": 4
   },
   "placementPins": {
     "190": {
       "matrix": [
         [
-          0.0,
-          1.0
+          0,
+          1
         ],
         [
-          -1.0,
-          0.0
+          -1,
+          0
         ]
       ],
       "translation": [
@@ -1194,30 +1194,30 @@
         ],
         "bodyCentroidMovementCommonM": [
           7.105427357601002e-15,
-          0.0
+          0
         ],
         "bodyCentroidMovementEastNorthM": [
           5.205912209075881e-15,
           -4.835863522220143e-15
         ],
         "bodyCentroidMovementLengthM": 7.105427357601002e-15,
-        "relativeReflectionDeterminant": -1.0,
-        "matrixDeterminant": 1.0,
-        "upperBoundaryOptimalityGapM": 0.0,
-        "northTieBreakOptimalityGapM": 0.0,
-        "globalMapNorthOptimalityGapM": 0.0,
+        "relativeReflectionDeterminant": -1,
+        "matrixDeterminant": 1,
+        "upperBoundaryOptimalityGapM": 0,
+        "northTieBreakOptimalityGapM": 0,
+        "globalMapNorthOptimalityGapM": 0,
         "activeSetbacks": [
           {
             "edge": 2,
             "road": true,
-            "requiredM": 5.0,
-            "actualM": 5.0
+            "requiredM": 5,
+            "actualM": 5
           },
           {
             "edge": 3,
             "road": true,
-            "requiredM": 5.0,
-            "actualM": 5.0
+            "requiredM": 5,
+            "actualM": 5
           }
         ],
         "feasibleTranslations": {
@@ -1256,40 +1256,40 @@
           ]
         },
         "proof": "Full parcel half-plane intersection includes catalogue reservation setbacks and whole terrace/pergola containment; triangulated Minkowski obstacles remove shared-zone overlaps. Linear objectives attain maxima at resulting polygon vertices. Driveway and entry of selected maximizer pass containment and shared-zone checks, so these checks do not reduce this maximum.",
-        "occupiedOutsideParcelM2": 0.0,
-        "occupiedSharedOverlapM2": 0.0
+        "occupiedOutsideParcelM2": 0,
+        "occupiedSharedOverlapM2": 0
       },
       "reflectionRelativeToModel": {
         "baseline": "2026-11-16.2",
         "baselineFile": "work/mirror-v3-before/placement-draft.json",
         "previousMatrix": [
           [
-            0.0,
-            1.0
+            0,
+            1
           ],
           [
-            1.0,
-            0.0
+            1,
+            0
           ]
         ],
         "relativeMatrix": [
           [
-            1.0,
-            0.0
+            1,
+            0
           ],
           [
-            0.0,
-            -1.0
+            0,
+            -1
           ]
         ],
         "canonicalAxisReflection": [
           [
-            -1.0,
-            0.0
+            -1,
+            0
           ],
           [
-            0.0,
-            1.0
+            0,
+            1
           ]
         ],
         "originalGarageFrontRetained": true
@@ -1298,12 +1298,12 @@
     "191": {
       "matrix": [
         [
-          -1.0,
-          0.0
+          -1,
+          0
         ],
         [
-          0.0,
-          -1.0
+          0,
+          -1
         ]
       ],
       "translation": [
@@ -1339,22 +1339,22 @@
           3.084201491026433
         ],
         "bodyCentroidMovementLengthM": 4.531846050174537,
-        "relativeReflectionDeterminant": -1.0,
-        "matrixDeterminant": 1.0,
-        "upperBoundaryOptimalityGapM": 5.379068285904509e-05,
-        "northTieBreakOptimalityGapM": 0.0,
-        "globalMapNorthOptimalityGapM": 0.0,
+        "relativeReflectionDeterminant": -1,
+        "matrixDeterminant": 1,
+        "upperBoundaryOptimalityGapM": 0.00005379068285904509,
+        "northTieBreakOptimalityGapM": 0,
+        "globalMapNorthOptimalityGapM": 0,
         "activeSetbacks": [
           {
             "edge": 4,
             "road": true,
-            "requiredM": 5.0,
-            "actualM": 5.0
+            "requiredM": 5,
+            "actualM": 5
           },
           {
             "edge": 5,
             "road": false,
-            "requiredM": 4.0,
+            "requiredM": 4,
             "actualM": 4.000000000000003
           }
         ],
@@ -1391,39 +1391,39 @@
         },
         "proof": "Full parcel half-plane intersection includes catalogue reservation setbacks and whole terrace/pergola containment; triangulated Minkowski obstacles remove shared-zone overlaps. Linear objectives attain maxima at resulting polygon vertices. Driveway and entry of selected maximizer pass containment and shared-zone checks, so these checks do not reduce this maximum.",
         "occupiedOutsideParcelM2": 1.031149791179226e-14,
-        "occupiedSharedOverlapM2": 0.0
+        "occupiedSharedOverlapM2": 0
       },
       "reflectionRelativeToModel": {
         "baseline": "2026-11-16.2",
         "baselineFile": "work/mirror-v3-before/placement-draft.json",
         "previousMatrix": [
           [
-            1.0,
-            0.0
+            1,
+            0
           ],
           [
-            0.0,
-            -1.0
+            0,
+            -1
           ]
         ],
         "relativeMatrix": [
           [
-            -1.0,
-            0.0
+            -1,
+            0
           ],
           [
-            0.0,
-            1.0
+            0,
+            1
           ]
         ],
         "canonicalAxisReflection": [
           [
-            -1.0,
-            0.0
+            -1,
+            0
           ],
           [
-            0.0,
-            1.0
+            0,
+            1
           ]
         ],
         "originalGarageFrontRetained": true
@@ -1451,10 +1451,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "b967ebf892991498e646774f5a004b96e913e516819401991d6f0ab74b634fa0",
-    "proceduralCodeSha256": "62dcf68a3728285ab275fc0c3e5fc5230f735829180a3a46e2b217a2720729f3",
+    "proceduralCodeSha256": "ff868cb0e73178ae29ddcfa51879c79d71a840135ab139fa249e463ec4eb745a",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "426140b9e29c7b44a98258b31e23e939a3789b4b671d8536079a11c746c93047",
-    "runtimeSha256": "661fd99c76b72439b0e3a837faa32273889661a74932d322926c002c3c714d39"
+    "runtimeSha256": "1788251061d164572e47d875e7ad1ee3b1570482b7460bff599447f142cfc064"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1465,7 +1465,8 @@
     "Zachowano wymiary 23 obiektów ogrodu, drzew, ludzi i psów oraz kontekst /41, /192 i /133.",
     "Wnętrze /193: przejścia drzwiowe, schody na +3,20 m, ściany, pustka nad salonem i poglądowe meble. Sauna: wejście od podestu i okno 2 × 1,4 m.",
     "Wnętrze /190 według Willa Floryda6: oba poziomy i schody +3,35m. Review /193: poprawione orientacje i pozycje mebli oraz pełna ściana przy antresoli. Inwentarze wyposażenia i ich źródła w kontrolowanych plikach danych.",
-    "Usunięto nakładanie trawy/map i podłóg obu wnętrz, powierzchni blatów i ram. /193: otwarte drzwi, ściany do skosów, 6 krzeseł 6cm od stołu. /190: niezależny przegląd 21 pomieszczeń, schody 12+6 i spocznik +2,23m. Oba domy: podparte i połączone balustrady bez zdublowanych słupków."
+    "Usunięto nakładanie trawy/map i podłóg obu wnętrz, powierzchni blatów i ram. /193: otwarte drzwi, ściany do skosów, 6 krzeseł 6cm od stołu. /190: niezależny przegląd 21 pomieszczeń, schody 12+6 i spocznik +2,23m. Oba domy: podparte i połączone balustrady bez zdublowanych słupków.",
+    "Pełne górne przeszklenie salonu /193 cofnięte o 1,10m do dolnych szyb; usunięte błędne trójkąty ściany i domknięta wnęka. 13 istniejących okien dachowych ma rzeczywiste otwory; dodano okno 1,14×1,40m nad salonem na zachodniej połaci /193. Pozycje i wymiary wszystkich 14 okien zamrożone."
   ],
   "contextParcels": [
     {
@@ -1512,7 +1513,7 @@
         "coordinates": [
           [
             [
-              6528603.0,
+              6528603,
               6033584.65
             ],
             [
@@ -1528,7 +1529,7 @@
               6033597.62
             ],
             [
-              6528603.0,
+              6528603,
               6033584.65
             ]
           ]
@@ -1597,7 +1598,7 @@
               6033563.85
             ],
             [
-              6528603.0,
+              6528603,
               6033584.65
             ],
             [
@@ -2074,7 +2075,7 @@
             6033616.87
           ],
           [
-            6528524.0,
+            6528524,
             6033623.81
           ],
           [
@@ -2187,7 +2188,7 @@
           ],
           [
             6528629.11,
-            6033749.0
+            6033749
           ],
           [
             6528609.64,
@@ -2223,7 +2224,7 @@
           ],
           [
             6528463.83,
-            6033673.0
+            6033673
           ],
           [
             6528457.73,
@@ -2455,7 +2456,7 @@
         "min": [
           -2.4000000953674316,
           -0.9750000238418579,
-          -1.4305114759416426e-08
+          -1.4305114759416426e-8
         ],
         "max": [
           2.4000000953674316,
@@ -2490,7 +2491,7 @@
         "min": [
           -2.299999952316284,
           -0.925000011920929,
-          7.152557379708213e-09
+          7.152557379708213e-9
         ],
         "max": [
           2.299999952316284,
@@ -2525,7 +2526,7 @@
         "min": [
           -2.299999952316284,
           -0.925000011920929,
-          7.152557379708213e-09
+          7.152557379708213e-9
         ],
         "max": [
           2.299999952316284,
@@ -2560,7 +2561,7 @@
         "min": [
           -2.299999952316284,
           -0.925000011920929,
-          7.152557379708213e-09
+          7.152557379708213e-9
         ],
         "max": [
           2.299999952316284,
@@ -2595,7 +2596,7 @@
         "min": [
           -2.299999952316284,
           -0.925000011920929,
-          7.152557379708213e-09
+          7.152557379708213e-9
         ],
         "max": [
           2.299999952316284,
@@ -2678,7 +2679,7 @@
       "heightM": 0.95,
       "heightRangeM": [
         0.8,
-        1.0
+        1
       ],
       "spacingM": 1.35,
       "baseZ": 0.006
@@ -2695,7 +2696,7 @@
           -10.0967
         ],
         "height": 11,
-        "crownRadius": 4.0,
+        "crownRadius": 4,
         "kind": "deciduous",
         "positionBasis": "Representative position in merged inner canopy; individual trunk not resolved"
       },
@@ -3230,13 +3231,13 @@
     "outsideSharedM2": {
       "item-2": 0.2332703348523997,
       "item-4": 0.007727272727272845,
-      "item-5": 0.0,
-      "item-6": 0.0,
-      "item-7": 0.0,
-      "item-8": 0.0,
-      "item-9": 0.0,
-      "item-10": 0.0,
-      "obj-44df8e1f-d905-4a92-a4cc-12a31a2ab48e": 0.0
+      "item-5": 0,
+      "item-6": 0,
+      "item-7": 0,
+      "item-8": 0,
+      "item-9": 0,
+      "item-10": 0,
+      "obj-44df8e1f-d905-4a92-a4cc-12a31a2ab48e": 0
     },
     "fullSandGeometryPreserved": true
   },
@@ -3293,7 +3294,34 @@
     "reconstruction": "Publisher-plan review plus requested six dining chairs: continuous wall openings, floor slabs and roof-height partitions; supported stair rails and stringers. Raster uncertainty remains recorded in source data.",
     "originalShell": "Original roof, garden piers, pergola and rooflights retained; solid walls replaced with doorway/window cutouts",
     "diningChairs": 6,
-    "diningChairTableGapM": 0.06
+    "diningChairTableGapM": 0.06,
+    "gardenGlazing": {
+      "recessChangeM": 1.1,
+      "glassLocalY": 16.85,
+      "outerGableLocalY": 18.13,
+      "outlineLocalXZ": [
+        [
+          0.9,
+          3.2
+        ],
+        [
+          7.6,
+          3.2
+        ],
+        [
+          7.6,
+          3.95
+        ],
+        [
+          4.25,
+          7.35
+        ],
+        [
+          0.9,
+          3.95
+        ]
+      ]
+    }
   },
   "florydaInterior": {
     "dataFile": "floryda-interior-data.json",
@@ -3312,5 +3340,735 @@
     "stairUpperRises": 6,
     "stairLandingHeightM": 2.23,
     "stairLandingThicknessM": 0.2
+  },
+  "roofWindows": {
+    "moduleSha256": "c4ecb020da23f39dbd1a214bcb7329d4aa6f31b8dbf555589ec66409a71e98a3",
+    "openings": [
+      {
+        "id": "main-rooflight-0",
+        "parcel": "193",
+        "vertices": [
+          [
+            -3.4148961067827948,
+            14.554790123867349,
+            4.956
+          ],
+          [
+            -4.138083041723647,
+            13.793540718527115,
+            6.001058823529412
+          ],
+          [
+            -3.6160834494903433,
+            13.297641105996249,
+            6.001058823529412
+          ],
+          [
+            -2.892896514549493,
+            14.058890511336482,
+            4.956
+          ]
+        ],
+        "ring": [
+          [
+            -3.4148961067827948,
+            14.554790123867349
+          ],
+          [
+            -4.138083041723647,
+            13.793540718527115
+          ],
+          [
+            -3.6160834494903433,
+            13.297641105996249
+          ],
+          [
+            -2.892896514549493,
+            14.058890511336482
+          ]
+        ],
+        "center": [
+          -3.5154897781365695,
+          13.926215614931799,
+          5.478529411764706
+        ],
+        "widthM": 0.7199999999999978,
+        "heightM": 1.4814344213081734
+      },
+      {
+        "id": "main-rooflight-1",
+        "parcel": "193",
+        "vertices": [
+          [
+            -1.7473974093708566,
+            12.970666361615963,
+            4.956
+          ],
+          [
+            -2.470584344311707,
+            12.20941695627573,
+            6.001058823529412
+          ],
+          [
+            -1.9485847520784052,
+            11.713517343744861,
+            6.001058823529412
+          ],
+          [
+            -1.225397817137555,
+            12.474766749085095,
+            4.956
+          ]
+        ],
+        "ring": [
+          [
+            -1.7473974093708566,
+            12.970666361615963
+          ],
+          [
+            -2.470584344311707,
+            12.20941695627573
+          ],
+          [
+            -1.9485847520784052,
+            11.713517343744861
+          ],
+          [
+            -1.225397817137555,
+            12.474766749085095
+          ]
+        ],
+        "center": [
+          -1.847991080724631,
+          12.342091852680412,
+          5.478529411764706
+        ],
+        "widthM": 0.719999999999999,
+        "heightM": 1.481434421308172
+      },
+      {
+        "id": "main-rooflight-2",
+        "parcel": "193",
+        "vertices": [
+          [
+            -1.022397975713492,
+            12.281916899767534,
+            4.956
+          ],
+          [
+            -1.7455849106543422,
+            11.5206674944273,
+            6.001058823529412
+          ],
+          [
+            -1.2235853184210406,
+            11.024767881896432,
+            6.001058823529412
+          ],
+          [
+            -0.5003983834801904,
+            11.786017287236666,
+            4.956
+          ]
+        ],
+        "ring": [
+          [
+            -1.022397975713492,
+            12.281916899767534
+          ],
+          [
+            -1.7455849106543422,
+            11.5206674944273
+          ],
+          [
+            -1.2235853184210406,
+            11.024767881896432
+          ],
+          [
+            -0.5003983834801904,
+            11.786017287236666
+          ]
+        ],
+        "center": [
+          -1.1229916470672663,
+          11.653342390831984,
+          5.478529411764706
+        ],
+        "widthM": 0.719999999999999,
+        "heightM": 1.481434421308172
+      },
+      {
+        "id": "main-rooflight-3",
+        "parcel": "193",
+        "vertices": [
+          [
+            -0.29739854205612914,
+            11.593167437919107,
+            4.956
+          ],
+          [
+            -1.0205854769969775,
+            10.831918032578873,
+            6.001058823529412
+          ],
+          [
+            -0.49858588476367594,
+            10.336018420048003,
+            6.001058823529412
+          ],
+          [
+            0.22460105017717424,
+            11.097267825388236,
+            4.956
+          ]
+        ],
+        "ring": [
+          [
+            -0.29739854205612914,
+            11.593167437919107
+          ],
+          [
+            -1.0205854769969775,
+            10.831918032578873
+          ],
+          [
+            -0.49858588476367594,
+            10.336018420048003
+          ],
+          [
+            0.22460105017717424,
+            11.097267825388236
+          ]
+        ],
+        "center": [
+          -0.3979922134099021,
+          10.964592928983555,
+          5.478529411764706
+        ],
+        "widthM": 0.7200000000000002,
+        "heightM": 1.481434421308172
+      },
+      {
+        "id": "cross-rooflight-0",
+        "parcel": "193",
+        "vertices": [
+          [
+            -8.832454373709577,
+            7.908357815895403,
+            4.946047058823528
+          ],
+          [
+            -9.314578997003476,
+            7.400858212335249,
+            4.946047058823528
+          ],
+          [
+            -8.553329591663244,
+            6.677671277394398,
+            5.991105882352941
+          ],
+          [
+            -8.071204968369344,
+            7.185170880954553,
+            5.991105882352941
+          ]
+        ],
+        "ring": [
+          [
+            -8.832454373709577,
+            7.908357815895403
+          ],
+          [
+            -9.314578997003476,
+            7.400858212335249
+          ],
+          [
+            -8.553329591663244,
+            6.677671277394398
+          ],
+          [
+            -8.071204968369344,
+            7.185170880954553
+          ]
+        ],
+        "center": [
+          -8.69289198268641,
+          7.293014546644901,
+          5.468576470588235
+        ],
+        "widthM": 0.6999999999999982,
+        "heightM": 1.481434421308173
+      },
+      {
+        "id": "cross-rooflight-1",
+        "parcel": "193",
+        "vertices": [
+          [
+            -10.003328458851906,
+            6.675858778677885,
+            4.946047058823528
+          ],
+          [
+            -10.485453082145806,
+            6.168359175117729,
+            4.946047058823528
+          ],
+          [
+            -9.724203676805573,
+            5.445172240176879,
+            5.991105882352941
+          ],
+          [
+            -9.242079053511674,
+            5.952671843737034,
+            5.991105882352941
+          ]
+        ],
+        "ring": [
+          [
+            -10.003328458851906,
+            6.675858778677885
+          ],
+          [
+            -10.485453082145806,
+            6.168359175117729
+          ],
+          [
+            -9.724203676805573,
+            5.445172240176879
+          ],
+          [
+            -9.242079053511674,
+            5.952671843737034
+          ]
+        ],
+        "center": [
+          -9.86376606782874,
+          6.060515509427382,
+          5.468576470588235
+        ],
+        "widthM": 0.6999999999999987,
+        "heightM": 1.481434421308173
+      },
+      {
+        "id": "cross-rooflight-2",
+        "parcel": "193",
+        "vertices": [
+          [
+            -11.243077490179079,
+            5.370859798094627,
+            4.946047058823528
+          ],
+          [
+            -11.725202113472978,
+            4.863360194534472,
+            4.946047058823528
+          ],
+          [
+            -10.963952708132746,
+            4.140173259593622,
+            5.991105882352941
+          ],
+          [
+            -10.481828084838845,
+            4.647672863153777,
+            5.991105882352941
+          ]
+        ],
+        "ring": [
+          [
+            -11.243077490179079,
+            5.370859798094627
+          ],
+          [
+            -11.725202113472978,
+            4.863360194534472
+          ],
+          [
+            -10.963952708132746,
+            4.140173259593622
+          ],
+          [
+            -10.481828084838845,
+            4.647672863153777
+          ]
+        ],
+        "center": [
+          -11.103515099155912,
+          4.755516528844125,
+          5.468576470588235
+        ],
+        "widthM": 0.6999999999999987,
+        "heightM": 1.481434421308173
+      },
+      {
+        "id": "front-rooflight-0",
+        "parcel": "191",
+        "vertices": [
+          [
+            43.14773031509539,
+            4.916751779412126,
+            5.32797
+          ],
+          [
+            42.45902332672594,
+            5.5565038283897525,
+            5.32797
+          ],
+          [
+            41.72912068582535,
+            4.770747768020916,
+            6.22788
+          ],
+          [
+            42.41782767419481,
+            4.130995719043289,
+            6.22788
+          ]
+        ],
+        "ring": [
+          [
+            43.14773031509539,
+            4.916751779412126
+          ],
+          [
+            42.45902332672594,
+            5.5565038283897525
+          ],
+          [
+            41.72912068582535,
+            4.770747768020916
+          ],
+          [
+            42.41782767419481,
+            4.130995719043289
+          ]
+        ],
+        "center": [
+          42.43842550046037,
+          4.843749773716521,
+          5.777925
+        ],
+        "widthM": 0.939999999999992,
+        "heightM": 1.4000030213181722
+      },
+      {
+        "id": "front-rooflight-1",
+        "parcel": "191",
+        "vertices": [
+          [
+            41.02299598927473,
+            6.8904549092367215,
+            5.32797
+          ],
+          [
+            40.33428900090527,
+            7.53020695821435,
+            5.32797
+          ],
+          [
+            39.604386360004696,
+            6.744450897845514,
+            6.22788
+          ],
+          [
+            40.29309334837415,
+            6.104698848867885,
+            6.22788
+          ]
+        ],
+        "ring": [
+          [
+            41.02299598927473,
+            6.8904549092367215
+          ],
+          [
+            40.33428900090527,
+            7.53020695821435
+          ],
+          [
+            39.604386360004696,
+            6.744450897845514
+          ],
+          [
+            40.29309334837415,
+            6.104698848867885
+          ]
+        ],
+        "center": [
+          40.313691174639715,
+          6.817452903541117,
+          5.777925
+        ],
+        "widthM": 0.9399999999999985,
+        "heightM": 1.4000030213181685
+      },
+      {
+        "id": "front-rooflight-2",
+        "parcel": "191",
+        "vertices": [
+          [
+            38.898261663454065,
+            8.86415803906132,
+            5.32797
+          ],
+          [
+            38.20955467508462,
+            9.503910088038946,
+            5.32797
+          ],
+          [
+            37.47965203418403,
+            8.71815402767011,
+            6.22788
+          ],
+          [
+            38.16835902255349,
+            8.078401978692483,
+            6.22788
+          ]
+        ],
+        "ring": [
+          [
+            38.898261663454065,
+            8.86415803906132
+          ],
+          [
+            38.20955467508462,
+            9.503910088038946
+          ],
+          [
+            37.47965203418403,
+            8.71815402767011
+          ],
+          [
+            38.16835902255349,
+            8.078401978692483
+          ]
+        ],
+        "center": [
+          38.188956848819046,
+          8.791156033365715,
+          5.777925
+        ],
+        "widthM": 0.939999999999992,
+        "heightM": 1.4000030213181722
+      },
+      {
+        "id": "front-rooflight-3",
+        "parcel": "191",
+        "vertices": [
+          [
+            36.70026063674304,
+            10.905919897500558,
+            5.32797
+          ],
+          [
+            36.01155364837358,
+            11.545671946478185,
+            5.32797
+          ],
+          [
+            35.281651007473,
+            10.759915886109349,
+            6.22788
+          ],
+          [
+            35.97035799584246,
+            10.120163837131722,
+            6.22788
+          ]
+        ],
+        "ring": [
+          [
+            36.70026063674304,
+            10.905919897500558
+          ],
+          [
+            36.01155364837358,
+            11.545671946478185
+          ],
+          [
+            35.281651007473,
+            10.759915886109349
+          ],
+          [
+            35.97035799584246,
+            10.120163837131722
+          ]
+        ],
+        "center": [
+          35.99095582210802,
+          10.832917891804954,
+          5.777925
+        ],
+        "widthM": 0.9400000000000024,
+        "heightM": 1.400003021318165
+      },
+      {
+        "id": "rear-rooflight-0",
+        "parcel": "191",
+        "vertices": [
+          [
+            38.7239129551437,
+            0.1544162215382272,
+            6.22788
+          ],
+          [
+            38.03520596677426,
+            0.7941682705158541,
+            6.22788
+          ],
+          [
+            37.305303325873666,
+            0.008412210147016097,
+            5.32797
+          ],
+          [
+            37.99401031424313,
+            -0.6313398388306108,
+            5.32797
+          ]
+        ],
+        "ring": [
+          [
+            38.7239129551437,
+            0.1544162215382272
+          ],
+          [
+            38.03520596677426,
+            0.7941682705158541
+          ],
+          [
+            37.305303325873666,
+            0.008412210147016097
+          ],
+          [
+            37.99401031424313,
+            -0.6313398388306108
+          ]
+        ],
+        "center": [
+          38.014608140508685,
+          0.08141421584262165,
+          5.777925
+        ],
+        "widthM": 0.939999999999992,
+        "heightM": 1.4000030213181733
+      },
+      {
+        "id": "rear-rooflight-1",
+        "parcel": "191",
+        "vertices": [
+          [
+            32.276443276791355,
+            6.14358433962666,
+            6.22788
+          ],
+          [
+            31.587736288421898,
+            6.783336388604288,
+            6.22788
+          ],
+          [
+            30.857833647521314,
+            5.99758032823545,
+            5.32797
+          ],
+          [
+            31.54654063589077,
+            5.357828279257822,
+            5.32797
+          ]
+        ],
+        "ring": [
+          [
+            32.276443276791355,
+            6.14358433962666
+          ],
+          [
+            31.587736288421898,
+            6.783336388604288
+          ],
+          [
+            30.857833647521314,
+            5.99758032823545
+          ],
+          [
+            31.54654063589077,
+            5.357828279257822
+          ]
+        ],
+        "center": [
+          31.567138462156336,
+          6.070582333931055,
+          5.777925
+        ],
+        "widthM": 0.9400000000000004,
+        "heightM": 1.4000030213181698
+      },
+      {
+        "id": "living-west-rooflight",
+        "parcel": "193",
+        "localCenter": [
+          6.25,
+          14.4
+        ],
+        "widthM": 1.14,
+        "heightM": 1.4,
+        "assumption": "Concept opening, 1.14 m along ridge by 1.40 m on slope; architect to confirm structure and product.",
+        "vertices": [
+          [
+            0.04431814022541225,
+            4.504587527058813,
+            6.85321774487516
+          ],
+          [
+            -0.6391152229761392,
+            3.7851839867149764,
+            5.865605784536606
+          ],
+          [
+            0.18738413139325694,
+            3.0000096002077665,
+            5.865605784536606
+          ],
+          [
+            0.8708174945948084,
+            3.7194131405516035,
+            6.85321774487516
+          ]
+        ],
+        "outwardHorizontal": [
+          -0.688749461848429,
+          -0.7249994336573646
+        ],
+        "slopeFacing": "west",
+        "ring": [
+          [
+            0.04431814022541225,
+            4.504587527058813
+          ],
+          [
+            -0.6391152229761392,
+            3.7851839867149764
+          ],
+          [
+            0.18738413139325694,
+            3.0000096002077665
+          ],
+          [
+            0.8708174945948084,
+            3.7194131405516035
+          ]
+        ],
+        "center": [
+          0.1158511358093346,
+          3.75229856363329,
+          6.359411764705882
+        ]
+      }
+    ],
+    "lightModel": "Through apertures in outer roof and Icon inner lining; transparent glass does not cast opaque shadows; frames cast shadows. Geometric direct sunlight, without optical or thermal glazing calculation."
   }
 }

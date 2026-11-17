@@ -11,7 +11,7 @@ export function addIconInterior(options) {
 
 const iconInteriorContains = (p,r)=>{let yes=false;for(let i=0,j=r.length-1;i<r.length;j=i++){const a=r[i],b=r[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;};
 
-function iconInteriorSetup({THREE,scene,house,data}) {
+function iconInteriorSetup({THREE,scene,house,data,cutRoof=geometry=>geometry}) {
  const group = new THREE.Group(); group.name = 'icon-193-interior';
  const md = house.metadata, M = md.matrix, t = md.translation;
  group.matrixAutoUpdate = false;
@@ -44,17 +44,29 @@ function iconInteriorSetup({THREE,scene,house,data}) {
    if(!opening)obstacle(id+'-'+i,bounds,z0,z1);else{if(opening.bottom>z0+.01)obstacle(id+'-sill-'+i,bounds,z0,opening.bottom);if(opening.top<z1-.01)obstacle(id+'-header-'+i,bounds,opening.top,z1);}
   }
   for(const [i,o] of openings.entries()){
-   const points=o.poly||[[o.start,o.bottom],[o.end,o.bottom],[o.end,o.top],[o.start,o.top]],to3=p=>[a[0]+ux*p[0],a[1]+uy*p[0],p[1]];
+   const points=o.poly||[[o.start,o.bottom],[o.end,o.bottom],[o.end,o.top],[o.start,o.top]],recess=o.recess||0,to3=p=>[a[0]+ux*p[0]-nx*recess,a[1]+uy*p[0]-ny*recess,p[1]];
+   if(recess>thickness/2)iconInteriorWindowReveal({THREE,mesh,mats,id:id+'-reveal-'+i,points,to3,normal:[nx,ny],depth:recess-thickness/2});
    for(let j=0;j<points.length;j++)beam(id+'-opening-'+i+'-frame-'+j,to3(points[j]),to3(points[(j+1)%points.length]),.025,mats.dark);
    if(o.glass){const g=new THREE.ShapeGeometry(new THREE.Shape(points.map(p=>new THREE.Vector2(...p)))),ps=g.getAttribute('position');for(let j=0;j<ps.count;j++){const p=to3([ps.getX(j),ps.getY(j)]);ps.setXYZ(j,...p);}g.computeVertexNormals();mesh(g,mats.glass,id+'-glass-'+i).castShadow=false;
-    const mid=(o.start+o.end)/2;if(o.end-o.start>2)beam(id+'-mullion-'+i,to3([mid,o.bottom]),to3([mid,Math.min(o.top,4.0)]),.025,mats.dark);
-    obstacle(id+'-glass-barrier-'+i,[Math.min(a[0]+ux*o.start,a[0]+ux*o.end)-.035,Math.min(a[1]+uy*o.start,a[1]+uy*o.end)-.035,Math.max(a[0]+ux*o.start,a[0]+ux*o.end)+.035,Math.max(a[1]+uy*o.start,a[1]+uy*o.end)+.035],o.bottom,o.top);
+    const mid=(o.start+o.end)/2;if(o.end-o.start>2&&id!=='garden-gable')beam(id+'-mullion-'+i,to3([mid,o.bottom]),to3([mid,Math.min(o.top,4.0)]),.025,mats.dark);
+    obstacle(id+'-glass-barrier-'+i,[Math.min(to3([o.start,0])[0],to3([o.end,0])[0])-.035,Math.min(to3([o.start,0])[1],to3([o.end,0])[1])-.035,Math.max(to3([o.start,0])[0],to3([o.end,0])[0])+.035,Math.max(to3([o.start,0])[1],to3([o.end,0])[1])+.035],o.bottom,o.top);
    }
   }
  };
  const opening = (start,end,bottom=0,top=2.35,glass=true) => ({start,end,bottom,top,glass});
  const contains = iconInteriorContains;
- return {THREE, scene, house, data, group, world, ring, navigation, mats, mesh, box, obstacle, floor, slab, beam, rail, wall, opening, contains, ceilingAt};
+ return {THREE, scene, house, data, group, world, ring, navigation, mats, mesh, box, obstacle, floor, slab, beam, rail, wall, opening, contains, ceilingAt, cutRoof};
+}
+
+function iconInteriorWindowReveal({THREE,mesh,mats,id,points,to3,normal,depth}) {
+ const vertices=[];
+ for(let i=0;i<points.length;i++) {
+  const a=to3(points[i]),b=to3(points[(i+1)%points.length]);
+  if(a[2]===points[0][1]&&b[2]===points[0][1])continue;
+  const outside=p=>[p[0]+normal[0]*depth,p[1]+normal[1]*depth,p[2]];
+  vertices.push(...a,...outside(a),...outside(b),...a,...outside(b),...b);
+ }
+ const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.computeVertexNormals();mesh(geometry,mats.wall,id);
 }
 
 function iconInteriorWallGeometry(THREE,options) {
@@ -68,7 +80,7 @@ function iconInteriorWallGeometry(THREE,options) {
  }
  const xs=[...new Set(cuts.filter(u=>u>=0&&u<=L))].sort((x,y)=>x-y);
  const bounds=(polygon,u,mid)=>{
-  const edges=polygon.flatMap((p,i)=>{const q=polygon[(i+1)%polygon.length];if(mid>Math.min(p[0],q[0])&&mid<Math.max(p[0],q[0]))return [[p,q]];return [];});
+  const edges=polygon.flatMap((p,i)=>{const q=polygon[(i+1)%polygon.length];if(p[0]!==q[0]&&mid>=Math.min(p[0],q[0])&&mid<=Math.max(p[0],q[0]))return [[p,q]];return [];});
   const heights=edges.map(([p,q])=>p[1]+(q[1]-p[1])*(u-p[0])/(q[0]-p[0]));return heights.length?[Math.min(...heights),Math.max(...heights)]:null;
  };
  const bands=(u,mid)=>{const base=bounds(outer,u,mid);if(!base)return [];const openings=holes.map(p=>bounds(p,u,mid)).filter(Boolean).sort((x,y)=>x[0]-y[0]);let bottom=base[0];const result=[];for(const o of openings){if(o[0]>bottom+1e-8)result.push([bottom,o[0]]);bottom=Math.max(bottom,o[1]);}if(base[1]>bottom+1e-8)result.push([bottom,base[1]]);return result;};
@@ -108,8 +120,10 @@ function iconInteriorFacades(context) {
  box('garage-sectional-door',[1.08,-.05,6.04,.05],0,2.32,mats.dark);obstacle('garage-door',[1.06,-.1,6.06,.1],0,2.35);
  // These three walls include the upper gable and its asymmetrical glazing.
  wall('front-gable',[0,0],[8.5,0],2.8,8.3,.36,[{...opening(.9,4.25,3.2,7.25),poly:[[.9,3.2],[4.25,3.2],[4.25,7.25],[.9,3.9]]}],[[0,2.8],[8.5,2.8],[8.5,4.07],[4.25,8.3],[0,4.07]]);
- wall('garden-gable',[0,18.13],[8.5,18.13],2.8,8.3,.36,[{...opening(.9,7.6,3.2,7.35),poly:[[.9,3.2],[7.6,3.2],[7.6,3.95],[4.25,7.35],[.9,3.95]]}],[[0,2.8],[8.5,2.8],[8.5,4.07],[4.25,8.3],[0,4.07]]);
- for(const x of [3.1,5.4])beam('garden-upper-triangle-mullion-'+x,[x,18.13-.18,3.2],[x,18.13-.18,7.35-Math.abs(x-4.25)],.025,mats.dark);
+ const gardenGlassY=data.facades.find(f=>f.id==='facade-garden').a[1]-.24;
+ wall('garden-gable',[0,18.13],[8.5,18.13],2.8,8.3,.36,[{...opening(.9,7.6,3.2,7.35),recess:18.13-.18-gardenGlassY,poly:[[.9,3.2],[7.6,3.2],[7.6,3.95],[4.25,7.35],[.9,3.95]]}],[[0,2.8],[8.5,2.8],[8.5,4.07],[4.25,8.3],[0,4.07]]);
+ box('garden-window-sill-recess',[.9,gardenGlassY,7.6,18.13-.36],2.8,.4,mats.wall);
+ for(const x of [3.1,5.4])beam('garden-upper-triangle-mullion-'+x,[x,gardenGlassY,3.2],[x,gardenGlassY,7.35-Math.abs(x-4.25)],.025,mats.dark);
  wall('wing-gable',[14.64,4.21],[14.64,12.71],2.8,8.3,.36,[{...opening(4.25,7.39,3.2,7.3),poly:[[4.25,3.2],[7.39,3.2],[7.39,4.15],[4.25,7.3]]}],[[0,2.8],[8.5,2.8],[8.5,4.07],[4.25,8.3],[0,4.07]]);
  for(const [id,a,b] of [['upper-main-side',[0,0],[0,18.13]],['upper-front-wing',[8.5,4.21],[14.64,4.21]],['upper-rear-wing',[8.5,12.71],[14.64,12.71]],['upper-garage-side',[8.5,0],[8.5,4.21]],['upper-terrace-side',[8.5,12.71],[8.5,18.13]]])wall(id,a,b,2.8,4.07,.36);
 }
@@ -250,7 +264,7 @@ function iconInteriorFurnishings(context) {
 }
 
 function iconInteriorLightingAndRoof(context) {
- const {THREE, group, box, mats, navigation, contains, data, house, mesh, ceilingAt} = context;
+ const {THREE, group, box, mats, navigation, contains, data, house, mesh, ceilingAt, cutRoof} = context;
  for(const [id,x,y,z] of [['living',4.4,14,2.5],['kitchen',4.3,10.5,2.55],['hall',8.3,8.4,2.55],['guest',12.6,7,2.55],['office',12,10.9,2.55],['upper-hall',5.6,7.5,5.6],['upper-one',4.3,2,5.6],['upper-two',3.2,7.6,5.6],['upper-master',11.7,10,5.6]]){const lamp=new THREE.PointLight('#fff0d6',12,5,2);lamp.position.set(x,y,z);lamp.castShadow=false;group.add(lamp);box('light-fixture-'+id,[x-.12,y-.12,x+.12,y+.12],z+.05,.04,mats.lamp);}
  const inverse=group.matrix.clone().invert();
  navigation.ceilingHeight = worldXY => {
@@ -260,7 +274,7 @@ function iconInteriorLightingAndRoof(context) {
  };
  for(const part of house.meshes.filter(m=>m.kind==='roof')){
   const vertices=part.vertices.map(v=>{const p=new THREE.Vector3(...v).applyMatrix4(inverse);return [p.x,p.y,p.z-.045];});
-  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices.flat(),3));geometry.setIndex(part.faces.flatMap(f=>f.slice(1,-1).flatMap((_,i)=>[f[0],f[i+1],f[i+2]])));geometry.computeVertexNormals();mesh(geometry,mats.ceiling,'interior-roof-lining-'+part.id).castShadow=false;
+  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices.flat(),3));geometry.setIndex(part.faces.flatMap(f=>f.slice(1,-1).flatMap((_,i)=>[f[0],f[i+1],f[i+2]])));geometry.computeVertexNormals();mesh(cutRoof(geometry,group.matrix),mats.ceiling,'interior-roof-lining-'+part.id).castShadow=false;
  }
  group.userData={kind:'walkable-interior',rooms:data.rooms.length,stairRises:18,source:data.metadata,groundFloor:0,upperFloor:3.2};
 }
