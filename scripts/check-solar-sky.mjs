@@ -51,7 +51,7 @@ test('walking sky aims at astronomical sun independently of camera translation a
   const uniforms = calls[0].scene.children[0].material.uniforms;
   near(worldRay(uniforms).dot(direction), 1);
   near(uniforms.sunDirection.value.dot(direction), 1);
-  near(uniforms.diskRadius.value * 360 / Math.PI, .53);
+  near(uniforms.diskRadius.value * 360 / Math.PI, 1.06);
   const before = worldRay(uniforms, .4, -.2);
   camera.position.add(new THREE.Vector3(1500, -800, 45));
   camera.near = .001; camera.far = 9000; camera.updateProjectionMatrix();

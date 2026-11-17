@@ -157,3 +157,7 @@ Pas między dolnym i górnym przeszkleniem salonu ma lico na y=16,85 m, wspólne
 Symulacja pokazuje tarczę słońca o średnicy kątowej 0,53° w kierunku obliczonym dla wybranej daty i godziny. Podczas spaceru można patrzeć na słońce; budynki, drzewa i inne obiekty zasłaniają je. Przy horyzoncie tarcza oraz bezpośrednie światło stają się pomarańczowe, a niebo przechodzi przez zmierzch do nocy. Kolory są poglądowym modelem czystego nieba, nie prognozą atmosfery. Oddzielna warstwa nieba nie zmienia obwiedni geometrii ani precyzji głębi.
 
 Dolny zegar ma przycisk play/pause współdzielący stan i tempo z panelem „Słońce i mapy”. Działa także podczas spaceru i na telefonie. Geometria i wszystkie dotychczasowe wymiary pozostały niezmienione.
+
+## Większa tarcza słońca 2026-11-17.7
+
+Tarczę powiększono wizualnie dwukrotnie: średnica kątowa w obrazie wynosi 1,06° zamiast 0,53°. To ułatwienie widoczności podczas spaceru; obliczany kierunek słońca oraz geometria cieni pozostają bez zmian.
