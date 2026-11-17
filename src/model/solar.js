@@ -322,7 +322,7 @@ export function setupSolar({ THREE, scene, sun, renderer, requestDraw, container
     sync(); requestDraw();
     return getState();
   }
-  playback = createSolarPlayback({ ...playbackClock, apply, onChange: sync });
+  playback = createSolarPlayback({ ...playbackClock, apply, onChange() { sync(); requestDraw(); } });
   const api = { activate, setLocal, setPreset, setShadowStrength, getState, pause: playback.pause,
     play() { activate(); playback.play(); }, setPlaybackSpeed: playback.setPlaybackSpeed,
     deactivate() { playback.pause(); active = false; requestDraw(); },

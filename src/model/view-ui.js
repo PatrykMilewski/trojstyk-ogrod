@@ -47,13 +47,24 @@ export function setupViewUI({ solar, requestDraw, canvas }) {
   const menu = document.getElementById('view-menu'), toggle = document.getElementById('views-toggle');
   const tools = document.getElementById('environment-tools'), toolsToggle = document.getElementById('tools-toggle');
   const clock = document.getElementById('simulation-clock'), time = document.getElementById('simulation-time');
+  const play = document.getElementById('simulation-play');
   const date = document.getElementById('simulation-date'), info = document.getElementById('model-info');
   const positionPanels = () => positionViewPanels({ tools, menu, clock, info });
   const closeMenu = bindViewMenu({ menu, toggle, tools, toolsToggle, solar, requestDraw, canvas, positionPanels });
+  play.addEventListener('click', event => {
+    if (solar.getState().playing) solar.pause();
+    else solar.play();
+    syncClock(solar.getState()); requestDraw();
+    if (event.detail > 0) canvas.focus({ preventScroll: true });
+  });
   function syncClock(state) {
     clock.hidden = !state.active; document.body.classList.toggle('solar-mode', state.active);
     time.textContent = `${state.time}:${state.seconds}`;
     date.textContent = state.date.split('-').reverse().join('.') + ' · czas w Polsce';
+    play.textContent = state.playing ? '❚❚' : '▶';
+    play.setAttribute('aria-pressed', String(state.playing));
+    play.setAttribute('aria-label', state.playing ? 'Wstrzymaj symulację słońca' : 'Odtwórz symulację słońca');
+    play.title = play.getAttribute('aria-label');
   }
   const observer = new ResizeObserver(positionPanels);
   observer.observe(document.querySelector('.panel')); observer.observe(info); observer.observe(clock);

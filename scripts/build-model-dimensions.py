@@ -75,7 +75,9 @@ content += section('Symulacja słońca i mapy', '<p>Pozycja słońca dla wybrane
         ['Algorytm', solar['algorithm']],
         ['Początkowa data i godzina', solar['defaultLocalDateTime']],
         ['Tempo odtwarzania', '1 godzina / 3 sekundy, regulacja 1–15 sekund na godzinę'],
-        ['Sterowanie', 'Suwaki dnia roku i godziny, odtwarzanie/pauza; aktywacja wyłącza podkład'],
+        ['Sterowanie', 'Suwaki dnia roku i godziny; play/pause w panelu i przy dolnym zegarze; aktywacja wyłącza podkład'],
+        ['Widoczne słońce', 'Tarcza 0,53° w kierunku astronomicznym; ciepłe barwy przy horyzoncie, zasłanianie przez geometrię'],
+        ['Kolory nieba i światła', 'Poglądowy model czystego nieba i zmierzchu, bez prognozy pogody'],
         ['Promień mapy wody i prądu', '150 m od rzeczywistego wspólnego wierzchołka działek'],
         ['Siatka NMT / układ wysokości', '1 m / PL-EVRF2007-NH'],
         ['Ortofotomapa', '360 × 360 m; indeks 2024 w centrum, dokładna data nalotu nieznana']]) + '<p><a href="map-sources.json">Pełne źródła map, współrzędne i parametry eksportu</a></p>')

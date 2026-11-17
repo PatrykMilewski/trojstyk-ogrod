@@ -151,3 +151,9 @@ Siedem istniejących okien dachowych /193 i sześć /191 ma rzeczywiste otwory w
 Usunięto zewnętrzne powierzchnie zamykające ściany na wypukłych narożnikach, które pokrywały się z ciemną elewacją. Wklęsłe połączenia zachowują potrzebne zamknięcia od środka. Wewnętrzne powierzchnie kończą się na wewnętrznych narożnikach. Na poziomie 2,80 m usunięto zakryte, zdublowane powierzchnie połączenia ścian i stropu, zachowując widoczne spody nadwieszeń. Krawędź stropu i podłogi piętra cofnięto o 0,18 m do wnętrza grubości ściany; otwory schodów i antresoli oraz zewnętrzny obrys domu pozostają bez zmian.
 
 Pas między dolnym i górnym przeszkleniem salonu ma lico na y=16,85 m, wspólne z szybami. Jego grubość 0,12 m mieści się za tą płaszczyzną, wysokość obejmuje z=2,35–3,20 m. Usunięto wysuniętą półkę i zasłaniający ją dawny pas ściany. Zachowano pełne górne okno i wszystkie okna dachowe.
+
+## Widoczne słońce i zegar 2026-11-17.6
+
+Symulacja pokazuje tarczę słońca o średnicy kątowej 0,53° w kierunku obliczonym dla wybranej daty i godziny. Podczas spaceru można patrzeć na słońce; budynki, drzewa i inne obiekty zasłaniają je. Przy horyzoncie tarcza oraz bezpośrednie światło stają się pomarańczowe, a niebo przechodzi przez zmierzch do nocy. Kolory są poglądowym modelem czystego nieba, nie prognozą atmosfery. Oddzielna warstwa nieba nie zmienia obwiedni geometrii ani precyzji głębi.
+
+Dolny zegar ma przycisk play/pause współdzielący stan i tempo z panelem „Słońce i mapy”. Działa także podczas spaceru i na telefonie. Geometria i wszystkie dotychczasowe wymiary pozostały niezmienione.

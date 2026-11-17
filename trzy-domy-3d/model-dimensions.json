@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-17.5",
+  "modelVersion": "2026-11-17.6",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1454,7 +1454,7 @@
     "proceduralCodeSha256": "ff868cb0e73178ae29ddcfa51879c79d71a840135ab139fa249e463ec4eb745a",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "426140b9e29c7b44a98258b31e23e939a3789b4b671d8536079a11c746c93047",
-    "runtimeSha256": "bf61218bcec087ce396457b2221e1ed359915acf6107ce0a69449a51cfa52f14"
+    "runtimeSha256": "9b97895419eba4f1ff6e8c9646583cade1fb6a4916a244b903e56f742f399f31"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1467,7 +1467,8 @@
     "Wnętrze /190 według Willa Floryda6: oba poziomy i schody +3,35m. Review /193: poprawione orientacje i pozycje mebli oraz pełna ściana przy antresoli. Inwentarze wyposażenia i ich źródła w kontrolowanych plikach danych.",
     "Usunięto nakładanie trawy/map i podłóg obu wnętrz, powierzchni blatów i ram. /193: otwarte drzwi, ściany do skosów, 6 krzeseł 6cm od stołu. /190: niezależny przegląd 21 pomieszczeń, schody 12+6 i spocznik +2,23m. Oba domy: podparte i połączone balustrady bez zdublowanych słupków.",
     "Pełne górne przeszklenie salonu /193 cofnięte o 1,10m do dolnych szyb; usunięte błędne trójkąty ściany i domknięta wnęka. 13 istniejących okien dachowych ma rzeczywiste otwory; dodano okno 1,14×1,40m nad salonem na zachodniej połaci /193. Pozycje i wymiary wszystkich 14 okien zamrożone.",
-    "Elewacja /193: usunięto zdublowane powierzchnie na wypukłych narożnikach i styku kondygnacji, zachowano zamknięcia wklęsłe i widoczne spody nadwieszeń. Strop cofnięty 0,18m wewnątrz ściany. Pas między szybami salonu ma lico y=16,85m wspólne z szybami i grubość 0,12m za nimi; wystająca półka usunięta."
+    "Elewacja /193: usunięto zdublowane powierzchnie na wypukłych narożnikach i styku kondygnacji, zachowano zamknięcia wklęsłe i widoczne spody nadwieszeń. Strop cofnięty 0,18m wewnątrz ściany. Pas między szybami salonu ma lico y=16,85m wspólne z szybami i grubość 0,12m za nimi; wystająca półka usunięta.",
+    "Widoczna tarcza słońca o średnicy kątowej 0,53°, zgodna z datą, godziną i kierunkiem astronomicznym. Ciepłe barwy przy horyzoncie, niebo dzienne i zmierzch; poglądowa atmosfera. Play/pause także przy dolnym zegarze, wspólny stan z panelem słońca. Gabaryty, geometria, wnętrza i układ działek bez zmian."
   ],
   "contextParcels": [
     {
@@ -2671,7 +2672,27 @@
     "playbackUsesMonotonicClock": true,
     "automaticPlainGroundOnActivation": true,
     "hemisphereLightIntensity": 1.1,
-    "directSunIntensity": 3.6
+    "directSunIntensity": 3.6,
+    "appearance": {
+      "sunAngularDiameterDeg": 0.53,
+      "skyRendering": "Separate camera-relative background pass; world geometry occludes the sun; no added world bounds",
+      "colorModel": "Illustrative clear sky and warm horizon gradient, driven by geometric solar elevation; not a meteorological prediction",
+      "sunColorHorizon": "#ff5426",
+      "sunColorDay": "#fff5e8",
+      "warmLightElevationRangeDeg": [
+        0,
+        22
+      ],
+      "directIntensityFactorRange": [
+        0.45,
+        1
+      ],
+      "ambientIntensityFactorRange": [
+        0.35,
+        1
+      ],
+      "clockPlaybackButton": true
+    }
   },
   "surroundingVegetation": {
     "dataFile": "vegetation-data.json",
