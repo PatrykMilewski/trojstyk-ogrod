@@ -2,25 +2,42 @@ const roofWindowEpsilon = 1e-8;
 const roofWindowCross = (a, b, p) => (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]);
 const roofWindowMix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
 
-export const livingRoofWindow = Object.freeze({
-  id: 'living-west-rooflight', parcel: '193', localCenter: [6.25, 14.4],
-  widthM: 1.14, heightM: 1.4,
-  assumption: 'Concept opening, 1.14 m along ridge by 1.40 m on slope; architect to confirm structure and product.',
-});
+// Centres in unmirrored catalogue metres, digitised from the mirrored attic plan.
+const iconRoofWindowSchedule = [
+  ['1.1', 'right', 7.15, 1.78],
+  ['1.2', 'left', 1.04, 4.72],
+  ['1.3', 'left', 1.04, 7.10],
+  ['1.3', 'left', 1.04, 8.02],
+  ['1.3', 'left', 1.04, 8.94],
+  ['1.5', 'cross', 8.25, 5.66],
+  ['1.6', 'cross', 10.47, 5.66],
+  ['1.7', 'cross', 12.89, 5.66],
+];
 
-export function roofWindowOpenings(house, neighbors, source) {
-  const openings = [house, ...neighbors.houses].flatMap(model => model.meshes
-    .filter(part => /rooflight/.test(part.id) && part.material === 'glass')
-    .map(part => ({id: part.id, parcel: model.parcel || '193', vertices: part.vertices.map(p => [...p])})));
+function iconRoofWindows(source) {
   const angle = source.rotation * Math.PI / 180, c = Math.cos(angle), s = Math.sin(angle);
   const t = source.variants.find(item => item.id === 'lustro').t;
   const slope = (8.3 - 4.07) / 4.25;
-  const halfRun = livingRoofWindow.heightM / Math.sqrt(1 + slope * slope) / 2;
-  const [x, y] = livingRoofWindow.localCenter, halfWidth = livingRoofWindow.widthM / 2;
-  const vertices = [[x-halfRun,y-halfWidth],[x+halfRun,y-halfWidth],
-    [x+halfRun,y+halfWidth],[x-halfRun,y+halfWidth]].map(([u,v]) =>
-    [t[0]+(14.64-u)*c+v*s,t[1]+(14.64-u)*s-v*c,8.3-(u-4.25)*slope+.05]);
-  openings.push({...livingRoofWindow, vertices, outwardHorizontal: [-c,-s], slopeFacing: 'west'});
+  const widthM = .72, heightM = 1.48;
+  const halfRun = heightM / Math.hypot(1, slope) / 2;
+  return iconRoofWindowSchedule.map(([roomId, face, x, y], i) => {
+    const vertices = [[-1,-1],[1,-1],[1,1],[-1,1]].map(([along, across]) => {
+      const u = x + (face === 'cross' ? along * widthM / 2 : across * halfRun);
+      const v = y + (face === 'cross' ? across * halfRun : along * widthM / 2);
+      const run = face === 'cross' ? v - 4.21 : face === 'left' ? u : 8.5 - u;
+      return [t[0]+(14.64-u)*c+v*s, t[1]+(14.64-u)*s-v*c, 4.07+run*slope+.045];
+    });
+    const number = i - iconRoofWindowSchedule.findIndex(([id]) => id === roomId) + 1;
+    return {id: `icon-rooflight-${roomId}-${number}`, parcel: '193', roomId,
+      localCenter: [x,y], widthM, heightM, vertices};
+  });
+}
+
+export function roofWindowOpenings(house, neighbors, source) {
+  const openings = neighbors.houses.flatMap(model => model.meshes
+    .filter(part => /rooflight/.test(part.id) && part.material === 'glass')
+    .map(part => ({id: part.id, parcel: model.parcel, vertices: part.vertices.map(p => [...p])})));
+  openings.push(...iconRoofWindows(source));
   return openings.map(opening => {
     const ring = opening.vertices.map(p => p.slice(0,2));
     const area = ring.reduce((sum,a,i) => {const b=ring[(i+1)%ring.length];return sum+a[0]*b[1]-b[0]*a[1];},0);

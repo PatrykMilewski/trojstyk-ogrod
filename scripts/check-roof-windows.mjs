@@ -6,7 +6,7 @@ const html=await readFile(new URL('../trzy-domy-3d/index.html',import.meta.url),
 const imports=JSON.parse(html.split('<script type="importmap">')[1].split('</script>')[0]).imports;
 const THREE=await load(Buffer.from(imports.three.split(',')[1],'base64').toString('utf8').replaceAll("'three/core'",`'${imports['three/core']}'`));
 const moduleSource=await readFile(new URL('../src/model/roof-windows.js',import.meta.url),'utf8');
-const {roofWindowOpenings,cutRoofGeometry,clipRoofSeam,createRoofWindowGlazing,livingRoofWindow}=await load(moduleSource);
+const {roofWindowOpenings,cutRoofGeometry,clipRoofSeam,createRoofWindowGlazing}=await load(moduleSource);
 const marker='const [source,garden,house,neighbors]=';
 const start=html.indexOf(marker)+marker.length;
 const [source,,house,neighbors]=JSON.parse(html.slice(start,html.indexOf(';\nconst landscaping=',start)));
@@ -21,7 +21,7 @@ const interpolate=(a,b,t)=>a.map((v,k)=>v+(b[k]-v)*t);
 function sample(opening,u,v){const p=opening.vertices;return interpolate(interpolate(p[0],p[1],u),interpolate(p[3],p[2],u),v);}
 
 test('source regression reproduces opaque roof blockers behind every original rooflight',()=>{
-  for(const model of models)for(const opening of openings.filter(o=>o.parcel===model.parcel&&o.id!==livingRoofWindow.id)){
+  for(const model of models)for(const opening of openings.filter(o=>o.parcel===model.parcel)){
     const p=opening.center;assert(hits(meshes(model,false),[p[0],p[1],p[2]+3]).length,`source overlay was unexpectedly open: /${model.parcel} ${opening.id}`);
   }
 });
@@ -83,11 +83,30 @@ test('actual Icon interior lining callback opens every window through both real 
     'generated model must pass the real lining cut callback');
 });
 
-test('new 1.14 by 1.40 m window sits on livingroom west-facing slope and seams avoid all apertures',()=>{
-  const o=openings.find(o=>o.id===livingRoofWindow.id);assert.deepEqual(o.localCenter,[6.25,14.4]);assert(o.localCenter[0]>4.25&&o.localCenter[0]<8.5);assert(o.localCenter[1]>10.3&&o.localCenter[1]<18.13);
-  assert(o.outwardHorizontal[0]<-.6);const trueNorthAngle=.3584748670196551*Math.PI/180;
-  const west=[-Math.cos(trueNorthAngle),-Math.sin(trueNorthAngle)];assert(o.outwardHorizontal[0]*west[0]+o.outwardHorizontal[1]*west[1]>.6);
-  const length=(a,b)=>Math.hypot(...a.map((v,k)=>v-b[k]));assert(Math.abs(length(o.vertices[0],o.vertices[1])-1.4)<1e-9);assert(Math.abs(length(o.vertices[1],o.vertices[2])-1.14)<1e-9);
+test('Icon skylights follow the mirrored attic schedule and meet the physical roof',async()=>{
+  const interior=JSON.parse(await readFile(new URL('../trzy-domy-3d/interior-data.json',import.meta.url),'utf8'));
+  const own=openings.filter(o=>o.parcel==='193');
+  assert.deepEqual(own.map(o=>o.roomId),['1.1','1.2','1.3','1.3','1.3','1.5','1.6','1.7']);
+  const original=meshes(models[0],false);
+  const t=source.variants.find(v=>v.id==='lustro').t;
+  const a=source.rotation*Math.PI/180,c=Math.cos(a),s=Math.sin(a);
+  for(const o of own){
+    const [left,front,right,back]=interior.rooms.find(room=>room.id===o.roomId).box;
+    for(const [x,y,z] of o.vertices){
+      const u=14.64-(x-t[0])*c-(y-t[1])*s,v=(x-t[0])*s-(y-t[1])*c;
+      assert(u>=left&&u<=right&&v>=front&&v<=back, o.id+' outside its room');
+      const hit=hits(original,[x,y,12])[0];
+      assert(hit&&Math.abs(z-hit.point.z-.045)<.002,o.id+' glazing detached from roof plane');
+    }
+  }
+  const row=own.filter(o=>o.roomId==='1.3');
+  assert(row.every(o=>o.localCenter[0]===row[0].localCenter[0]));
+  assert(own.filter(o=>['1.5','1.6','1.7'].includes(o.roomId)).every(o=>o.localCenter[1]===own.at(-1).localCenter[1]));
+  assert(html.includes("if(opening.parcel==='193')windowFrame({id:opening.id+'-frame',points:[...opening.vertices,opening.vertices[0]]}"));
+  assert(!html.includes("garden-pier|main-rooflight|cross-rooflight"));
+});
+
+test('roof seams avoid all apertures',()=>{
   for(const model of models)for(const seam of (model.lines||[]).filter(l=>l.kind==='roof-seam'))for(const segment of clipRoofSeam(seam.points,openings.filter(w=>w.parcel===model.parcel))){
     const p=interpolate(...segment,.5);assert(!openings.filter(w=>w.parcel===model.parcel).some(w=>w.ring.every((a,i)=>{const b=w.ring[(i+1)%4];return (b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0])>1e-6;})),'seam crosses aperture');
   }

@@ -144,7 +144,7 @@ Niezależny przegląd /190 objął wszystkie 21 pomieszczeń i porównanie z rzu
 
 Górne okno salonu /193 zachowuje cały kształt i podziały; jego szyby cofnięto o 1,10 m do płaszczyzny dolnego przeszklenia (lokalne y=16,85 m). Usunięto błędne trójkąty ściany powstające przy wierzchołku obrysu i domknięto wnękę, pozostawiając zewnętrzny szczyt w dawnym miejscu.
 
-Siedem istniejących okien dachowych /193 i sześć /191 ma rzeczywiste otwory w połaciach. Wycięcia /193 przechodzą również przez okładzinę widoczną od wnętrza; linie rąbków omijają otwory. Przezroczyste szyby przepuszczają bezpośrednie światło, a ramy zachowują cienie. Dodano okno nad salonem /193, 1,14 × 1,40 m po połaci, na zachodniej stronie dachu zwróconej na południowy zachód. Jego rozmiar i lokalny środek (6,25; 14,40) m są założeniem koncepcyjnym, zapisanym razem z pozostałymi oknami w rejestrze wymiarów.
+Dom /193 ma osiem okien dachowych według lustrzanego rzutu poddasza. Jedno przypada na pokój 1.1, trzy na pokój 1.3 i po jednym na obie łazienki, garderobę i pralnię. Nad salonem połać jest pełna. Otwory w pokryciu i okładzinie przepuszczają bezpośrednie światło. Rejestr podaje lokalne środki i przyjęte wymiary szyb. Układ sześciu okien domu /191 pozostaje zgodny z jego modelem.
 
 ## Elewacja i płaski pas między szybami 2026-11-17.5
 

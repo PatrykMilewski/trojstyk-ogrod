@@ -678,7 +678,7 @@
       "Published room usable areas on sloped upper floor differ from rectangular floor footprints.",
       "Upper slope follows unchanged exterior roof; interior roof finish thickness and installation void estimated.",
       "Private-bath doorway traced position shifted25cm within the same partition to provide walk-camera clearance at the perpendicular suite wall; raster-derived design remains approximate.",
-      "Existing rooflights remain exterior glazing overlays without roof or interior-lining cutouts; they are not transparent openings from inside. Pale roof lining follows the unchanged exterior planes45mm below them.",
+      "Eight roof windows on the mirrored attic plan have matching openings through the outer roof and the interior lining 45 mm below it. Window centres were digitised from the drawing; glazing size is an estimate. The living room has a solid roof.",
       "Main entrance, internal doorways and one terrace sliding panel are held open for walking; garage door and remaining glazing stay closed.",
       "Furniture inventory records approximate source footprints and front direction; beds face from head to foot. Dimensions are visual traces, typically uncertain by15–30cm, not product or execution dimensions.",
       "Room2 upper partition beside the void is solid; the hall alone has a guardrail. Laundry entry is through the side hall; its rear partition is solid as drawn.",
@@ -691,6 +691,7 @@
     ],
     "furnitureSources": {
       "ground-plan": "work/sources/icon-parter-zwykly.jpg, publisher original ground floor, rooms 0.1–0.9",
+      "user-attic": "User-requested furnishings fitted to the supplied mirrored attic plan; furniture sizes are schematic.",
       "upper-plan": "work/icon3d-research/attic-mirror.jpg, publisher mirrored upper floor, converted once into original coordinates",
       "living-render": "work/icon3d-research/top-original.png, publisher living room and kitchen render",
       "mirrored-ground-plan": "User-supplied publisher mirrored ground-floor plan, room 0.9 with 76 cm under-stair storage allowance."
@@ -1380,32 +1381,47 @@
       "source": "upper-plan"
     },
     {
-      "id": "laundry-machine-0",
-      "type": "washer",
+      "id": "laundry-stack",
+      "type": "laundry-stack",
       "room": "1.5",
       "box": [
-        7.15,
+        7.16,
         7.21,
-        7.800000000000001,
+        7.76,
         7.89
       ],
       "facing": "-y",
-      "source": "upper-plan",
-      "height": 0.87
+      "source": "user-attic",
+      "height": 1.73
     },
     {
-      "id": "laundry-machine-1",
-      "type": "washer",
+      "id": "laundry-storage",
+      "type": "cabinet",
       "room": "1.5",
       "box": [
-        7.9,
-        7.21,
-        8.55,
+        7.82,
+        7.34,
+        8.75,
         7.89
       ],
       "facing": "-y",
-      "source": "upper-plan",
-      "height": 0.87
+      "source": "user-attic",
+      "height": 1.9,
+      "doors": 2
+    },
+    {
+      "id": "laundry-ironing-board",
+      "type": "ironing-board",
+      "room": "1.5",
+      "box": [
+        7.32,
+        5.52,
+        8.57,
+        5.92
+      ],
+      "facing": "-y",
+      "source": "user-attic",
+      "height": 0.9
     },
     {
       "id": "private-shower",
@@ -1504,31 +1520,31 @@
     },
     {
       "id": "master-bedside-left",
-      "type": "cabinet",
+      "type": "nightstand",
       "room": "1.8",
       "box": [
-        10.55,
-        11.7,
-        11,
+        10.67,
+        11.88,
+        11.07,
         12.26
       ],
       "facing": "-y",
-      "source": "upper-plan",
-      "height": 0.5
+      "source": "user-attic",
+      "height": 0.52
     },
     {
       "id": "master-bedside-right",
-      "type": "cabinet",
+      "type": "nightstand",
       "room": "1.8",
       "box": [
-        13.3,
-        11.7,
-        13.75,
+        13.23,
+        11.88,
+        13.63,
         12.26
       ],
       "facing": "-y",
-      "source": "upper-plan",
-      "height": 0.5
+      "source": "user-attic",
+      "height": 0.52
     },
     {
       "id": "office-under-stair-1",

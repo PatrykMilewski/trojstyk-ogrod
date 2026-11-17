@@ -89,7 +89,7 @@ test('source wall storage contacts are preserved and cabinet handles face into r
     ['entry-wardrobe-side', 'max.x', 11.19], ['bedroom-two-wardrobe-rear', 'max.y', 10.18],
     ['bedroom-two-wardrobe-side', 'max.x', 4.77], ['master-dressing-left', 'min.x', 11.69],
     ['master-dressing-right', 'max.x', 14.14], ['kitchen-tall', 'min.y', 8.65],
-    ['laundry-machine-0', 'max.y', 7.89], ['laundry-machine-1', 'max.y', 7.89],
+    ['laundry-stack', 'max.y', 7.89], ['laundry-storage', 'max.y', 7.89],
   ]) {
     const [side, axis] = edge.split('.'); close(itemBounds(id)[side][axis], expected, id + ' source wall contact');
   }
@@ -98,6 +98,24 @@ test('source wall storage contacts are preserved and cabinet handles face into r
     for (const handle of parts(item.id).filter(object => object.name.includes('-handle-'))) {
       assert(facingProjection(item, bounds(handle).getCenter(new THREE.Vector3())) > facingProjection(item, body), item.id + ' handles face outward');
     }
+  }
+});
+
+test('attic laundry stack, ironing station and bedside drawers fit the mirrored plan', () => {
+  const lower=partCenter('laundry-stack','washer-door'),upper=partCenter('laundry-stack','dryer-door');
+  close(lower.x,upper.x,'Appliances align');close(lower.y,upper.y,'Doors align');
+  close(upper.z-lower.z,.88,'Dryer sits above stacking kit');
+  const board=itemBounds('laundry-ironing-board'), stack=itemBounds('laundry-stack');
+  assert(board.max.y+1.28 < stack.min.y,'Clear standing space in front of both appliances');
+  assert.equal(parts('laundry-ironing-board').filter(mesh=>mesh.name.includes('-leg-')).length,4);
+  const door= data.walls.find(w=>w.id==='u-laundry-hall'), [start,end]=door.doors[0];
+  const swing=[door.a[0],door.a[1]+start,door.a[0]+end-start,door.a[1]+end];
+  for(const item of data.furniture.filter(f=>f.room==='1.5')) assert(!overlaps(swing,item.box),item.id+' leaves full door swing clear');
+  const bed=itemBounds('master-bed'), left=itemBounds('master-bedside-left'), right=itemBounds('master-bedside-right');
+  close(bed.min.x-left.max.x,.08,'Left nightstand at bedside');close(right.min.x-bed.max.x,.08,'Right nightstand at bedside');
+  for(const id of ['master-bedside-left','master-bedside-right']){
+    close(itemBounds(id).max.y,bed.max.y,'Nightstand aligns with headboard');
+    assert(partCenter(id,'drawer').z>partCenter(id,'shelf').z);
   }
 });
 
@@ -290,4 +308,28 @@ test('plaster return finishes flush with the vestibule wardrobe and keeps the pa
   const point = (x,y) => interior.localToWorld([x,y]).slice(0,2);
   assert(collider.pathBlocked(point(8.12,5.93),point(8.78,5.93)));
   assert(!collider.pathBlocked(point(7.4,5.25),point(7.4,8.1)));
+});
+
+test('reference furniture keeps the stone returns, paired coffee tables and floating TV console in scale', () => {
+  const box = name => bounds(interior.group.getObjectByName(name));
+  const island = furniture.get('kitchen-island'), top = box('kitchen-island-top');
+  const returns = parts(island.id).filter(mesh => mesh.name.includes('-waterfall-'));
+  assert.equal(returns.length, 2);
+  for (const panel of returns) {
+    const side = bounds(panel);
+    close(side.max.z, top.min.z, 'Waterfall returns meet underside of top');
+    close(side.max.y - side.min.y, island.box[3] - island.box[1], 'Waterfall wraps the full island depth');
+  }
+  close(itemBounds('kitchen-tall').max.z, furniture.get('kitchen-tall').height, 'Tall cabinet stays within its original envelope');
+  const larger = box('coffee-table-top-0'), smaller = box('coffee-table-top-1');
+  close(larger.max.x - larger.min.x, .78, 'Large coffee tabletop diameter');
+  close(smaller.max.x - smaller.min.x, .47, 'Small coffee tabletop diameter');
+  assert(smaller.max.z < larger.min.z, 'Smaller table nests below the larger tabletop');
+  close(itemBounds('living-rug').min.z, 0, 'Rug rests on the floor');
+  assert(itemBounds('media-console').min.z > .20, 'Media console floats clear of floor');
+  assert.equal(parts('sofa').filter(mesh => mesh.name.includes('-scatter-')).length, 3);
+  for (const chair of data.furniture.filter(item => item.id.startsWith('dining-') && item.type === 'chair')) {
+    const seat = interior.group.getObjectByName(chair.id + '-seat');
+    assert.equal(seat.material.color.getHexString(), 'ded8c8', 'Dining seats have ivory upholstery');
+  }
 });
