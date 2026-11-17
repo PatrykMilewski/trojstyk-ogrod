@@ -28,22 +28,17 @@ function iconInteriorSetup({THREE,scene,house,data}) {
  const floor = (id,b,z) => navigation.floors.push({id,ring:ring(b).map(p=>world(p).slice(0,2)),z});
  const path = points => new THREE.Path(points.map(p=>new THREE.Vector2(...p)));
  const slab = (id,outline,holes,z,depth,mat) => {const shape=new THREE.Shape(outline.map(p=>new THREE.Vector2(...p)));shape.holes=holes.map(path);const m=mesh(new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:false}),mat,id);m.position.z=z;return m;};
- const beam = (id,a,b,r=.025,mat=mats.metal) => {const av=new THREE.Vector3(...a),bv=new THREE.Vector3(...b),d=bv.clone().sub(av);const m=mesh(new THREE.CylinderGeometry(r,r,d.length(),8),mat,id);m.position.copy(av.add(bv).multiplyScalar(.5));m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());return m;};
+ const beamInstances=new Map();
+ const beam = (id,a,b,r=.025,mat=mats.metal) => {const key=[a.map(n=>n.toFixed(6)).join(','),b.map(n=>n.toFixed(6)).join(',')].sort().join('|')+'|'+r+'|'+mat.uuid;if(beamInstances.has(key))return beamInstances.get(key);const av=new THREE.Vector3(...a),bv=new THREE.Vector3(...b),d=bv.clone().sub(av);const m=mesh(new THREE.CylinderGeometry(r,r,d.length(),8),mat,id);m.position.copy(av.add(bv).multiplyScalar(.5));m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());beamInstances.set(key,m);return m;};
  const rail = (id,a,b,z) => {beam(id+'-top',[...a,z+1.05],[...b,z+1.05]);const length=Math.hypot(b[0]-a[0],b[1]-a[1]),count=Math.max(1,Math.ceil(length/.55));for(let i=0;i<=count;i++){const s=i/count,p=[a[0]+(b[0]-a[0])*s,a[1]+(b[1]-a[1])*s];beam(id+'-post-'+i,[...p,z],[...p,z+1.05],.017);}obstacle(id,[Math.min(a[0],b[0])-.04,Math.min(a[1],b[1])-.04,Math.max(a[0],b[0])+.04,Math.max(a[1],b[1])+.04],z,z+1.1);};
+ const ceilingAt = (x,y) => {const slope=(8.3-4.07)/4.25;return Math.max(x<=8.5?8.3-slope*Math.abs(x-4.25):-Infinity,x>=4.25&&y>=4.21&&y<=12.71?8.3-slope*Math.abs(y-8.46):-Infinity)-.045;};
  const wall = (id,a,b,z0,z1,thickness,openings=[],profile=null) => {
   const external=id.startsWith('facade-')||id.startsWith('upper-')||id.endsWith('-gable');
   let nx=0,ny=0;if(external){if(Math.abs(a[0]-b[0])<.01)nx=a[0]<.1?-1:1;else ny=a[1]<5?-1:1;a=[a[0]-nx*thickness/2,a[1]-ny*thickness/2];b=[b[0]-nx*thickness/2,b[1]-ny*thickness/2];}
   const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L;
-  const shape=new THREE.Shape((profile||[[0,z0],[L,z0],[L,z1],[0,z1]]).map(p=>new THREE.Vector2(...p)));
-  shape.holes=openings.map(o=>path(o.poly||[[o.start,o.bottom],[o.end,o.bottom],[o.end,o.top],[o.start,o.top]]));
-  const geometry=new THREE.ExtrudeGeometry(shape,{depth:thickness,bevelEnabled:false}),pos=geometry.getAttribute('position');
-  for(let i=0;i<pos.count;i++){const u=pos.getX(i),h=pos.getY(i),d=pos.getZ(i)-thickness/2;pos.setXYZ(i,a[0]+ux*u-uy*d,a[1]+uy*u+ux*d,h);}if(id.startsWith('u-'))for(let i=0;i<pos.count;i++){const x=pos.getX(i),y=pos.getY(i),main=8.3-(8.3-4.07)/4.25*Math.abs(x-4.25),wing=8.3-(8.3-4.07)/4.25*Math.abs(y-8.46),roof=Math.max(x<=8.5?main:-Infinity,y>=4.21&&y<=12.71&&x>=4.25?wing:-Infinity);pos.setZ(i,Math.min(pos.getZ(i),roof-.25));}
-  geometry.computeVertexNormals();mesh(geometry,mats.wall,id);
-  if(id.startsWith('facade-')||id.startsWith('upper-')||id.endsWith('-gable')){
-   const shell=new THREE.ShapeGeometry(shape),sp=shell.getAttribute('position');
-
-   for(let i=0;i<sp.count;i++){const u=sp.getX(i),h=sp.getY(i);sp.setXYZ(i,a[0]+ux*u+nx*(thickness/2+.003),a[1]+uy*u+ny*(thickness/2+.003),h);}shell.computeVertexNormals();mesh(shell,mats.dark,id+'-charred-exterior');
-  }
+  const outer=profile||[[0,z0],[L,z0],[L,z1],[0,z1]],holes=openings.map(o=>o.poly||[[o.start,o.bottom],[o.end,o.bottom],[o.end,o.top],[o.start,o.top]]);
+  const geometry=iconInteriorWallGeometry(THREE,{a,ux,uy,L,z0,z1,thickness,outer,holes,ceilingAt,sloped:id.startsWith('u-'),external,nx,ny});
+  mesh(geometry,external?[mats.wall,mats.dark]:mats.wall,id);
   const cuts=[0,L,...openings.flatMap(o=>[o.start,o.end])].sort((x,y)=>x-y);
   for(let i=1;i<cuts.length;i++){const start=cuts[i-1],end=cuts[i];if(end-start<.001)continue;const opening=openings.find(o=>(start+end)/2>o.start&&(start+end)/2<o.end);const ax=a[0]+ux*start,ay=a[1]+uy*start,bx=a[0]+ux*end,by=a[1]+uy*end,bounds=[Math.min(ax,bx)-Math.abs(uy)*thickness/2,Math.min(ay,by)-Math.abs(ux)*thickness/2,Math.max(ax,bx)+Math.abs(uy)*thickness/2,Math.max(ay,by)+Math.abs(ux)*thickness/2];
    if(!opening)obstacle(id+'-'+i,bounds,z0,z1);else{if(opening.bottom>z0+.01)obstacle(id+'-sill-'+i,bounds,z0,opening.bottom);if(opening.top<z1-.01)obstacle(id+'-header-'+i,bounds,opening.top,z1);}
@@ -59,7 +54,37 @@ function iconInteriorSetup({THREE,scene,house,data}) {
  };
  const opening = (start,end,bottom=0,top=2.35,glass=true) => ({start,end,bottom,top,glass});
  const contains = iconInteriorContains;
- return {THREE, scene, house, data, group, world, ring, navigation, mats, mesh, box, obstacle, floor, slab, beam, rail, wall, opening, contains};
+ return {THREE, scene, house, data, group, world, ring, navigation, mats, mesh, box, obstacle, floor, slab, beam, rail, wall, opening, contains, ceilingAt};
+}
+
+function iconInteriorWallGeometry(THREE,options) {
+ const {a,ux,uy,L,z0,z1,thickness,outer,holes,ceilingAt,sloped,external,nx,ny}=options;
+ const vertices=[],groups=[],cuts=[0,L,...outer.map(p=>p[0]),...holes.flatMap(p=>p.map(v=>v[0]))];
+ const point=(u,d,h)=>[a[0]+ux*u-uy*d,a[1]+uy*u+ux*d,h];
+ const height=(u,d,h)=>{const roof=ceilingAt(...point(u,d,0).slice(0,2));if(sloped)return Math.min(h,roof);const inner=external&&z0===2.8&&(-uy*d*nx+ux*d*ny)<0,top=bounds(outer,u,Math.max(1e-7,Math.min(L-1e-7,u)))?.[1];return inner&&Math.abs(h-top)<1e-6?roof:h;};
+ if(sloped||external&&z0===2.8)for(const d of [-thickness/2,thickness/2]){
+  const [x,y]=point(0,d,0);
+  for(const [offset,rate] of [[x-4.25,ux],[x-8.5,ux],[y-4.21,uy],[y-8.46,uy],[y-12.71,uy],[x-y+4.21,ux-uy],[x+y-12.71,ux+uy]])if(Math.abs(rate)>1e-9)cuts.push(-offset/rate);
+ }
+ const xs=[...new Set(cuts.filter(u=>u>=0&&u<=L))].sort((x,y)=>x-y);
+ const bounds=(polygon,u,mid)=>{
+  const edges=polygon.flatMap((p,i)=>{const q=polygon[(i+1)%polygon.length];if(mid>Math.min(p[0],q[0])&&mid<Math.max(p[0],q[0]))return [[p,q]];return [];});
+  const heights=edges.map(([p,q])=>p[1]+(q[1]-p[1])*(u-p[0])/(q[0]-p[0]));return heights.length?[Math.min(...heights),Math.max(...heights)]:null;
+ };
+ const bands=(u,mid)=>{const base=bounds(outer,u,mid);if(!base)return [];const openings=holes.map(p=>bounds(p,u,mid)).filter(Boolean).sort((x,y)=>x[0]-y[0]);let bottom=base[0];const result=[];for(const o of openings){if(o[0]>bottom+1e-8)result.push([bottom,o[0]]);bottom=Math.max(bottom,o[1]);}if(base[1]>bottom+1e-8)result.push([bottom,base[1]]);return result;};
+ const quad=(p,q,r,t,material=0)=>{const start=vertices.length/3;vertices.push(...p,...q,...r,...p,...r,...t);groups.push({start,count:6,material});};
+ for(let i=1;i<xs.length;i++){
+  const start=xs[i-1],end=xs[i];if(end-start<1e-8)continue;const mid=(start+end)/2,lo=bands(start,mid),hi=bands(end,mid);
+  for(let j=0;j<lo.length;j++){
+   for(const d of [-thickness/2,thickness/2]){const outside=external&&(-uy*d*nx+ux*d*ny)>0;quad(point(start,d,height(start,d,lo[j][0])),point(end,d,height(end,d,hi[j][0])),point(end,d,height(end,d,hi[j][1])),point(start,d,height(start,d,lo[j][1])),outside?1:0);}
+   for(const edge of [0,1]){const h0=lo[j][edge],h1=hi[j][edge];if(sloped&&edge===1&&h0===z1&&h1===z1)continue;quad(point(start,-thickness/2,height(start,-thickness/2,h0)),point(end,-thickness/2,height(end,-thickness/2,h1)),point(end,thickness/2,height(end,thickness/2,h1)),point(start,thickness/2,height(start,thickness/2,h0)));}
+  }
+ }
+ for(let i=0;i<xs.length;i++){
+  const u=xs[i],left=i?bands(u,(xs[i-1]+u)/2):[],right=i<xs.length-1?bands(u,(u+xs[i+1])/2):[],heights=[...new Set([...left.flat(),...right.flat()])].sort((x,y)=>x-y);
+  for(let j=1;j<heights.length;j++){const bottom=heights[j-1],top=heights[j],mid=(bottom+top)/2,solid=band=>band.some(([lo,hi])=>mid>lo&&mid<hi);if(solid(left)===solid(right))continue;quad(point(u,-thickness/2,height(u,-thickness/2,bottom)),point(u,thickness/2,height(u,thickness/2,bottom)),point(u,thickness/2,height(u,thickness/2,top)),point(u,-thickness/2,height(u,-thickness/2,top)));}
+ }
+ const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));for(const group of groups)geometry.addGroup(group.start,group.count,group.material);geometry.computeVertexNormals();return geometry;
 }
 
 function iconInteriorFloorsAndPartitions(context) {
@@ -68,10 +93,13 @@ function iconInteriorFloorsAndPartitions(context) {
  const stairHole=ring(data.stairs.box),livingHole=ring(data.void.box);
 
  navigation.floors.push({id:'ground',ring:data.exterior.ground.map(p=>world(p).slice(0,2)),z:0});
+ const upperOutline=[[0,0],[8.5,0],[8.5,4.21],[14.64,4.21],[14.64,12.71],[8.5,12.71],[8.5,12.21],[9.8,12.21],[9.8,9.23],[7.94,9.23],[7.94,10.3],[0,10.3]];
+ slab('upper-structure',upperOutline,[],2.8,.4,mats.ceiling);
+ slab('upper-oak-finish',upperOutline,[],3.2,.015,mats.oak);
  const xs=[...new Set([0,.5,7.94,8.5,9.8,14.64])].sort((a,b)=>a-b),ys=[0,4.21,9.23,10.3,12.21,12.71,17.63,18.13];
- for(let i=1;i<xs.length;i++)for(let j=1;j<ys.length;j++){const b=[xs[i-1],ys[j-1],xs[i],ys[j]],p=[(b[0]+b[2])/2,(b[1]+b[3])/2];if(contains(p,data.exterior.upper)&&!contains(p,stairHole)&&!contains(p,livingHole)){floor('upper-'+i+'-'+j,b,3.2);slab('upper-slab-'+i+'-'+j,ring(b),[],2.8,.4,mats.ceiling);slab('upper-finish-'+i+'-'+j,ring(b),[],3.2,.015,mats.oak);obstacle('upper-slab-'+i+'-'+j,b,2.8,3.2);navigation.obstacles[navigation.obstacles.length-1].kind='slab';}}
- for(const room of data.rooms){const z=room.id.startsWith('1.')?3.218:.018;if(room.finish==='tile')slab('finish-'+room.id,ring(room.box),[],z,.008,mats.tile);}
- for(const w of data.walls){const z=w.level?3.2:0,top=w.level?5.86:2.8;wall(w.id,w.a,w.b,z,top,w.thickness,w.doors.map(d=>opening(d[0],d[1],z,z+2.1,false)));}
+ for(let i=1;i<xs.length;i++)for(let j=1;j<ys.length;j++){const b=[xs[i-1],ys[j-1],xs[i],ys[j]],p=[(b[0]+b[2])/2,(b[1]+b[3])/2];if(contains(p,data.exterior.upper)&&!contains(p,stairHole)&&!contains(p,livingHole)){floor('upper-'+i+'-'+j,b,3.2);obstacle('upper-slab-'+i+'-'+j,b,2.8,3.2);navigation.obstacles[navigation.obstacles.length-1].kind='slab';}}
+ for(const room of data.rooms){const z=room.id.startsWith('1.')?3.215:0;if(room.finish==='tile')slab('finish-'+room.id,ring(room.box),[],z,.008,mats.tile);}
+ for(const w of data.walls){const z=w.level?3.2:0,top=w.level?8.3:2.8;wall(w.id,w.a,w.b,z,top,w.thickness,w.doors.map(d=>opening(d[0],d[1],z,z+2.1,false)));}
 }
 
 function iconInteriorFacades(context) {
@@ -97,10 +125,26 @@ function iconInteriorStairs(context) {
  box('stair-upper-riser-18',[ex-s.width,sy,ex,sy+.015],half+8*half/9,half/9,mats.oak);
  box('stair-landing',[sx,sy+run,ex,ey],half-.15,.15,mats.oak);floor('stair-landing',[sx,sy+run,ex,ey],half);
  navigation.ramps.push({id:'stair-lower',start:world([sx+s.width/2,sy]).slice(0,2),end:world([sx+s.width/2,sy+run]).slice(0,2),width:s.width,z0:0,z1:half},{id:'stair-upper',start:world([ex-s.width/2,sy+run]).slice(0,2),end:world([ex-s.width/2,sy]).slice(0,2),width:s.width,z0:half,z1:3.2});
- for(const [id,x,z0,z1] of [['lower',sx,0,half],['upper',ex,3.2,half]])beam('stair-handrail-'+id,[x,sy,z0+1.02],[x,sy+run,z1+1.02],.025);
+ for(const [id,x,z0,z1] of [['lower',sx,0,half],['upper',ex,3.2,half]]){
+  beam('stair-handrail-'+id,[x,sy,z0+1.05],[x,sy+run,z1+1.05],.025);
+  for(let i=0;i<8;i++){const t=i/8,y=sy+run*t,step=id==='lower'?Math.min(half,(i+1)*half/9):half+Math.min(half,(9-i)*half/9);beam('stair-'+id+'-baluster-'+i,[x,y,step],[x,y,z0+(z1-z0)*t+1.05],.017);}
+  rail('landing-'+id,[x,sy+run],[x,ey],half);
+ }
+ for(const [id,x0,x1,front,slope] of [['lower',sx+.09,sx+s.width-.09,-.06,half/9/s.tread],['upper',ex-s.width+.09,ex-.09,3.2-half/9-.06,-half/9/s.tread]])for(const [index,x] of [x0,x1].entries())iconInteriorStairStringer(context,'stair-stringer-'+id+'-'+index,x,sy,run,front,slope);
  rail('landing-back',[sx,ey],[ex,ey],half);
+ box('upper-void-rim',[4.84,10.23,8.01,10.37],3.02,.18,mats.wood);
+ box('upper-stair-rim',[7.87,10.3,8.01,12.28],3.02,.18,mats.wood);
+ box('upper-stair-rim-anchor',[7.94,12.14,9.87,12.28],3.02,.18,mats.wood);
  for(const guard of data.rails)rail(guard.id,guard.a,guard.b,guard.level?3.2:0);
  obstacle('stair-divider',[sx+s.width,sy,sx+s.width+s.gap,sy+run],0,3.2);
+}
+
+function iconInteriorStairStringer(context,id,x,y,run,front,slope) {
+ const {THREE,mesh,mats}=context,start=-.15,end=run+.3;
+ const shape=new THREE.Shape([new THREE.Vector2(start,front+start*slope),new THREE.Vector2(end,front+end*slope),new THREE.Vector2(end,front+end*slope-.16),new THREE.Vector2(start,front+start*slope-.16)]);
+ const geometry=new THREE.ExtrudeGeometry(shape,{depth:.12,bevelEnabled:false}),positions=geometry.getAttribute('position');
+ for(let i=0;i<positions.count;i++)positions.setXYZ(i,x+positions.getZ(i)-.06,y+positions.getX(i),positions.getY(i));
+ geometry.computeVertexNormals();mesh(geometry,mats.wood,id);
 }
 
 function iconInteriorFurnitureFrame(context, item) {
@@ -118,7 +162,7 @@ function iconInteriorFurnitureFrame(context, item) {
 
 function iconInteriorFurnitureBed(frame) {
  const {width:w,depth:d,part,mats}=frame;
- part('frame',[0,0,w,d],.15,.23);
+ part('frame',[0,.06,w,d],.15,.23);
  part('mattress',[.04,.08,w-.04,d-.02],.38,.21,mats.white);
  part('duvet',[.04,Math.min(.55,d*.3),w-.04,d-.02],.59,.09,mats.linen);
  for(const u of [.08,w/2+.03])part('pillow',[u,.12,u+w/2-.12,.48],.6,.09,mats.white);
@@ -139,7 +183,7 @@ function iconInteriorFurnitureSeating(frame) {
 
 function iconInteriorFurnitureStorage(frame) {
  const {item,width:w,depth:d,part,mats}=frame,h=item.height||2.2;
- part('body',[0,0,w,d],0,h,item.type==='appliance'?mats.white:mats.wood);
+ part('body',[0,0,w,d-.035],0,item.type==='counter'?h-.05:h,item.type==='appliance'?mats.white:mats.wood);
  if(item.type==='counter')part('top',[0,0,w,d],h-.05,.05,mats.counter);
  for(let u=.15;u<w;u+=.6)part('handle-'+u,[u,d-.035,Math.min(u+.025,w),d],Math.min(1,h*.55),Math.min(.3,h*.25),mats.dark);
 }
@@ -206,16 +250,13 @@ function iconInteriorFurnishings(context) {
 }
 
 function iconInteriorLightingAndRoof(context) {
- const {THREE, group, box, mats, navigation, contains, data, house, mesh} = context;
+ const {THREE, group, box, mats, navigation, contains, data, house, mesh, ceilingAt} = context;
  for(const [id,x,y,z] of [['living',4.4,14,2.5],['kitchen',4.3,10.5,2.55],['hall',8.3,8.4,2.55],['guest',12.6,7,2.55],['office',12,10.9,2.55],['upper-hall',5.6,7.5,5.6],['upper-one',4.3,2,5.6],['upper-two',3.2,7.6,5.6],['upper-master',11.7,10,5.6]]){const lamp=new THREE.PointLight('#fff0d6',12,5,2);lamp.position.set(x,y,z);lamp.castShadow=false;group.add(lamp);box('light-fixture-'+id,[x-.12,y-.12,x+.12,y+.12],z+.05,.04,mats.lamp);}
  const inverse=group.matrix.clone().invert();
  navigation.ceilingHeight = worldXY => {
   const p=new THREE.Vector3(worldXY[0],worldXY[1],0).applyMatrix4(inverse);
   if(!contains([p.x,p.y],data.exterior.upper))return Infinity;
-  const slope=(8.3-4.07)/4.25,heights=[];
-  if(p.x>=0&&p.x<=8.5)heights.push(8.3-slope*Math.abs(p.x-4.25));
-  if(p.x>=4.25&&p.y>=4.21&&p.y<=12.71)heights.push(8.3-slope*Math.abs(p.y-8.46));
-  return Math.max(...heights)-.045;
+  return ceilingAt(p.x,p.y);
  };
  for(const part of house.meshes.filter(m=>m.kind==='roof')){
   const vertices=part.vertices.map(v=>{const p=new THREE.Vector3(...v).applyMatrix4(inverse);return [p.x,p.y,p.z-.045];});

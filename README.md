@@ -131,3 +131,11 @@ Menu „Widoki i sterowanie” umożliwia wejście do /190 i /193. Willa Floryda
 Układ /193 porównano ponownie z rzutami wydawcy: poprawiono kierunki łóżek i sofy, szafy przy ścianach, wyposażenie kuchni i łazienek oraz pełną ścianę pokoju przy antresoli. Pozycje, gabaryty i kierunki mebli zapisano w plikach `trzy-domy-3d/interior-data.json` i `trzy-domy-3d/floryda-interior-data.json`, kontrolowanych odciskami w rejestrze. Rysunki rastrowe i symbole wyposażenia nie zapewniają dokładności wykonawczej; niepewności opisano w danych.
 
 Spacer działa w obu budynkach, z kolizjami ścian i stropów; /191 i /41 pozostają zamknięte. Zachowano sprint, skok oraz przyciski Przód/Tył na telefonie.
+
+## Poprawki wnętrz 2026-11-17.3
+
+Usunięto nakładające się powierzchnie trawy, podłóg, blatów i ram okiennych; podkłady map mają otwory pod oboma dostępnymi wnętrzami. Zakres głębokości kamery spaceru dopasowuje się do sceny.
+
+W /193 otwory drzwiowe są wycięte w rzeczywistej geometrii ścian, a ściany poddasza dochodzą do skosów. Przy stole jest sześć krzeseł, po trzy przy długich bokach, z odstępem siedziska od blatu 6 cm. Poprawiono ciągłość podłóg oraz podparcie i połączenia balustrad.
+
+Niezależny przegląd /190 objął wszystkie 21 pomieszczeń i porównanie z rzutami oraz przekrojem MG Projekt. Schody skorygowano do 12 + 6 podniesień ze spocznikiem +2,23 m; poprawiono otwór w stropie, przejście do pomieszczenia pod schodami, ścianę garderoby, wyposażenie i kierunki mebli. Usunięto nieobecne w rzucie boczne okno kuchni. Geometria ścian pod schodami i symbole wyposażenia pozostają przybliżeniem rysunków źródłowych.

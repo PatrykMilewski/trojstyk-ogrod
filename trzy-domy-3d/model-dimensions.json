@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-17.2",
+  "modelVersion": "2026-11-17.3",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1451,10 +1451,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "b967ebf892991498e646774f5a004b96e913e516819401991d6f0ab74b634fa0",
-    "proceduralCodeSha256": "b4182d064a2a7d6a8f62911dcd4a224ea4587691d18b768fb5d2ef7dc2da0e24",
+    "proceduralCodeSha256": "62dcf68a3728285ab275fc0c3e5fc5230f735829180a3a46e2b217a2720729f3",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "426140b9e29c7b44a98258b31e23e939a3789b4b671d8536079a11c746c93047",
-    "runtimeSha256": "4aaab1390d813bc608a9fe35e7d51eaf47a49c317ba58e6d91aca1480714414b"
+    "runtimeSha256": "661fd99c76b72439b0e3a837faa32273889661a74932d322926c002c3c714d39"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1464,7 +1464,8 @@
     "Touchpad: dwa palce przesuwają widok; Ctrl lub gest szczypnięcia zmienia zoom.",
     "Zachowano wymiary 23 obiektów ogrodu, drzew, ludzi i psów oraz kontekst /41, /192 i /133.",
     "Wnętrze /193: przejścia drzwiowe, schody na +3,20 m, ściany, pustka nad salonem i poglądowe meble. Sauna: wejście od podestu i okno 2 × 1,4 m.",
-    "Wnętrze /190 według Willa Floryda6: oba poziomy i schody +3,35m. Review /193: poprawione orientacje i pozycje mebli oraz pełna ściana przy antresoli. Inwentarze wyposażenia i ich źródła w kontrolowanych plikach danych."
+    "Wnętrze /190 według Willa Floryda6: oba poziomy i schody +3,35m. Review /193: poprawione orientacje i pozycje mebli oraz pełna ściana przy antresoli. Inwentarze wyposażenia i ich źródła w kontrolowanych plikach danych.",
+    "Usunięto nakładanie trawy/map i podłóg obu wnętrz, powierzchni blatów i ram. /193: otwarte drzwi, ściany do skosów, 6 krzeseł 6cm od stołu. /190: niezależny przegląd 21 pomieszczeń, schody 12+6 i spocznik +2,23m. Oba domy: podparte i połączone balustrady bez zdublowanych słupków."
   ],
   "contextParcels": [
     {
@@ -3255,7 +3256,9 @@
     "sprintMultiplier": 2.2,
     "sprintSpeedMPerSecond": 4.84,
     "jumpApexM": 0.6,
-    "gravityMPerSecondSquared": 9.81
+    "gravityMPerSecondSquared": 9.81,
+    "walkCameraNearM": 0.12,
+    "walkCameraFar": "Scene bounding corners plus 5m; minimum 50m, updated with walking position"
   },
   "northIndicator": {
     "centerLocalM": [
@@ -3277,7 +3280,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "d24ce0461f11256b86975917e97d10394af3ff8f6c79a6810e0d0c855af7783a",
+    "dataSha256": "657c16f4f680073bf79221475fd6db4a5f12c256408228c8e6ace975807192ec",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,
@@ -3287,12 +3290,14 @@
     "stairRises": 18,
     "stairFlightWidthM": 0.9,
     "stairTreadM": 0.26,
-    "reconstruction": "Publisher-plan review: corrected furniture orientation and wall contacts, missing Room2 void partition and hall-only railing; item bounds/orientations/source uncertainty pinned in data.",
-    "originalShell": "Original roof, garden piers, pergola and rooflights retained; solid walls replaced with doorway/window cutouts"
+    "reconstruction": "Publisher-plan review plus requested six dining chairs: continuous wall openings, floor slabs and roof-height partitions; supported stair rails and stringers. Raster uncertainty remains recorded in source data.",
+    "originalShell": "Original roof, garden piers, pergola and rooflights retained; solid walls replaced with doorway/window cutouts",
+    "diningChairs": 6,
+    "diningChairTableGapM": 0.06
   },
   "florydaInterior": {
     "dataFile": "floryda-interior-data.json",
-    "dataSha256": "620bd764cf15343df4f17eb4f85c082d7c7bb0895c4e67996ba7ef68052eb330",
+    "dataSha256": "c78f7f51a401dabbe5226358f5846ea5d0eb72d6c4faa53031978b6d573548f8",
     "source": "https://www.mgprojekt.com.pl/willa-floryda-6",
     "floorHeightsM": [
       0,
@@ -3302,6 +3307,10 @@
     "upperCeilingM": 6.05,
     "stairRises": 18,
     "stairTreadM": 0.27,
-    "reconstruction": "Rooms and furnishings traced from publisher plans; heights from section A-A. Raster uncertainty recorded per item. Current mirrored exterior placement retained."
+    "reconstruction": "Independent review of all 21 rooms against publisher plans and section: 12+6 stairs, landing +2.23m, L-shaped floor opening, utility access, dressing partitions, furniture orientation and omitted furnishings corrected. Under-stair build-up remains illustrative.",
+    "stairLowerRises": 12,
+    "stairUpperRises": 6,
+    "stairLandingHeightM": 2.23,
+    "stairLandingThicknessM": 0.2
   }
 }

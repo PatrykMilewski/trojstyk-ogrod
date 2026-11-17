@@ -5,7 +5,7 @@
   "description": "Interaktywny edytor wspólnego ogrodu",
   "scripts": {
     "build": "python3 scripts/build.py && python3 scripts/build-model-dimensions.py",
-    "check": "node --check src/app.js && node scripts/check-model-dimensions.mjs && node --test scripts/check-model-dimensions.test.mjs && node scripts/check-solar.mjs && node scripts/check-vegetation.mjs && node --test scripts/check-walk.mjs && node --test scripts/check-interior-walk.mjs && node --test scripts/check-interior-model.mjs && node --test scripts/check-multi-interior.mjs && node --test scripts/check-floryda-interior.mjs && node --test scripts/check-interior-furniture.mjs"
+    "check": "node --check src/app.js && node scripts/check-model-dimensions.mjs && node --test scripts/check-model-dimensions.test.mjs && node scripts/check-solar.mjs && node scripts/check-vegetation.mjs && node --test scripts/check-walk.mjs && node --test scripts/check-interior-walk.mjs && node --test scripts/check-interior-model.mjs && node --test scripts/check-multi-interior.mjs && node --test scripts/check-floryda-interior.mjs && node --test scripts/check-interior-furniture.mjs && node --test scripts/check-ground-surfaces.mjs && node --test scripts/check-icon-surfaces.mjs && node --test scripts/check-floryda-surfaces.mjs"
   },
   "dependencies": {
     "polygon-clipping": "^0.15.7"

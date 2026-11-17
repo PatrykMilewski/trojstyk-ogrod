@@ -53,9 +53,9 @@ function follow(motion,route,z=0) {
   assert(Math.abs(state.floorHeightM-(p[2]??z))<.015,`Wrong actual floor ${p}: ${state.floorHeightM}`);
  }
 }
-const stairRoute=[[7.44,7.14,0],[7.82,7.14,0],[9.98,7.14,upper/2],[10.5,7.14,upper/2],[10.5,8.31,upper/2],[9.98,8.31,upper/2],[7.82,8.31,upper],[7.44,8.31,upper]];
+const stairs=data.stairs,landing=stairs.landingHeight,stairRoute=[[7.44,7.14,0],[stairs.box[0],7.14,0],[stairs.landingStart,7.14,landing],[11.35,7.14,landing],[11.35,8.31,landing],[stairs.landingStart,8.31,landing],[stairs.upperStart,8.31,upper],[7.44,8.31,upper]];
 test('source levels and all twenty one source rooms are pinned',()=>{
- assert.equal(data.rooms.length,21);assert.equal(upper,3.35);assert.equal(data.metadata.levels.upperCeiling-upper,2.6999999999999997);
+ assert.equal(data.rooms.length,21);assert.equal(upper,3.35);assert.equal(stairs.landingHeight,2.23);assert.equal(stairs.lowerRises,12);assert.equal(stairs.upperRises,6);assert.equal(data.metadata.levels.upperCeiling-upper,2.6999999999999997);
  assert(data.furniture.every(f=>f.source.pixels.length===4&&f.source.position&&f.room&&Number.isFinite(f.angle)));
  assert.equal(group.name,'floryda-190-interior');
 });

@@ -42,7 +42,7 @@ function florydaInteriorContext({THREE,scene,house,data}) {
 }
 
 function florydaInteriorWall(c,w) {
- const {data,box,obstacle,mats,beam,mesh,THREE}=c;
+ const {data,box,obstacle,mats,mesh,THREE}=c;
  const dx=w.b[0]-w.a[0],dy=w.b[1]-w.a[1],L=Math.hypot(dx,dy),u=[dx/L,dy/L];
  const n=[-u[1],u[0]],a=w.external?[w.a[0]+n[0]*w.inset,w.a[1]+n[1]*w.inset]:w.a;
  const z=w.level?data.metadata.levels.upper:0,top=z+w.height;
@@ -61,32 +61,33 @@ function florydaInteriorWall(c,w) {
   else {segment(w.id+'-sill-'+i,lo,hi,z,z+o.bottom);segment(w.id+'-lintel-'+i,lo,hi,z+o.top,top);}
  }
  for(const o of w.openings) {
-  const pts=[[o.start,z+o.bottom],[o.start,z+o.top],[o.end,z+o.top],[o.end,z+o.bottom]];
-  for(let i=1;i<pts.length;i++)beam(o.id+'-frame-'+i,point(...pts[i-1]),point(...pts[i]),.022);
-  if(o.kind==='door')continue;
-  const end=o.open?(o.start+o.end)/2:o.end;
-  const vertices=[point(o.start,z+o.bottom),point(end,z+o.bottom),point(end,z+o.top),point(o.start,z+o.top)];
+  const frame=.045,depth=.07;
+  const framePart=(id,start,end,bottom,upper)=>{
+   const center=point((start+end)/2,0),m=box(o.id+'-frame-'+id,[-(end-start)/2,-depth/2,(end-start)/2,depth/2],bottom,upper-bottom,mats.dark);
+   m.position.x=center[0];m.position.y=center[1];m.rotation.z=Math.atan2(u[1],u[0]);
+  };
+  const low=z+o.bottom,high=z+o.top,door=o.kind==='door';
+  framePart('left',o.start,o.start+frame,low,high-frame);
+  framePart('right',o.end-frame,o.end,low,high-frame);
+  framePart('top',o.start,o.end,high-frame,high);
+  if(!door)framePart('bottom',o.start+frame,o.end-frame,low,low+frame);
+  if(door)continue;
+  const end=o.open?(o.start+o.end)/2:o.end-frame,start=o.start+frame,bottom=low+frame,top=high-frame;
+  const vertices=[point(start,bottom),point(end,bottom),point(end,top),point(start,top)];
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices.flat(),3));g.setIndex([0,1,2,0,2,3]);g.computeVertexNormals();
   mesh(o.id+'-glass',g,mats.glass).castShadow=false;
   const p=point(o.start,0),q=point(end,0),d=.025;
-  obstacle(o.id+'-pane',[[p[0]+n[0]*d,p[1]+n[1]*d],[q[0]+n[0]*d,q[1]+n[1]*d],[q[0]-n[0]*d,q[1]-n[1]*d],[p[0]-n[0]*d,p[1]-n[1]*d]],z+o.bottom,z+o.top,'glass');
+  obstacle(o.id+'-pane',[[p[0]+n[0]*d,p[1]+n[1]*d],[q[0]+n[0]*d,q[1]+n[1]*d],[q[0]-n[0]*d,q[1]-n[1]*d],[p[0]-n[0]*d,p[1]-n[1]*d]],low,high,'glass');
  }
 }
 
 function florydaInteriorStructure(c) {
- const {data,slab,mats,floor,ring,box,obstacle}=c;
- slab('floryda-ground-floor',data.exterior.ground,-.12,.12,mats.oak);floor('floryda-ground',data.exterior.ground,0);
+ const {data,slab,mats,box}=c;
+ florydaInteriorFloor(c,0);
+ florydaInteriorFloor(c,1);
  florydaInteriorPlinth(c);
  florydaInteriorTower(c);
- const s=data.stairs.box,upper=data.exterior.upper,z=data.metadata.levels.upper;
- const xs=[...new Set([...upper.map(p=>p[0]),s[0],s[2]])].sort((a,b)=>a-b),ys=[...new Set([...upper.map(p=>p[1]),s[1],s[3]])].sort((a,b)=>a-b);
- for(let i=1;i<xs.length;i++)for(let j=1;j<ys.length;j++) {
-  const b=[xs[i-1],ys[j-1],xs[i],ys[j]],p=[(b[0]+b[2])/2,(b[1]+b[3])/2];
-  if(!florydaInteriorInside(p,upper)||p[0]>s[0]&&p[0]<s[2]&&p[1]>s[1]&&p[1]<s[3])continue;
-  box('floryda-upper-slab-'+i+'-'+j,b,3,z-3,mats.wall);box('floryda-upper-finish-'+i+'-'+j,b,z,.012,mats.oak);
-  floor('floryda-upper-'+i+'-'+j,ring(b),z);obstacle('floryda-slab-'+i+'-'+j,ring(b),3,z,'slab');
- }
- for(const r of data.rooms)if(r.finish==='tile')box('floryda-tile-'+r.id,r.box,(r.level?z:0)+.013,.006,mats.tile);
+ const upper=data.exterior.upper;
  slab('floryda-upper-ceiling',upper,data.metadata.levels.upperCeiling,.14,mats.wall);
  for(const w of data.walls)florydaInteriorWall(c,w);
  for(const [level,key] of [[0,'ground'],[1,'upper']]) {
@@ -98,6 +99,36 @@ function florydaInteriorStructure(c) {
   const cornice=data.replacementCornice,d=cornice.width/2;
   const m=box('floryda-replacement-cornice-'+i,[-L/2,-d,L/2,d],cornice.bottom,cornice.height,mats.white);
   m.position.x=(a[0]+b[0])/2-dy/L*d;m.position.y=(a[1]+b[1])/2+dx/L*d;m.rotation.z=Math.atan2(dy,dx);
+ }
+}
+
+function florydaInteriorFloor(c,level) {
+ const {THREE,data,mesh,mats,floor,ring,obstacle}=c,polygon=data.exterior[level?'upper':'ground'];
+ const z=level?data.metadata.levels.upper:0,tiles=data.rooms.filter(r=>r.level===level&&r.finish==='tile');
+ const shape=holes=>{
+  const outline=new THREE.Shape(polygon.map(p=>new THREE.Vector2(...p)));
+  for(const hole of holes)outline.holes.push(new THREE.Path(hole.map(p=>new THREE.Vector2(...p))));
+  return outline;
+ };
+ const stairHoles=level?[data.stairs.opening]:[];
+ const depth=level?z-3:.12,geometry=new THREE.ExtrudeGeometry(shape(stairHoles),{depth,bevelEnabled:false}),positions=geometry.attributes.position,vertices=[];
+ for(let i=0;i<positions.count;i+=3) {
+  if([0,1,2].every(j=>Math.abs(positions.getZ(i+j)-depth)<.000001))continue;
+  for(let j=0;j<3;j++)vertices.push(positions.getX(i+j),positions.getY(i+j),positions.getZ(i+j));
+ }
+ const shell=new THREE.BufferGeometry();shell.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));shell.computeVertexNormals();
+ const base=mesh('floryda-'+(level?'upper':'ground')+'-floor',shell,mats.wall);
+ base.position.z=level?3:-.12;
+ const oak=mesh('floryda-'+(level?'upper':'ground')+'-finish',new THREE.ShapeGeometry(shape([...stairHoles,...tiles.map(r=>r.finishPolygon??ring(r.box))])),mats.oak);oak.position.z=z;
+ for(const room of tiles) {
+  const finish=mesh('floryda-tile-'+room.id,new THREE.ShapeGeometry(new THREE.Shape((room.finishPolygon??ring(room.box)).map(p=>new THREE.Vector2(...p)))),mats.tile);finish.position.z=z;
+ }
+ if(!level){floor('floryda-ground',polygon,z);return;}
+ const opening=data.stairs.opening,xs=[...new Set([...polygon.map(p=>p[0]),...opening.map(p=>p[0])])].sort((a,b)=>a-b),ys=[...new Set([...polygon.map(p=>p[1]),...opening.map(p=>p[1])])].sort((a,b)=>a-b);
+ for(let i=1;i<xs.length;i++)for(let j=1;j<ys.length;j++) {
+  const b=[xs[i-1],ys[j-1],xs[i],ys[j]],p=[(b[0]+b[2])/2,(b[1]+b[3])/2];
+  if(!florydaInteriorInside(p,polygon)||florydaInteriorInside(p,opening))continue;
+  floor('floryda-upper-'+i+'-'+j,ring(b),z);obstacle('floryda-slab-'+i+'-'+j,ring(b),3,z,'slab');
  }
 }
 
@@ -118,70 +149,126 @@ function florydaInteriorPlinth({data,box,mats}) {
 }
 
 function florydaInteriorStaircase(c) {
- const {data,box,mats,ring,floor,navigation,world,beam,obstacle}=c,s=data.stairs;
- const [x0,y0,x1,y1]=s.box,run=8*s.tread,half=s.floorHeight/2,step=half/9;
- for(let i=0;i<8;i++) {
-  box('floryda-stair-lower-'+i,[x0+i*s.tread,y0,x0+(i+1)*s.tread,y0+s.width],i*step,step,mats.oak);
-  box('floryda-stair-upper-'+i,[x0+(7-i)*s.tread,y1-s.width,x0+(8-i)*s.tread,y1],half+i*step,step,mats.oak);
- }
- box('floryda-stair-lower-last',[x0+run-.015,y0,x0+run,y0+s.width],8*step,step,mats.oak);
- box('floryda-stair-upper-last',[x0,y1-s.width,x0+.015,y1],half+8*step,step,mats.oak);
- box('floryda-stair-landing',[x0+run,y0,x1,y1],half-.14,.14,mats.oak);floor('floryda-stair-landing',ring([x0+run,y0,x1,y1]),half);
- navigation.ramps.push({id:'floryda-stair-lower',start:world([x0,y0+s.width/2]).slice(0,2),end:world([x0+run,y0+s.width/2]).slice(0,2),width:s.width,z0:0,z1:half},{id:'floryda-stair-upper',start:world([x0+run,y1-s.width/2]).slice(0,2),end:world([x0,y1-s.width/2]).slice(0,2),width:s.width,z0:half,z1:s.floorHeight});
- for(const [id,y,za,zb] of [['lower',y0,0,half],['upper',y1,s.floorHeight,half]])beam('floryda-handrail-'+id,[x0,y,za+1],[x0+run,y,zb+1]);
- beam('floryda-landing-rail',[x1,y0,half+1],[x1,y1,half+1]);
- obstacle('floryda-stair-divider',ring([x0,y0+s.width,x0+run,y1-s.width]),0,s.floorHeight,'rail');
- obstacle('floryda-landing-rail',ring([x1-.025,y0,x1+.025,y1]),half,half+1.05,'rail');
+ const {data,box,mats,ring,floor,navigation,world,obstacle}=c,s=data.stairs;
+ const [x0,y0,x1,y1]=s.box,end=s.landingStart,landing=s.landingHeight;
+ florydaInteriorFlight(c,'lower',x0,end,y0,s.width,0,landing,s.lowerRises);
+ florydaInteriorFlight(c,'upper',end,s.upperStart,y1-s.width,s.width,landing,s.floorHeight,s.upperRises);
+ box('floryda-stair-landing',[end,y0,x1,y1],landing-.20,.20,mats.oak);floor('floryda-stair-landing',ring([end,y0,x1,y1]),landing);
+ navigation.ramps.push({id:'floryda-stair-lower',start:world([x0,y0+s.width/2]).slice(0,2),end:world([end,y0+s.width/2]).slice(0,2),width:s.width,z0:0,z1:landing},{id:'floryda-stair-upper',start:world([end,y1-s.width/2]).slice(0,2),end:world([s.upperStart,y1-s.width/2]).slice(0,2),width:s.width,z0:landing,z1:s.floorHeight});
+ florydaInteriorStairRails(c);
+ obstacle('floryda-stair-divider',ring([x0,y0+s.width,end,y1-s.width]),0,s.floorHeight,'rail');
+ obstacle('floryda-landing-rail',ring([x1-.025,y0,x1+.025,y1]),landing,landing+1.05,'rail');
+}
+
+function florydaInteriorFlight(c,id,start,end,y,width,bottom,top,rises) {
+ const {THREE,mesh,mats}=c,step=(top-bottom)/rises,tread=(end-start)/(rises-1),points=[[start,bottom+step]];
+ for(let i=1;i<rises;i++){points.push([start+i*tread,bottom+i*step]);if(i<rises-1)points.push([start+i*tread,bottom+(i+1)*step]);}
+ points.push([end,top-step-.16],[start,bottom-.16]);
+ const shape=new THREE.Shape(points.map(p=>new THREE.Vector2(...p))),geometry=new THREE.ExtrudeGeometry(shape,{depth:width,bevelEnabled:false});geometry.rotateX(Math.PI/2);
+ const flight=mesh('floryda-stair-'+id+'-flight',geometry,mats.oak);flight.position.y=y+width;flight.userData.stair={rises,treads:rises-1,bottom,top};
+}
+
+function florydaInteriorStairRails(c) {
+ const {data,beam,obstacle,ring}=c,s=data.stairs,[x0,y0,x1,y1]=s.box,end=s.landingStart,landing=s.landingHeight;
+ const posts=new Set();
+ const rail=(id,a,b,baseAt)=>{
+  const topA=[a[0],a[1],a[2]+1],topB=[b[0],b[1],b[2]+1];
+  const handrail=beam('floryda-handrail-'+id,topA,topB,.028);handrail.userData.rail={a:topA,b:topB};
+  const count=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/.12);
+  for(let i=0;i<=count;i++) {
+   const t=i/count,x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t,bottom=baseAt(t,x,y),top=a[2]+(b[2]-a[2])*t+1;
+   const key=[x,y,bottom,top].map(v=>v.toFixed(6)).join(',');if(posts.has(key))continue;posts.add(key);
+   const post=beam('floryda-rail-'+id+'-post-'+i,[x,y,bottom],[x,y,top],i%4===0||i===count?.025:.012);
+   post.userData.railAnchor={position:[x,y,bottom],top:[x,y,top],support:id};
+  }
+ };
+ const lowerAt=(t,x)=>t===1?landing:(Math.floor((x-x0)/s.tread)+1)*landing/s.lowerRises;
+ const upperAt=(t,x)=>x<s.upperStart+.00001?s.floorHeight:t===1?landing:landing+(Math.floor((end-x)/s.tread)+1)*(s.floorHeight-landing)/s.upperRises;
+ for(const [id,y] of [['lower-outer',y0+.045],['lower-inner',y0+s.width-.045]])rail(id,[x0+.035,y,0],[end,y,landing],lowerAt);
+ for(const [id,y] of [['upper-outer',y1-.045],['upper-inner',y1-s.width+.045]])rail(id,[s.upperStart-.035,y,s.floorHeight],[end,y,landing],upperAt);
+ const lo=y0+.045,hi=y1-.045,far=x1-.045;
+ rail('landing-low',[end,lo,landing],[far,lo,landing],()=>landing);
+ rail('landing-end',[far,lo,landing],[far,hi,landing],()=>landing);
+ rail('landing-high',[far,hi,landing],[end,hi,landing],()=>landing);
+ rail('turn',[end,y0+s.width-.045,landing],[end,y1-s.width+.045,landing],()=>landing);
+ rail('upper-floor-edge',[x0-.035,y0,s.floorHeight],[x0-.035,y1-s.width+.045,s.floorHeight],()=>s.floorHeight);
+ rail('upper-floor-return',[x0-.035,y1-s.width+.045,s.floorHeight],[s.upperStart-.035,y1-s.width+.045,s.floorHeight],()=>s.floorHeight);
+ obstacle('floryda-upper-floor-guard',ring([x0-.06,y0,x0-.01,y1-s.width]),s.floorHeight,s.floorHeight+1.03,'rail');
+ obstacle('floryda-upper-floor-return',ring([x0,y1-s.width+.01,s.upperStart,y1-s.width+.06]),s.floorHeight,s.floorHeight+1.03,'rail');
 }
 
 function florydaInteriorFurniture(c) {
  const {data,box,mats,obstacle,ring}=c;
  for(const f of data.furniture) {
-  const b=f.bounds,[x0,y0,x1,y1]=b,z=f.level?data.metadata.levels.upper:0,h=f.height,dx=x1-x0,dy=y1-y0;
-  const part=(name,r,a,height,mat)=>box('floryda-'+f.id+'-'+name,r,z+a,height,mat);
+  const diagonal=f.kind==='chair'&&Math.abs(f.angle)%90!==0,center=[(f.bounds[0]+f.bounds[2])/2,(f.bounds[1]+f.bounds[3])/2];
+  const b=diagonal?f.bounds.map((v,i)=>center[i%2]+(v-center[i%2])/Math.SQRT2):f.bounds,[x0,y0,x1,y1]=b,z=f.level?data.metadata.levels.upper:0,h=f.height,dx=x1-x0,dy=y1-y0;
+  const part=(name,r,a,height,mat)=>{
+   const m=box('floryda-'+f.id+'-'+name,r,z+a,height,mat);
+   if(diagonal){const angle=f.angle*Math.PI/180,dx=m.position.x-center[0],dy=m.position.y-center[1];m.position.x=center[0]+Math.cos(angle)*dx-Math.sin(angle)*dy;m.position.y=center[1]+Math.sin(angle)*dx+Math.cos(angle)*dy;m.rotation.z=angle;}
+   return m;
+  };
   const inset=(v=.04)=>[x0+v,y0+v,x1-v,y1-v];
   const edge=(side,depth)=>side==='xMin'?[x0,y0,x0+depth,y1]:side==='xMax'?[x1-depth,y0,x1,y1]:side==='yMax'?[x0,y1-depth,x1,y1]:[x0,y0,x1,y0+depth];
   const legs=height=>{for(const x of [x0+.07,x1-.07])for(const y of [y0+.07,y1-.07])part('leg-'+x+'-'+y,[x-.025,y-.025,x+.025,y+.025],0,height,mats.dark);};
-  const item={f,b,x0,y0,x1,y1,z,h,dx,dy,part,inset,edge,legs,mats};
+  const item={f,b,x0,y0,x1,y1,z,h,dx,dy,part,inset,edge,legs,mats,c};
   if(['table','desk','island','counter','bench','bed','sofa','chair'].includes(f.kind))florydaInteriorSeating(item);
   else if(['sink','toilet','shower','tub'].includes(f.kind))florydaInteriorSanitary(item);
   else florydaInteriorStorage(item);
-  if(f.kind!=='hob'&&f.collision!==false)obstacle('floryda-furniture-'+f.id,ring(b),z,z+h,'furniture');
+  if(f.kind!=='hob'&&f.collision!==false)obstacle('floryda-furniture-'+f.id,ring(f.bounds),z,z+h,'furniture');
  }
 }
 
 function florydaInteriorSeating(item) {
- const {f,b,x0,y0,x1,y1,h,dx,dy,part,inset,edge,legs,mats}=item;
+ const {f,b,x0,y0,x1,y1,h,dx,dy,part,inset,edge,legs,mats,c}=item;
   if(['table','desk','island','counter','bench'].includes(f.kind)) {
    if(['island','counter','bench'].includes(f.kind))part('base',inset(),0,h-.05,mats.wood);else legs(h-.06);
-   part('top',b,h-.06,.06,mats.wood);
-   if(f.kind==='desk')part('monitor',[x0+dx*.35,y0+dy*.35,x0+dx*.65,y0+dy*.4],h,.35,mats.dark);
+   const cutouts=c.data.furniture.filter(o=>o.kind==='sink'&&o.level===f.level&&o.collision===false&&o.bounds[0]>x0&&o.bounds[2]<x1&&o.bounds[1]>y0&&o.bounds[3]<y1);
+   if(cutouts.length) {
+    const shape=new c.THREE.Shape(c.ring(b).map(p=>new c.THREE.Vector2(...p)));
+    for(const sink of cutouts)shape.holes.push(new c.THREE.Path(c.ring(sink.bounds).map(p=>new c.THREE.Vector2(...p))));
+    const top=c.mesh('floryda-'+f.id+'-top',new c.THREE.ExtrudeGeometry(shape,{depth:.06,bevelEnabled:false}),mats.wood);top.position.z=item.z+h-.06;
+   } else part('top',b,h-.06,.06,mats.wood);
+   if(f.kind==='desk')part('monitor',f.front?.startsWith('x')?[x0+dx*.35,y0+dy*.35,x0+dx*.4,y0+dy*.65]:[x0+dx*.35,y0+dy*.35,x0+dx*.65,y0+dy*.4],h,.35,mats.dark);
   } else if(f.kind==='bed') {
-   part('frame',b,.12,.22,mats.wood);part('mattress',inset(),.34,.22,mats.white);part('duvet',[x0+.04,y0+dy*.3,x1-.04,y1-.04],.56,.08,mats.linen);
    const rotated=f.angle===90;
+   part('frame',rotated?[x0+.07,y0,x1,y1]:[x0,y0+.07,x1,y1],.12,.22,mats.wood);part('mattress',rotated?[x0+.075,y0+.04,x1-.04,y1-.04]:[x0+.04,y0+.075,x1-.04,y1-.04],.34,.22,mats.white);part('duvet',[x0+.04,y0+dy*.3,x1-.04,y1-.04],.56,.08,mats.linen);
    part('headboard',rotated?[x0,y0,x0+.07,y1]:[x0,y0,x1,y0+.07],.12,.85,mats.wood);
    part('pillows',rotated?[x0+.08,y0+.08,x0+dx*.24,y1-.08]:[x0+.08,y0+.08,x1-.08,y0+dy*.24],.57,.1,mats.white);
   } else if(f.kind==='sofa') {
    part('base',b,.08,.34,mats.sofa);part('cushions',inset(.03),.42,.14,mats.linen);
-   part('back',f.back==='yMin'?[x0,y0,x1,y0+.16]:[x0,y0,x0+.16,y1],.42,h-.42,mats.sofa);
+   part('back',edge(f.back,.16),.42,h-.42,mats.sofa);
   } else if(f.kind==='chair') {
    legs(Math.min(.45,h-.15));part('seat',b,Math.min(.45,h-.15),.07,mats.linen);
-   part('back',edge(f.back,.07),.5,Math.max(.1,h-.5),mats.wood);
+   part('back',edge(f.back,.07),.52,Math.max(.1,h-.52),mats.wood);
   }
 }
 
 function florydaInteriorSanitary(item) {
  const {f,b,x0,y0,x1,y1,h,dx,dy,part,inset,edge,mats}=item;
   if(f.kind==='sink') {
-   part('vanity',b,0,h-.1,mats.wood);part('basin',inset(.02),h-.1,.1,mats.white);
-   part('water',[x0+dx*.25,y0+dy*.25,x1-dx*.25,y1-dy*.25],h-.015,.007,mats.water);
+   const bottom=h-.15,count=f.basins??1;
+   if(f.collision!==false)part('vanity',b,0,bottom,mats.wood);
+   for(let i=0;i<count;i++) {
+    const bounds=[...b],axis=dx>dy?0:1;bounds[axis]=b[axis]+(b[axis+2]-b[axis])*i/count;bounds[axis+2]=b[axis]+(b[axis+2]-b[axis])*(i+1)/count;
+    const [left,front,right,back]=bounds,d=Math.min(right-left,back-front)*.13;
+    part('basin-'+i+'-bottom',[left+d,front+d,right-d,back-d],bottom,.025,mats.white);
+    part('basin-'+i+'-left',[left,front,left+d,back],bottom,h-bottom,mats.white);
+    part('basin-'+i+'-right',[right-d,front,right,back],bottom,h-bottom,mats.white);
+    part('basin-'+i+'-front',[left+d,front,right-d,front+d],bottom,h-bottom,mats.white);
+    part('basin-'+i+'-back',[left+d,back-d,right-d,back],bottom,h-bottom,mats.white);
+    part('water-'+i,[left+d+.005,front+d+.005,right-d-.005,back-d-.005],bottom+.035,.007,mats.water);
+   }
   } else if(f.kind==='toilet') {
    part('pedestal',inset(.03),0,.38,mats.white);part('seat',b,.38,.06,mats.white);
    if(h>.6)part('cistern',edge(f.back,Math.min(dx,dy)*.25),.44,h-.44,mats.white);
   } else if(f.kind==='shower') {
    part('tray',b,0,.04,mats.white);part('screen',[x1-.015,y0,x1,y1],.04,h-.04,mats.glass).castShadow=false;
   } else if(f.kind==='tub') {
-   part('shell',b,0,h,mats.white);part('water',inset(.09),h-.03,.01,mats.water);
+   const d=.09;
+   part('bottom',inset(d),0,.08,mats.white);
+   part('left',[x0,y0,x0+d,y1],0,h,mats.white);part('right',[x1-d,y0,x1,y1],0,h,mats.white);
+   part('front',[x0+d,y0,x1-d,y0+d],0,h,mats.white);part('back',[x0+d,y1-d,x1-d,y1],0,h,mats.white);
+   part('water',inset(d+.005),h-.09,.01,mats.water);
   }
 }
 
@@ -197,17 +284,22 @@ function florydaInteriorStorage(item) {
    if(f.kind==='cabinet') {
     const alongX=f.front.startsWith('y'),length=alongX?dx:dy,count=Math.max(1,Math.round(length/.6));
     for(let i=0;i<count;i++) {
-     const t=(i+.5)/count,panel=edge(f.front,.025),position=(alongX?x0:y0)+length*t;
+     const t=(i+.5)/count,panel=florydaExteriorPanel(edge(f.front,.025),f.front),position=(alongX?x0:y0)+length*t;
      if(alongX){panel[0]=position-.012;panel[2]=position+.012;}else{panel[1]=position-.012;panel[3]=position+.012;}
      part('handle-'+i,panel,h*.45,.22,mats.dark);
     }
    }
    if(f.kind==='laundry') {
-    const panel=edge(f.front,.025);
+    const panel=florydaExteriorPanel(edge(f.front,.025),f.front);
     if(f.front.startsWith('y')){panel[0]+=dx*.2;panel[2]-=dx*.2;}else{panel[1]+=dy*.2;panel[3]-=dy*.2;}
     part('door',panel,.25,.4,mats.dark);
    }
   }
+}
+
+function florydaExteriorPanel(b,front) {
+ const axis=front.startsWith('x')?0:1,sign=front.endsWith('Min')?-1:1,offset=sign*.03;
+ return b.map((v,i)=>i%2===axis?v+offset:v);
 }
 
 function florydaInteriorLights({THREE,group,data,box,mats}) {

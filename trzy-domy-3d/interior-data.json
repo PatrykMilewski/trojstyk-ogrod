@@ -672,7 +672,8 @@
       "Ground main-side glazing traced to y9.23–12.23m; terrace glazing traced to y13.90–16.60m. These refine openings only, preserving the exterior envelope.",
       "Private bathroom front sanitary fixture symbols overlap a rooflight in the public plan. Shower and WC remain explicit approximations; two wall basins follow the visible source.",
       "Furniture under roof slopes uses schematic heights; source footprints and wall contacts are more reliable than catalogue symbol sizes. No unsupported furniture is inferred from rooflight symbols.",
-      "Shared upper bathroom doorway refined to y4.64–5.54m against the source opening, leaving the shower approach clear."
+      "Shared upper bathroom doorway refined to y4.64–5.54m against the source opening, leaving the shower approach clear.",
+      "Dining seating is the user-requested six-chair override: three chairs per long side, pulled to 6cm from the table edge, instead of eight catalogue chairs."
     ],
     "furnitureSources": {
       "ground-plan": "work/sources/icon-parter-zwykly.jpg, publisher original ground floor, rooms 0.1–0.9",
@@ -982,9 +983,9 @@
       "type": "chair",
       "room": "0.4",
       "box": [
-        4.91,
+        5.05,
         13.129999999999999,
-        5.35,
+        5.489999999999999,
         13.57
       ],
       "facing": "+x",
@@ -995,9 +996,9 @@
       "type": "chair",
       "room": "0.4",
       "box": [
-        6.8500000000000005,
+        6.710000000000001,
         13.129999999999999,
-        7.29,
+        7.15,
         13.57
       ],
       "facing": "-x",
@@ -1008,9 +1009,9 @@
       "type": "chair",
       "room": "0.4",
       "box": [
-        4.91,
+        5.05,
         14.08,
-        5.35,
+        5.489999999999999,
         14.520000000000001
       ],
       "facing": "+x",
@@ -1021,9 +1022,9 @@
       "type": "chair",
       "room": "0.4",
       "box": [
-        6.8500000000000005,
+        6.710000000000001,
         14.08,
-        7.29,
+        7.15,
         14.520000000000001
       ],
       "facing": "-x",
@@ -1034,9 +1035,9 @@
       "type": "chair",
       "room": "0.4",
       "box": [
-        4.91,
+        5.05,
         15.03,
-        5.35,
+        5.489999999999999,
         15.47
       ],
       "facing": "+x",
@@ -1047,38 +1048,12 @@
       "type": "chair",
       "room": "0.4",
       "box": [
-        6.8500000000000005,
+        6.710000000000001,
         15.03,
-        7.29,
+        7.15,
         15.47
       ],
       "facing": "-x",
-      "source": "ground-plan"
-    },
-    {
-      "id": "dining-front",
-      "type": "chair",
-      "room": "0.4",
-      "box": [
-        5.88,
-        12.36,
-        6.319999999999999,
-        12.8
-      ],
-      "facing": "+y",
-      "source": "ground-plan"
-    },
-    {
-      "id": "dining-rear",
-      "type": "chair",
-      "room": "0.4",
-      "box": [
-        5.88,
-        15.799999999999999,
-        6.319999999999999,
-        16.24
-      ],
-      "facing": "-y",
       "source": "ground-plan"
     },
     {

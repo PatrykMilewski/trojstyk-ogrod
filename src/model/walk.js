@@ -312,11 +312,28 @@ function walkButtons(button, isActive, enter, exit) {
   }, true);
 }
 
-function createWalkView(THREE, requestDraw) {
-  const perspective = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, .06, 5000);
+export function createWalkDepthGuard(THREE, camera, scene) {
+  const bounds = scene ? new THREE.Box3().setFromObject(scene) : null;
+  const corners = [];
+  if (bounds && !bounds.isEmpty()) {
+    for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) {
+      for (const z of [bounds.min.z, bounds.max.z]) corners.push(new THREE.Vector3(x, y, z));
+    }
+  }
+  return () => {
+    camera.near = .12;
+    camera.far = corners.length ? Math.max(50, ...corners.map(point => point.distanceTo(camera.position) + 5)) : 1000;
+    camera.updateProjectionMatrix();
+  };
+}
+
+function createWalkView(THREE, requestDraw, scene) {
+  const perspective = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, .12, 1000);
   perspective.up.set(0, 0, 1);
+  const fitDepth = createWalkDepthGuard(THREE, perspective, scene);
   let yaw = 0, pitch = 0;
   function updateLook() {
+    fitDepth();
     const direction = new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.cos(yaw) * Math.cos(pitch), Math.sin(pitch));
     perspective.lookAt(perspective.position.clone().add(direction)); perspective.updateMatrixWorld(true); requestDraw();
   }
@@ -334,8 +351,8 @@ export function mergeInteriorNavigation(interiors) {
     ceilingHeight: point => Math.min(Infinity, ...sources.map(({ navigation }) => navigation.ceilingHeight?.(point) ?? Infinity)) };
 }
 
-export function setupWalk({ THREE, house, neighbors, camera, controls, renderer, requestDraw, onCameraChange, button, interior, interiors }) {
-  const view = createWalkView(THREE, requestDraw), perspective = view.camera;
+export function setupWalk({ THREE, scene, house, neighbors, camera, controls, renderer, requestDraw, onCameraChange, button, interior, interiors }) {
+  const view = createWalkView(THREE, requestDraw, scene), perspective = view.camera;
   const sources = interiors ?? [{ parcel: '193', navigation: interior?.navigation }];
   const navigation = mergeInteriorNavigation(sources);
   const navigableParcels = new Set(sources.filter(item => item.navigation).map(item => item.parcel));

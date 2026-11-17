@@ -7,14 +7,13 @@ function mapTexture(THREE, url) {
   });
 }
 
-async function mapPlane({THREE, scene, asset, bounds, z, transparent = false, unlit = false, requestDraw}) {
+async function mapPlane({THREE, scene, asset, bounds, z, transparent = false, unlit = false, requestDraw, groundExclusions = []}) {
   const texture = await mapTexture(THREE, asset);
   const Material = transparent || unlit ? THREE.MeshBasicMaterial : THREE.MeshStandardMaterial;
   const material = new Material({map: texture, transparent, depthWrite: !transparent, depthTest: !transparent,
     side: THREE.DoubleSide, ...(transparent || unlit ? {toneMapped: false} : {roughness: 1})});
-  const [left, bottom, right, top] = bounds;
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(right-left, top-bottom), material);
-  mesh.position.set((left+right)/2, (bottom+top)/2, z);
+  const mesh = new THREE.Mesh(mapGroundGeometry(THREE, bounds, groundExclusions), material);
+  mesh.position.z = z;
   mesh.receiveShadow = !transparent;
   mesh.name = 'map-overlay';
   scene.add(mesh);
@@ -60,17 +59,16 @@ function mapControls(container, apply, focus, metadata) {
   };
 }
 
-function plainMapGround(THREE, scene, bounds) {
-  const [left, bottom, right, top] = bounds;
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(right-left, top-bottom),
+function plainMapGround(THREE, scene, bounds, groundExclusions) {
+  const ground = new THREE.Mesh(mapGroundGeometry(THREE, bounds, groundExclusions),
     new THREE.MeshStandardMaterial({color:'#bec7a5',roughness:1,side:THREE.DoubleSide}));
-  ground.position.set((left+right)/2,(bottom+top)/2,-.018);
+  ground.position.z = -.018;
   ground.name='plain-surrounding-ground'; ground.receiveShadow=true; scene.add(ground);
   return ground;
 }
 
-async function setupMapLayers({THREE, scene, requestDraw, container, camera, controls, data, onChange = () => {}}) {
-  const shared = {THREE, scene, requestDraw};
+async function setupMapLayers({THREE, scene, requestDraw, container, camera, controls, data, groundExclusions = [], onChange = () => {}}) {
+  const shared = {THREE, scene, requestDraw, groundExclusions};
   const [ortho, height, water, electricity] = await Promise.all([
     mapPlane({...shared, asset: data.assets.ortho, bounds: data.orthoBounds, z: -.015}),
     mapPlane({...shared, asset: data.assets.height, bounds: data.orthoBounds, z: .025, unlit: true}),
@@ -78,7 +76,7 @@ async function setupMapLayers({THREE, scene, requestDraw, container, camera, con
     mapPlane({...shared, asset: data.assets.electricity, bounds: data.utilityBounds, z: .145, transparent: true}),
   ]);
   const boundary = utilityCircle(THREE, scene, data.utilityCenter, data.utilityRadiusM);
-  const plain = plainMapGround(THREE, scene, data.orthoBounds);
+  const plain = plainMapGround(THREE, scene, data.orthoBounds, groundExclusions);
   let state, syncControls;
   function apply(next) {
     state = {...state,...next}; next=state;

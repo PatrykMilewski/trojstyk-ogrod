@@ -67,7 +67,11 @@ test('rendered bed heads and sofa backs follow publisher orientation', () => {
 
 test('dining chairs face the table and kitchen has three correctly oriented stools', () => {
   const center = itemBounds('dining-table').getCenter(new THREE.Vector3());
-  for (const item of data.furniture.filter(item => item.id.startsWith('dining-') && item.type === 'chair')) {
+  const diningChairs = data.furniture.filter(item => item.id.startsWith('dining-') && item.type === 'chair');
+  assert.equal(diningChairs.length, 6, 'User override: exactly six dining chairs');
+  const table = furniture.get('dining-table');
+  for (const item of diningChairs) {
+    close(item.id.startsWith('dining-left-') ? table.box[0] - item.box[2] : item.box[0] - table.box[2], .06, item.id + ' is pulled close to table');
     const back = partCenter(item.id, 'back'), seat = partCenter(item.id, 'seat');
     assert(seat.distanceTo(center) < back.distanceTo(center), item.id + ' faces dining table');
   }

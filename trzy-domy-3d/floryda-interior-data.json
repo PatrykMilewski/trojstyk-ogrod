@@ -25,8 +25,8 @@
       "Upper catalogue raster rectified to shared exterior envelope: ground-equivalent pixelX=250+(px-227)*505/508, pixelY=170+(py-199)*480/462. Common stair and rear wall anchors agree within approximately0.10m.",
       "Heights of furniture, finishes and colours are illustrative; placement and orientation follow publisher plan symbols.",
       "Stone tower above ceiling retains existing approximate XY and cap at+7.08; source elevation supports feature and height, not exact inherited XY.",
-      "Utility south partition below staircase is clipped to1.40m so it stays below the half landing. Stair undercroft, handrail profiles and exact wall build-ups need construction documentation.",
-      "Open interior doors and terrace slider halves are visual open-state choices; garage shutter is shown open for walk access."
+      "Open interior doors and terrace slider halves are visual open-state choices; garage shutter is shown open for walk access.",
+      "Stair landing+2.23 and upperfloor+3.35 follow PDF section;12+6 rises and27cm treads follow combined plans/section. Underflight utility wall heights are illustrative clearances below stair structure; exact construction build-up requires working drawings."
     ],
     "excludedExistingMeshes": [
       "ground-storey",
@@ -524,7 +524,25 @@
           711,
           479
         ]
-      }
+      },
+      "finishPolygon": [
+        [
+          4.843,
+          3.397
+        ],
+        [
+          6.67,
+          3.397
+        ],
+        [
+          6.67,
+          5.266
+        ],
+        [
+          4.843,
+          5.266
+        ]
+      ]
     },
     {
       "id": "20",
@@ -574,7 +592,41 @@
           711,
           353
         ]
-      }
+      },
+      "finishPolygon": [
+        [
+          7.991,
+          5.439
+        ],
+        [
+          8.5015,
+          5.439
+        ],
+        [
+          8.5015,
+          3.6368
+        ],
+        [
+          11.9419,
+          3.6368
+        ],
+        [
+          11.9419,
+          6.3917
+        ],
+        [
+          8.5015,
+          6.3917
+        ],
+        [
+          8.5015,
+          6.457
+        ],
+        [
+          7.991,
+          6.457
+        ]
+      ]
     }
   ],
   "walls": [
@@ -724,7 +776,7 @@
       "id": "g-utility-stair",
       "a": [
         10.3803,
-        8.8303
+        7.79
       ],
       "b": [
         10.3803,
@@ -732,7 +784,7 @@
       ],
       "level": 0,
       "thickness": 0.15,
-      "height": 1.4,
+      "height": 1.55,
       "openings": [],
       "source": {
         "id": "ground",
@@ -1155,34 +1207,6 @@
       }
     },
     {
-      "id": "u-master-child",
-      "a": [
-        6.0127,
-        11.2477
-      ],
-      "b": [
-        6.0127,
-        8.8664
-      ],
-      "level": 1,
-      "thickness": 0.15,
-      "height": 2.7,
-      "openings": [],
-      "source": {
-        "id": "upper",
-        "pixels": [
-          [
-            385,
-            455
-          ],
-          [
-            487,
-            455
-          ]
-        ]
-      }
-    },
-    {
       "id": "u-master-child-side",
       "a": [
         6.0127,
@@ -1508,6 +1532,44 @@
           [
             637,
             377
+          ]
+        ]
+      }
+    },
+    {
+      "id": "g-utility-stair-door",
+      "a": [
+        10.3803,
+        8.8303
+      ],
+      "b": [
+        10.3803,
+        7.79
+      ],
+      "level": 0,
+      "thickness": 0.15,
+      "height": 2.1,
+      "openings": [
+        {
+          "id": "g-utility-stair-service-door",
+          "start": 0.047,
+          "end": 1.0095,
+          "bottom": 0,
+          "top": 2.05,
+          "kind": "door",
+          "open": true
+        }
+      ],
+      "source": {
+        "id": "ground",
+        "pixels": [
+          [
+            510,
+            250
+          ],
+          [
+            607,
+            250
           ]
         ]
       }
@@ -2206,7 +2268,8 @@
         "position": "traced publisher plan symbol",
         "height": "illustrative",
         "uncertaintyM": 0.2
-      }
+      },
+      "front": "xMax"
     },
     {
       "id": "office-chair",
@@ -2791,7 +2854,8 @@
         "position": "traced publisher plan symbol",
         "height": "illustrative",
         "uncertaintyM": 0.2
-      }
+      },
+      "front": "xMax"
     },
     {
       "id": "child18-chair",
@@ -2951,7 +3015,8 @@
         "height": "illustrative",
         "uncertaintyM": 0.2
       },
-      "collision": true
+      "collision": true,
+      "basins": 2
     },
     {
       "id": "master-wc",
@@ -3168,31 +3233,30 @@
       "front": "xMax"
     },
     {
-      "id": "laundry-cabinet",
-      "kind": "cabinet",
+      "id": "laundry-ironing-board",
+      "kind": "table",
       "room": "19",
       "level": 1,
       "bounds": [
-        6.3055,
-        3.6135,
+        6.3299,
+        3.777,
         6.6715,
-        5.1543
+        4.8741
       ],
-      "height": 1.1,
+      "height": 0.9,
       "angle": 0,
       "source": {
         "id": "upper",
         "pixels": [
-          646,
+          658,
           428,
-          712,
-          443
+          705,
+          442
         ],
-        "position": "traced publisher plan symbol",
+        "position": "publisher ironing-board symbol; independent source recheck",
         "height": "illustrative",
         "uncertaintyM": 0.2
-      },
-      "front": "xMin"
+      }
     },
     {
       "id": "sauna-bench",
@@ -3245,6 +3309,195 @@
         "height": "illustrative",
         "uncertaintyM": 0.2
       }
+    },
+    {
+      "id": "master-open-dressing-long",
+      "kind": "cabinet",
+      "room": "14",
+      "level": 1,
+      "bounds": [
+        5.4027,
+        8.9597,
+        6.0127,
+        11.1309
+      ],
+      "height": 2.2,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          390,
+          455,
+          483,
+          480
+        ],
+        "position": "traced publisher plan symbol; independent source recheck",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "xMax"
+    },
+    {
+      "id": "living-left-return",
+      "kind": "sofa",
+      "room": "6",
+      "level": 0,
+      "bounds": [
+        3.6871,
+        13.0811,
+        4.3682,
+        13.8091
+      ],
+      "height": 0.85,
+      "angle": 0,
+      "source": {
+        "id": "ground",
+        "pixels": [
+          298,
+          506,
+          329,
+          535
+        ],
+        "position": "traced publisher plan symbol; independent source recheck",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "back": "yMax"
+    },
+    {
+      "id": "master-bedside-a",
+      "kind": "cabinet",
+      "room": "13",
+      "level": 1,
+      "bounds": [
+        5.0611,
+        11.3411,
+        5.4271,
+        11.6912
+      ],
+      "height": 0.55,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          366,
+          479,
+          381,
+          494
+        ],
+        "position": "traced publisher plan symbol; independent source recheck",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "yMax"
+    },
+    {
+      "id": "master-bedside-b",
+      "kind": "cabinet",
+      "room": "13",
+      "level": 1,
+      "bounds": [
+        2.8896,
+        11.3411,
+        3.2555,
+        11.6912
+      ],
+      "height": 0.55,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          366,
+          568,
+          381,
+          583
+        ],
+        "position": "traced publisher plan symbol; independent source recheck",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "yMax"
+    },
+    {
+      "id": "child17-bedside",
+      "kind": "cabinet",
+      "room": "17",
+      "level": 1,
+      "bounds": [
+        1.4012,
+        9.8236,
+        1.7916,
+        10.1971
+      ],
+      "height": 0.55,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          430,
+          628,
+          446,
+          644
+        ],
+        "position": "traced publisher plan symbol; independent source recheck",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "xMax"
+    },
+    {
+      "id": "child18-bedside",
+      "kind": "cabinet",
+      "room": "18",
+      "level": 1,
+      "bounds": [
+        1.4012,
+        6.0415,
+        1.7916,
+        6.415
+      ],
+      "height": 0.55,
+      "angle": 0,
+      "source": {
+        "id": "upper",
+        "pixels": [
+          592,
+          628,
+          608,
+          644
+        ],
+        "position": "traced publisher plan symbol; independent source recheck",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      },
+      "front": "xMax"
+    },
+    {
+      "id": "laundry-small-cabinet",
+      "kind": "cabinet",
+      "room": "19",
+      "level": 1,
+      "bounds": [
+        4.8415,
+        4.7107,
+        5.3539,
+        5.1776
+      ],
+      "height": 1.1,
+      "angle": 0,
+      "front": "xMax",
+      "source": {
+        "id": "upper",
+        "pixels": [
+          645,
+          482,
+          665,
+          503
+        ],
+        "position": "traced publisher plan symbol; independent source recheck",
+        "height": "illustrative",
+        "uncertaintyM": 0.2
+      }
     }
   ],
   "entry": {
@@ -3268,7 +3521,7 @@
     "box": [
       7.82,
       6.62,
-      11.08,
+      11.86,
       8.83
     ],
     "width": 1.04,
@@ -3280,8 +3533,39 @@
     "source": {
       "id": "details",
       "page": 1,
-      "annotation": "18,6x27 x18; landing inferred from plan, total rise matches section+3.35"
-    }
+      "annotation": "18 rises of approximately18.6cm;27cm treads; section landing+2.23, floor+3.35; unequal12+6 flights"
+    },
+    "lowerRises": 12,
+    "upperRises": 6,
+    "landingHeight": 2.23,
+    "landingStart": 10.79,
+    "upperStart": 9.44,
+    "opening": [
+      [
+        7.82,
+        6.62
+      ],
+      [
+        11.86,
+        6.62
+      ],
+      [
+        11.86,
+        8.83
+      ],
+      [
+        9.44,
+        8.83
+      ],
+      [
+        9.44,
+        7.79
+      ],
+      [
+        7.82,
+        7.79
+      ]
+    ]
   },
   "exterior": {
     "ground": [
@@ -3715,30 +3999,6 @@
           [
             790,
             620
-          ]
-        ]
-      }
-    },
-    {
-      "id": "kitchen-side",
-      "level": 0,
-      "segment": 12,
-      "start": 0.3523,
-      "end": 3.7576,
-      "bottom": 0.9,
-      "top": 2.4,
-      "kind": "window",
-      "open": false,
-      "source": {
-        "id": "ground",
-        "pixels": [
-          [
-            610,
-            674
-          ],
-          [
-            755,
-            674
           ]
         ]
       }
