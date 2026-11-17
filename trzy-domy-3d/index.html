@@ -680,14 +680,12 @@ function draw(){
  if(activeCamera===camera)depthGuard?.fit();
  const solarState=solar.getState();
  solarAtmosphere.update(solarState);
- if(solarState.active){
-  const background=scene.background,autoClear=renderer.autoClear;
-  try{
-   scene.background=null;renderer.autoClear=false;renderer.clear();
-   solarSky.render(renderer,activeCamera,solarState);renderer.clearDepth();
-   renderer.render(scene,activeCamera);
-  }finally{scene.background=background;renderer.autoClear=autoClear;}
- }else renderer.render(scene,activeCamera);
+ const background=scene.background,autoClear=renderer.autoClear;
+ try{
+  scene.background=null;renderer.autoClear=false;renderer.clear();
+  solarSky.render(renderer,activeCamera,solarState);renderer.clearDepth();
+  renderer.render(scene,activeCamera);
+ }finally{scene.background=background;renderer.autoClear=autoClear;}
  viewUI?.syncClock(solarState);
  const insideHome=walk?.getState().active&&walkableInteriors.some(({navigation})=>navigation.floors.some(f=>f.z<=.1&&inside([activeCamera.position.x,activeCamera.position.y],f.ring)));
  for(const t of tags){
@@ -2530,7 +2528,7 @@ function setupSolarSky({ THREE }) {
   let disposed = false;
   return {
     render(renderer, viewCamera, state) {
-      if (disposed || !state?.active) return false;
+      if (disposed || !state) return false;
       const appearance = solarAppearance(state.elevationDeg);
       viewCamera.updateWorldMatrix(true, false);
       uniforms.inverseProjection.value.copy(viewCamera.projectionMatrixInverse);
@@ -2557,20 +2555,14 @@ function setupSolarSky({ THREE }) {
 }
 
 function setupSolarAtmosphere({ sun, hemi }) {
-  const baseline = { sunColor: sun.color.clone(), sunIntensity: sun.intensity,
-    hemiColor: hemi?.color.clone(), groundColor: hemi?.groundColor.clone(), hemiIntensity: hemi?.intensity };
+  const baseline = { sunIntensity: sun.intensity, hemiIntensity: hemi?.intensity };
   return {
     update(state) {
       if (!state) return;
-      const appearance = state.active ? solarAppearance(state.elevationDeg) : null;
-      sun.color.copy(baseline.sunColor);
-      if (appearance) sun.color.setHex(appearance.sunColor);
-      sun.intensity = state.daylight ? baseline.sunIntensity * (appearance?.sunIntensityFactor ?? 1) : 0;
-      if (hemi) {
-        hemi.color.copy(baseline.hemiColor);
-        hemi.groundColor.copy(baseline.groundColor);
-        hemi.intensity = baseline.hemiIntensity * (appearance?.ambientIntensityFactor ?? 1);
-      }
+      const appearance = solarAppearance(state.elevationDeg);
+      sun.color.setHex(appearance.sunColor);
+      sun.intensity = state.daylight ? baseline.sunIntensity * appearance.sunIntensityFactor : 0;
+      if (hemi) hemi.intensity = baseline.hemiIntensity * appearance.ambientIntensityFactor;
     },
   };
 }

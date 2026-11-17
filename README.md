@@ -161,3 +161,7 @@ Dolny zegar ma przycisk play/pause współdzielący stan i tempo z panelem „S�
 ## Większa tarcza słońca 2026-11-17.7
 
 Tarczę powiększono wizualnie dwukrotnie: średnica kątowa w obrazie wynosi 1,06° zamiast 0,53°. To ułatwienie widoczności podczas spaceru; obliczany kierunek słońca oraz geometria cieni pozostają bez zmian.
+
+## Domyślne niebo 2026-11-17.8
+
+Niebo, tarcza słońca i barwa światła są widoczne od pierwszego wyświetlenia modelu, również podczas spaceru bez otwierania panelu. Dolny zegar i sterowanie odtwarzaniem ujawniają się dopiero po otwarciu „Słońce i mapy”. Początkowa data i godzina pozostają 20.07.2026, 15:50 czasu polskiego.

@@ -82,11 +82,11 @@ test('orthographic rays stay parallel and sky never enters the model bounds or d
   sky.dispose();
 });
 
-test('inactive and disposed sky preserve original rendering; render failures restore renderer state', () => {
+test('sky renders before controls are activated; disposal and failures preserve renderer state', () => {
   const { sky, renderer, calls } = captureSky();
   const camera = new THREE.PerspectiveCamera();
-  assert.equal(sky.render(renderer, camera, { ...selected, active: false }), false);
-  assert.equal(calls.length, 0);
+  assert.equal(sky.render(renderer, camera, { ...selected, active: false }), true);
+  assert.equal(calls.length, 1);
   renderer.render = () => { renderer.shadowMap.needsUpdate = false; throw new Error('context lost'); };
   assert.throws(() => sky.render(renderer, camera, selected), /context lost/);
   assert.equal(renderer.autoClear, true);
@@ -96,10 +96,10 @@ test('inactive and disposed sky preserve original rendering; render failures res
 });
 
 
-test('atmosphere uses absolute light factors, restores baseline and keeps nighttime sun off', () => {
+test('atmosphere is independent of controls activation and keeps nighttime sun off', () => {
   const sun = new THREE.DirectionalLight(0xf8f0dd, 3.6);
   const hemi = new THREE.HemisphereLight(0xaabbcc, 0x556644, 2.4);
-  const baseline = { sun: sun.color.clone(), hemi: hemi.color.clone(), ground: hemi.groundColor.clone() };
+  const baseline = { hemi: hemi.color.clone(), ground: hemi.groundColor.clone() };
   const atmosphere = setupSolarAtmosphere({ sun, hemi });
   const active = { ...selected, daylight: true };
   atmosphere.update(active);
@@ -110,15 +110,16 @@ test('atmosphere uses absolute light factors, restores baseline and keeps nightt
   assert.equal(hemi.intensity, ambient);
   assert.ok(intensity < 3.6);
   atmosphere.update({ ...active, active: false });
-  assert.deepEqual(sun.color, baseline.sun);
-  assert.equal(sun.intensity, 3.6);
+  assert.deepEqual(sun.color, warmColor);
+  assert.equal(sun.intensity, intensity);
   assert.deepEqual(hemi.color, baseline.hemi);
   assert.deepEqual(hemi.groundColor, baseline.ground);
-  assert.equal(hemi.intensity, 2.4);
+  assert.equal(hemi.intensity, ambient);
   atmosphere.update({ ...active, daylight: false, elevationDeg: -15 });
   assert.equal(sun.intensity, 0);
   assert.ok(hemi.intensity < 2.4);
-  atmosphere.update({ ...active, active: false, daylight: false });
+  const nightAmbient = hemi.intensity;
+  atmosphere.update({ ...active, active: false, daylight: false, elevationDeg: -15 });
   assert.equal(sun.intensity, 0);
-  assert.equal(hemi.intensity, 2.4);
+  assert.equal(hemi.intensity, nightAmbient);
 });

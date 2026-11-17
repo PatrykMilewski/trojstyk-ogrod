@@ -94,7 +94,7 @@ export function setupSolarSky({ THREE }) {
   let disposed = false;
   return {
     render(renderer, viewCamera, state) {
-      if (disposed || !state?.active) return false;
+      if (disposed || !state) return false;
       const appearance = solarAppearance(state.elevationDeg);
       viewCamera.updateWorldMatrix(true, false);
       uniforms.inverseProjection.value.copy(viewCamera.projectionMatrixInverse);
@@ -121,20 +121,14 @@ export function setupSolarSky({ THREE }) {
 }
 
 export function setupSolarAtmosphere({ sun, hemi }) {
-  const baseline = { sunColor: sun.color.clone(), sunIntensity: sun.intensity,
-    hemiColor: hemi?.color.clone(), groundColor: hemi?.groundColor.clone(), hemiIntensity: hemi?.intensity };
+  const baseline = { sunIntensity: sun.intensity, hemiIntensity: hemi?.intensity };
   return {
     update(state) {
       if (!state) return;
-      const appearance = state.active ? solarAppearance(state.elevationDeg) : null;
-      sun.color.copy(baseline.sunColor);
-      if (appearance) sun.color.setHex(appearance.sunColor);
-      sun.intensity = state.daylight ? baseline.sunIntensity * (appearance?.sunIntensityFactor ?? 1) : 0;
-      if (hemi) {
-        hemi.color.copy(baseline.hemiColor);
-        hemi.groundColor.copy(baseline.groundColor);
-        hemi.intensity = baseline.hemiIntensity * (appearance?.ambientIntensityFactor ?? 1);
-      }
+      const appearance = solarAppearance(state.elevationDeg);
+      sun.color.setHex(appearance.sunColor);
+      sun.intensity = state.daylight ? baseline.sunIntensity * appearance.sunIntensityFactor : 0;
+      if (hemi) hemi.intensity = baseline.hemiIntensity * appearance.ambientIntensityFactor;
     },
   };
 }

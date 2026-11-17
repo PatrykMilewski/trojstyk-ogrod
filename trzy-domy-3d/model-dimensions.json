@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-17.7",
+  "modelVersion": "2026-11-17.8",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1454,7 +1454,7 @@
     "proceduralCodeSha256": "ff868cb0e73178ae29ddcfa51879c79d71a840135ab139fa249e463ec4eb745a",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "426140b9e29c7b44a98258b31e23e939a3789b4b671d8536079a11c746c93047",
-    "runtimeSha256": "0962124d6ae730e65472e71a0c786cd797e7900eca70dd8eda76d7fe4e039fa0"
+    "runtimeSha256": "4ac6fa247815b222743d455ace03381cca8d30dfb86ea18fde84215fabd30edb"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1469,7 +1469,8 @@
     "Pełne górne przeszklenie salonu /193 cofnięte o 1,10m do dolnych szyb; usunięte błędne trójkąty ściany i domknięta wnęka. 13 istniejących okien dachowych ma rzeczywiste otwory; dodano okno 1,14×1,40m nad salonem na zachodniej połaci /193. Pozycje i wymiary wszystkich 14 okien zamrożone.",
     "Elewacja /193: usunięto zdublowane powierzchnie na wypukłych narożnikach i styku kondygnacji, zachowano zamknięcia wklęsłe i widoczne spody nadwieszeń. Strop cofnięty 0,18m wewnątrz ściany. Pas między szybami salonu ma lico y=16,85m wspólne z szybami i grubość 0,12m za nimi; wystająca półka usunięta.",
     "Widoczna tarcza słońca o średnicy kątowej 0,53°, zgodna z datą, godziną i kierunkiem astronomicznym. Ciepłe barwy przy horyzoncie, niebo dzienne i zmierzch; poglądowa atmosfera. Play/pause także przy dolnym zegarze, wspólny stan z panelem słońca. Gabaryty, geometria, wnętrza i układ działek bez zmian.",
-    "Tarczę słońca powiększono wizualnie 2× do średnicy kątowej 1,06°, aby była wyraźniejsza podczas spaceru. Kierunek astronomiczny i geometria cieni bez zmian."
+    "Tarczę słońca powiększono wizualnie 2× do średnicy kątowej 1,06°, aby była wyraźniejsza podczas spaceru. Kierunek astronomiczny i geometria cieni bez zmian.",
+    "Niebo i słońce widoczne od startu modelu; zegar nadal ukryty do otwarcia panelu Słońce i mapy. Domyślna data i godzina bez zmian."
   ],
   "contextParcels": [
     {
@@ -2694,7 +2695,9 @@
       ],
       "clockPlaybackButton": true,
       "physicalSunAngularDiameterDeg": 0.53,
-      "visualSunScale": 2
+      "visualSunScale": 2,
+      "visibleByDefault": true,
+      "clockVisibleAfterControlsActivation": true
     }
   },
   "surroundingVegetation": {
