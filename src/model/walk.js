@@ -351,7 +351,7 @@ export function mergeInteriorNavigation(interiors) {
     ceilingHeight: point => Math.min(Infinity, ...sources.map(({ navigation }) => navigation.ceilingHeight?.(point) ?? Infinity)) };
 }
 
-export function setupWalk({ THREE, scene, house, neighbors, camera, controls, renderer, requestDraw, onCameraChange, button, interior, interiors }) {
+export function setupWalk({ THREE, scene, house, neighbors, camera, controls, renderer, requestDraw, onCameraChange, button, shortcutButton, interior, interiors }) {
   const view = createWalkView(THREE, requestDraw, scene), perspective = view.camera;
   const sources = interiors ?? [{ parcel: '193', navigation: interior?.navigation }];
   const navigation = mergeInteriorNavigation(sources);
@@ -384,6 +384,7 @@ export function setupWalk({ THREE, scene, house, neighbors, camera, controls, re
     motion.reset(navigation ? spawn : spawn.slice(0, 2)); perspective.position.set(...motion.getState().position); active = true; controls.enabled = false;
     input.clear(); panel.hidden = false; document.body.classList.add('walk-mode');
     button.setAttribute('aria-pressed', 'true'); button.textContent = 'Wyjdź ze spaceru';
+    shortcutButton?.setAttribute('aria-pressed', 'true');
     resize(); view.updateLook(); onCameraChange(perspective); canvas.focus({ preventScroll: true });
     last = performance.now(); frame = requestAnimationFrame(tick);
   }
@@ -393,10 +394,12 @@ export function setupWalk({ THREE, scene, house, neighbors, camera, controls, re
     perspective.position.set(...motion.getState().position); cancelAnimationFrame(frame); frame = null;
     controls.enabled = true; panel.hidden = true; document.body.classList.remove('walk-mode');
     button.setAttribute('aria-pressed', 'false'); button.textContent = 'Spacer · 1,7 m';
+    shortcutButton?.setAttribute('aria-pressed', 'false');
     onCameraChange(camera); controls.update(); requestDraw();
   }
   function resize() { perspective.aspect = innerWidth / innerHeight; perspective.updateProjectionMatrix(); }
   walkButtons(button, () => active, enter, exit);
+  shortcutButton?.addEventListener('click', () => button.click());
   return { enter, exit, resize, move, look: view.look, jump, camera: perspective, collision, clearInput: input.clear,
     getState: () => ({ ...motion.getState(), ...view.getState(), active, position: perspective.position.toArray(),
       collisionRadiusM: collision.radius, footprintParcels: [...new Set(collision.footprints.map(item => item.parcel))] }) };

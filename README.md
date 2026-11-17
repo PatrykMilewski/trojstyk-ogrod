@@ -165,3 +165,7 @@ Tarczę powiększono wizualnie dwukrotnie: średnica kątowa w obrazie wynosi 1,
 ## Domyślne niebo 2026-11-17.8
 
 Niebo, tarcza słońca i barwa światła są widoczne od pierwszego wyświetlenia modelu, również podczas spaceru bez otwierania panelu. Dolny zegar i sterowanie odtwarzaniem ujawniają się dopiero po otwarciu „Słońce i mapy”. Początkowa data i godzina pozostają 20.07.2026, 15:50 czasu polskiego.
+
+## Szybki spacer 2026-11-17.9
+
+Przycisk „Spacer” na głównym pasku, obok „Widoki i sterowanie”, przełącza ten sam tryb chodzenia co „Spacer · 1,7 m” w menu. Oba przyciski współdzielą stan; Esc, reset widoku i wejścia do wnętrz także go aktualizują.
