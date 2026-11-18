@@ -974,36 +974,6 @@
       "height": 0.45
     },
     {
-      "id": "media-console",
-      "type": "cabinet",
-      "room": "0.4",
-      "box": [
-        0.5,
-        13.55,
-        0.9,
-        15.75
-      ],
-      "facing": "+x",
-      "source": "ground-plan",
-      "height": 0.55
-    },
-    {
-      "id": "projection-screen",
-      "type": "screen",
-      "room": "0.4",
-      "box": [
-        0.509,
-        13.28,
-        0.536,
-        15.68
-      ],
-      "facing": "+x",
-      "source": "user-lounge",
-      "height": 1.35,
-      "elevation": 0.9,
-      "support": "living-slate-boards"
-    },
-    {
       "id": "dining-table",
       "type": "table",
       "room": "0.4",
@@ -2153,6 +2123,13 @@
       }
     ]
   },
+  "projection": {
+    "wall": "facade-main-side",
+    "centerY": 14.48,
+    "centerHeightM": 1.575,
+    "widthM": 2.4,
+    "heightM": 1.35
+  },
   "electrical": {
     "series": "JLM Retro Loft podtynkowe",
     "source": "https://jlmretro.com/pl/content/13-loft",
@@ -2252,9 +2229,9 @@
         "room": "0.4",
         "type": "socket",
         "finish": "white",
-        "support": "living-slate-boards",
-        "normal": "+x",
-        "alongM": 13.1,
+        "support": "facade-garden",
+        "normal": "-y",
+        "alongM": 0.77,
         "heightM": 0.33
       },
       {

@@ -7,7 +7,7 @@ export function addIconInterior(options) {
  iconInteriorOfficeBacking(context);
  iconInteriorFurnishings(context);
  options.fitGarage?.(context);
- iconLivingMediaWall(context);
+ iconLivingProjector(context);
  iconInteriorLightingAndRoof(context);
  iconMoodEntryBathFinishes(context);
  if(context.data.electrical)iconLoftElectrical(context);
@@ -60,8 +60,15 @@ function iconInteriorSetup({THREE,scene,house,data,cutRoof=geometry=>geometry}) 
   let nx=0,ny=0;if(external){if(Math.abs(a[0]-b[0])<.01)nx=a[0]<.1?-1:1;else ny=a[1]<5?-1:1;a=[a[0]-nx*thickness/2,a[1]-ny*thickness/2];b=[b[0]-nx*thickness/2,b[1]-ny*thickness/2];}
   const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L;
   const outer=profile||[[0,z0],[L,z0],[L,z1],[0,z1]],holes=openings.map(o=>o.wallPoly||o.poly||[[o.start,o.bottom],[o.end,o.bottom],[o.end,o.top],[o.start,o.top]]);
-  const geometry=iconInteriorWallGeometry(THREE,{a,ux,uy,L,z0,z1,thickness,outer,holes,ceilingAt,sloped:id.startsWith('u-'),external,nx,ny,omitCaps});
-  mesh(geometry,external?[mats.wall,mats.dark]:mats.wall,id);
+  const paintedFrom=id==='facade-main-side'?data.rooms.find(r=>r.id==='0.4').box[1]:
+   id==='upper-main-side'?data.void.box[1]:undefined;
+  const geometry=iconInteriorWallGeometry(THREE,{a,ux,uy,L,z0,z1,thickness,outer,holes,ceilingAt,sloped:id.startsWith('u-'),external,nx,ny,omitCaps,paintedFrom});
+  const finishes=external?[mats.wall,mats.dark]:mats.wall;
+  if(paintedFrom!==undefined){
+   mats.projectionPaint??=material('#ffffff',{roughness:1,name:'Matte white projection paint'});
+   finishes.push(mats.projectionPaint);
+  }
+  mesh(geometry,finishes,id);
   const cuts=[0,L,...openings.flatMap(o=>[o.start,o.end])].sort((x,y)=>x-y);
   for(let i=1;i<cuts.length;i++){const start=cuts[i-1],end=cuts[i];if(end-start<.001)continue;const opening=openings.find(o=>(start+end)/2>o.start&&(start+end)/2<o.end);const ax=a[0]+ux*start,ay=a[1]+uy*start,bx=a[0]+ux*end,by=a[1]+uy*end,bounds=[Math.min(ax,bx)-Math.abs(uy)*thickness/2,Math.min(ay,by)-Math.abs(ux)*thickness/2,Math.max(ax,bx)+Math.abs(uy)*thickness/2,Math.max(ay,by)+Math.abs(ux)*thickness/2];
    if(!opening)obstacle(id+'-'+i,bounds,z0,z1);else{if(opening.bottom>z0+.01)obstacle(id+'-sill-'+i,bounds,z0,opening.bottom);if(opening.top<z1-.01)obstacle(id+'-header-'+i,bounds,opening.top,z1);}
@@ -131,8 +138,9 @@ function iconInteriorWindowReveal({THREE,mesh,mats,id,points,to3,normal,depth}) 
 }
 
 function iconInteriorWallGeometry(THREE,options) {
- const {a,ux,uy,L,z0,z1,thickness,outer,holes,ceilingAt,sloped,external,nx,ny,omitCaps}=options;
+ const {a,ux,uy,L,z0,z1,thickness,outer,holes,ceilingAt,sloped,external,nx,ny,omitCaps,paintedFrom=Infinity}=options;
  const vertices=[],groups=[],cuts=[0,L,...outer.map(p=>p[0]),...holes.flatMap(p=>p.map(v=>v[0]))];
+ if(paintedFrom<L)cuts.push(paintedFrom);
  const point=(u,d,h)=>{
   const inset=external?thickness/2-(-uy*d*nx+ux*d*ny):0;
   const along=Math.max(omitCaps[0]?inset:0,Math.min(omitCaps[1]?L-inset:L,u));
@@ -152,9 +160,10 @@ function iconInteriorWallGeometry(THREE,options) {
  const quad=(p,q,r,t,material=0)=>{const start=vertices.length/3;vertices.push(...p,...q,...r,...p,...r,...t);groups.push({start,count:6,material});};
  for(let i=1;i<xs.length;i++){
   const start=xs[i-1],end=xs[i];if(end-start<1e-8)continue;const mid=(start+end)/2,lo=bands(start,mid),hi=bands(end,mid);
+  const interiorMaterial=mid>=paintedFrom?2:0;
   for(let j=0;j<lo.length;j++){
-   for(const d of [-thickness/2,thickness/2]){const outside=external&&(-uy*d*nx+ux*d*ny)>0;quad(point(start,d,height(start,d,lo[j][0])),point(end,d,height(end,d,hi[j][0])),point(end,d,height(end,d,hi[j][1])),point(start,d,height(start,d,lo[j][1])),outside?1:0);}
-   for(const edge of [0,1]){const h0=lo[j][edge],h1=hi[j][edge];if(sloped&&edge===1&&h0===z1&&h1===z1)continue;quad(point(start,-thickness/2,height(start,-thickness/2,h0)),point(end,-thickness/2,height(end,-thickness/2,h1)),point(end,thickness/2,height(end,thickness/2,h1)),point(start,thickness/2,height(start,thickness/2,h0)));}
+   for(const d of [-thickness/2,thickness/2]){const outside=external&&(-uy*d*nx+ux*d*ny)>0;quad(point(start,d,height(start,d,lo[j][0])),point(end,d,height(end,d,hi[j][0])),point(end,d,height(end,d,hi[j][1])),point(start,d,height(start,d,lo[j][1])),outside?1:interiorMaterial);}
+   for(const edge of [0,1]){const h0=lo[j][edge],h1=hi[j][edge];if(sloped&&edge===1&&h0===z1&&h1===z1)continue;quad(point(start,-thickness/2,height(start,-thickness/2,h0)),point(end,-thickness/2,height(end,-thickness/2,h1)),point(end,thickness/2,height(end,thickness/2,h1)),point(start,thickness/2,height(start,thickness/2,h0)),interiorMaterial);}
   }
  }
  for(let i=0;i<xs.length;i++){
@@ -493,6 +502,103 @@ function iconInteriorNightstand(context,frame) {
   [[.96,0],[1,.003],[.98,.034],[.91,.056],[.78,.075],[.58,.088],[.31,.095],[0,.098]],p.stone);
 }
 
+function iconSofaPrint(THREE) {
+ const n=384,mask=new Uint8Array(n*n),centers=[];
+ let seed=917351;
+ const random=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
+ for(let attempt=0;centers.length<51 && attempt<2500;attempt++){
+  const u=random(),v=random();
+  if(centers.some(([a,b])=>{
+   const dx=Math.abs(u-a),dy=Math.abs(v-b);
+   return Math.min(dx,1-dx)**2+Math.min(dy,1-dy)**2<.098**2;
+  }))continue;
+  centers.push([u,v]);
+  const rx=(.041+.019*random())*n,ry=rx*(.66+.31*random());
+  const angle=random()*Math.PI,c=Math.cos(angle),s=Math.sin(angle),phase=random()*6.28;
+  const x=u*n,y=v*n,r=Math.ceil(rx*1.10);
+  for(let j=Math.floor(y-r);j<=y+r;j++)for(let i=Math.floor(x-r);i<=x+r;i++){
+   const a=((i+.5-x)*c+(j+.5-y)*s)/rx,b=(-(i+.5-x)*s+(j+.5-y)*c)/ry;
+   const phi=Math.atan2(b,a),edge=1+.050*Math.sin(3*phi+phase)+.027*Math.sin(2*phi-phase);
+   const ink=Math.min(1,Math.max(0,.5+(edge-Math.hypot(a,b))*ry));
+   const k=((j+n)%n)*n+(i+n)%n;mask[k]=Math.max(mask[k],Math.round(ink*255));
+  }
+ }
+ return iconFinishTexture(THREE,'Cream basketweave with irregular ink ovals',n,n,.94,(u,v)=>{
+  const x=Math.floor(u*n),y=Math.floor(v*n),ink=mask[y*n+x]/255;
+  const yarn=(((x&3)<2)===((y&3)<2)?1.8:-1.8)+(y%3===0?-1.4:1.4);
+  return [235-213*ink+yarn,225-204*ink+yarn,204-184*ink+yarn];
+ },[1,1]);
+}
+
+function iconAnatolianRug(THREE) {
+ const width=252,height=288;
+ const colors=[[162,104,82],[183,131,101],[95,112,104],[67,79,77],[208,181,140],[146,122,93],[178,153,119]];
+ const knots=new Uint8Array(width*height);
+ const diamond=(x,y,rx,ry)=>Math.abs(x)/rx+Math.abs(y)/ry;
+ const folded=(t,period)=>Math.abs((t%period+period)%period-period/2);
+ function medallion(x,y){
+  const step=Math.floor(y/4)*4,edge=47-step*.82+(Math.floor(step/8)%2)*2;
+  if(y<61 && x<=edge+2){
+   const inner=edge-x;
+   if(inner<1)return 3;
+   if(inner<3.5)return 4;
+   if(inner<6)return 5;
+   if(inner<9)return 2;
+   if(inner<11)return 4;
+   const rosette=Math.min(diamond(x,y,20,29),diamond(x-16,y,12,7),diamond(x,y-24,6,14));
+   if(rosette<.31)return 0;
+   if(rosette<.58)return 4;
+   if(rosette<.88)return 2;
+   if(rosette<1.03)return 4;
+   return diamond(x-8,y-11,2.3,3)<1?4:3;
+  }
+  if(diamond(x,y-61,7,10)<1)return diamond(x,y-61,4,6)<1?2:4;
+ }
+ function colorAt(i,j){
+  const x=Math.abs(i+.5-width/2),y=Math.abs(j+.5-height/2);
+  const a=width/2-x,b=height/2-y,edge=Math.min(a,b),along=a<b?y:x;
+  if(edge<2)return 5;
+  if(edge<3)return 4;
+  if(edge<7)return diamond(folded(along,8),edge-5,3,2)<1?3:6;
+  if(edge<9 || edge>=23 && edge<25)return 3;
+  if(edge<23){
+   const t=folded(along,21),ring=diamond(t,edge-16,8,5.8);
+   if(ring<.27)return 0;
+   if(ring<.60)return 4;
+   if(ring<=1)return 2;
+   if(Math.abs(edge-16-(t-6)*.67)<1.1)return 5;
+   return 1;
+  }
+  if(edge<29)return diamond(folded(along,7),edge-27,2.5,1.8)<1?3:4;
+  if(edge<31)return 5;
+  const corner=(Math.floor((a-31)/3)+Math.floor((b-31)/3))*3;
+  if(corner<32){
+   if(corner>=30)return 4;
+   if(corner>=27)return 5;
+   if(diamond(a-39,b-39,6,7)<1)return 4;
+   return corner%9===0?2:3;
+  }
+  const center=medallion(x,y);
+  if(center!==undefined)return center;
+  const bloom=diamond(x-57,y-65,11,10);
+  if(bloom<.3)return 3;
+  if(bloom<.7)return 4;
+  if(bloom<1 || diamond(x-57,y-75,3,5)<1)return 2;
+  if(diamond(x-54,y-34,5,7)<1 || diamond(x-23,y-83,4,6)<1)return 5;
+  if(Math.abs(x-57-(y-62)*.32)<1 && y>48 && y<66)return 5;
+  if(diamond(x-52,y-50,3,4)<1 || diamond(x-11,y-76,2.5,4)<1)return 4;
+  return 0;
+ }
+ for(let j=0;j<height;j++)for(let i=0;i<width;i++)knots[j*width+i]=colorAt(i,j);
+ return iconFinishTexture(THREE,'Anatolian wool rug with stepped medallion and rosette borders',width*2,height*2,.98,(u,v)=>{
+  const x=Math.floor(u*width*2),y=Math.floor(v*height*2),i=x>>1,j=y>>1;
+  const dye=2.8*Math.sin(j*.21)+2.4*Math.sin(j*.51+.4)+1.8*Math.sin(j*.071);
+  const fleck=(Math.imul(i*79+j*3011,1597334677)>>>27)/4-4;
+  const light=dye+fleck+((x&1)===(y&1)?2.9:-2.9),color=colors[knots[j*width+i]];
+  return [color[0]+light,color[1]+light*.89,color[2]+light*.73];
+ });
+}
+
 function iconLivingAccentMaterials(THREE) {
  const mix=(color,tone)=>[color[0]+tone,color[1]+tone*.88,color[2]+tone*.70];
  const walnut=iconFinishTexture(THREE,'Oiled walnut veneer',256,256,.46,(u0,v0)=>{
@@ -503,14 +609,7 @@ function iconLivingAccentMaterials(THREE) {
   const pore=Math.max(0,Math.cos(grain*11.2+.08*Math.cos(y*.4)))**10;
   return mix([122,76,52],10*ring-12*pore+5*Math.sin(grain*.84));
  });
- const check=iconFinishTexture(THREE,'Woven cocoa and flax checks',252,288,.98,(u,v)=>{
-  const x=Math.floor(u*252),y=Math.floor(v*288);
-  const edge=Math.min(x,251-x,y,287-y),square=(Math.floor(x/18)+Math.floor(y/18))%2;
-  const base=edge<2||edge>=5&&edge<7?[102,77,62]:edge<9?[189,161,132]:square?[158,132,109]:[211,193,167];
-  const warp=(x%3===0?5:0)-(y%3===0?4:0);
-  return mix(base,warp+2*Math.sin(x*23.4+y*43.1));
- });
- return {accentWalnut:walnut,check};
+ return {accentWalnut:walnut,spotted:iconSofaPrint(THREE),anatolian:iconAnatolianRug(THREE)};
 }
 
 function iconLivingPalette(context) {
@@ -534,7 +633,25 @@ function iconLivingPalette(context) {
   putty:paint('#c7b9a7',.89),chalk:paint('#e7dcc9',.90),clay:paint('#a17360',.83),
   cocoa:paint('#655246',.82),shadow:paint('#544a41',.87),plaster:paint('#c7b9a7',.94),
   silver:paint('#bfc0b9',.32,.78),indigo:paint('#49526c',.79),
-  walnut:finish('#604638','wood'),espresso:finish('#483b32','wood'),ash:finish('#ad8662','wood'),slate:finish('#343637','wood'),stone:finish('#d3c6b2','stone'),ivory:paint('#efe8da'),black:paint('#252625',.48,.32),screen:paint('#202c33',.24,.25),sage:finish('#aaa998','cloth'),olive:finish('#959984','cloth'),linen:finish('#ded8c8','cloth'),rug:finish('#bcae96','cloth'),brass:paint('#ab8454',.34,.55),projection:paint('#faf9f5',1),lens:paint('#315877',.16,.46)};
+  walnut:finish('#604638','wood'),espresso:finish('#483b32','wood'),ash:finish('#ad8662','wood'),slate:finish('#343637','wood'),stone:finish('#d3c6b2','stone'),ivory:paint('#efe8da'),black:paint('#252625',.48,.32),screen:paint('#202c33',.24,.25),sage:finish('#aaa998','cloth'),olive:finish('#959984','cloth'),linen:finish('#ded8c8','cloth'),rug:finish('#bcae96','cloth'),brass:paint('#ab8454',.34,.55),lens:paint('#315877',.16,.46)};
+}
+
+function iconUpholsteryCut(geometry,w,d,h,r,cut) {
+ const {position,normal,uv}=geometry.attributes;
+ // Spend the outer subdivisions on the radius even on metre-wide cushions.
+ function fold(value,length){
+  const t=Math.abs(value)/(length/2),flat=length/2-r;
+  return Math.sign(value)*(t<.32?flat*t/.32:flat+r*(t-.32)/.68);
+ }
+ for(let i=0;i<position.count;i++){
+  const x=fold(position.getX(i),w),y=fold(position.getY(i),d),z=fold(position.getZ(i),h);
+  const nx=normal.getX(i),ny=normal.getY(i),nz=normal.getZ(i);
+  position.setXYZ(i,x,y,z);
+  // Unfold the cap and its four drops like a cut of fabric; UVs measure metres.
+  const u=nx?nx*(w/2+h/2-z):x;
+  const v=ny?ny*(d/2+h/2-z):nz<0?d-y:y;
+  uv.setXY(i,u/1.06+cut*.317,v/1.06+cut*.587);
+ }
 }
 
 function iconLivingShapes(context,frame,segments=8) {
@@ -542,8 +659,9 @@ function iconLivingShapes(context,frame,segments=8) {
  const add=(name,geometry,mat,u,v,z)=>{
   const object=mesh(geometry,mat,item.id+'-'+name);object.position.set(...point(u,v,z));object.rotation.z=rotation;return object;
  };
- function cushion(name,u,v,z,w,d,h,r,mat,tilt=0){
+ function cushion(name,u,v,z,w,d,h,r,mat,tilt=0,cut=0){
   const g=new THREE.BoxGeometry(w,d,h,segments,segments,Math.min(segments,6)),p=g.attributes.position,radius=Math.min(r,w*.49,d*.49,h*.49);
+  if(cut)iconUpholsteryCut(g,w,d,h,radius,cut);
   for(let i=0;i<p.count;i++){
    const vtx=new THREE.Vector3().fromBufferAttribute(p,i),core=vtx.clone().clamp(new THREE.Vector3(-w/2+radius,-d/2+radius,-h/2+radius),new THREE.Vector3(w/2-radius,d/2-radius,h/2-radius));
    const normal=vtx.clone().sub(core).normalize();core.addScaledVector(normal,radius);
@@ -561,6 +679,51 @@ function iconLivingShapes(context,frame,segments=8) {
  return {add,cushion,disc,tube};
 }
 
+function iconSpottedSectional(frame,s,p) {
+ const {item,width:w,depth:d}=frame,chaise=item.type==='ottoman';
+ let cut=chaise?16:0;
+ const cover=(name,u,v,z,width,depth,height,radius,tilt=0)=>
+  s.cushion(name,u,v,z,width,depth,height,radius,p.spotted,tilt,++cut);
+ s.cushion('recessed-foot',w/2,d/2,.049,w-.17,d-.18,.082,.036,p.shadow);
+ cover('upholstered-base',w/2,d/2,.123,w,d,.158,.072);
+ if(chaise){
+  cover('loose-cushion',w/2,d/2,.302,w-.009,d-.008,.35,.135);
+  return;
+ }
+ cover('back',w/2,.097,.435,w-.045,.175,.552,.082);
+ const gardenSeat=w-1,divisions=[.145,gardenSeat/2,gardenSeat,w];
+ for(let i=0;i<3;i++){
+  const u=(divisions[i]+divisions[i+1])/2,panel=divisions[i+1]-divisions[i];
+  cover(i===1?'seat':'seat-'+i,u,(d+.19)/2,.302,panel-.011,d-.198,.35,.135);
+  cover('scatter-'+i,u,.189,.625,panel-.016,.279,.455,.134,.115);
+ }
+ cover('arm',.092,(d+.035)/2,.423,.184,d-.055,.425,.091);
+}
+
+function iconLivingRug(THREE,frame,s,p) {
+ const {width:w,depth:d}=frame,field=d-.072;
+ const body=s.cushion('woven',w/2,d/2,.0075,w,field,.015,.007,p.anatolian);
+ const {position,uv}=body.geometry.attributes;
+ for(let i=0;i<uv.count;i++)uv.setXY(i,position.getX(i)/w+.5,position.getY(i)/field+.5);
+ const fibers=[],indices=[],tex=[];
+ for(const side of [-1,1])for(let k=0;k<98;k++){
+  const x=(k+.5)*w/98,y=side*field/2;
+  const length=.025+.009*(.5+.5*Math.sin(k*38.1+side)),drift=.003*Math.sin(k*19.2);
+  for(let strand=0;strand<2;strand++){
+   const start=x+(strand-.5)*.005,end=start+drift+(strand-.5)*.011,idx=fibers.length/3;
+   fibers.push(start-.004,y-side*.002,.006,start+.004,y-side*.002,.006,
+    end+.0025,y+side*length,.003,end-.0025,y+side*length,.003);
+   tex.push(0,0,1,0,1,1,0,1);
+   if(side>0)indices.push(idx,idx+1,idx+2,idx,idx+2,idx+3);
+   else indices.push(idx,idx+2,idx+1,idx,idx+3,idx+2);
+  }
+ }
+ const fringe=new THREE.BufferGeometry();
+ fringe.setAttribute('position',new THREE.Float32BufferAttribute(fibers,3));
+ fringe.setAttribute('uv',new THREE.Float32BufferAttribute(tex,2));fringe.setIndex(indices);fringe.computeVertexNormals();
+ s.add('knotted-fringe',fringe,p.linen,0,d/2,0);
+}
+
 function iconLivingSeats(frame,s,p) {
  const {item,width:w,depth:d,line}=frame;
  if(item.type==='armchair'){
@@ -575,20 +738,7 @@ function iconLivingSeats(frame,s,p) {
   s.cushion('scatter',w*.53,.39,.665,.43,.17,.397,.082,p.linen,-.30).rotateY(-.15);
   return;
  }
- if(item.type==='sofa'||item.type==='ottoman'){
-  const ott=item.type==='ottoman';
-  s.cushion('recessed-foot',w/2,d/2,.10,w-.13,d-.12,.16,.06,p.shadow);
-  s.cushion('upholstered-base',w/2,d/2,.245,w,d,.28,.12,p.sage);
-  if(ott){s.cushion('loose-cushion',w/2,d/2,.395,w-.014,d-.014,.22,.10,p.sage);return;}
-  for(let i=0;i<3;i++){
-   const u=(i+.5)*w/3;
-   s.cushion(i===1?'seat':'seat-'+i,u,.56,.414,w/3-.019,d-.15,.24,.115,p.sage);
-   s.cushion(i===1?'back':'back-'+i,u,.19,.63,w/3-.02,.29,.53,.13,p.sage,-.14);
-   s.cushion('scatter-'+i,u+(i===1?.17:-.18),.32,.72,.47,.20,i===1?.38:.46,.095,i===0?p.indigo:i===1?p.linen:p.olive,-.32).rotateY(i===1?-.15:.12);
-  }
-  s.cushion('arm',.10,.54,.54,.19,.9,.32,.09,p.sage);
-  return;
- }
+ if(item.type==='sofa'||item.type==='ottoman')return iconSpottedSectional(frame,s,p);
  const h=.445;
  s.disc('seat',w/2,d*.5,h,w*.46,d*.46,.052,p.linen);
  for(const left of [false,true])for(const front of [false,true]){
@@ -805,22 +955,12 @@ function iconLivingKitchen(context,frame,s,p) {
  }
 }
 
-function iconLivingMediaWall(context) {
- const {THREE,mesh,box,mats}=context,p=iconLivingPalette(context);
- box('living-slate-boards',[.477,12.36,.509,16.56],.02,2.75,p.plaster);
- const y=12.78,z=1.69;
- const plate=mesh(new THREE.CylinderGeometry(.119,.129,.023,48),p.brass,'living-sconce-backplate');
- plate.rotation.z=Math.PI/2;plate.position.set(.520,y,z);
- const globe=mesh(new THREE.SphereGeometry(.078,28,18),mats.lamp,'living-sconce-opal');
- globe.scale.x=.82;globe.position.set(.564,y,z);
- iconLocalSconceLight(context,'living',.665,y,z);
- const screen=context.data.furniture.find(item=>item.id==='projection-screen');
- iconLivingProjector(context,screen,p);
-}
-
-function iconLivingProjector(context,screen,p) {
- const {THREE,mesh,box,beam,obstacle}=context;
- const target=new THREE.Vector3(screen.box[2],(screen.box[1]+screen.box[3])/2,screen.elevation+screen.height/2);
+function iconLivingProjector(context) {
+ const {THREE,mesh,box,beam,obstacle,data,group}=context,p=iconLivingPalette(context);
+ const projection=data.projection;
+ const wall=group.getObjectByName(projection.wall);
+ wall.geometry.computeBoundingBox();
+ const target=new THREE.Vector3(wall.geometry.boundingBox.max.x,projection.centerY,projection.centerHeightM);
  const lens=new THREE.Vector3(7.51,target.y,2.57);
  const aim=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(-1,0,0),target.clone().sub(lens).normalize());
  const at=(x,y,z)=>new THREE.Vector3(x,y,z).applyQuaternion(aim).add(lens);
@@ -873,7 +1013,7 @@ function iconLivingFurniture(context,frame) {
  const {item,width:w,depth:d,part}=frame,p=iconLivingPalette(context),s=iconLivingShapes(context,frame);
  if(['sofa','ottoman','chair','armchair'].includes(item.type))iconLivingSeats(frame,s,p);
  else if(item.id.startsWith('kitchen-')||item.id==='hob')iconLivingKitchen(context,frame,s,p);
- else if(item.id==='living-rug')s.cushion('woven',w/2,d/2,.0075,w,d,.015,.007,p.check);
+ else if(item.id==='living-rug')iconLivingRug(context.THREE,frame,s,p);
  else if(item.id==='dining-table'){
   s.cushion('solid-top',w/2,d/2,.743,w,d,.077,.036,p.cocoa);
   for(const y of [.48,d-.48])part('trestle-'+y,[.13,y-.082,w-.13,y+.082],.012,.695,p.cocoa);
@@ -881,15 +1021,6 @@ function iconLivingFurniture(context,frame) {
   s.disc('pottery-bowl',w/2,d*.50,.806,.19,.19,.055,p.stone);
  }else if(item.id==='coffee-table'){
   iconLivingCoffeeTable(context.THREE,s,p);
- }else if(item.id==='projection-screen'){
-  part('panel',[0,0,w,d-.002],0,item.height,p.ivory);
-  part('surface',[0,d-.002,w,d],0,item.height,p.projection);
- }else if(item.id==='media-console'){
-  part('body',[0,.05,w,d-.016],.215,.27,p.cocoa);
-  for(let i=0;i<4;i++){
-   s.cushion('face-'+i,(i+.5)*w/4,d-.018,.347,w/4-.009,.020,.255,.008,p.putty);
-   s.cushion('pull-'+i,(i+.5)*w/4,d-.009,.354,.065,.018,.019,.007,p.cocoa);
-  }
  }else return false;
  return true;
 }
@@ -1089,38 +1220,66 @@ function iconUpperCeramic(s,THREE,name,u,v,z,rx,ry,profile,material) {
 
 function iconUpperSanitary(context,frame,s,p) {
  const {THREE,ceilingAt}=context,{item,width:w,depth:d,part,line,point,mats}=frame;
+ const family=item.room==='1.2',finish=iconUpperBathPalette(context),metal=family?finish.nickel:finish.brass;
  const ceramic=(name,u,v,z,rx,ry,profile)=>iconUpperCeramic(s,THREE,name,u,v,z,rx,ry,profile,mats.white);
  if(item.type==='sink'){
-  s.cushion('vanity',w/2,(d-.027)/2,.502,w,d-.027,.54,.018,p.cocoa);
-  for(let i=0;i<2;i++)part('drawer-'+i,[.014,d-.023,w-.014,d],.254+i*.25,.227,p.putty);
-  part('counter',[0,0,w,d],.772,.031,p.stone);
+  const front=family?finish.honey:finish.moss;
+  s.cushion('vanity',w/2,(d-.027)/2,.501,w-.012,d-.027,.538,.018,front);
+  for(let i=0;i<2;i++){
+   part('drawer-'+i,[.012,d-.025,w-.012,d-.020],.252+i*.25,.235,front);
+   line('drawer-pull-'+i,[w*.36,d-.011,.424+i*.25],[w*.64,d-.011,.424+i*.25],.009,metal);
+  }
+  s.cushion('counter',w/2,d/2,.787,w,d,.032,.010,finish.cream);
   ceramic('bowl',w/2,d*.58,.803,w*.386,d*.385,[[.56,0],[.85,.01],[1,.111],[.992,.127],[.95,.13],[.9,.102],[.58,.035],[.09,.016]]);
-  s.disc('drain',w/2,d*.58,.815,.024,.024,.004,p.brass);
-  s.tube('tap',[[w*.52,d*.11,.801],[w*.52,d*.11,1.01],[w*.52,d*.16,1.04],[w*.52,d*.39,1.04],[w*.52,d*.40,1.00]],.012,p.brass);
-  const mirrorTop=Math.min(1.90,...[.04,w-.04].map(u=>{const [x,y,z]=point(u,.02);return ceilingAt(x,y)-z-.03;}));
-  part('mirror-frame',[.032,.005,w-.032,.027],1.11,mirrorTop-1.11,p.cocoa);
-  const silver=context.upperMirror??=new THREE.MeshStandardMaterial({color:'#cbd8d6',metalness:.26,roughness:.12});
-  part('mirror',[.044,.027,w-.044,.031],1.122,mirrorTop-1.134,silver);
+  s.disc('drain',w/2,d*.58,.815,.024,.024,.004,metal);
+  s.tube('tap',[[w*.52,d*.11,.801],[w*.52,d*.11,1.01],[w*.52,d*.16,1.04],[w*.52,d*.39,1.04],[w*.52,d*.40,1.00]],.012,metal);
+  const mirrorTop=Math.min(1.94,...[.04,w-.04].map(u=>{const [x,y,z]=point(u,.02);return ceilingAt(x,y)-z-.03;}));
+  const mirror=(name,width,height,v,material)=>{
+   const shape=new THREE.Shape(),r=width/2;
+   if(family)shape.absellipse(0,height/2,r,height/2,0,2*Math.PI,false);
+   else{shape.moveTo(-r,0);shape.lineTo(r,0);shape.lineTo(r,height-r);shape.absarc(0,height-r,r,0,Math.PI,false);shape.lineTo(-r,0);}
+   const g=new THREE.ExtrudeGeometry(shape,{depth:.008,bevelEnabled:false,curveSegments:24});
+   const xy=g.attributes.position,uv=g.attributes.uv;
+   for(let i=0;i<uv.count;i++)uv.setXY(i,xy.getX(i)/width+.5,xy.getY(i)/height);
+   g.rotateX(Math.PI/2);
+   s.add(name,g,material,w/2,v,1.115+(name==='mirror'?.008:0));
+  };
+  const width=w*(family?.91:.76),height=mirrorTop-1.115;
+  mirror('mirror-frame',width,height,.033,metal);
+  mirror('mirror',width-.016,height-.016,.035,finish.silver);
+  const u=w*.12,v=d*.26;
+  s.disc('amber-soap',u,v,.804,.033,.033,.112,finish.amber);
+  s.disc('pump-neck',u,v,.916,.015,.015,.023,metal);
+  line('pump-spout',[u,v,.941],[u+.030,v,.941],.005,metal);
  }else if(item.type==='toilet'){
   part('wall-carrier',[w*.24,0,w*.76,d*.43],.17,.22,mats.white);
   ceramic('base',w/2,d*.573,.08,w*.48,d*.409,[[.46,0],[.58,.025],[.70,.13],[.97,.24],[1,.32],[.95,.337],[.78,.333],[.67,.23],[.18,.13]]);
   ceramic('seat',w/2,d*.57,.413,w*.48,d*.403,[[.77,0],[.96,0],[1,.012],[.98,.033],[.79,.035],[.76,.023],[.77,0]]);
   s.cushion('cistern',w/2,d*.13,.542,w-.036,d*.25,.37,.035,mats.white);
-  s.disc('flush',w/2,d*.13,.727,.024,.016,.004,p.brass);
+  s.disc('flush',w/2,d*.13,.727,.024,.016,.004,metal);
  }else if(item.type==='tub'){
   ceramic('shell',w/2,d/2,.016,w*.50,d*.50,[[.73,0],[.79,.026],[.90,.22],[.995,.53],[1,.556],[.976,.569],[.918,.561],[.88,.49],[.72,.13],[.58,.096],[.025,.096]]);
-  s.disc('drain',w*.50,d*.50,.110,.028,.028,.005,p.brass);
-  s.tube('filler',[[w*.20,.10,.025],[w*.2,.10,.65],[w*.23,.12,.70],[w*.26,d*.28,.70],[w*.26,d*.29,.66]],.017,p.brass);
+  s.disc('drain',w*.50,d*.50,.110,.028,.028,.005,metal);
+  part('bath-bridge',[w*.27,.005,w*.38,d-.005],.582,.022,finish.honey);
+  s.disc('bridge-soap-dish',w*.325,d*.54,.604,.064,.047,.014,finish.cream);
+  s.tube('filler',[[w*.20,.10,.025],[w*.2,.10,.65],[w*.23,.12,.70],[w*.26,d*.28,.70],[w*.26,d*.29,.66]],.017,metal);
  }else{
   s.cushion('tray',w/2,d/2,.036,w,d,.06,.025,p.stone);
   part('linear-drain',[w*.18,.075,w*.78,.099],.066,.006,p.black);
   const maxHeight=Math.min(2.03,...[.025,d-.025].map(v=>{const [x,y,z]=point(w-.028,v);return ceilingAt(x,y)-z-.035;}));
   part('screen',[w-.035,.024,w-.023,d-.019],.066,maxHeight-.066,mats.glass).castShadow=false;
   for(const v of [.025,d-.025])line('glazing-stile-'+v,[w-.029,v,.065],[w-.029,v,maxHeight],.011,p.black);
-  line('mixer',[w-.184,d*.45,1.03],[w-.05,d*.45,1.03],.024,p.brass);
-  line('column',[w-.09,d*.45,1.03],[w-.09,d*.45,1.98],.014,p.brass);
-  line('arm',[w-.09,d*.45,1.98],[w*.59,d*.45,1.98],.014,p.brass);
-  s.disc('head',w*.59,d*.45,1.94,.093,.093,.033,p.brass);
+  const u=family?w*.56:.075,v=family?.065:d*.51;
+  const [mx,my]=family?[.15,0]:[0,.15],headU=family?u:w*.39,headV=family?d*.46:v;
+  line('mixer',[u-mx,v-my,1.04],[u+mx,v+my,1.04],.023,metal);
+  for(const side of [-1,1]){
+   const end=[u+side*mx*.64,v+side*my*.64,1.04];
+   line('wall-feed-'+side,family?[end[0],0,1.04]:[0,end[1],1.04],end,.015,metal);
+  }
+  line('column',[u,v,1.04],[u,v,1.98],.014,metal);
+  line('arm',[u,v,1.98],[headU,headV,1.98],.014,metal);
+  s.disc('head',headU,headV,1.94,.093,.093,.033,metal);
+  s.disc('perforated-face',headU,headV,1.937,.086,.086,.003,finish.spray);
  }
 }
 
@@ -2008,26 +2167,6 @@ function iconMoodPlanks(THREE) {
  },[1/2.72,1/1.44]);
 }
 
-function iconMoodTiles(THREE,style,repeat) {
- const colors={check:[[231,214,183],[119,87,70]],sand:[[196,175,151],[201,181,157]],
-  olive:[[91,101,73],[104,112,79]],clay:[[143,85,67],[153,95,75]],star:[[234,220,191],[227,210,181]]};
- const glaze=style==='olive'||style==='clay',rows=glaze?2:4,cols=4;
- return iconFinishTexture(THREE,style+' ceramic',256,256,glaze?.22:.64,(u,v)=>{
-  const x=u*cols,y=v*rows,col=Math.floor(x),row=Math.floor(y),dx=x-col-.5,dy=y-row-.5;
-  const edge=Math.min((.5-Math.abs(dx))*(glaze?.56:1),.5-Math.abs(dy));
-  let base=colors[style][(col+row)%2];
-  if(style==='check'&&Math.abs(dx)+Math.abs(dy)>.75)base=[167,132,98];
-  if(style==='star'){
-   const angle=Math.atan2(dy,dx),radius=.074+.244*Math.pow(Math.abs(Math.cos(4*angle)),5);
-   if(Math.hypot(dx,dy)<radius)base=[77,70,56];
-  }
-  if(edge<.009)base=glaze?[167,153,125]:[177,159,139];
-  const variation=glaze?4*Math.sin(11*dx+5*dy+row)*Math.sin(7*dy-col)+8*Math.exp(-Math.pow((edge-.021)/.013,2))
-   :1.8*Math.sin(42*u+4*Math.cos(19*v))*Math.sin(37*v);
-  return base.map(channel=>channel+variation);
- },repeat);
-}
-
 function iconMoodWallPanel({THREE,mesh},id,a,b,bottom,height,material) {
  const width=Math.hypot(b[0]-a[0],b[1]-a[1]),geometry=new THREE.PlaneGeometry(width,height);
  const uv=geometry.attributes.uv;
@@ -2038,8 +2177,8 @@ function iconMoodWallPanel({THREE,mesh},id,a,b,bottom,height,material) {
  panel.castShadow=false;
 }
 
-function iconLocalSconceLight({THREE,group},id,x,y,z) {
- const lamp=new THREE.PointLight('#ffdaaf',6,3.4,2);
+function iconLocalSconceLight({THREE,group},id,x,y,z,intensity=6) {
+ const lamp=new THREE.PointLight('#ffdaaf',intensity,3.4,2);
  lamp.name='sconce-light-'+id;lamp.position.set(x,y,z);group.add(lamp);
 }
 
@@ -2328,24 +2467,174 @@ function iconGroundBathFinishes(context) {
  iconBathSunburst(context,end,(wc.box[1]+wc.box[3])/2,1.86);
 }
 
+function iconUpperBathPalette(context) {
+ if(context.upperBathPalette)return context.upperBathPalette;
+ const {THREE}=context;
+ const plain=(name,color,roughness,metalness=0)=>new THREE.MeshStandardMaterial({name,color,roughness,metalness});
+ const glaze=(name,tones,grout,w,h)=>{
+  const finish=iconFinishTexture(THREE,name,256,256,.23,(u,v)=>{
+   const x=u*4,y=v*4,i=Math.floor(x),j=Math.floor(y),dx=x-i,dy=y-j;
+   const edge=Math.min(dx*w,(1-dx)*w,dy*h,(1-dy)*h);
+   if(edge<.0012)return grout;
+   const shade=3.1*Math.cos(10*dx+2.3*j)*Math.sin(6*dy+i)+7*Math.exp(-((edge-.003)**2)/.000005);
+   return tones[(i+2*j+(j%2)*i)%tones.length].map(c=>c+shade);
+  },[1/(4*w),1/(4*h)]);
+  return finish;
+ };
+ const silver=iconFinishTexture(THREE,'Silvered mirror',128,256,.15,(u,v)=>{
+  const tint=13*v+5*Math.cos(2.1*u+2*v)+5*Math.tanh((u-.58+.16*v)*13);
+  return [172+tint,183+tint,180+tint];
+ });silver.metalness=.24;
+ const spray=iconFinishTexture(THREE,'Perforated nickel spray plate',96,96,.34,(u,v)=>
+  Math.hypot(u*13%1-.5,v*13%1-.5)<.15?[55,57,54]:[169,166,149]);
+ return context.upperBathPalette={
+  petrol:glaze('Petrol glazed square tile',[[43,88,91],[50,96,98],[55,100,101],[39,83,87]],[114,137,132],.142,.142),
+  olive:glaze('Olive glazed stick mosaic',[[95,103,49],[118,119,65],[106,114,58],[86,99,54]],[112,112,78],.065,.215),
+  cream:plain('Ivory solid surface','#dbd1b8',.46),honey:plain('Ochre lacquer','#bf843d',.43),
+  moss:plain('Dark olive lacquer','#404939',.46),nickel:plain('Brushed nickel','#babdb8',.32,.56),
+  brass:plain('Satin champagne metal','#b79c69',.35,.5),amber:plain('Amber glass','#714527',.22,.12),
+  familyWall:plain('Warm oyster paint','#c8bca9',.89),privateWall:plain('Dusty almond paint','#b59e87',.90),
+  piping:plain('Ivory ceramic pencil trim','#e3d7b9',.32),silver,spray
+ };
+}
+
+function iconFamilyBathFloor(THREE) {
+ return iconFinishTexture(THREE,'Ochre and petrol compass-star porcelain',256,256,.60,(u,v)=>{
+  const x=u-.5,y=v-.5,ax=Math.abs(x),ay=Math.abs(y),angle=Math.atan2(y,x)+Math.PI/8;
+  const segment=Math.floor(angle/(Math.PI/4)),ray=angle-segment*Math.PI/4-Math.PI/8;
+  const peak=segment%2===0?.411:.282;
+  const r=.075*peak*Math.sin(Math.PI/8)/(peak*Math.sin(Math.abs(ray))+.075*Math.sin(Math.PI/8-Math.abs(ray)));
+  const shade=1.6*Math.sin(209*u)*Math.cos(157*v);
+  const tone=Math.max(ax,ay)>.493?[162,151,130]:ax+ay>.841?[156,135,91]:
+   Math.hypot(x,y)<r?(ray>0?[53,86,87]:[113,134,125]):[223,211,184];
+  return tone.map(c=>c+shade);
+ },[1/.293,1/.293]);
+}
+
+function iconPrivateBathFloor(THREE) {
+ return iconFinishTexture(THREE,'Honed shell-limestone porcelain',256,256,.68,(u,v)=>{
+  const offset=Math.floor(v*2)%2*.5,edge=Math.min((u+offset)%1,1-(u+offset)%1,(v*2)%1,1-(v*2)%1);
+  if(edge<.0025)return [167,155,135];
+  const xi=Math.floor(u*116),yi=Math.floor(v*73),cell=Math.sin(xi*63.97+yi*35.60)*41031;
+  const fossil=cell-Math.floor(cell)>.92 && (u*116%1+v*73%1*.7)<.83;
+  const cloud=4*Math.sin(16*u+5*Math.cos(9*v))*Math.cos(15*v+u*4)+2*Math.cos(44*v+2*Math.sin(15*u));
+  const shade=cloud+(fossil?-22:0);
+  return [201,187,162].map(c=>c+shade);
+ },[1/.80,1/.80]);
+}
+
+function iconUpperBathWall({THREE,mesh,ceilingAt},id,a,b,bottom,top,material) {
+ const vertices=[],uvs=[],length=Math.hypot(b[0]-a[0],b[1]-a[1]);
+ const at=t=>a.map((v,i)=>v+(b[i]-v)*t);
+ const roof=t=>ceilingAt(...at(t))-.007;
+ const times=[0,1],ridge=(4.25-a[0])/(b[0]-a[0]);
+ if(ridge>0&&ridge<1)times.splice(1,0,ridge);
+ const breaks=[...times];
+ for(let i=1;i<times.length;i++){
+  const lo=times[i-1],hi=times[i],z0=roof(lo),z1=roof(hi);
+  for(const z of [bottom,top])if(z>Math.min(z0,z1)&&z<Math.max(z0,z1))breaks.push(lo+(hi-lo)*(z-z0)/(z1-z0));
+ }
+ breaks.sort((x,y)=>x-y);
+ for(let i=1;i<breaks.length;i++){
+  const lo=breaks[i-1],hi=breaks[i],zl=Math.min(top,roof(lo)),zh=Math.min(top,roof(hi));
+  if(Math.max(zl,zh)<=bottom+.0001)continue;
+  for(const [t,z] of [[lo,bottom],[hi,bottom],[hi,zh],[lo,bottom],[hi,zh],[lo,zl]]){
+   vertices.push(...at(t),z);uvs.push(t*length,z-bottom);
+  }
+ }
+ const g=new THREE.BufferGeometry();
+ g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+ g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));g.computeVertexNormals();
+ mesh(g,material,id).castShadow=false;
+}
+
+function iconUpperBathLamp(context,id,x,y,z,family) {
+ const {THREE,mesh,beam,mats}=context,p=iconUpperBathPalette(context),prefix='light-fixture-mood-'+id+'-';
+ const origin=[x,y,z],position=(u,v,h)=>family?[x+u,y+v,z+h]:[x-v,y+u,z+h];
+ const metal=family?p.nickel:p.brass;
+ const mount=mesh(new THREE.CylinderGeometry(.072,.072,.02,32),metal,prefix+'mount');
+ mount.position.set(...position(0,.012,0));if(!family)mount.rotation.z=Math.PI/2;
+ beam(prefix+'bracket',origin,position(0,.082,0),.018,metal);
+ if(family){
+  const geometry=new THREE.CapsuleGeometry(.027,.415,6,24);geometry.rotateZ(Math.PI/2);
+  const tube=mesh(geometry,mats.lamp,prefix+'opal');tube.position.set(...position(0,.089,0));tube.castShadow=false;
+  for(const side of [-1,1])beam(prefix+'end-'+side,position(side*.209,.089,0),position(side*.236,.089,0),.03,metal);
+ }else{
+  beam(prefix+'spindle',position(0,.084,-.103),position(0,.084,.103),.026,metal);
+  for(const side of [-1,1]){
+   const globe=mesh(new THREE.SphereGeometry(.055,24,16),mats.lamp,prefix+(side===1?'opal':'lower-opal'));
+   globe.scale.z=1.12;globe.position.set(...position(0,.084,side*.119));globe.castShadow=false;
+  }
+ }
+ iconLocalSconceLight(context,id,...position(0,.161,0),family ? .43 : .31);
+}
+
+function iconUpperBathFinishes(context) {
+ const {THREE,group,box,beam,mesh}=context,p=iconUpperBathPalette(context),floor=3.223;
+ group.getObjectByName('finish-1.2').material=iconFamilyBathFloor(THREE);
+ group.getObjectByName('finish-1.6').material=iconPrivateBathFloor(THREE);
+ const tile=(id,a,b,top,mat)=>iconUpperBathWall(context,id,a,b,floor,top,mat);
+ const family=(id,a,b,top)=>{
+  tile('bath-family-'+id,a,b,top,p.petrol);
+  iconUpperBathWall(context,'bath-family-paint-'+id,a,b,top,Infinity,p.familyWall);
+  beam('bath-family-ivory-pencil-'+id,[...a,top],[...b,top],.009,p.piping);
+ };
+ family('tub-side',[.502,5.638],[4.768,5.638],4.30);
+ family('basin-side',[3.87,3.742],[.502,3.742],4.30);
+ family('shower',[4.768,3.742],[3.87,3.742],5.29);
+ tile('bath-family-shower-return',[4.768,4.638],[4.768,3.742],5.29,p.petrol);
+ box('bath-family-tub-ledge',[.186,3.745,.498,5.635],3.223,.625,p.cream);
+ box('bath-family-tub-shelf',[.185,3.745,.51,5.635],3.848,.025,p.piping);
+ context.obstacle('bath-family-tub-ledge',[.185,3.745,.51,5.635],floor,3.873);
+ const vessel=(id,x,y,z,r,h,finish)=>{
+  const profile=[[.8,0],[1,.05],[1,.66],[.94,.77],[.56,.88],[.56,1],[.42,1],[.42,.88]];
+  const g=new THREE.LatheGeometry(profile.map(([radius,height])=>new THREE.Vector2(r*radius,h*height)),28);
+  g.rotateX(Math.PI/2);mesh(g,finish,id).position.set(x,y,z);
+ };
+ vessel('bath-family-ochre-jar',.435,4.10,3.873,.067,.16,p.honey);
+ vessel('bath-family-pale-bud-vase',.435,4.25,3.873,.050,.21,p.piping);
+ iconUpperBathLamp(context,'family-basin',3.35,3.743,5.262,true);
+ const privateWall=(id,a,b,top,mat=p.olive)=>{
+  tile('bath-private-'+id,a,b,top,mat);
+  iconUpperBathWall(context,'bath-private-paint-'+id,a,b,top,Infinity,p.privateWall);
+ };
+ privateWall('double-vanity',[11.548,7.887],[11.548,5.115],5.34);
+ privateWall('shower',[8.912,5.226],[8.912,6.50],5.21);
+ for(const side of [-1,1]){
+  const y=5.4+.51+side*.15*.64;
+  beam('bath-private-mixer-feed-'+side,[8.912,y,4.24],[8.95,y,4.24],.015,p.brass);
+ }
+ privateWall('towel-wall',[8.912,6.50],[8.912,7.887],4.31);
+ privateWall('door-left',[8.912,7.888],[9.997,7.888],4.31);
+ privateWall('door-right',[10.902,7.888],[11.548,7.888],4.31);
+ const capZ=4.176;
+ box('bath-private-service-ledge',[8.913,4.82,11.545,5.132],floor,capZ-floor,p.moss);
+ tile('bath-private-service-glaze',[11.545,5.133],[8.913,5.133],capZ,p.olive);
+ box('bath-private-ledge-cap',[8.913,4.82,11.545,5.143],capZ,.024,p.cream);
+ context.obstacle('bath-private-service-ledge',[8.913,4.82,11.545,5.143],floor,capZ+.024);
+ vessel('bath-private-oil-flask',10.90,5.018,capZ+.024,.041,.176,p.amber);
+ vessel('bath-private-bath-salts',11.035,5.001,capZ+.024,.065,.122,p.cream);
+ for(const y of [6.704,7.29])beam('bath-private-rail-bracket-'+y,[8.913,y,4.36],[8.986,y,4.36],.012,p.brass);
+ beam('bath-private-towel-bar',[8.986,6.687,4.36],[8.986,7.305,4.36],.010,p.brass);
+ const towel=iconFinishTexture(THREE,'Ivory ribbed linen with olive selvedges',128,128,.94,(u,v)=>{
+  const stripe=v<.03||v>.97||v>.115&&v<.133;
+  const rib=4*Math.sin(u*67*Math.PI*2);
+  return (stripe?[104,112,74]:[212,202,182]).map(c=>c+rib);
+ });
+ box('bath-private-hand-towel',[8.98,6.79,9.006,7.206],3.864,.508,towel);
+ iconUpperBathLamp(context,'private-basins',11.547,6.976,4.82,false);
+}
+
 function iconMoodEntryBathFinishes(context) {
  const {THREE,group}=context;
  const get=name=>group.getObjectByName(name);
  const planks=iconMoodPlanks(THREE);
  for(const name of ['ground-floor','upper-oak-finish'])get(name).material=planks;
  iconEntryFloor(context);
- const warmFloor=iconMoodTiles(THREE,'sand',[1/1.76,1/1.76]);
- for(const id of ['1.2','1.6'])get('finish-'+id).material=warmFloor;
  const paint=new THREE.MeshStandardMaterial({color:'#b7aa8e',roughness:.73});
  iconMoodVestibule(context,paint);
- const olive=iconMoodTiles(THREE,'olive',[1/.40,1/.36]),clay=iconMoodTiles(THREE,'clay',[1/.40,1/.36]);
- const star=iconMoodTiles(THREE,'star',[1/.76,1/.76]);
  iconGroundBathFinishes(context);
- iconMoodWallPanel(context,'bath-family-clay-shower',[4.765,3.742],[3.872,3.742],3.263,1.98,clay);
- iconMoodWallPanel(context,'bath-family-star-band',[.53,5.638],[2.62,5.638],3.90,.38,star);
- iconMoodWallPanel(context,'bath-private-olive-splash',[11.548,7.82],[11.548,6.12],3.43,1.52,olive);
- iconMoodSconce(context,'family-basin',3.35,3.743,5.24,0,1);
- iconMoodSconce(context,'private-basins',11.547,6.976,5.20,-1,0);
+ iconUpperBathFinishes(context);
 }
 
 function iconLoftElectrical({THREE,data,group,mesh}) {

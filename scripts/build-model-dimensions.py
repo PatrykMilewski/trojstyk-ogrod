@@ -140,7 +140,7 @@ if 'interior' in registry:
     if 'projection' in interior:
         screen, bays = interior['projection'], interior['garageBays']
         content += section('Wyposażenie domu /193', table(['Element', 'Wymiar w modelu'], [
-            ['Białe pole projekcyjne', dimensions([screen['widthM'], screen['heightM']]) + ' m (' + number(screen['diagonalInches']) + '″)'],
+            ['Obraz na białej ścianie malowanej farbą projekcyjną', dimensions([screen['widthM'], screen['heightM']]) + ' m (' + number(screen['diagonalInches']) + '″)'],
             ['Wolne stanowiska w garażu', str(bays['count']) + ' stanowiska po ' + dimensions([bays['widthM'], bays['lengthM']]) + ' m'],
             ['Drzwi przechodnie w spacerze', 'Szklane skrzydło wiatrołapu i ukryty front kuchenny']]))
 if 'florydaInterior' in registry:

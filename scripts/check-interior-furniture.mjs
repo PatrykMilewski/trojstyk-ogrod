@@ -61,7 +61,7 @@ test('rendered bed heads and sofa backs follow publisher orientation', () => {
     assert.equal(item.facing, '-x');
     assert(facingProjection(item, seat) > facingProjection(item, back), id + ' faces toward -x');
   }
-  assert(itemBounds('projection-screen').max.x < itemBounds('coffee-table').min.x);
+  assert(bounds(interior.group.getObjectByName(data.projection.wall)).max.x < itemBounds('coffee-table').min.x);
   assert(itemBounds('coffee-table').max.x < itemBounds('sofa').min.x);
 });
 
@@ -307,7 +307,7 @@ test('plaster return finishes flush with the vestibule wardrobe and keeps the pa
   assert(!collider.pathBlocked(point(7.4,5.25),point(7.4,8.1)));
 });
 
-test('reference furniture keeps the stone returns, paired coffee tables and floating media console in scale', () => {
+test('reference furniture keeps the stone returns and paired coffee tables in scale', () => {
   const box = name => bounds(interior.group.getObjectByName(name));
   const island = furniture.get('kitchen-island'), top = box('kitchen-island-top');
   const returns = parts(island.id).filter(mesh => mesh.name.includes('-waterfall-'));
@@ -323,7 +323,7 @@ test('reference furniture keeps the stone returns, paired coffee tables and floa
   close(smaller.max.x - smaller.min.x, .47, 'Small coffee tabletop diameter');
   assert(smaller.max.z < larger.min.z, 'Smaller table nests below the larger tabletop');
   close(itemBounds('living-rug').min.z, 0, 'Rug rests on the floor');
-  assert(itemBounds('media-console').min.z > .20, 'Media console floats clear of floor');
+  assert(!furniture.has('media-console') && !furniture.has('projection-screen'));
   assert.equal(parts('sofa').filter(mesh => mesh.name.includes('-scatter-')).length, 3);
   for (const chair of data.furniture.filter(item => item.id.startsWith('dining-') && item.type === 'chair')) {
     const seat = interior.group.getObjectByName(chair.id + '-seat');
@@ -393,12 +393,23 @@ test('wall-mounted projector aims at a matte white 16:9 surface with the entire 
   const get = name => interior.group.getObjectByName(name);
   assert(!interior.group.children.some(object => /living-stove|^tv-/.test(object.name)));
   assert(!interior.navigation.obstacles.some(obstacle => /stove|furniture-tv/.test(obstacle.id)));
-  const surface=get('projection-screen-surface'), screen=bounds(surface), size=screen.getSize(new THREE.Vector3());
-  close(size.y/size.z,16/9,'Projection image aspect ratio');
-  const inches=Math.hypot(size.y,size.z)/.0254;
-  assert(inches>=70 && inches<=120);
-  assert(surface.material.roughness >= .95 && surface.material.metalness === 0);
-  assert(Math.min(...surface.material.color.toArray())>.88 && surface.material.emissive.getHex()===0);
+  const zone=data.projection, wall=get(zone.wall), face=bounds(wall).max.x;
+  const screen=new THREE.Box3(new THREE.Vector3(face,zone.centerY-zone.widthM/2,zone.centerHeightM-zone.heightM/2),
+    new THREE.Vector3(face,zone.centerY+zone.widthM/2,zone.centerHeightM+zone.heightM/2));
+  close(zone.widthM/zone.heightM,16/9,'Projection image aspect ratio');
+  assert(Math.hypot(zone.widthM,zone.heightM)/.0254>=70 && Math.hypot(zone.widthM,zone.heightM)/.0254<=120);
+  const paint=wall.material[2];
+  assert.equal(paint.color.getHex(),0xffffff);
+  assert(paint.roughness===1 && paint.metalness===0 && paint.emissive.getHex()===0);
+  assert(!interior.group.children.some(o=>/^(projection-screen-|living-sconce-|living-slate-|media-console-)/.test(o.name)));
+  for(const [z,layer] of [[.05,wall],[1.575,wall],[2.76,wall],[3.55,get('upper-main-side')]]){
+    for(const y of [12.4,zone.centerY,16.48]){
+      const origin=new THREE.Vector3(1,y,z).applyMatrix4(interior.group.matrixWorld);
+      const dir=new THREE.Vector3(-1,0,0).transformDirection(interior.group.matrixWorld);
+      const hit=new THREE.Raycaster(origin,dir,0,.8).intersectObject(layer)[0];
+      assert(hit && layer.material[hit.face.materialIndex]===paint,'White paint across lounge at '+y+', '+z);
+    }
+  }
   const lens=get('projector-lens-glass'), axis=new THREE.Vector3(-1,0,0).applyQuaternion(lens.quaternion);
   const origin=lens.position.clone().addScaledVector(axis,lens.geometry.parameters.height/2);
   const hit=origin.clone().addScaledVector(axis,(screen.max.x-origin.x)/axis.x);
@@ -701,7 +712,8 @@ test('the downstairs bath finishes are confined to its own walls and keep the ha
   close(tileBox.min.x-wc.min.x,.0060,'Control plate projects beyond tile',.001);
   assert(!get('bath-ground-star-splash'));
   assert.equal(get('finish-0.7').material.name,'Limestone and clay terrazzo');
-  assert.equal(get('finish-1.2').material.name,'sand ceramic');
+  assert.equal(get('finish-1.2').material.name,'Ochre and petrol compass-star porcelain');
+  assert.equal(get('finish-1.6').material.name,'Honed shell-limestone porcelain');
   const room=rooms.get('0.7').box;
   for(const wall of interior.group.children.filter(o=>o.name.startsWith('bath-ground-plaster-'))){
     const b=bounds(wall);
@@ -822,4 +834,32 @@ test('the vestibule routes clear the new console, ottoman and fitted wardrobes',
   const sample=(u,v)=>floor.data[(Math.floor(v*floor.height)*floor.width+Math.floor(u*floor.width))*4];
   assert(sample(.5,.5)>200 && sample(.02,.02)>200 && sample(.26,.31)<65);
   assert(sample(.31,.5)>200 && sample(.19,.5)<65);
+});
+
+test('sectional upholstery continues over the garden chaise and the rug has a bound field and fringe', () => {
+  const seat=interior.group.getObjectByName('sofa-seat');
+  const cover=seat.material;
+  assert(cover.map && cover.roughness>.8);
+  for(const part of [...parts('sofa'),...parts('chaise')].filter(m=>!m.name.endsWith('recessed-foot'))){
+    assert.equal(part.material,cover,part.name);
+    assert(part.geometry.hasAttribute('uv'),part.name+' has fabric coordinates');
+  }
+  const rug=interior.group.getObjectByName('living-rug-woven');
+  assert(rug.material.map && rug.material.map!==cover.map);
+  const fringe=bounds(interior.group.getObjectByName('living-rug-knotted-fringe'));
+  const field=bounds(rug);
+  assert(fringe.min.y<field.min.y && fringe.max.y>field.max.y,'Fringe extends beyond both short ends');
+});
+
+test('the private bath ledge blocks walking and vessels sit on the exposed family bath shelf', () => {
+  const collider=createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<4.70 && o.maxZ>3.26));
+  const point=(x,y)=>interior.localToWorld([x,y]).slice(0,2);
+  assert(collider.pathBlocked(point(11,5.83),point(11,5.14)));
+  const shelf=bounds(interior.group.getObjectByName('bath-family-tub-shelf'));
+  const wall=bounds(interior.group.getObjectByName('upper-main-side'));
+  for(const name of ['bath-family-ochre-jar','bath-family-pale-bud-vase']){
+    const vase=bounds(interior.group.getObjectByName(name));
+    assert(vase.min.x>wall.max.x && vase.max.x<=shelf.max.x);
+    close(vase.min.z,shelf.max.z,'Vessel is supported by shelf');
+  }
 });

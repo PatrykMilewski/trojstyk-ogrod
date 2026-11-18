@@ -212,10 +212,10 @@ test('room fixtures are suspended from the slab or the actual sloped lining, wit
   assert(bounds(shade).min.z-(upper?data.levels.upper:0)>2.30,id+' clear height');
  }
  const lights=interior.group.children.filter(child=>child.isPointLight);
- assert.equal(lights.length,9+5);
- for(const id of ['living','entry','family-basin','private-basins','ground-bath']){
+ assert.equal(lights.length,9+4);
+ for(const id of ['entry','family-basin','private-basins','ground-bath']){
   const lamp=object('sconce-light-'+id);
-  const globe=object(id==='living'?'living-sconce-opal':id==='ground-bath'?'light-fixture-bath-sunburst-opal':'light-fixture-mood-'+id+'-opal');
+  const globe=object(id==='ground-bath'?'light-fixture-bath-sunburst-opal':'light-fixture-mood-'+id+'-opal');
   assert(lamp.isPointLight && lamp.intensity>0 && lamp.distance>=3);
   assert(lamp.position.distanceTo(globe.position)<.15);
  }
