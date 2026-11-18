@@ -446,9 +446,28 @@
       "doors": []
     },
     {
-      "id": "hall-front",
+      "id": "vestibule-screen",
+      "finish": "reeded-glass",
       "a": [
         6.58,
+        7.95
+      ],
+      "b": [
+        8.49,
+        7.95
+      ],
+      "thickness": 0.05,
+      "doors": [
+        [
+          0.42,
+          1.32
+        ]
+      ]
+    },
+    {
+      "id": "hall-front",
+      "a": [
+        8.49,
         7.95
       ],
       "b": [
@@ -458,12 +477,8 @@
       "thickness": 0.14,
       "doors": [
         [
-          0.42,
-          1.32
-        ],
-        [
-          2.78,
-          3.68
+          0.87,
+          1.77
         ]
       ]
     },
@@ -679,7 +694,7 @@
       "Upper slope follows unchanged exterior roof; interior roof finish thickness and installation void estimated.",
       "Private-bath doorway traced position shifted25cm within the same partition to provide walk-camera clearance at the perpendicular suite wall; raster-derived design remains approximate.",
       "Eight roof windows on the mirrored attic plan have matching openings through the outer roof and the interior lining 45 mm below it. Window centres were digitised from the drawing; glazing size is an estimate. The living room has a solid roof.",
-      "Main entrance, internal doorways and one terrace sliding panel are held open for walking; garage door and remaining glazing stay closed.",
+      "The main entry, internal doorways and one terrace slider allow passage. The concealed pantry cabinet door and the vestibule glass leaf appear closed, and the fixed vestibule panes block passage.",
       "Furniture inventory records approximate source footprints and front direction; beds face from head to foot. Dimensions are visual traces, typically uncertain by15–30cm, not product or execution dimensions.",
       "Room2 upper partition beside the void is solid; the hall alone has a guardrail. Laundry entry is through the side hall; its rear partition is solid as drawn.",
       "Ground main-side glazing traced to y9.23–12.23m; terrace glazing traced to y13.90–16.60m. These refine openings only, preserving the exterior envelope.",
@@ -687,10 +702,12 @@
       "Furniture under roof slopes uses schematic heights; source footprints and wall contacts are more reliable than catalogue symbol sizes. No unsupported furniture is inferred from rooflight symbols.",
       "Shared upper bathroom doorway refined to y4.64–5.54m against the source opening, leaving the shower approach clear.",
       "Dining seating is the user-requested six-chair override: three chairs per long side, pulled to 6cm from the table edge, instead of eight catalogue chairs.",
-      "The mirrored ground-floor drawing supplies usable areas 10.29 and 13.45 m²; their dimensioned footprints include finishes and the low office storage beneath the stairs. The four closed cabinet modules and their individual heights approximate a possible fit-out."
+      "The mirrored ground-floor drawing supplies usable areas 10.29 and 13.45 m²; their dimensioned footprints include finishes and the low office storage beneath the stairs. The four closed cabinet modules and their individual heights approximate a possible fit-out.",
+      "Room 1.1 study desk, chair and wardrobe are a proposed fit-out. The upper hall reading corner and the exposed timber at the crossing of the two roofs interpret the supplied interior view. Member sizes and joints are for visualisation only."
     ],
     "furnitureSources": {
       "ground-plan": "work/sources/icon-parter-zwykly.jpg, publisher original ground floor, rooms 0.1–0.9",
+      "user-lounge": "User-requested lounge layout with the chaise at the garden end, a separate upholstered armchair and wall-mounted projection. Dimensions are schematic.",
       "user-attic": "User-requested furnishings fitted to the supplied mirrored attic plan; furniture sizes are schematic.",
       "upper-plan": "work/icon3d-research/attic-mirror.jpg, publisher mirrored upper floor, converted once into original coordinates",
       "living-render": "work/icon3d-research/top-original.png, publisher living room and kitchen render",
@@ -785,6 +802,21 @@
       "approximation": "Schematic plant equipment; catalogue gives position, not product dimensions."
     },
     {
+      "id": "kitchen-pantry",
+      "type": "concealed-door",
+      "room": "0.4",
+      "box": [
+        0.5,
+        8.65,
+        2.05,
+        9.23
+      ],
+      "facing": "+y",
+      "source": "living-render",
+      "height": 2.8,
+      "passageWall": "kitchen-back"
+    },
+    {
       "id": "kitchen-back",
       "type": "counter",
       "room": "0.4",
@@ -810,7 +842,7 @@
       ],
       "facing": "+y",
       "source": "ground-plan",
-      "height": 2.3
+      "height": 2.8
     },
     {
       "id": "kitchen-sink",
@@ -859,45 +891,6 @@
       "elevation": 0.96
     },
     {
-      "id": "island-stool-0",
-      "type": "stool",
-      "room": "0.4",
-      "box": [
-        3.5799999999999996,
-        11.729999999999999,
-        4.02,
-        12.17
-      ],
-      "facing": "-y",
-      "source": "ground-plan"
-    },
-    {
-      "id": "island-stool-1",
-      "type": "stool",
-      "room": "0.4",
-      "box": [
-        4.430000000000001,
-        11.729999999999999,
-        4.87,
-        12.17
-      ],
-      "facing": "-y",
-      "source": "ground-plan"
-    },
-    {
-      "id": "island-stool-2",
-      "type": "stool",
-      "room": "0.4",
-      "box": [
-        5.28,
-        11.729999999999999,
-        5.72,
-        12.17
-      ],
-      "facing": "-y",
-      "source": "ground-plan"
-    },
-    {
       "id": "living-rug",
       "type": "rug",
       "room": "0.4",
@@ -930,12 +923,25 @@
       "room": "0.4",
       "box": [
         2.25,
-        12.8,
+        15.1,
         3.05,
-        13.8
+        16.1
       ],
       "facing": "-x",
-      "source": "ground-plan"
+      "source": "user-lounge"
+    },
+    {
+      "id": "living-armchair",
+      "type": "armchair",
+      "room": "0.4",
+      "box": [
+        1.98,
+        12.42,
+        2.94,
+        13.36
+      ],
+      "facing": "+y",
+      "source": "user-lounge"
     },
     {
       "id": "coffee-table",
@@ -943,12 +949,12 @@
       "room": "0.4",
       "box": [
         1.55,
-        14.55,
+        13.95,
         2.55,
-        15.35
+        14.75
       ],
       "facing": "+y",
-      "source": "ground-plan",
+      "source": "user-lounge",
       "height": 0.45
     },
     {
@@ -966,20 +972,20 @@
       "height": 0.55
     },
     {
-      "id": "tv",
+      "id": "projection-screen",
       "type": "screen",
       "room": "0.4",
       "box": [
-        0.53,
-        13.8,
-        0.6,
-        15.5
+        0.509,
+        13.28,
+        0.536,
+        15.68
       ],
       "facing": "+x",
-      "source": "ground-plan",
-      "height": 0.95,
-      "elevation": 0.7,
-      "support": "media-console"
+      "source": "user-lounge",
+      "height": 1.35,
+      "elevation": 0.9,
+      "support": "living-slate-boards"
     },
     {
       "id": "dining-table",
@@ -1249,6 +1255,46 @@
       "source": "upper-plan"
     },
     {
+      "id": "bedroom-one-desk",
+      "type": "table",
+      "room": "1.1",
+      "box": [
+        7.38,
+        1.22,
+        8,
+        2.82
+      ],
+      "facing": "-x",
+      "source": "user-attic"
+    },
+    {
+      "id": "bedroom-one-chair",
+      "type": "chair",
+      "room": "1.1",
+      "box": [
+        6.69,
+        1.75,
+        7.19,
+        2.25
+      ],
+      "facing": "+x",
+      "source": "user-attic"
+    },
+    {
+      "id": "bedroom-one-wardrobe",
+      "type": "cabinet",
+      "room": "1.1",
+      "box": [
+        4.47,
+        0.5,
+        6.2,
+        1.08
+      ],
+      "facing": "+y",
+      "source": "user-attic",
+      "height": 2.14
+    },
+    {
       "id": "upper-bath",
       "type": "sink",
       "room": "1.2",
@@ -1366,6 +1412,32 @@
       "facing": "-x",
       "source": "upper-plan",
       "height": 2.2
+    },
+    {
+      "id": "gallery-chair",
+      "type": "chair",
+      "room": "1.4",
+      "box": [
+        5.03,
+        9.17,
+        5.77,
+        9.95
+      ],
+      "facing": "+y",
+      "source": "user-attic"
+    },
+    {
+      "id": "gallery-reading-lamp",
+      "type": "floor-lamp",
+      "room": "1.4",
+      "box": [
+        5.04,
+        8.8,
+        5.32,
+        9.08
+      ],
+      "facing": "+y",
+      "source": "user-attic"
     },
     {
       "id": "laundry-sink",
@@ -1807,5 +1879,59 @@
         }
       ]
     }
-  ]
+  ],
+  "garageFitout": {
+    "unit": "m",
+    "source": "Concept storage layout. Parking rectangles are checked in the clear inside the double garage door.",
+    "parkingBays": [
+      [
+        1.06,
+        0.59,
+        3.56,
+        5.59
+      ],
+      [
+        3.56,
+        0.59,
+        6.06,
+        5.59
+      ]
+    ],
+    "workbench": {
+      "footprint": [
+        2.74,
+        6.04,
+        4.52,
+        6.51
+      ],
+      "topHeight": 0.87,
+      "upperCabinetTop": 2.39
+    },
+    "bikes": [
+      {
+        "id": "garage-tourer",
+        "center": [
+          0.764,
+          1.53,
+          0.36
+        ],
+        "barWidth": 0.54,
+        "wheelbase": 1.075,
+        "wheelRadius": 0.345,
+        "paint": "#9e583f"
+      },
+      {
+        "id": "garage-hybrid",
+        "center": [
+          0.764,
+          3.65,
+          0.44
+        ],
+        "barWidth": 0.54,
+        "wheelbase": 1.05,
+        "wheelRadius": 0.341,
+        "paint": "#516d74"
+      }
+    ]
+  }
 }

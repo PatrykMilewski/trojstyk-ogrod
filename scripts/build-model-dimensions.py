@@ -99,7 +99,13 @@ if 'interior' in registry:
         ['Wiatrołap z garderobą', f"{number(vestibule['catalogueAreaM2'])} m² według rzutu, obrys L w prostokącie {dimensions(vestibule['outerSizeM'])} m"],
         ['Zabudowa od strony gabinetu', f"{office['numberOfModules']} moduły, długość {number(office['cabinetRunM'])} m, głębokość {number(office['cabinetDepthM'])} m"],
         ['Dolne okno salonu od ogrodu', f"{glazing['panels']} równe pola, otwór {dimensions([glazing['widthM'], glazing['heightM']])} m"],
-        ['Krzesła przy stole', '6 sztuk, po 3 przy długich bokach; odstęp siedziska od blatu 0,06 m'], ['Drzwi', 'Otwarte przejścia zgodnie z zapisanym układem'], ['Dane i źródła', 'interior-data.json']]) + '<p><a href="interior-data.json">Pobierz współrzędne, wymiary i założenia wnętrza</a></p>')
+        ['Krzesła przy stole', '6 sztuk, po 3 przy długich bokach; odstęp siedziska od blatu 0,06 m'], ['Dane i źródła', 'interior-data.json']]) + '<p><a href="interior-data.json">Pobierz współrzędne, wymiary i założenia wnętrza</a></p>')
+    if 'projection' in interior:
+        screen, bays = interior['projection'], interior['garageBays']
+        content += section('Wyposażenie domu /193', table(['Element', 'Wymiar w modelu'], [
+            ['Białe pole projekcyjne', dimensions([screen['widthM'], screen['heightM']]) + ' m (' + number(screen['diagonalInches']) + '″)'],
+            ['Wolne stanowiska w garażu', str(bays['count']) + ' stanowiska po ' + dimensions([bays['widthM'], bays['lengthM']]) + ' m'],
+            ['Drzwi przechodnie w spacerze', 'Szklane skrzydło wiatrołapu i ukryty front kuchenny']]))
 if 'florydaInterior' in registry:
     content += section('Wnętrze Willa Floryda 6 /190', '<p>Ściany, otwory i wyposażenie odtworzono z rzutów MG Projekt. Wysokości pochodzą z przekroju; położenia ścian i mebli odczytane z rastra są przybliżone. Zachowano obecne odbicie i ustawienie domu.</p>' + table(['Element', 'Wartość'], [
         ['Podłoga piętra', '3,35 m'], ['Wysokość parteru / piętra', '3,00 / 2,70 m'],

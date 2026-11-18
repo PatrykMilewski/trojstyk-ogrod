@@ -61,11 +61,11 @@ test('rendered bed heads and sofa backs follow publisher orientation', () => {
     assert.equal(item.facing, '-x');
     assert(facingProjection(item, seat) > facingProjection(item, back), id + ' faces toward -x');
   }
-  assert(itemBounds('tv').max.x < itemBounds('coffee-table').min.x);
+  assert(itemBounds('projection-screen').max.x < itemBounds('coffee-table').min.x);
   assert(itemBounds('coffee-table').max.x < itemBounds('sofa').min.x);
 });
 
-test('dining chairs face the table and kitchen has three correctly oriented stools', () => {
+test('dining chairs face the table and the kitchen island has no stools', () => {
   const center = itemBounds('dining-table').getCenter(new THREE.Vector3());
   const diningChairs = data.furniture.filter(item => item.id.startsWith('dining-') && item.type === 'chair');
   assert.equal(diningChairs.length, 6, 'User override: exactly six dining chairs');
@@ -75,12 +75,9 @@ test('dining chairs face the table and kitchen has three correctly oriented stoo
     const back = partCenter(item.id, 'back'), seat = partCenter(item.id, 'seat');
     assert(seat.distanceTo(center) < back.distanceTo(center), item.id + ' faces dining table');
   }
-  const stools = data.furniture.filter(item => item.id.startsWith('island-stool-'));
-  assert.equal(stools.length, 3);
-  for (const item of stools) {
-    assert.equal(item.facing, '-y');
-    assert(partCenter(item.id, 'back').y > partCenter(item.id, 'seat').y);
-  }
+  assert(!data.furniture.some(item => item.room === '0.4' && item.type === 'stool'));
+  assert(!interior.group.children.some(object => object.name.startsWith('island-stool-')));
+  assert(!interior.navigation.obstacles.some(obstacle => obstacle.id.includes('island-stool-')));
 });
 
 test('source wall storage contacts are preserved and cabinet handles face into rooms', () => {
@@ -147,7 +144,7 @@ test('furniture does not occupy another furniture footprint or an internal doorw
       const bx = wall.a[0] + ux * end, by = wall.a[1] + uy * end;
       const clearance = [Math.min(ax, bx) - Math.abs(uy) * reach, Math.min(ay, by) - Math.abs(ux) * reach,
         Math.max(ax, bx) + Math.abs(uy) * reach, Math.max(ay, by) + Math.abs(ux) * reach];
-      for (const item of occupied.filter(item => item.room.startsWith('1.') === Boolean(wall.level))) {
+      for (const item of occupied.filter(item => item.room.startsWith('1.') === Boolean(wall.level) && item.passageWall !== wall.id)) {
         assert(!overlaps(item.box, clearance), `${item.id} obstructs ${wall.id} doorway approach`);
       }
     }
@@ -310,7 +307,7 @@ test('plaster return finishes flush with the vestibule wardrobe and keeps the pa
   assert(!collider.pathBlocked(point(7.4,5.25),point(7.4,8.1)));
 });
 
-test('reference furniture keeps the stone returns, paired coffee tables and floating TV console in scale', () => {
+test('reference furniture keeps the stone returns, paired coffee tables and floating media console in scale', () => {
   const box = name => bounds(interior.group.getObjectByName(name));
   const island = furniture.get('kitchen-island'), top = box('kitchen-island-top');
   const returns = parts(island.id).filter(mesh => mesh.name.includes('-waterfall-'));
@@ -332,4 +329,205 @@ test('reference furniture keeps the stone returns, paired coffee tables and floa
     const seat = interior.group.getObjectByName(chair.id + '-seat');
     assert.equal(seat.material.color.getHexString(), 'ded8c8', 'Dining seats have ivory upholstery');
   }
+});
+
+test('garden-end chaise and separate club chair leave a continuous route to the open terrace panel', () => {
+  const sofa = itemBounds('sofa'), chaise = itemBounds('chaise'), chair = itemBounds('living-armchair');
+  const table = itemBounds('coffee-table'), island = itemBounds('kitchen-island');
+  close(chaise.max.y, sofa.max.y, 'Chaise aligns with the garden end of the sofa');
+  close(chaise.max.x, sofa.min.x, 'Chaise joins the front of the sofa');
+  assert(partCenter('sofa', 'arm').y < sofa.min.y + .15, 'Sofa arm finishes the opposite end');
+  assert(chaise.min.y - table.max.y >= .35 && sofa.min.x - table.max.x >= .40);
+  assert(chair.min.y - island.max.y >= .85 && chair.max.x < sofa.min.x && chair.max.y < table.min.y);
+  assert.equal(parts('living-armchair').filter(mesh => mesh.name.includes('-rolled-arm-')).length, 2);
+  assert(partCenter('living-armchair', 'scatter').z > partCenter('living-armchair', 'seat').z);
+  const collision = createWalkCollision(interior.navigation.obstacles.filter(o => o.minZ < 1.85 && o.maxZ > .04), .40);
+  const route = [[4.55,12.5],[4.55,16.08],[7.65,16.08],[8.65,15.95]].map(xy => interior.localToWorld(xy).slice(0,2));
+  for (let i = 1; i < route.length; i++) assert(!collision.pathBlocked(route[i-1], route[i]), '80 cm wide terrace route');
+});
+
+function projectionFrustum(lens,screen) {
+  const center = screen.getCenter(new THREE.Vector3()), view = lens.clone().lerp(center,.5);
+  const corners = [[screen.min.y,screen.min.z],[screen.max.y,screen.min.z],[screen.max.y,screen.max.z],[screen.min.y,screen.max.z]]
+    .map(([y,z]) => new THREE.Vector3(screen.max.x,y,z));
+  const sides = corners.map((corner,i) => {
+    const side = new THREE.Plane().setFromCoplanarPoints(lens,corner,corners[(i+1)%corners.length]);
+    return side.distanceToPoint(view) < 0 ? side.negate() : side;
+  });
+  return new THREE.Frustum(...sides, new THREE.Plane(new THREE.Vector3(1,0,0),-screen.max.x-.001),
+    new THREE.Plane(new THREE.Vector3(-1,0,0),lens.x-.001));
+}
+
+function triangleInFrustum(vertices, frustum) {
+  for (const plane of frustum.planes) {
+    const clipped = [];
+    for (let i=0; i<vertices.length; i++) {
+      const a=vertices[i], b=vertices[(i+1)%vertices.length], da=plane.distanceToPoint(a), db=plane.distanceToPoint(b);
+      if (da >= 0) clipped.push(a);
+      if ((da >= 0) !== (db >= 0)) clipped.push(a.clone().lerp(b,da/(da-db)));
+    }
+    if (!clipped.length) return false;
+    vertices = clipped;
+  }
+  return true;
+}
+
+function meshBlocksProjection(mesh,frustum) {
+  const geometry=mesh.geometry, positions=geometry.attributes.position, index=geometry.index;
+  mesh.updateMatrix(); geometry.computeBoundingBox();
+  for (let i=0; i<(mesh.isInstancedMesh ? mesh.count : 1); i++) {
+    const matrix=mesh.matrix.clone();
+    if (mesh.isInstancedMesh) {
+      const instance=new THREE.Matrix4(); mesh.getMatrixAt(i,instance); matrix.multiply(instance);
+    }
+    if (!frustum.intersectsBox(geometry.boundingBox.clone().applyMatrix4(matrix))) continue;
+    for (let n=0; n<(index?.count ?? positions.count); n+=3) {
+      const vertices=[n,n+1,n+2].map(k => new THREE.Vector3().fromBufferAttribute(positions,index ? index.getX(k) : k).applyMatrix4(matrix));
+      if (triangleInFrustum(vertices,frustum)) return true;
+    }
+  }
+  return false;
+}
+
+test('wall-mounted projector aims at a matte white 16:9 surface with the entire image cone clear', () => {
+  const get = name => interior.group.getObjectByName(name);
+  assert(!interior.group.children.some(object => /living-stove|^tv-/.test(object.name)));
+  assert(!interior.navigation.obstacles.some(obstacle => /stove|furniture-tv/.test(obstacle.id)));
+  const surface=get('projection-screen-surface'), screen=bounds(surface), size=screen.getSize(new THREE.Vector3());
+  close(size.y/size.z,16/9,'Projection image aspect ratio');
+  const inches=Math.hypot(size.y,size.z)/.0254;
+  assert(inches>=70 && inches<=120);
+  assert(surface.material.roughness >= .95 && surface.material.metalness === 0);
+  assert(Math.min(...surface.material.color.toArray())>.88 && surface.material.emissive.getHex()===0);
+  const lens=get('projector-lens-glass'), axis=new THREE.Vector3(-1,0,0).applyQuaternion(lens.quaternion);
+  const origin=lens.position.clone().addScaledVector(axis,lens.geometry.parameters.height/2);
+  const hit=origin.clone().addScaledVector(axis,(screen.max.x-origin.x)/axis.x);
+  close(hit.y,screen.getCenter(new THREE.Vector3()).y,'Horizontal optical axis');
+  close(hit.z,screen.getCenter(new THREE.Vector3()).z,'Vertical optical axis');
+  const plate=bounds(get('projector-anchor-plate'));
+  assert(plate.min.z > 2.35 && plate.max.z < 2.8, 'Fixing plate is entirely on the solid terrace header');
+  close(plate.max.x,bounds(get('facade-terrace')).min.x,'Plate bears directly on the inner wall face');
+  for (const [a,b] of [['anchor-plate','wall-arm'],['wall-arm','tilt-pivot'],['tilt-pivot','case']])
+    assert(bounds(get('projector-'+a)).intersectsBox(bounds(get('projector-'+b))),a+' connected to '+b);
+  const frustum=projectionFrustum(origin,screen);
+  const testObstruction=new THREE.Mesh(new THREE.SphereGeometry(.03,8,6));
+  testObstruction.position.copy(origin).lerp(hit,.5);
+  assert(meshBlocksProjection(testObstruction,frustum), 'An obstruction wholly inside the beam is detected');
+  const blockers=interior.group.children.filter(object => object.isMesh && meshBlocksProjection(object,frustum));
+  assert.deepEqual(blockers.map(o=>o.name),[],'No interior mesh intersects the optical volume between lens and screen');
+});
+
+test('upper rooms have layered beds, usable workstations and fitted dressing-room storage', () => {
+  const get = name => interior.group.getObjectByName(name);
+  for (const id of ['bedroom-one','bedroom-two','master-bed']) {
+    for (const detail of ['head-pad-0','mattress','duvet','turnback','throw','pillow-0']) assert(get(id+'-'+detail));
+  }
+  for (const id of ['bedroom-one','bedroom-two']) {
+    const desk = furniture.get(id+'-desk'), chair = furniture.get(id+'-chair');
+    for (const detail of ['task-light','notebook','drawer-2','pencil-cup']) assert(get(desk.id+'-'+detail));
+    close(bounds(get(desk.id+'-top')).max.z-3.2,.752,'Writing height');
+    assert(facingProjection(chair,partCenter(desk.id,'top'))>facingProjection(chair,partCenter(chair.id,'seat')));
+    assert(parts(chair.id).filter(mesh=>mesh.name.includes('-back-upright-')).length===2);
+  }
+  for (const id of ['master-dressing-left','master-dressing-right']) {
+    assert.equal(parts(id).filter(mesh=>mesh.name.includes('-garment-')).length,6);
+    for (const detail of ['rail-0','rail-1','drawer-2','shelf-1.12']) assert(get(id+'-'+detail));
+  }
+  for (const id of ['upper-bath','private-sink-one','private-sink-two']) {
+    for (const detail of ['bowl','drain','mirror','tap','vanity']) assert(get(id+'-'+detail));
+    assert(get(id+'-bowl').geometry.type==='LatheGeometry');
+  }
+  assert(get('gallery-chair-scatter') && get('gallery-reading-lamp-diffuser'));
+  const collision = createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<5.12 && o.maxZ>3.25),.40);
+  const route = [[5.54,4.40],[5.54,8.42],[6.17,8.48],[7.54,8.78],[8.33,8.78]].map(p=>interior.localToWorld(p).slice(0,2));
+  for (let i=1;i<route.length;i++) assert(!collision.pathBlocked(route[i-1],route[i]),'80 cm clear to gallery and stair');
+});
+
+test('mezzanine collar frames follow the crossed roof and leave the catalogue rooflights free', () => {
+  const timbers = interior.group.children.filter(o=>o.name.startsWith('gallery-truss-'));
+  assert.equal(timbers.filter(o=>o.name.includes('-rafter-')).length,6);
+  assert.equal(timbers.filter(o=>o.name.includes('-collar-')).length,3);
+  assert.equal(timbers.filter(o=>o.name.includes('-valley-')).length,2);
+  const asWorld = p => new THREE.Vector3(...interior.localToWorld(p));
+  interior.group.updateMatrixWorld(true);
+  const apertures = [[7.15,1.78,.524,.36],[1.04,4.72,.524,.36],[1.04,7.10,.524,.36],[1.04,8.02,.524,.36],
+    [1.04,8.94,.524,.36],[8.25,5.66,.36,.524],[10.47,5.66,.36,.524],[12.89,5.66,.36,.524]];
+  for(const [x,y,rx,ry] of apertures) for(let i=-2;i<=2;i++) for(let j=-2;j<=2;j++) {
+    const at=asWorld([x+rx*i/2,y+ry*j/2,8.8]);
+    assert.equal(new THREE.Raycaster(at,new THREE.Vector3(0,0,-1),0,5.6).intersectObjects(timbers).length,0);
+  }
+  for(const mesh of timbers){
+    const verts=mesh.geometry.attributes.position;
+    for(let i=0;i<verts.count;i++){
+      const [x,y,z]=new THREE.Vector3().fromBufferAttribute(verts,i).toArray();
+      assert(z<=interior.navigation.ceilingHeight(interior.localToWorld([x,y]).slice(0,2))+.001,mesh.name+' remains under lining');
+    }
+  }
+  const collar=interior.group.getObjectByName('gallery-truss-collar-1');
+  assert(bounds(collar).min.z-3.2>3.7);
+  for(const eye of [[6.18,9.49,4.82],[5.30,13.20,1.62]]){
+    const start=asWorld(eye),aim=asWorld(bounds(collar).getCenter(new THREE.Vector3()).toArray());
+    const ray=new THREE.Raycaster(start,aim.clone().sub(start).normalize(),0,start.distanceTo(aim)+.5);
+    const hit=ray.intersectObjects(interior.group.children.filter(o=>o.isMesh))[0];
+    assert(hit?.object.name.startsWith('gallery-truss-'),'Exposed timber visible from '+eye+'; first hit '+hit?.object.name);
+  }
+});
+
+test('the closed walnut portal joins the ceiling-height kitchen and admits walking to the garage', () => {
+  const door = bounds(interior.group.getObjectByName('kitchen-pantry-closed-leaf'));
+  close(door.min.x,1.053,'Left veneer reveal');
+  close(door.max.x,1.947,'Right veneer reveal');
+  assert(door.min.z<.01 && door.max.z>2.1);
+  const run = ['kitchen-pantry','kitchen-back','kitchen-tall'].map(itemBounds);
+  for (const section of run) close(section.max.z,data.levels.groundCeiling,'Cabinetry touches slab');
+  close(furniture.get('kitchen-island').box[1]-furniture.get('kitchen-back').box[3],1.08,'Island working aisle');
+  for(let i=0;i<5;i++) {
+    const light = bounds(interior.group.getObjectByName('kitchen-back-upper-'+i));
+    const crown = bounds(interior.group.getObjectByName('kitchen-back-walnut-crown-'+i));
+    assert(light.max.y+.10<crown.max.y && light.min.z>1.55 && crown.max.z>2.79);
+  }
+  const walk = createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<1.7 && o.maxZ>0));
+  const point = (x,y)=>interior.localToWorld([x,y]).slice(0,2);
+  for(const xs of [[1.5,9.8,1.5,7.45],[1.5,7.45,2.1,7.45],[2.1,7.45,2.1,5.5]])
+    assert(!walk.pathBlocked(point(xs[0],xs[1]),point(xs[2],xs[3])),'Hidden route '+xs);
+  for(const x of [.75,2.15])assert(walk.pathBlocked(point(x,9.7),point(x,8.0)),'Fixed cabinet at '+x);
+});
+
+test('the ceiling-height reeded vestibule screen admits walking through its leaf only', () => {
+  const walk = createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<1.7 && o.maxZ>0));
+  const point = (x,y)=>interior.localToWorld([x,y]).slice(0,2);
+  for(const [piece,x,blocked] of [['left',6.78,true],['leaf',7.45,false],['right',8.19,true]]) {
+    const glass = interior.group.getObjectByName('vestibule-screen-'+piece+'-reeded-glass');
+    assert(glass.material.transparent && !glass.castShadow && glass.geometry.attributes.position.count>100);
+    const pane = bounds(glass);
+    assert(pane.min.z<.03 && pane.max.z>2.77 && pane.max.y-pane.min.y>.003);
+    assert.equal(walk.pathBlocked(point(x,7.45),point(x,8.46)),blocked);
+  }
+  assert(!walk.pathBlocked(point(7.45,4.83),point(7.45,8.46)));
+  assert(!walk.pathBlocked(point(7.45,5.52),point(5.7,5.52)));
+});
+
+test('the garage return closes the entry corner to the slab beside the main door and its two windows', () => {
+  interior.group.updateMatrixWorld(true);
+  const object = name => interior.group.getObjectByName(name);
+  const hit = (name,origin,direction,limit) => {
+    const ray = new THREE.Raycaster(new THREE.Vector3(...origin).applyMatrix4(interior.group.matrix),
+      new THREE.Vector3(...direction).transformDirection(interior.group.matrix),0,limit);
+    return ray.intersectObject(object(name),false).length>0;
+  };
+  for(const y of [4.235,4.445,4.675,4.70])for(const z of [.08,1.3,2.33,2.78]) {
+    assert(hit('entry-garage-jamb-return',[6.30,y,z],[1,0,0],.14),'Garage face '+y+','+z);
+    if(z<2.35||y>4.69)assert(hit('entry-garage-jamb-return',[6.98,y,z],[-1,0,0],.09),'Door reveal '+y+','+z);
+  }
+  assert(hit('upper-structure',[6.67,4.46,2.72],[0,0,1],.09),'Soffit meets the jamb');
+  assert(hit('entry-main-door-leaf',[7.4,3.9,1.3],[0,1,0],.60),'Visible front leaf');
+  for(const [i,x] of [[1,9.5],[2,12.5]]) {
+    assert(hit('facade-front-wing-glass-'+i,[x,3.9,1.3],[0,1,0],.60));
+    assert(!hit('facade-front-wing',[x,3.9,1.3],[0,1,0],.9));
+  }
+  const walk = createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<1.7 && o.maxZ>0));
+  const point=(x,y)=>interior.localToWorld([x,y]).slice(0,2);
+  assert(!walk.pathBlocked(point(7.4,3.5),point(7.4,5.3)),'Main entrance');
+  for(const x of [6.72,8.16,9.50,12.5])
+    assert(walk.pathBlocked(point(x,3.5),point(x,5.3)),'Solid jamb, pier or window '+x);
 });
