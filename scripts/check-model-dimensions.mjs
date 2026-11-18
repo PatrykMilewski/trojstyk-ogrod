@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {checkWoodyPlanting} from './check-woody-beds.mjs';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -14,7 +15,9 @@ function extractModel(html) {
   const codeEnd = html.indexOf('\nlet descriptions=', end);
   assert.ok(start >= 0 && end > start && codeEnd > end, 'Missing model geometry markers');
   const inputs = html.slice(start + marker.length, end);
-  return { data: JSON.parse(inputs), inputsHash: hash(inputs), codeHash: hash(html.slice(end + 2, codeEnd)), runtimeHash: hash(html.split('<script type="module">')[1].split('</script>')[0]) };
+  const woodyData = html.match(/^const woodyPlantings=(.+);$/m);
+  assert.ok(woodyData, 'Missing woody planting geometry');
+  return { woodyPlantings: JSON.parse(woodyData[1]), data: JSON.parse(inputs), inputsHash: hash(inputs), codeHash: hash(html.slice(end + 2, codeEnd)), runtimeHash: hash(html.split('<script type="module">')[1].split('</script>')[0]) };
 }
 
 function checkContext(neighbors, registry) {
@@ -107,6 +110,12 @@ function checkDimensions(model, registry) {
   assert.equal(model.codeHash, registry.integrity.proceduralCodeSha256, 'Procedural geometry changed: measure and review before updating the registry');
   const [source, garden, icon, neighbors] = model.data;
   checkDriveway193(source, garden, icon, neighbors, registry);
+  const woodyFile = readFileSync(resolve(root, 'trzy-domy-3d', registry.woodyPlanting.dataFile));
+  const woodyData = JSON.parse(woodyFile);
+  const planSvg = readFileSync(resolve(root, 'trzy-domy-3d/plan-kontrolny.svg'), 'utf8');
+  assert.ok(planSvg.includes(`data-woodland-sha256="${hash(woodyFile)}"`), '2D plan must use the current planting geometry');
+  assert.deepEqual(model.woodyPlantings, woodyData, 'Published planting plan and rendered beds differ');
+  checkWoodyPlanting(woodyData, model.data, registry.woodyPlanting);
   assert.equal(hash(readFileSync(resolve(root, registry.sharedLayout.sourceFile))), registry.sharedLayout.sha256, '2D default changed without synchronizing 3D');
   assert.deepEqual(JSON.parse(readFileSync(resolve(root, registry.sharedLayout.sourceFile), 'utf8')), registry.sharedLayout.state);
   assert.equal(garden.metadata.areasM2.shared, registry.sharedAreaM2);

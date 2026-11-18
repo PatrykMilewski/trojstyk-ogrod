@@ -49,6 +49,24 @@ content += section('Dodatkowe działki i droga /133', '<p>/192 pozostaje pusta. 
     ['Działka', 'Powierzchnia geometrii (m²)', 'Długości boków (m)'], [
         ['/'+p['parcel'], number(p['areaM2']), '; '.join(number(v) for v in p['edgeLengthsM'])]
         for p in [*registry['contextParcels'], registry['road']]]))
+if 'woodyPlanting' in registry:
+    rule = registry['woodyPlanting']
+    planting = json.loads((SOURCE.parent / rule['dataFile']).read_text())
+    rows = []
+    for parcel in planting['parcels']:
+        area, planted = parcel['areaM2'], parcel['plantedAreaM2']
+        required = area * rule['minimumPercent'] / 100
+        rows.append(['/' + parcel['id'], number(round(area, 2)), number(round(required, 2)),
+                     number(round(planted, 2)), number(round(planted / area * 100, 2)),
+                     number(round(planted - required, 2))])
+    content += section('Drzewa i krzewy na działkach budowlanych',
+        '<p>MPZP wymaga obsadzenia drzewami i krzewami co najmniej 30% terenu każdej działki. '
+        'Bilans koncepcji obejmuje grunt w granicach zaprojektowanych nasadzeń. '
+        'Obrysy są wspólne dla rzutu i modelu 3D. Trawnik, rzuty koron i powierzchnię wspólnego ogrodu pominięto.</p>'
+        + table(['Działka', 'Powierzchnia (m²)', 'Wymagane 30% (m²)', 'Nasadzenia (m²)',
+                 'Udział (%)', 'Zapas (m²)'], rows)
+        + '<p><a href="plan-kontrolny.svg">Rzut nasadzeń</a> · <a href="woodland-plan.json">Obrysy i bilans (JSON)</a> · '
+        '<a href="https://bip.zukowo.pl/api/files/108363#page=3">Uchwała XLV/781/2002, pkt 1.4 lit. a</a></p>')
 content += section('Aktualny układ wspólnego ogrodu', '<p>Źródło: dokładny plik moj-ogrod (1).json, wspólny dla konfiguratora 2D i modelu 3D. Zachowano około 0,23 m² piasku poza płotem; układ nie jest automatycznie poprawiany.</p>' + table(
     ['Parametr', 'Wartość'], [
         ['Powierzchnia wspólna (m²)', number(registry['sharedAreaM2'])],

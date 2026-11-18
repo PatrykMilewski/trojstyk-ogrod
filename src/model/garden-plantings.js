@@ -100,7 +100,7 @@ function clearance(x,y,ring) {
   }
   return (within?1:-1)*Math.sqrt(nearest);
 }
-function surfaceClearance(x,y,{ring,holes=[]}) {
+export function surfaceClearance(x,y,{ring,holes=[]}) {
   let gap=clearance(x,y,ring);
   for (const hole of holes) gap=Math.min(gap,-clearance(x,y,hole));
   return gap;

@@ -57,6 +57,12 @@ Model zachowuje metryczną geometrię i gabaryty katalogowe. Dachy, stolarka, wy
 
 Podstrona jest samodzielna, działa offline i nie korzysta z zapisów lokalnych konfiguratora. Three.js r186 i OrbitControls (MIT) oraz dane modelu są osadzone w HTML; informacje licencyjne pozostają w dołączonym kodzie bibliotek. Zwykły build edytora nie nadpisuje tej podstrony.
 
+Obrysy rabat z drzewami i krzewami, współrzędne nowych drzew i bilans każdej działki zawiera [plan nasadzeń](trzy-domy-3d/woodland-plan.json). Te same obrysy są osadzone w scenie i na rzucie. Kontrola `npm run check` oblicza ich sumę geometryczną w granicach każdej działki i sprawdza próg 30%. Generator korzysta z metrycznych danych aktualnego modelu i biblioteki Shapely 2.
+
+```sh
+python3 scripts/woodland_plan.py --model trzy-domy-3d/index.html --output trzy-domy-3d/woodland-plan.json
+```
+
 ### Stały rejestr wymiarów
 
 [Czytelna tabela wymiarów](https://patrykmilewski.github.io/trojstyk-ogrod/trzy-domy-3d/wymiary.html) powstaje wyłącznie z pliku [`trzy-domy-3d/model-dimensions.json`](trzy-domy-3d/model-dimensions.json). Ten plik przechowuje gabaryty trzech domów, 23 obiektów wyposażenia, detale, odsunięcia, drzewa, ludzi i psy. Rozróżnia gabaryt katalogowy, nominalny rzut i zmierzoną obwiednię wierzchołków modelu, która uwzględnia wystające detale. Część wymiarów jest założeniem koncepcji, co wskazano przy danych.

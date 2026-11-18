@@ -1,0 +1,57 @@
+import assert from 'node:assert/strict';
+import {test} from 'node:test';
+import {checkWoodyPlanting} from './check-woody-beds.mjs';
+
+const ids = ['190', '191', '193'];
+const ring = (x, width) => [[x, 0], [x + width, 0], [x + width, 10], [x, 10], [x, 0]];
+const parcels = Object.fromEntries(ids.map((id, i) => [id, {coordinates: [ring(10 * i, 10)]}]));
+const model = [{variants: [{}]}, {polygons: []}, null, {
+  parcels, layouts: {}, surfaces: [], gardenAdditions: {polygons: []},
+}];
+
+function verify(widths, duplicate = false) {
+  const plan = {parcels: ids.map((id, i) => {
+    const bed = {ring: ring(i * 10, widths[i]), holes: []};
+    return {id, beds: duplicate ? [bed, bed] : [bed], areaM2: 100, plantedAreaM2: widths[i] * 10};
+  })};
+  checkWoodyPlanting(plan, model, {minimumPercent: 30});
+}
+
+test('exactly 30% on every parcel passes', () => verify([3, 3, 3]));
+test('extra planting on another parcel cannot cover a shortfall', () => {
+  assert.throws(() => verify([4, 2, 3]), /Below 30% on \/191/);
+});
+test('overlapping beds cannot be credited twice', () => {
+  assert.throws(() => verify([3, 3, 3], true), /Area mismatch/);
+});
+
+test('each mapped bed contains rendered shrubs within its ground footprint', async (t) => {
+  const {readFile} = await import('node:fs/promises');
+  const read = path => readFile(new URL(path, import.meta.url), 'utf8');
+  const html = await read('../trzy-domy-3d/index.html');
+  const imports = JSON.parse(html.split('<script type="importmap">')[1].split('</script>')[0]).imports;
+  const load = source => import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
+  const three = Buffer.from(imports.three.split(',')[1], 'base64').toString();
+  const THREE = await load(three.replaceAll("'three/core'", `'${imports['three/core']}'`));
+  const {createWoodyBeds} = await load(await read('../src/model/woody-beds.js'));
+  const {surfaceClearance} = await load(await read('../src/model/garden-plantings.js'));
+  const {woodyRandom} = await load(await read('../src/model/tree-realism.js'));
+  const {parcels} = JSON.parse(await read('../trzy-domy-3d/woodland-plan.json'));
+  const canvasContext = new Proxy({}, {get: () => () => {}});
+  t.after(() => { delete globalThis.document; });
+  globalThis.document = {createElement: () => ({getContext: () => canvasContext})};
+  const group = createWoodyBeds(THREE, parcels, {surfaceClearance, woodyRandom});
+  const beds = parcels.flatMap(p => p.beds), occupied = new Set();
+  const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), scale = new THREE.Vector3();
+  const orientation = new THREE.Quaternion();
+  for (const mesh of group.children.filter(m => m.isInstancedMesh)) {
+    for (let i = 0; i < mesh.count; i++) {
+      mesh.getMatrixAt(i, matrix);
+      matrix.decompose(position, orientation, scale);
+      const bed = beds.find(b => surfaceClearance(position.x, position.y, b) >= scale.x - 0.00001);
+      assert.ok(bed, 'Shrub extends beyond its planted area');
+      occupied.add(bed);
+    }
+  }
+  assert.equal(occupied.size, beds.length);
+});

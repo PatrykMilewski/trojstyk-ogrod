@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-18.4",
+  "modelVersion": "2026-11-18.5",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1103,6 +1103,62 @@
       "id": "191-tree-2",
       "source": "model",
       "meaning": "Nominalna wysokość i promień korony koncepcji, nie rozmiar sadzonki."
+    },
+    {
+      "id": "190-tree-bed-1",
+      "height": 4.8,
+      "crownRadius": 1.45,
+      "source": "woodland-plan.json",
+      "meaning": "Nominalna wysokość i promień korony drzewa w zaprojektowanych nasadzeniach."
+    },
+    {
+      "id": "190-tree-bed-2",
+      "height": 4.3,
+      "crownRadius": 1.3,
+      "source": "woodland-plan.json",
+      "meaning": "Nominalna wysokość i promień korony drzewa w zaprojektowanych nasadzeniach."
+    },
+    {
+      "id": "190-tree-bed-3",
+      "height": 3.9,
+      "crownRadius": 1.2,
+      "source": "woodland-plan.json",
+      "meaning": "Nominalna wysokość i promień korony drzewa w zaprojektowanych nasadzeniach."
+    },
+    {
+      "id": "191-tree-bed-1",
+      "height": 4.8,
+      "crownRadius": 1.45,
+      "source": "woodland-plan.json",
+      "meaning": "Nominalna wysokość i promień korony drzewa w zaprojektowanych nasadzeniach."
+    },
+    {
+      "id": "191-tree-bed-2",
+      "height": 4.3,
+      "crownRadius": 1.3,
+      "source": "woodland-plan.json",
+      "meaning": "Nominalna wysokość i promień korony drzewa w zaprojektowanych nasadzeniach."
+    },
+    {
+      "id": "191-tree-bed-3",
+      "height": 3.9,
+      "crownRadius": 1.2,
+      "source": "woodland-plan.json",
+      "meaning": "Nominalna wysokość i promień korony drzewa w zaprojektowanych nasadzeniach."
+    },
+    {
+      "id": "193-tree-bed-1",
+      "height": 4.8,
+      "crownRadius": 1.45,
+      "source": "woodland-plan.json",
+      "meaning": "Nominalna wysokość i promień korony drzewa w zaprojektowanych nasadzeniach."
+    },
+    {
+      "id": "193-tree-bed-2",
+      "height": 4.3,
+      "crownRadius": 1.3,
+      "source": "woodland-plan.json",
+      "meaning": "Nominalna wysokość i promień korony drzewa w zaprojektowanych nasadzeniach."
     }
   ],
   "people": [
@@ -1671,10 +1727,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "8b6d221b5cb50afe91603930a89f8a988566456df566fe9e2feda2edc8f2ca22",
-    "proceduralCodeSha256": "0ce9d174a3e91f157f4a3028eecf5c7447603f00174d3e8fb21dd98adff7b273",
+    "proceduralCodeSha256": "f28e65f81bfd542148d9fd4925bc2e84fb2d7a8a449e34f84393ac2a653c99e2",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
-    "planSha256": "2de4f242984a87781e974b571b33114cb031459d24ea937552a59c99108c3e69",
-    "runtimeSha256": "48db24bf0da3c9831186e4483fdc30a4fe56fd2ca94da2454614b75ab2815b47"
+    "planSha256": "f6f27de0208ddacc1880061ce21577c8aa17d9cf9595e32efb76d2759fffda44",
+    "runtimeSha256": "208cb47ea9dca1405159bbfaa81570ca4ca4f19404dd298fce386e4e990f7a5a"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1698,7 +1754,8 @@
     "Dom /193. Szezlong od ogrodu, fotel od kuchni, ekran projekcyjny, pełna zabudowa kuchni z ukrytymi drzwiami i szklana ścianka wiatrołapu. Doposażenie garażu, umeblowanie poddasza i widoczne wiązary są elementami koncepcji wnętrz.",
     "Dom /193. Gładkie przeszklenie wiatrołapu, szprosy zgodne z obrysem szyb, uzupełnione ściany i wyposażenie parteru, pralni oraz garderoby. Szczegółowość traw i zbóż zależy od widoku.",
     "Dom /193. Dwa stanowiska pracy, bawialnia z rozkładaną sofą, rozsunięte zasłony i nowe oprawy sufitowe.",
-    "Dom /193 odbito lewo–prawo w tym samym miejscu wraz z wnętrzem i tarasem. Brama wjazdowa i podjazd leżą na osi garażu."
+    "Dom /193 odbito lewo–prawo w tym samym miejscu wraz z wnętrzem i tarasem. Brama wjazdowa i podjazd leżą na osi garażu.",
+    "Nasadzenia drzew i krzewów rozliczono osobno dla /190, /191 i /193 według powierzchni gruntu obsadzonego w modelu."
   ],
   "contextParcels": [
     {
@@ -4419,5 +4476,10 @@
     "standInclusiveHeightM": 0.565,
     "lowestZM": 0.1,
     "highestZM": 0.665
+  },
+  "woodyPlanting": {
+    "minimumPercent": 30,
+    "dataFile": "woodland-plan.json",
+    "source": "https://bip.zukowo.pl/api/files/108363#page=3"
   }
 }
