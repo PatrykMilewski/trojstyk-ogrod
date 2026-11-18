@@ -718,7 +718,15 @@
       "user-ground-rooms": "Furnishings requested for the guest room, study and bathroom, fitted to the published plan. Furniture dimensions and finishes are schematic.",
       "user-study-playroom": "User-requested two-person study and children’s playroom fitted to publisher rooms 0.9 and 0.8. Desk, toy and unfolded sofa dimensions are design allowances."
     },
-    "furnitureCoordinateUncertaintyM": 0.3
+    "furnitureCoordinateUncertaintyM": 0.3,
+    "finishSchedule": {
+      "veneerApplications": [
+        "coffee-table-top-0",
+        "kitchen-back-niche-end-trim"
+      ],
+      "veneerDescription": "Fornir orzechowy na blacie stolika kawowego i wąskim boku wnęki kawowej.",
+      "officeDeskFinish": "Gładki laminat i stalowy stelaż z regulacją elektryczną."
+    }
   },
   "furniture": [
     {
@@ -1242,7 +1250,8 @@
         12.27
       ],
       "facing": "-y",
-      "source": "user-study-playroom"
+      "source": "user-study-playroom",
+      "worktopHeightM": 0.752
     },
     {
       "id": "office-chair",
@@ -1268,7 +1277,8 @@
         12.27
       ],
       "facing": "-y",
-      "source": "user-study-playroom"
+      "source": "user-study-playroom",
+      "worktopHeightM": 1.08
     },
     {
       "id": "office-chair-window",

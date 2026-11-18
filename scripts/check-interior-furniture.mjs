@@ -473,17 +473,17 @@ test('mezzanine collar frames follow the crossed roof and leave the catalogue ro
   }
 });
 
-test('the closed walnut portal joins the ceiling-height kitchen and admits walking to the garage', () => {
+test('the closed painted portal joins the ceiling-height kitchen and admits walking to the garage', () => {
   const door = bounds(interior.group.getObjectByName('kitchen-pantry-closed-leaf'));
-  close(door.min.x,1.053,'Left veneer reveal');
-  close(door.max.x,1.947,'Right veneer reveal');
+  close(door.min.x,1.053,'Left door reveal');
+  close(door.max.x,1.947,'Right door reveal');
   assert(door.min.z<.01 && door.max.z>2.1);
   const run = ['kitchen-pantry','kitchen-back','kitchen-tall'].map(itemBounds);
   for (const section of run) close(section.max.z,data.levels.groundCeiling,'Cabinetry touches slab');
   close(furniture.get('kitchen-island').box[1]-furniture.get('kitchen-back').box[3],1.08,'Island working aisle');
   for(let i=0;i<5;i++) {
     const light = bounds(interior.group.getObjectByName('kitchen-back-upper-'+i));
-    const crown = bounds(interior.group.getObjectByName('kitchen-back-walnut-crown-'+i));
+    const crown = bounds(interior.group.getObjectByName('kitchen-back-crown-'+i));
     assert(light.max.y+.10<crown.max.y && light.min.z>1.55 && crown.max.z>2.79);
   }
   const walk = createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<1.7 && o.maxZ>0));
@@ -615,6 +615,11 @@ test('study fits two independent occupied desks, clear of the door, window and o
     const top=bounds(interior.group.getObjectByName(desk+'-top')),seat=itemBounds(chair);
     close(top.max.x-top.min.x,1.38,'Independent full-width desktop');
     close(top.max.y-top.min.y,.75,'Monitor and keyboard depth');
+    close(top.max.z,furniture.get(desk).worktopHeightM,'Desk height matches the finish schedule');
+    for(const detail of ['t-foot-','lifting-column-base-','lifting-column-middle-','lifting-column-inner-','motor-']){
+      assert.equal(parts(desk).filter(mesh=>mesh.name.startsWith(desk+'-'+detail)).length,2,desk+' '+detail);
+    }
+    for(const detail of ['control-panel','cable-tray'])assert(interior.group.getObjectByName(desk+'-'+detail));
     assert(seat.max.y<top.min.y && seat.min.x>top.min.x && seat.max.x<top.max.x);
     assert.equal(parts(chair).filter(mesh=>mesh.name.includes('-castor-')).length,5);
     assert(partCenter(chair,'seat').y>partCenter(chair,'back').y,'Chair faces worktop');
@@ -674,4 +679,12 @@ test('ground-floor shower admits a walker through its open end and stops them at
   const approach=[p(9.83,8.38),p(9.83,7.52),p(8.97,7.52),p(8.97,6.84)];
   for(let i=1;i<approach.length;i++)assert(!collision.pathBlocked(approach[i-1],approach[i]),'Walk into the shower');
   assert(collision.pathBlocked(p(9.68,6.95),p(8.97,6.95)),'Fixed glass blocks a direct crossing');
+});
+
+
+test('walnut veneer is confined to two small day-zone accents', () => {
+  const accents=interior.group.children.filter(mesh=>mesh.material?.name === 'Oiled walnut veneer');
+  assert.deepEqual(accents.map(mesh=>mesh.name).sort(),[...data.metadata.finishSchedule.veneerApplications].sort());
+  assert.equal(accents.length,2);
+  for(const mesh of accents) assert.equal(furniture.get(mesh.userData.furnitureId).room,'0.4');
 });

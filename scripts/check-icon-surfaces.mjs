@@ -201,7 +201,14 @@ test('room fixtures are suspended from the slab or the actual sloped lining, wit
   assert(cord.min.z<=collar.max.z && cord.max.z>=roof-.011,id+' connected drop');
   assert(bounds(shade).min.z-(upper?data.levels.upper:0)>2.30,id+' clear height');
  }
- assert.equal(interior.group.children.filter(child=>child.isPointLight).length,9);
+ const lights=interior.group.children.filter(child=>child.isPointLight);
+ assert.equal(lights.length,9+4);
+ for(const id of ['living','entry','family-basin','private-basins']){
+  const lamp=object('sconce-light-'+id);
+  const globe=object(id==='living'?'living-sconce-opal':'light-fixture-mood-'+id+'-opal');
+  assert(lamp.isPointLight && lamp.intensity>0 && lamp.distance>=3);
+  assert(lamp.position.distanceTo(globe.position)<.15);
+ }
 });
 
 test('play mat rests on the floor and the train track rests on the mat', () => {
