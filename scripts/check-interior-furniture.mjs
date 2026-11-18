@@ -594,22 +594,73 @@ test('laundry baskets, hanging cabinets and stocked shelving leave the work aisl
   }
 });
 
-test('the ground-floor guest room and study have usable furnishings and a route past their open doors', () => {
-  const bed=itemBounds('guest-sofa-bed'), bedside=itemBounds('guest-bedside');
-  assert(bedside.min.y>bed.max.y && bedside.min.y-bed.max.y<.25);
-  assert(partCenter('guest-bedside','linen-shade').z>partCenter('guest-bedside','top').z);
-  assert(partCenter('guest-sofa-bed','woven-throw').z>partCenter('guest-sofa-bed','upholstered-frame').z);
-  assert.equal(parts('guest-wardrobe').filter(o=>o.name.includes('-door-')).length,3);
-  const desk=itemBounds('office-desk'),chair=itemBounds('office-chair'),cabinet=itemBounds('office-bookcase');
-  assert.equal(parts('office-chair').filter(o=>o.name.includes('-castor-')).length,5);
-  assert(chair.min.y>desk.max.y && chair.min.x>desk.min.x && chair.max.x<desk.max.x);
-  assert(cabinet.max.y<desk.min.y-.70 && cabinet.max.z<1.75);
-  for(const i of [0,1]) assert(partCenter('office-desk','display-'+i).z>partCenter('office-desk','keycaps').z+.24);
-  const collision=createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<1.70 && o.maxZ>.06));
-  for(const route of [[[10.90,8.85],[12.30,8.85],[12.30,6.03],[12.95,6.03]],[[10.32,9.02],[10.32,10.26],[10.48,11.80],[11.18,11.82],[11.18,11.45]]]){
-    const points=route.map(p=>interior.localToWorld(p).slice(0,2));
-    for(let i=1;i<points.length;i++) assert(!collision.pathBlocked(points[i-1],points[i]),'Door and approach clear');
+function groundWalk(extraObstacles=[]) {
+  const occupied=interior.navigation.obstacles.filter(o=>o.minZ<1.70 && o.maxZ>.06);
+  return createWalkCollision([...occupied,...extraObstacles]);
+}
+function assertGroundRoute(collision,route) {
+  const points=route.map(p=>interior.localToWorld(p).slice(0,2));
+  for(let i=1;i<points.length;i++) assert(!collision.pathBlocked(points[i-1],points[i]),'Clear route '+route[i-1]+' to '+route[i]);
+}
+
+test('study fits two independent occupied desks, clear of the door, window and opening cabinet fronts', () => {
+  assert.equal(rooms.get('0.9').catalogueName,'Gabinet');
+  const items=data.furniture.filter(item=>item.room==='0.9');
+  assert.equal(items.filter(item=>item.type==='table').length,2);
+  assert.equal(items.filter(item=>item.type==='chair').length,2);
+  const bookcase=itemBounds('office-bookcase');
+  const walk=groundWalk();
+  for(const suffix of ['','-window']){
+    const desk='office-desk'+suffix,chair='office-chair'+suffix;
+    const top=bounds(interior.group.getObjectByName(desk+'-top')),seat=itemBounds(chair);
+    close(top.max.x-top.min.x,1.38,'Independent full-width desktop');
+    close(top.max.y-top.min.y,.75,'Monitor and keyboard depth');
+    assert(seat.max.y<top.min.y && seat.min.x>top.min.x && seat.max.x<top.max.x);
+    assert.equal(parts(chair).filter(mesh=>mesh.name.includes('-castor-')).length,5);
+    assert(partCenter(chair,'seat').y>partCenter(chair,'back').y,'Chair faces worktop');
+    assert(partCenter(desk,'display-0').z>partCenter(desk,'keycaps').z+.24);
+    const taskShade=bounds(interior.group.getObjectByName(desk+'-task-lamp-shade'));
+    for(const display of parts(desk).filter(mesh=>mesh.name.includes('-display-frame-'))){
+      assert(!taskShade.intersectsBox(bounds(display)),'Desk lamp clears monitor bezel');
+    }
+    assert(partCenter(desk,'display-0').y>partCenter(desk,'keycaps').y);
+    assert(seat.min.y-bookcase.max.y>=1.12-.001,'Passage remains behind occupied chairs');
+    assert(top.min.x>=9.8+.94-.001,'Space in front of opening under-stair cabinets');
+    assert(top.max.x<=13.61,'Worktops clear the side glazing');
+    assert(!overlaps(furniture.get(desk).box,[9.89,9.42,10.79,10.32]),'Desk clears door swing');
+    const x=seat.getCenter(new THREE.Vector3()).x;
+    assertGroundRoute(walk,[[10.32,9.02],[10.32,10.24],[x,10.24],[x,10.48]]);
   }
+  assertGroundRoute(walk,[[10.32,9.02],[10.32,11.93]]);
+  assertGroundRoute(walk,[[10.32,9.02],[10.32,10.24],[13.76,10.24]]);
+});
+
+test('playroom keeps the folded sofa, a full pull-out and an approach beside the deployed bed', () => {
+  const room=rooms.get('0.8'),sofa=furniture.get('guest-sofa-bed'),unfolded=sofa.unfoldedBox;
+  assert.equal(room.catalogueName,'Pokój gościnny');
+  assert.equal(sofa.facing,'-x');
+  assert.deepEqual(unfolded.slice(1),sofa.box.slice(1),'Frame stays against its catalogue wall');
+  close(unfolded[2]-unfolded[0],1.65,'Open frame depth');
+  close(unfolded[3]-unfolded[1],2.10,'Open frame length');
+  assert.deepEqual(sofa.sleepingSurface,[1.95,1.45]);
+  assert(unfolded[0]>=room.box[0] && unfolded[1]>=room.box[1] && unfolded[2]<=room.box[2] && unfolded[3]<=room.box[3]);
+  const otherItems=data.furniture.filter(item=>item.room==='0.8' && item.id!==sofa.id);
+  for(const item of otherItems){
+    assert(!overlaps(unfolded,item.box),item.id+' stays outside the deployed bed');
+    assert(!overlaps([11.33,8.39,12.23,9.29],item.box),item.id+' clears the internal door swing');
+  }
+  close(unfolded[0]-furniture.get('guest-wardrobe').box[2],.79,'Passage beside deployed bed');
+  assert(partCenter(sofa.id,'woven-throw').z>partCenter(sofa.id,'upholstered-frame').z);
+  assert.equal(parts('guest-wardrobe').filter(o=>o.name.includes('-door-')).length,3);
+  assert(partCenter('play-cubbies','basket-0').z<.3);
+  assert.equal(parts('play-cubbies').filter(o=>o.name.includes('-stacking-ring-')).length,4);
+  const rug=itemBounds('play-mat'),train=itemBounds('play-train');
+  assert(train.min.x>rug.min.x && train.max.x<rug.max.x && train.min.y>rug.min.y && train.max.y<rug.max.y);
+  assert.equal(parts('play-train').filter(o=>o.name.includes('-wheel-') && !o.name.includes('-groove-')).length,8);
+  const [x0,y0,x1,y1]=unfolded;
+  const ring=[[x0,y0],[x0,y1],[x1,y1],[x1,y0]].map(p=>interior.localToWorld(p).slice(0,2));
+  const walk=groundWalk([{ring}]);
+  assertGroundRoute(walk,[[10.90,8.85],[12.12,8.85],[12.12,7.65],[12.08,6.03],[12.08,5.05]]);
 });
 
 test('ground-floor shower admits a walker through its open end and stops them at the fixed glass', () => {

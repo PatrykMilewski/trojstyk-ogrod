@@ -94,10 +94,17 @@ if 'interior' in registry:
     vestibule = interior['entranceWardrobe']
     office = interior['officeStorage']
     glazing = interior['gardenGlazing']['lowerOpening']
+    furniture = {item['id']: item for item in json.loads((SOURCE.parent / 'interior-data.json').read_text())['furniture']}
+    desks = [item['box'] for item in furniture.values() if item['room'] == '0.9' and item['type'] == 'table']
+    desk_sizes = [dimensions([b[2] - b[0], b[3] - b[1]]) + ' m' for b in desks]
+    bed = furniture['guest-sofa-bed']
+    unfolded = bed['unfoldedBox']
     content += section('Wnętrze Stodoła Icon /193', '<p>Odtworzenie z publicznych rzutów i przekroju; położenia ścian i otworów są przybliżone. Pozycje i orientacje mebli porównano z rzutami; wymiary symboli są przybliżone i zapisane w danych. Pokój przy antresoli oddziela pełna ściana. Salon zachowuje pustkę do dachu.</p>' + table(['Element', 'Wartość'], [
         ['Podłoga poddasza', '3,20 m'], ['Sufit parteru', '2,80 m'], ['Schody', '18 podniesień po 3,20/18 m; szerokość biegu 0,90 m; stopnica 0,26 m'],
         ['Wiatrołap z garderobą', f"{number(vestibule['catalogueAreaM2'])} m² według rzutu, obrys L w prostokącie {dimensions(vestibule['outerSizeM'])} m"],
         ['Zabudowa od strony gabinetu', f"{office['numberOfModules']} moduły, długość {number(office['cabinetRunM'])} m, głębokość {number(office['cabinetDepthM'])} m"],
+        ['Biurka w gabinecie', ' oraz '.join(desk_sizes)],
+        ['Sofa w bawialni po rozłożeniu', dimensions([unfolded[3] - unfolded[1], unfolded[2] - unfolded[0]]) + ' m wraz z ramą. Powierzchnia spania ' + dimensions(bed['sleepingSurface']) + ' m (założenie modelu)'],
         ['Dolne okno salonu od ogrodu', f"{glazing['panels']} równe pola, otwór {dimensions([glazing['widthM'], glazing['heightM']])} m"],
         ['Krzesła przy stole', '6 sztuk, po 3 przy długich bokach; odstęp siedziska od blatu 0,06 m'], ['Dane i źródła', 'interior-data.json']]) + '<p><a href="interior-data.json">Pobierz współrzędne, wymiary i założenia wnętrza</a></p>')
     if 'projection' in interior:

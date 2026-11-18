@@ -186,3 +186,25 @@ test('rectangular stringers stay below every tread and bear inside landing and f
     assert(floorHit && (flight === 'lower' ? floorHit.point.z >= -.12 && floorHit.point.z <= 0 : floorHit.point.z >= 2.8 && floorHit.point.z <= 3.2), 'Stringer nose bears inside floor slab');
   }
 });
+
+test('room fixtures are suspended from the slab or the actual sloped lining, with walking headroom', () => {
+ const names=['hall','guest','office','upper-hall','upper-one','upper-two','upper-master'];
+ for(const id of names){
+  const name='light-fixture-'+id+'-',shade=object(name+'shade'),canopy=object(name+'canopy');
+  assert.equal(shade.geometry.type,'LatheGeometry');
+  const up=new THREE.Vector3(0,1,0).applyQuaternion(canopy.quaternion);
+  const anchor=canopy.position.clone().addScaledVector(up,.0125);
+  const upper=id.startsWith('upper-');
+  const roof=upper?interior.navigation.ceilingHeight(interior.localToWorld([anchor.x,anchor.y])):data.levels.groundCeiling;
+  close(anchor.z,roof,id+' mounting height');
+  const cord=bounds(object(name+'drop')),collar=bounds(object(name+'collar'));
+  assert(cord.min.z<=collar.max.z && cord.max.z>=roof-.011,id+' connected drop');
+  assert(bounds(shade).min.z-(upper?data.levels.upper:0)>2.30,id+' clear height');
+ }
+ assert.equal(interior.group.children.filter(child=>child.isPointLight).length,9);
+});
+
+test('play mat rests on the floor and the train track rests on the mat', () => {
+  close(bounds(object('play-mat-woven-edge')).min.z, data.levels.ground, 'mat base');
+  close(bounds(object('play-train-beech-track')).min.z, bounds(object('play-mat-woven-face')).max.z, 'track base');
+});

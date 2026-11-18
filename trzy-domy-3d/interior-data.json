@@ -192,7 +192,7 @@
     },
     {
       "id": "0.8",
-      "name": "Pokój gościnny",
+      "name": "Pokój zabaw z rozkładaną sofą",
       "box": [
         11.33,
         4.71,
@@ -200,11 +200,12 @@
         9.22
       ],
       "area": 12.63,
-      "finish": "oak"
+      "finish": "oak",
+      "catalogueName": "Pokój gościnny"
     },
     {
       "id": "0.9",
-      "name": "Gabinet",
+      "name": "Gabinet dwuosobowy",
       "box": [
         9.04,
         9.42,
@@ -212,7 +213,8 @@
         12.27
       ],
       "area": 13.45,
-      "finish": "oak"
+      "finish": "oak",
+      "catalogueName": "Gabinet"
     },
     {
       "id": "1.1",
@@ -703,7 +705,8 @@
       "Shared upper bathroom doorway refined to y4.64–5.54m against the source opening, leaving the shower approach clear.",
       "Dining seating is the user-requested six-chair override: three chairs per long side, pulled to 6cm from the table edge, instead of eight catalogue chairs.",
       "The mirrored ground-floor drawing supplies usable areas 10.29 and 13.45 m²; their dimensioned footprints include finishes and the low office storage beneath the stairs. The four closed cabinet modules and their individual heights approximate a possible fit-out.",
-      "Room 1.1 study desk, chair and wardrobe are a proposed fit-out. The upper hall reading corner and the exposed timber at the crossing of the two roofs interpret the supplied interior view. Member sizes and joints are for visualisation only."
+      "Room 1.1 study desk, chair and wardrobe are a proposed fit-out. The upper hall reading corner and the exposed timber at the crossing of the two roofs interpret the supplied interior view. Member sizes and joints are for visualisation only.",
+      "Room 0.8 retains the catalogue folded sofa position. Its assumed pull-out daybed extends toward the room centre to 1.65 m overall depth, including frame and back, with a proposed 1.95 × 1.45 m sleeping area."
     ],
     "furnitureSources": {
       "ground-plan": "work/sources/icon-parter-zwykly.jpg, publisher original ground floor, rooms 0.1–0.9",
@@ -712,7 +715,8 @@
       "upper-plan": "work/icon3d-research/attic-mirror.jpg, publisher mirrored upper floor, converted once into original coordinates",
       "living-render": "work/icon3d-research/top-original.png, publisher living room and kitchen render",
       "mirrored-ground-plan": "User-supplied publisher mirrored ground-floor plan, room 0.9 with 76 cm under-stair storage allowance.",
-      "user-ground-rooms": "Furnishings requested for the guest room, study and bathroom, fitted to the published plan. Furniture dimensions and finishes are schematic."
+      "user-ground-rooms": "Furnishings requested for the guest room, study and bathroom, fitted to the published plan. Furniture dimensions and finishes are schematic.",
+      "user-study-playroom": "User-requested two-person study and children’s playroom fitted to publisher rooms 0.9 and 0.8. Desk, toy and unfolded sofa dimensions are design allowances."
     },
     "furnitureCoordinateUncertaintyM": 0.3
   },
@@ -1174,7 +1178,17 @@
       ],
       "facing": "-x",
       "source": "ground-plan",
-      "approximation": "Publisher symbol reads as sofa or convertible bed; compact footprint and wall-facing orientation retained."
+      "approximation": "Folded footprint and orientation follow the publisher plan. Proposed daybed pulls out toward -x; the unfolded box includes the frame and is a design allowance.",
+      "unfoldedBox": [
+        12.48,
+        5.05,
+        14.13,
+        7.15
+      ],
+      "sleepingSurface": [
+        1.95,
+        1.45
+      ]
     },
     {
       "id": "guest-wardrobe",
@@ -1191,56 +1205,83 @@
       "height": 2.2
     },
     {
-      "id": "guest-armchair",
-      "type": "sofa",
+      "id": "play-mat",
+      "type": "rug",
       "room": "0.8",
       "box": [
-        13.15,
-        8.2,
+        12.25,
+        7.38,
         13.85,
-        8.9
+        8.94
       ],
-      "facing": "-x",
-      "source": "ground-plan"
+      "facing": "+y",
+      "source": "user-study-playroom"
+    },
+    {
+      "id": "play-train",
+      "type": "toy",
+      "room": "0.8",
+      "box": [
+        13.02,
+        7.68,
+        13.7,
+        8.08
+      ],
+      "facing": "+y",
+      "source": "user-study-playroom",
+      "elevation": 0.017
     },
     {
       "id": "office-desk",
       "type": "table",
       "room": "0.9",
       "box": [
-        11.2,
-        10.4,
-        12.9,
-        11.1
+        10.74,
+        11.52,
+        12.12,
+        12.27
       ],
-      "facing": "+y",
-      "source": "ground-plan"
+      "facing": "-y",
+      "source": "user-study-playroom"
     },
     {
       "id": "office-chair",
       "type": "chair",
       "room": "0.9",
       "box": [
-        11.72,
-        11.21,
-        12.32,
-        11.81
+        11.11,
+        10.8,
+        11.75,
+        11.44
       ],
-      "facing": "-y",
-      "source": "ground-plan"
+      "facing": "+y",
+      "source": "user-study-playroom"
     },
     {
-      "id": "office-armchair",
-      "type": "sofa",
+      "id": "office-desk-window",
+      "type": "table",
       "room": "0.9",
       "box": [
-        13.1,
-        9.65,
-        13.85,
-        10.35
+        12.2,
+        11.52,
+        13.58,
+        12.27
       ],
-      "facing": "-x",
-      "source": "ground-plan"
+      "facing": "-y",
+      "source": "user-study-playroom"
+    },
+    {
+      "id": "office-chair-window",
+      "type": "chair",
+      "room": "0.9",
+      "box": [
+        12.57,
+        10.8,
+        13.21,
+        11.44
+      ],
+      "facing": "+y",
+      "source": "user-study-playroom"
     },
     {
       "id": "bedroom-one",
@@ -1773,18 +1814,18 @@
       "doors": 2
     },
     {
-      "id": "guest-bedside",
-      "type": "table",
+      "id": "play-cubbies",
+      "type": "cabinet",
       "room": "0.8",
       "box": [
-        13.58,
-        7.28,
-        14.1,
-        7.73
+        11.33,
+        7.22,
+        11.68,
+        8.32
       ],
-      "facing": "-x",
-      "height": 0.52,
-      "source": "user-ground-rooms"
+      "facing": "+x",
+      "source": "user-study-playroom",
+      "height": 0.64
     },
     {
       "id": "office-bookcase",

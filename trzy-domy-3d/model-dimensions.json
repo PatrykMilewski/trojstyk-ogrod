@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-18.2",
+  "modelVersion": "2026-11-18.3",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1657,7 +1657,7 @@
     "proceduralCodeSha256": "db28c65dd3dab345ebfe104a49ce1e34d65f98ddedc8cce47eb6c2ba1c802bec",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "426140b9e29c7b44a98258b31e23e939a3789b4b671d8536079a11c746c93047",
-    "runtimeSha256": "bfb20651dd0959442e2de57c25cee9dbe57d66eb751b58779070f2b735416f7a"
+    "runtimeSha256": "a76f6acb1c951ad6c9c65ecf174ec6251d63a005b30109099b3e5067787e46fa"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1679,7 +1679,8 @@
     "Wiatrołap i gabinet na /193 dopasowano do rzutu lustrzanego. Okno ogrodowe salonu ma trzy pola w otworze 6,50 × 2,35 m. Wysokości frontów zabudowy pod schodami są oszacowane na podstawie biegu i spocznika. Pomiar przed zmianą zapisano dla postaci i psów. Grille, paleniska, sauna, balia, trampolina, plac zabaw i samochody zachowują skalę.",
     "Dom /193. Osiem przeszkleń połaciowych według rzutu poddasza. Słupek pralniczy, deska, szafa i dwie szafki nocne mają wymiary modelowe. Wyposażenie strefy dziennej i oświetlenie odtworzono według wizualizacji.",
     "Dom /193. Szezlong od ogrodu, fotel od kuchni, ekran projekcyjny, pełna zabudowa kuchni z ukrytymi drzwiami i szklana ścianka wiatrołapu. Doposażenie garażu, umeblowanie poddasza i widoczne wiązary są elementami koncepcji wnętrz.",
-    "Dom /193. Gładkie przeszklenie wiatrołapu, szprosy zgodne z obrysem szyb, uzupełnione ściany i wyposażenie parteru, pralni oraz garderoby. Szczegółowość traw i zbóż zależy od widoku."
+    "Dom /193. Gładkie przeszklenie wiatrołapu, szprosy zgodne z obrysem szyb, uzupełnione ściany i wyposażenie parteru, pralni oraz garderoby. Szczegółowość traw i zbóż zależy od widoku.",
+    "Dom /193. Dwa stanowiska pracy, bawialnia z rozkładaną sofą, rozsunięte zasłony i nowe oprawy sufitowe."
   ],
   "contextParcels": [
     {
@@ -3518,7 +3519,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "e5b236e21064d78b8507d22e5d6076e7fa65ff12b154cad8029a1e87c49093fe",
+    "dataSha256": "8dadc57a4360151ba5e7c091bde1d2b80157630560ac3895418f308d6ea91a07",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,
