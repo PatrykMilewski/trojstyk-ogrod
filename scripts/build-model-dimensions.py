@@ -128,6 +128,15 @@ if 'interior' in registry:
         ['Sofa w bawialni po rozłożeniu', dimensions([unfolded[3] - unfolded[1], unfolded[2] - unfolded[0]]) + ' m wraz z ramą. Powierzchnia spania ' + dimensions(bed['sleepingSurface']) + ' m (założenie modelu)'],
         ['Dolne okno salonu od ogrodu', f"{glazing['panels']} równe pola, otwór {dimensions([glazing['widthM'], glazing['heightM']])} m"],
         ['Krzesła przy stole', '6 sztuk, po 3 przy długich bokach; odstęp siedziska od blatu 0,06 m'], ['Dane i źródła', 'interior-data.json']]) + '<p><a href="interior-data.json">Pobierz współrzędne, wymiary i założenia wnętrza</a></p>')
+    points = model['electrical']['points']
+    content += section('Detale wnętrza /193', table(['Element', 'Wymiar w modelu'], [
+        [label, dimensions([furniture[key]['box'][2] - furniture[key]['box'][0],
+                            furniture[key]['box'][3] - furniture[key]['box'][1], furniture[key]['height']]) + ' m']
+        for key, label in [('entry-console', 'Konsola w wiatrołapie'), ('entry-pouf', 'Puf w wiatrołapie'),
+                           ('office-bookcase', 'Zabudowa w gabinecie'),
+                           ('office-pug-bed', 'Legowisko w gabinecie'), ('master-pug-bed', 'Legowisko w sypialni')]
+    ] + [['Osprzęt JLM Loft', f"{sum(p['type'] == 'switch' for p in points)} łączników i {sum(p['type'] != 'switch' for p in points)} gniazd. Okrągła ramka o średnicy {number(model['electrical']['frameDiameterM'] * 1000)} mm."],
+         ['Położenie osprzętu', 'Wysokości i pozycje w modelu są propozycją aranżacyjną. Zestawienie punktów znajduje się w danych wnętrza.']]))
     if 'projection' in interior:
         screen, bays = interior['projection'], interior['garageBays']
         content += section('Wyposażenie domu /193', table(['Element', 'Wymiar w modelu'], [

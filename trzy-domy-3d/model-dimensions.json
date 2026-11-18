@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-18.6",
+  "modelVersion": "2026-11-18.7",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1730,7 +1730,7 @@
     "proceduralCodeSha256": "f28e65f81bfd542148d9fd4925bc2e84fb2d7a8a449e34f84393ac2a653c99e2",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "f6f27de0208ddacc1880061ce21577c8aa17d9cf9595e32efb76d2759fffda44",
-    "runtimeSha256": "87bbebed6393227064b810c270af9005bc603b9bba5c383db53f7b4bf54d56c0"
+    "runtimeSha256": "0ab63b21880555a54ef9501f7d2e45daba4403f37cfc148f6d8e793059eca1c3"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1756,7 +1756,8 @@
     "Dom /193. Dwa stanowiska pracy, bawialnia z rozkładaną sofą, rozsunięte zasłony i nowe oprawy sufitowe.",
     "Dom /193 odbito lewo–prawo w tym samym miejscu wraz z wnętrzem i tarasem. Brama wjazdowa i podjazd leżą na osi garażu.",
     "Nasadzenia drzew i krzewów rozliczono osobno dla /190, /191 i /193 według powierzchni gruntu obsadzonego w modelu.",
-    "Dom /193. Dwa akcenty z forniru, biurka z regulacją wysokości, wyposażenie i materiały według moodboardu."
+    "Dom /193. Dwa akcenty z forniru, biurka z regulacją wysokości, wyposażenie i materiały według moodboardu.",
+    "Dom /193. Nowa posadzka i zabudowa wiatrołapu, łazienka w terakocie i szkliwionej ceramice, fronty kuchenne, osprzęt Loft i dwa legowiska."
   ],
   "contextParcels": [
     {
@@ -3595,7 +3596,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "2d976baa7b5d5382946b1c4f83ad464b2908b3748997913c640e00e8f5d7bfd2",
+    "dataSha256": "3610f4ca3dd4e3dcd734a51082b444dca2e90f81a9d424d0fc19712525efd26f",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,

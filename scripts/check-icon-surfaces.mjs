@@ -138,8 +138,18 @@ test('shared glazing edges and guardrail junctions have one exposed cylinder eac
 
 test('collinear cylinders never contain even a partial duplicate span', () => {
   const cylinders = interior.group.children.filter(m => m.geometry?.type === 'CylinderGeometry').map(mesh => {
-    const axis = new THREE.Vector3(0, 1, 0).applyQuaternion(mesh.quaternion);
-    return { mesh, axis, center: mesh.position, height: mesh.geometry.parameters.height, radius: mesh.geometry.parameters.radiusTop };
+    const {radialSegments,heightSegments}=mesh.geometry.parameters;
+    const positions=mesh.geometry.getAttribute('position');
+    mesh.updateMatrix();
+    const ringCenter=start=>{
+      const sum=new THREE.Vector3();
+      for(let i=0;i<radialSegments;i++)sum.add(new THREE.Vector3().fromBufferAttribute(positions,start+i));
+      return sum.divideScalar(radialSegments).applyMatrix4(mesh.matrix);
+    };
+    const top=ringCenter(0),base=ringCenter(heightSegments*(radialSegments+1));
+    const rim=new THREE.Vector3().fromBufferAttribute(positions,0).applyMatrix4(mesh.matrix);
+    return {mesh,axis:top.clone().sub(base).normalize(),center:top.clone().lerp(base,.5),
+      height:top.distanceTo(base),radius:top.distanceTo(rim)};
   });
   for (let i = 0; i < cylinders.length; i++) for (let j = i + 1; j < cylinders.length; j++) {
     const a = cylinders[i], b = cylinders[j];
@@ -202,10 +212,10 @@ test('room fixtures are suspended from the slab or the actual sloped lining, wit
   assert(bounds(shade).min.z-(upper?data.levels.upper:0)>2.30,id+' clear height');
  }
  const lights=interior.group.children.filter(child=>child.isPointLight);
- assert.equal(lights.length,9+4);
- for(const id of ['living','entry','family-basin','private-basins']){
+ assert.equal(lights.length,9+5);
+ for(const id of ['living','entry','family-basin','private-basins','ground-bath']){
   const lamp=object('sconce-light-'+id);
-  const globe=object(id==='living'?'living-sconce-opal':'light-fixture-mood-'+id+'-opal');
+  const globe=object(id==='living'?'living-sconce-opal':id==='ground-bath'?'light-fixture-bath-sunburst-opal':'light-fixture-mood-'+id+'-opal');
   assert(lamp.isPointLight && lamp.intensity>0 && lamp.distance>=3);
   assert(lamp.position.distanceTo(globe.position)<.15);
  }

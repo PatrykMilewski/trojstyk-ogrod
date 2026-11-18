@@ -715,8 +715,11 @@
       "upper-plan": "work/icon3d-research/attic-mirror.jpg, publisher mirrored upper floor, converted once into original coordinates",
       "living-render": "work/icon3d-research/top-original.png, publisher living room and kitchen render",
       "mirrored-ground-plan": "User-supplied publisher mirrored ground-floor plan, room 0.9 with 76 cm under-stair storage allowance.",
+      "user-entry": "Entrance console, removable pouf, and painted fitted wardrobes interpreted from the user brief and reference photographs. Furniture sizes are design allowances.",
       "user-ground-rooms": "Furnishings requested for the guest room, study and bathroom, fitted to the published plan. Furniture dimensions and finishes are schematic.",
-      "user-study-playroom": "User-requested two-person study and children’s playroom fitted to publisher rooms 0.9 and 0.8. Desk, toy and unfolded sofa dimensions are design allowances."
+      "user-study-playroom": "User-requested two-person study and children’s playroom fitted to publisher rooms 0.9 and 0.8. Desk, toy and unfolded sofa dimensions are design allowances.",
+      "user-study-storage": "User-requested fitted bookcase behind the two existing workstations. Painted board and plain laminate, fitted to the study wall.",
+      "user-pug-beds": "Matching proposed low-entry pug beds, placed directly on the finished floors in the study and main bedroom."
     },
     "furnitureCoordinateUncertaintyM": 0.3,
     "finishSchedule": {
@@ -1103,7 +1106,7 @@
       ],
       "facing": "-y",
       "source": "mirrored-ground-plan",
-      "height": 2.2,
+      "height": 2.78,
       "doors": 4
     },
     {
@@ -1118,22 +1121,37 @@
       ],
       "facing": "-x",
       "source": "mirrored-ground-plan",
-      "height": 2.2,
+      "height": 2.78,
       "doors": 2,
       "blindCornerWidth": 0.6
     },
     {
-      "id": "entry-bench",
+      "id": "entry-console",
+      "type": "sideboard",
+      "room": "0.6",
+      "box": [
+        8.14,
+        6.41,
+        8.488,
+        7.78
+      ],
+      "facing": "-x",
+      "height": 0.82,
+      "source": "user-entry"
+    },
+    {
+      "id": "entry-pouf",
       "type": "ottoman",
       "room": "0.6",
       "box": [
-        6.72,
-        6.65,
-        7.08,
-        7.55
+        6.62,
+        6.68,
+        7.06,
+        7.12
       ],
       "facing": "+x",
-      "source": "ground-plan"
+      "height": 0.445,
+      "source": "user-entry"
     },
     {
       "id": "ground-bath",
@@ -1842,14 +1860,42 @@
       "type": "cabinet",
       "room": "0.9",
       "box": [
-        11.68,
+        11.1,
         9.42,
-        12.78,
+        13.25,
         9.68
       ],
       "facing": "+y",
-      "height": 1.66,
-      "source": "user-ground-rooms"
+      "height": 2.76,
+      "source": "user-study-storage"
+    },
+    {
+      "id": "office-pug-bed",
+      "type": "pet-bed",
+      "room": "0.9",
+      "box": [
+        13.29,
+        9.42,
+        13.97,
+        9.94
+      ],
+      "facing": "+y",
+      "height": 0.18,
+      "source": "user-pug-beds"
+    },
+    {
+      "id": "master-pug-bed",
+      "type": "pet-bed",
+      "room": "1.8",
+      "box": [
+        10.59,
+        10.71,
+        11.11,
+        11.39
+      ],
+      "facing": "-x",
+      "height": 0.18,
+      "source": "user-pug-beds"
     }
   ],
   "rails": [
@@ -2104,6 +2150,382 @@
         "wheelbase": 1.05,
         "wheelRadius": 0.341,
         "paint": "#516d74"
+      }
+    ]
+  },
+  "electrical": {
+    "series": "JLM Retro Loft podtynkowe",
+    "source": "https://jlmretro.com/pl/content/13-loft",
+    "frameDiameterM": 0.081,
+    "points": [
+      {
+        "room": "0.1",
+        "type": "switch",
+        "finish": "black",
+        "support": "garage-hall",
+        "normal": "-x",
+        "alongM": 6.14,
+        "heightM": 1.08
+      },
+      {
+        "room": "0.1",
+        "type": "socket",
+        "finish": "black",
+        "support": "garage-back",
+        "normal": "-y",
+        "alongM": 5.93,
+        "heightM": 1.05
+      },
+      {
+        "room": "0.2",
+        "type": "switch",
+        "finish": "white",
+        "support": "garage-back",
+        "normal": "+y",
+        "alongM": 2.78,
+        "heightM": 1.08
+      },
+      {
+        "room": "0.2",
+        "type": "socket",
+        "finish": "white",
+        "support": "garage-back",
+        "normal": "+y",
+        "alongM": 1.39,
+        "heightM": 1.06
+      },
+      {
+        "room": "0.3",
+        "type": "switch",
+        "finish": "black",
+        "support": "garage-back",
+        "normal": "+y",
+        "alongM": 5.79,
+        "heightM": 1.08
+      },
+      {
+        "room": "0.3",
+        "type": "socket",
+        "finish": "black",
+        "support": "garage-hall",
+        "normal": "-x",
+        "alongM": 7.32,
+        "heightM": 1.13
+      },
+      {
+        "room": "0.4",
+        "type": "switch",
+        "finish": "blue",
+        "support": "kitchen-tall-body",
+        "normal": "+x",
+        "alongM": 8.93,
+        "heightM": 1.08
+      },
+      {
+        "room": "0.4",
+        "type": "socket",
+        "finish": "blue",
+        "support": "kitchen-back-slab-backsplash",
+        "normal": "+y",
+        "alongM": 3.23,
+        "heightM": 1.16
+      },
+      {
+        "room": "0.4",
+        "type": "switch",
+        "finish": "white",
+        "support": "facade-terrace",
+        "normal": "-x",
+        "alongM": 13.6,
+        "heightM": 1.08
+      },
+      {
+        "room": "0.4",
+        "type": "socket",
+        "finish": "white",
+        "support": "facade-terrace",
+        "normal": "-x",
+        "alongM": 13.04,
+        "heightM": 0.33
+      },
+      {
+        "room": "0.4",
+        "type": "socket",
+        "finish": "white",
+        "support": "living-slate-boards",
+        "normal": "+x",
+        "alongM": 13.1,
+        "heightM": 0.33
+      },
+      {
+        "room": "0.5",
+        "type": "switch",
+        "finish": "red",
+        "support": "hall-front",
+        "normal": "+y",
+        "alongM": 8.87,
+        "heightM": 1.08
+      },
+      {
+        "room": "0.5",
+        "type": "socket",
+        "finish": "red",
+        "support": "hall-front",
+        "normal": "+y",
+        "alongM": 9.02,
+        "heightM": 0.33
+      },
+      {
+        "room": "0.6",
+        "type": "switch",
+        "finish": "red",
+        "support": "facade-front-wing",
+        "normal": "+y",
+        "alongM": 8.17,
+        "heightM": 1.08
+      },
+      {
+        "room": "0.6",
+        "type": "socket",
+        "finish": "red",
+        "support": "bath-left",
+        "normal": "-x",
+        "alongM": 7.56,
+        "heightM": 1.0
+      },
+      {
+        "room": "0.7",
+        "type": "switch",
+        "finish": "black",
+        "support": "hall-front",
+        "normal": "+y",
+        "alongM": 10.48,
+        "heightM": 1.08
+      },
+      {
+        "room": "0.7",
+        "type": "covered",
+        "finish": "black",
+        "support": "bath-ground-plaster-hall-right",
+        "normal": "-y",
+        "alongM": 10.81,
+        "heightM": 1.27
+      },
+      {
+        "room": "0.8",
+        "type": "switch",
+        "finish": "blue",
+        "support": "guest-inner",
+        "normal": "+x",
+        "alongM": 8.15,
+        "heightM": 1.08
+      },
+      {
+        "room": "0.8",
+        "type": "socket",
+        "finish": "blue",
+        "support": "guest-office",
+        "normal": "-y",
+        "alongM": 12.9,
+        "heightM": 0.33
+      },
+      {
+        "room": "0.9",
+        "type": "switch",
+        "finish": "blue",
+        "support": "guest-office",
+        "normal": "+y",
+        "alongM": 10.96,
+        "heightM": 1.08
+      },
+      {
+        "room": "0.9",
+        "type": "socket",
+        "finish": "blue",
+        "support": "facade-wing-rear",
+        "normal": "-y",
+        "alongM": 11.38,
+        "heightM": 1.06
+      },
+      {
+        "room": "0.9",
+        "type": "socket",
+        "finish": "blue",
+        "support": "facade-wing-rear",
+        "normal": "-y",
+        "alongM": 12.99,
+        "heightM": 1.3
+      },
+      {
+        "room": "1.1",
+        "type": "switch",
+        "finish": "blue",
+        "support": "u-room1",
+        "normal": "-y",
+        "alongM": 6.37,
+        "heightM": 1.08
+      },
+      {
+        "room": "1.1",
+        "type": "socket",
+        "finish": "blue",
+        "support": "u-room1",
+        "normal": "-y",
+        "alongM": 7.37,
+        "heightM": 0.33
+      },
+      {
+        "room": "1.1",
+        "type": "socket",
+        "finish": "blue",
+        "support": "u-room1",
+        "normal": "-y",
+        "alongM": 1.42,
+        "heightM": 0.33
+      },
+      {
+        "room": "1.2",
+        "type": "switch",
+        "finish": "white",
+        "support": "u-room2-hall",
+        "normal": "+x",
+        "alongM": 5.68,
+        "heightM": 1.08
+      },
+      {
+        "room": "1.2",
+        "type": "covered",
+        "finish": "white",
+        "support": "u-bath-room2",
+        "normal": "-y",
+        "alongM": 3.12,
+        "heightM": 1.21
+      },
+      {
+        "room": "1.3",
+        "type": "switch",
+        "finish": "red",
+        "support": "u-room2-hall",
+        "normal": "-x",
+        "alongM": 6.74,
+        "heightM": 1.08
+      },
+      {
+        "room": "1.3",
+        "type": "socket",
+        "finish": "red",
+        "support": "u-bath-room2",
+        "normal": "+y",
+        "alongM": 1.75,
+        "heightM": 0.94
+      },
+      {
+        "room": "1.4",
+        "type": "switch",
+        "finish": "black",
+        "support": "u-room2-hall",
+        "normal": "+x",
+        "alongM": 8.07,
+        "heightM": 1.08
+      },
+      {
+        "room": "1.4",
+        "type": "socket",
+        "finish": "black",
+        "support": "u-room2-hall",
+        "normal": "+x",
+        "alongM": 6.2,
+        "heightM": 0.33
+      },
+      {
+        "room": "1.5",
+        "type": "switch",
+        "finish": "white",
+        "support": "u-laundry-hall",
+        "normal": "+x",
+        "alongM": 5.96,
+        "heightM": 1.08
+      },
+      {
+        "room": "1.5",
+        "type": "covered",
+        "finish": "white",
+        "support": "u-laundry-private",
+        "normal": "-x",
+        "alongM": 6.46,
+        "heightM": 1.08
+      },
+      {
+        "room": "1.6",
+        "type": "switch",
+        "finish": "black",
+        "support": "u-suite-front",
+        "normal": "+y",
+        "alongM": 11.1,
+        "heightM": 1.08
+      },
+      {
+        "room": "1.6",
+        "type": "covered",
+        "finish": "black",
+        "support": "u-suite-front",
+        "normal": "-y",
+        "alongM": 11.22,
+        "heightM": 1.15
+      },
+      {
+        "room": "1.7",
+        "type": "switch",
+        "finish": "red",
+        "support": "u-suite-front",
+        "normal": "-y",
+        "alongM": 12.37,
+        "heightM": 1.08
+      },
+      {
+        "room": "1.7",
+        "type": "socket",
+        "finish": "red",
+        "support": "u-suite-front",
+        "normal": "-y",
+        "alongM": 12.4,
+        "heightM": 0.33
+      },
+      {
+        "room": "1.8",
+        "type": "switch",
+        "finish": "blue",
+        "support": "u-suite-hall",
+        "normal": "+x",
+        "alongM": 9.42,
+        "heightM": 1.08
+      },
+      {
+        "room": "1.8",
+        "type": "socket",
+        "finish": "blue",
+        "support": "u-suite-front",
+        "normal": "+y",
+        "alongM": 11.72,
+        "heightM": 0.33
+      },
+      {
+        "room": "1.8",
+        "type": "socket",
+        "finish": "white",
+        "support": "upper-rear-wing",
+        "normal": "-y",
+        "alongM": 10.84,
+        "heightM": 0.74
+      },
+      {
+        "room": "1.8",
+        "type": "socket",
+        "finish": "white",
+        "support": "upper-rear-wing",
+        "normal": "-y",
+        "alongM": 13.43,
+        "heightM": 0.74
       }
     ]
   }

@@ -688,3 +688,138 @@ test('walnut veneer is confined to two small day-zone accents', () => {
   assert.equal(accents.length,2);
   for(const mesh of accents) assert.equal(furniture.get(mesh.userData.furnitureId).room,'0.4');
 });
+
+test('the downstairs bath finishes are confined to its own walls and keep the hall entrance clear', () => {
+  const get=id=>interior.group.getObjectByName(id);
+  const walkWall=bounds(get('bath-ground-plaster-hall-left')),farWall=bounds(get('bath-ground-plaster-hall-right'));
+  close(farWall.min.x-walkWall.max.x,.90,'Bathroom doorway clear width');
+  close(bounds(get('bath-ground-plaster-lintel')).min.z,2.10,'Bathroom doorway clear height');
+  const tiles=get('bath-ground-wc-relief-glaze'),finish=tiles.material;
+  assert(finish.map && finish.bumpMap && finish.roughness<.3);
+  const tileBox=bounds(tiles),wc=bounds(get('ground-wc-flush-plate')),lamp=bounds(get('light-fixture-bath-sunburst-opal'));
+  assert(tileBox.max.z<lamp.min.z && tileBox.max.z>wc.max.z && tileBox.min.x>wc.min.x);
+  close(tileBox.min.x-wc.min.x,.0060,'Control plate projects beyond tile',.001);
+  assert(!get('bath-ground-star-splash'));
+  assert.equal(get('finish-0.7').material.name,'Limestone and clay terrazzo');
+  assert.equal(get('finish-1.2').material.name,'sand ceramic');
+  const room=rooms.get('0.7').box;
+  for(const wall of interior.group.children.filter(o=>o.name.startsWith('bath-ground-plaster-'))){
+    const b=bounds(wall);
+    assert(b.min.x>=room[0] && b.max.x<=room[2] && b.min.y>=room[1] && b.max.y<=room[3]);
+  }
+});
+
+test('island drawers open toward the work aisle and the salon face has five routed panels', () => {
+  const get=id=>interior.group.getObjectByName(id);
+  const aisle=parts('kitchen-island').filter(o=>o.name.includes('-working-drawer-'));
+  const salon=parts('kitchen-island').filter(o=>o.name.includes('-salon-panel-'));
+  assert.equal(aisle.length,10);assert.equal(salon.length,5);
+  const tower=get('kitchen-tall-fridge'),portal=get('kitchen-pantry-closed-leaf');
+  for(const door of [tower,portal,...aisle,...salon]){
+    assert(door.geometry.hasAttribute('color') && door.geometry.index.count>100);
+    assert(bounds(door).max.y-bounds(door).min.y>=.020);
+  }
+  assert(bounds(get('kitchen-island-working-pull-2-0')).min.y<bounds(aisle[0]).min.y-.017);
+  assert(bounds(salon[0]).min.y>bounds(aisle[0]).max.y+.8);
+});
+
+test('study library and matching low-entry pug beds retain their floor space and access', () => {
+  const library=itemBounds('office-bookcase');
+  close(library.max.x-library.min.x,2.15,'Fitted width');
+  close(library.max.z,2.76,'Fitted height');
+  close(library.max.y,9.68,'Storage front');
+  const ground=itemBounds('office-pug-bed'),upper=itemBounds('master-pug-bed'),human=itemBounds('master-bed');
+  const ids=data.furniture.filter(f=>f.type==='pet-bed').map(f=>f.id).sort();
+  assert.deepEqual(ids,['master-pug-bed','office-pug-bed']);
+  const officeParts=parts('office-pug-bed'),bedroomParts=parts('master-pug-bed');
+  assert.equal(officeParts.length,bedroomParts.length);
+  for(const office of officeParts){
+    const other=bedroomParts.find(mesh=>mesh.name===office.name.replace('office-','master-'));
+    assert(other && office.material===other.material);
+    const a=office.geometry.attributes.position.array,b=other.geometry.attributes.position.array;
+    assert.equal(a.length,b.length);
+    for(let i=0;i<a.length;i++)close(a[i],b[i],'Matching local fabric form');
+  }
+  close(ground.min.z,0,'Office bed on floor');
+  close(upper.min.z,3.20,'Bedroom bed on floor');
+  close(upper.max.z-upper.min.z,.18,'Low rounded bed');
+  close(human.min.x-upper.max.x,.04,'Against side of master bed');
+  close(upper.min.x-rooms.get('1.8').box[0],.65,'Passable beside pet bed');
+  close(itemBounds('master-bedside-left').min.y-upper.max.y,.49,'Nightstand approach');
+  const curtain=bounds(interior.group.getObjectByName('curtain-study-left'));
+  assert(!curtain.intersectsBox(ground),'Study drape falls clear of bed');
+  const office=groundWalk();
+  assertGroundRoute(office,[[10.32,9.02],[10.32,10.24],[13.72,10.24]]);
+  const master=createWalkCollision(interior.navigation.obstacles.filter(o=>o.maxZ>3.24 && o.minZ<4.85));
+  for(const route of [
+    [[9.47,8.68],[10.31,8.68],[10.265,9.45],[10.265,11.57]],
+    [[10.31,8.68],[12.98,8.68],[13.66,9.41],[13.66,11.54]],
+    [[10.31,8.68],[10.45,8.40],[10.45,7.55]],
+    [[12.98,8.68],[12.98,7.50]]
+  ])assertGroundRoute(master,route);
+});
+
+
+test('each room has a Loft light switch and a grounded or covered outlet fixed to a solid surface', () => {
+  const {points,frameDiameterM}=data.electrical;
+  close(frameDiameterM,.081,'Single round JLM frame diameter');
+  for(const room of rooms.keys()){
+    const mounts=points.filter(m=>m.room===room);
+    assert(mounts.some(m=>m.type==='switch'),room+' switch');
+    assert(mounts.some(m=>m.type==='socket'||m.type==='covered'),room+' outlet');
+  }
+  interior.group.updateWorldMatrix(true,true);
+  for(const [i,mount] of points.entries()){
+    const frame=interior.group.getObjectByName('loft-fixture-'+i+'-frame');
+    const support=interior.group.getObjectByName(mount.support);
+    const axis=mount.normal[1],along=axis==='x'?'y':'x',sign=mount.normal[0]==='+'?1:-1;
+    const dir=new THREE.Vector3();dir[axis]=sign;
+    const frameBox=bounds(frame),center=frameBox.getCenter(new THREE.Vector3());
+    close(frameBox.max[along]-frameBox.min[along],frameDiameterM,'Frame width '+i,.0005);
+    close(center[along],mount.alongM,'Tangential position '+i,.001);
+    close(center.z,mount.heightM+(mount.room.startsWith('1.')?data.levels.upper:0),'Installed height '+i,.001);
+    for(const edge of [-.034,0,.034]){
+      const start=center.clone().addScaledVector(dir,.085);
+      start[along]+=edge;
+      const ray=new THREE.Raycaster(start.applyMatrix4(interior.group.matrixWorld),dir.clone().negate().transformDirection(interior.group.matrixWorld),0,.12);
+      const hits=ray.intersectObject(support,false);
+      assert(hits.length,'Frame '+i+' needs a solid support at '+mount.support+', offset '+edge);
+      const others=interior.group.children.filter(obj=>obj.isMesh && obj!==support && !obj.name.startsWith('loft-fixture-'));
+      const inFront=ray.intersectObjects(others,false).find(hit=>hit.distance<hits[0].distance-.010);
+      assert(!inFront,'Frame '+i+' obscured by '+inFront?.object.name+' at '+mount.support);
+    }
+  }
+});
+
+test('the vestibule routes clear the new console, ottoman and fitted wardrobes', () => {
+  const point=(x,y)=>interior.localToWorld([x,y]).slice(0,2);
+  const collider=createWalkCollision(interior.navigation.obstacles.filter(o=>o.maxZ>.08 && o.minZ<1.75));
+  for(const [id,a,b] of [
+   ['outer threshold through glazed vestibule door',[7.45,4.30],[7.45,8.34]],
+   ['front to garage',[7.45,5.44],[6.22,5.44]],
+   ['cross the pocket in front of wardrobes',[7.45,5.18],[10.27,5.18]],
+   ['stand in front of console',[7.45,6.97],[7.81,6.97]],
+  ]){
+   assert(!collider.pathBlocked(point(...a),point(...b)),id);
+  }
+  const [consoleBox,pouf]=['entry-console','entry-pouf'].map(id=>furniture.get(id).box);
+  close(consoleBox[0]-pouf[2],1.08,'Clear across opposing furniture');
+  const border=interior.group.getObjectByName('entry-mitred-tile-border');
+  const pos=border.geometry.getAttribute('position'),uv=border.geometry.getAttribute('uv');
+  assert.equal(pos.count,36);
+  for(let edge=0;edge<6;edge++){
+   const next=(edge+1)%6, i=edge*6,j=next*6;
+   close(pos.getX(i+1),pos.getX(j),'closed outer x');
+   close(pos.getY(i+1),pos.getY(j),'closed outer y');
+   close(pos.getX(i+2),pos.getX(j+5),'closed inner x');
+   close(pos.getY(i+2),pos.getY(j+5),'closed inner y');
+   close(uv.getX(i+1)%1,0,'continuous integer number of rosettes');
+  }
+  assert.equal(parts('entry-console').filter(m=>m.name.includes('-hemisphere-')).length,4);
+  assert.equal(parts('entry-console').filter(m=>m.name.includes('-slab-support-')).length,2);
+  assert.equal(parts('entry-pouf').filter(m=>m.name.endsWith('-padded-seat')).length,1);
+  const floor=interior.group.getObjectByName('finish-0.6').material.map.image;
+  const sample=(u,v)=>floor.data[(Math.floor(v*floor.height)*floor.width+Math.floor(u*floor.width))*4];
+  assert(sample(.5,.5)>200 && sample(.02,.02)>200 && sample(.26,.31)<65);
+  assert(sample(.31,.5)>200 && sample(.19,.5)<65);
+});
