@@ -24,7 +24,7 @@ function bounds(mesh) { mesh.updateMatrix(); mesh.geometry.computeBoundingBox();
 const contains = (p, ring) => { let inside = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const a = ring[i], b = ring[j]; if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside; } return inside; };
 
 test('open interior doorways match their rendered openings and collision bands', () => {
-  for (const wall of data.walls.filter(wall => wall.finish !== 'reeded-glass')) {
+  for (const wall of data.walls.filter(wall => wall.finish !== 'clear-glass')) {
     const dx = wall.b[0] - wall.a[0], dy = wall.b[1] - wall.a[1], length = Math.hypot(dx, dy), ux = dx / length, uy = dy / length, base = wall.level ? 3.2 : 0;
     for (let i = 1; i < 80; i++) for (const h of [.04, 1.1, 2.08, 2.2]) {
       const u = length * i / 80; if (wall.doors.some(door => door.some(edge => Math.abs(edge - u) < 1e-6))) continue; const expected = !wall.doors.some(([lo, hi]) => u > lo && u < hi && h < 2.1);

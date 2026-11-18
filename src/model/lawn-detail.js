@@ -32,6 +32,60 @@ function lawnTuft(THREE) {
   geometry.computeVertexNormals();
   return geometry;
 }
+
+function addVegetationTiles(THREE, group, samples, geometry, material, detail, setTransform) {
+  const tiles = new Map();
+  for (const sample of samples) {
+    const key = Math.floor(sample[0] / detail.tileSize) + ',' + Math.floor(sample[1] / detail.tileSize);
+    if (!tiles.has(key)) tiles.set(key, []);
+    tiles.get(key).push(sample);
+  }
+  const object = new THREE.Object3D();
+  let seed = 30841;
+  for (const [key, tile] of tiles) {
+    // A stable shuffled prefix keeps the same plants when zoom changes by a few pixels.
+    for (let i = tile.length - 1; i > 0; i--) {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      const j = Math.floor((seed / 4294967296) * (i + 1));
+      [tile[i], tile[j]] = [tile[j], tile[i]];
+    }
+    const mesh = new THREE.InstancedMesh(geometry, material, tile.length);
+    mesh.name = detail.name + '-' + key;
+    mesh.receiveShadow = true;
+    mesh.userData.vegetationDetail = detail;
+    tile.forEach((sample, i) => {
+      setTransform(object, sample);
+      object.updateMatrix();
+      mesh.setMatrixAt(i, object.matrix);
+    });
+    mesh.computeBoundingBox();
+    mesh.computeBoundingSphere();
+    group.add(mesh);
+  }
+}
+
+export function updateVegetationDetail(camera, viewportHeight, groups) {
+  camera.updateWorldMatrix(true, false);
+  const view = camera.matrixWorldInverse.elements;
+  const projection = viewportHeight * camera.projectionMatrix.elements[5] / 2;
+  for (const group of groups) {
+    if (!group.visible) continue;
+    for (const mesh of group.children) {
+      const detail = mesh.userData.vegetationDetail;
+      if (!detail) continue;
+      // The tiles store site coordinates, and each perspective tile keeps its near edge detailed.
+      const {center, radius} = mesh.boundingSphere;
+      const depth = camera.isPerspectiveCamera
+        ? Math.max(camera.near, -(view[2]*center.x + view[6]*center.y + view[10]*center.z + view[14]) - radius)
+        : 1;
+      const pixels = detail.height * projection / depth;
+      const t = Math.max(0, Math.min(1, (pixels - detail.minPixels) / (detail.fullPixels - detail.minPixels)));
+      mesh.count = Math.round(mesh.instanceMatrix.count * t*t*(3 - 2*t));
+      mesh.visible = mesh.count > 0;
+    }
+  }
+}
+
 export function createLawnDetail(THREE,landscaping,neighbors,plot,interiorRings) {
   const group=new THREE.Group();
   group.name='lawn-blade-detail';
@@ -50,7 +104,6 @@ export function createLawnDetail(THREE,landscaping,neighbors,plot,interiorRings)
   for (const footprint of footprints) if (footprint) blocked.push(...regions(footprint));
   const geometry=lawnTuft(THREE);
   const material=new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide});
-  const object=new THREE.Object3D();
   let seed=18673;
   const rand=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
   for (const [id,polygon] of Object.entries(neighbors.parcels)) {
@@ -66,16 +119,10 @@ export function createLawnDetail(THREE,landscaping,neighbors,plot,interiorRings)
         for (const overlay of overlays) if (lawnContains(overlay,px,py,0)) z=Math.max(z,overlay.z+.001);
         samples.push([px,py,z,scale,rand()*Math.PI*2]);
       }
-      if (!samples.length) continue;
-      const mesh=new THREE.InstancedMesh(geometry,material,samples.length);
-      mesh.name='lawn-tufts-'+id;
-      samples.forEach(([x,y,z,scale,angle],i)=>{
-        object.position.set(x,y,z);object.rotation.z=angle;object.scale.setScalar(scale);object.updateMatrix();
-        mesh.setMatrixAt(i,object.matrix);
+      const detail = {name:'lawn-tufts-'+id, tileSize:12, height:.043, minPixels:.45, fullPixels:3};
+      addVegetationTiles(THREE, group, samples, geometry, material, detail, (object, [x,y,z,scale,angle]) => {
+        object.position.set(x,y,z); object.rotation.z=angle; object.scale.setScalar(scale);
       });
-      mesh.computeBoundingSphere();
-      mesh.receiveShadow=true;
-      group.add(mesh);
     }
   }
   return group;

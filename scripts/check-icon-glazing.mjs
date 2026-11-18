@@ -76,3 +76,23 @@ test('garden slider has three equal clear panels and two full-height dividers', 
   close(b.min.z,0,'divider base');close(b.max.z,2.35,'divider top');
  });
 });
+
+test('vertical gable bars touch both the sill and the sloping frame', () => {
+ for(const [id,upper] of [['front-gable-mullion-0',(3.9+7.25)/2],['wing-gable-mullion-0',(4.15+7.3)/2],
+   ...[3.1,5.4].map(x=>['garden-upper-triangle-mullion-'+x,7.35-Math.abs(x-4.25)*3.4/3.35])]){
+  const bar=bounds(object(id));
+  close(bar.min.z,3.2,id+' sill');close(bar.max.z,upper,id+' sloped frame');
+ }
+});
+
+test('master bath doorway clears the hall partition and closes the slit toward the landing', () => {
+ const wall=object('u-suite-front');
+ for(const z of [3.32,4.9,5.25]){
+  assert(hits(wall,[9.77,8.10,z],[0,-1,0],.35).length,'wall beside the master bathroom');
+  assert(!hits(wall,[10.45,8.10,z],[0,-1,0],.35).length,'private bathroom doorway');
+ }
+ for(const [name,x,y,z] of [
+  ['u-laundry-private',8.84,4.85,4.4],['u-private-dressing',11.62,4.85,4.4],
+  ['u-private-dressing',11.62,4.48,4.17],['u-suite-hall',9.87,12.44,4.17]
+ ])assert(hits(object(name),[x-.2,y,z],[1,0,0],.4).length,name+' closes at the eaves');
+});

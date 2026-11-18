@@ -83,6 +83,7 @@ export function createWalkCollision(footprints, radius = .28) {
   function move(start, delta) {
     if (![...start, ...delta].every(Number.isFinite)) throw new TypeError('Pozycja spaceru musi być skończona.');
     const hit = advance(start, delta);
+    if (hit[0] === start[0] + delta[0] && hit[1] === start[1] + delta[1]) return hit;
     const slideX = advance(hit, [start[0] + delta[0] - hit[0], 0]);
     return advance(slideX, [0, start[1] + delta[1] - slideX[1]]);
   }
@@ -174,6 +175,7 @@ function createInteriorWalkMotion(collision, navigation) {
   const launchSpeed = Math.sqrt(2 * gravityMps2 * jumpHeightM);
   let position = [0, 0, eyeHeightM], floorHeightM = 0, velocity = 0, grounded = true, sprinting = false;
   let landingCeiling = 0, connectedRamps = new Set();
+  let needsSupportCheck = true;
   function airborneRamps() {
     return new Set(navigation.ramps.filter(ramp => Math.abs(ramp.z0 - floorHeightM) <= .12 ||
       Math.abs(ramp.z1 - floorHeightM) <= .12 || Math.abs((walkRampHeight(position, ramp) ?? Infinity) - floorHeightM) <= .12)
@@ -183,6 +185,7 @@ function createInteriorWalkMotion(collision, navigation) {
     floorHeightM = walkSupport(point, navigation, point[2] ?? 0);
     position = [point[0], point[1], floorHeightM + eyeHeightM];
     velocity = 0; grounded = true; sprinting = false; landingCeiling = floorHeightM; connectedRamps = new Set();
+    needsSupportCheck = false;
   }
   function jump() {
     if (!grounded) return false;
@@ -214,14 +217,21 @@ function createInteriorWalkMotion(collision, navigation) {
   function move(forward, right, dt, yaw = 0, sprint = false) {
     if (![forward, right, dt, yaw].every(Number.isFinite) || dt < 0) throw new TypeError('Nieprawidłowy krok spaceru.');
     sprinting = sprint && !!(forward || right);
+    if (grounded && !forward && !right && !needsSupportCheck) return [...position];
     const speed = walkSpeedMps * (sprinting ? sprintMultiplier : 1) / Math.max(1, Math.hypot(forward, right));
     const dx = (Math.sin(yaw) * forward + Math.cos(yaw) * right) * speed;
     const dy = (Math.cos(yaw) * forward - Math.sin(yaw) * right) * speed;
     const count = Math.max(1, Math.ceil(dt * Math.max(120, Math.hypot(dx, dy) / .025)));
     for (let i = 0; i < count; i++) step([dx * dt / count, dy * dt / count], dt / count);
+    needsSupportCheck = false;
     return [...position];
   }
-  return { reset, jump, move, setPosition: point => { position = [point[0], point[1], position[2]]; },
+  function setPosition(point) {
+    if (point[0] === position[0] && point[1] === position[1]) return;
+    position = [point[0], point[1], position[2]];
+    needsSupportCheck = true;
+  }
+  return { reset, jump, move, setPosition,
     clearSprint: () => { sprinting = false; },
     getState: () => ({ position: [...position], eyeHeightM, walkSpeedMps, sprintMultiplier, jumpHeightM, gravityMps2,
       floorHeightM, jumpHeight: position[2] - eyeHeightM - floorHeightM, grounded, sprinting }) };

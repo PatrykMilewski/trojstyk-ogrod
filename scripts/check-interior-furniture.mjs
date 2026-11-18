@@ -493,16 +493,23 @@ test('the closed walnut portal joins the ceiling-height kitchen and admits walki
   for(const x of [.75,2.15])assert(walk.pathBlocked(point(x,9.7),point(x,8.0)),'Fixed cabinet at '+x);
 });
 
-test('the ceiling-height reeded vestibule screen admits walking through its leaf only', () => {
+test('the ceiling-height clear vestibule screen admits walking through its leaf only', () => {
   const walk = createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<1.7 && o.maxZ>0));
   const point = (x,y)=>interior.localToWorld([x,y]).slice(0,2);
   for(const [piece,x,blocked] of [['left',6.78,true],['leaf',7.45,false],['right',8.19,true]]) {
-    const glass = interior.group.getObjectByName('vestibule-screen-'+piece+'-reeded-glass');
-    assert(glass.material.transparent && !glass.castShadow && glass.geometry.attributes.position.count>100);
+    const prefix='vestibule-screen-'+piece+'-';
+    const glass = interior.group.getObjectByName(prefix+'clear-glass');
+    assert.equal(glass.material.color.getHex(),0xffffff);
+    assert(glass.material.transparent && glass.material.opacity>0 && glass.material.opacity<=.1);
+    assert(!glass.castShadow && !glass.material.depthWrite && !glass.geometry.hasAttribute('color'));
     const pane = bounds(glass);
-    assert(pane.min.z<.03 && pane.max.z>2.77 && pane.max.y-pane.min.y>.003);
+    close(pane.min.y,pane.max.y,'Pane is flat');
+    for(const [profile,edge,side,axis] of [['jamb','min','max','x'],['closing-stile','max','min','x'],['shoe','min','max','z'],['head','max','min','z']])
+      close(pane[edge][axis],bounds(interior.group.getObjectByName(prefix+profile))[side][axis],profile+' meets the pane');
+    assert(pane.min.z<.03 && pane.max.z>2.77);
     assert.equal(walk.pathBlocked(point(x,7.45),point(x,8.46)),blocked);
   }
+  for(const side of [-1,1])assert(interior.group.getObjectByName('vestibule-leaf-pull-'+side));
   assert(!walk.pathBlocked(point(7.45,4.83),point(7.45,8.46)));
   assert(!walk.pathBlocked(point(7.45,5.52),point(5.7,5.52)));
 });
@@ -530,4 +537,90 @@ test('the garage return closes the entry corner to the slab beside the main door
   assert(!walk.pathBlocked(point(7.4,3.5),point(7.4,5.3)),'Main entrance');
   for(const x of [6.72,8.16,9.50,12.5])
     assert(walk.pathBlocked(point(x,3.5),point(x,5.3)),'Solid jamb, pier or window '+x);
+});
+
+test('open wardrobes have usable upper shelves and follow the lining from the eaves to the bedroom wall', () => {
+  const skylight = [12.53, 5.13, 13.25, 6.19];
+  for (const id of ['master-dressing-left', 'master-dressing-right']) {
+    const cap = interior.group.getObjectByName(id+'-sloping-cap');
+    const pos = cap.geometry.attributes.position;
+    let low = Infinity, high = -Infinity;
+    for (let i=0;i<pos.count;i++) {
+      const p = new THREE.Vector3().fromBufferAttribute(pos,i).applyMatrix4(cap.matrix);
+      const lining = interior.navigation.ceilingHeight(interior.localToWorld([p.x,p.y]));
+      assert(lining-p.z >= .006 && lining-p.z <= .036, id+' cap fits slope');
+      low = Math.min(low,p.z); high = Math.max(high,p.z);
+    }
+    assert(high-low>2.7);
+    assert(!overlaps(furniture.get(id).box,skylight));
+    const shelves = parts(id).filter(m=>m.name.includes('-upper-shelf-'));
+    assert(shelves.length>=4);
+    for(const shelf of shelves) {
+      const b=bounds(shelf);
+      assert(b.max.y-b.min.y>.84 && b.max.x-b.min.x>.54, shelf.name+' has full depth and bay width');
+    }
+    assert.equal(parts(id).filter(m=>m.name.includes('-upper-upright-')).length,4);
+    assert.equal(parts(id).filter(m=>m.name.includes('-garment-')).length,6);
+  }
+  const walk=createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<5.0 && o.maxZ>3.25),.30);
+  const pt=(x,y)=>interior.localToWorld([x,y]).slice(0,2);
+  assert(!walk.pathBlocked(pt(13,8.45),pt(13,5.52)),'Central aisle runs from bedroom door to the eaves');
+});
+
+test('laundry baskets, hanging cabinets and stocked shelving leave the work aisle clear', () => {
+  const baskets=data.furniture.filter(f=>f.type==='laundry-basket');
+  assert.equal(baskets.length,3);
+  assert.equal(new Set(baskets.map(b=>b.cloth)).size,3);
+  for(const item of baskets){
+    const body=interior.group.getObjectByName(item.id+'-open-linen-body'),b=bounds(body);
+    assert.equal(body.geometry.type,'LatheGeometry');
+    const profile=body.geometry.parameters.points;
+    assert(profile[0].x<.01 && profile.at(-1).x<.01 && profile.at(-1).y<.05,'Open top, inner wall, raised inner base');
+    assert(parts(item.id).filter(m=>m.name.includes('-loop-handle-')).length===2);
+    assert(b.max.x-b.min.x>.27 && b.max.y-b.min.y>.36);
+  }
+  for(const [base,upper,gap] of [['laundry-sink','laundry-wall-sink',.35],['laundry-stack','laundry-wall-dryer',.10],['laundry-storage','laundry-wall-shelves',.019]]){
+    const bottom=itemBounds(base),top=itemBounds(upper);
+    assert(top.min.z-bottom.max.z>=gap,'Clearance between '+base+' and '+upper);
+    assert(top.min.x>=bottom.min.x-.001 && top.max.x<=bottom.max.x+.001 && top.min.y>=bottom.min.y);
+    assert(interior.group.getObjectByName(upper+'-middle-shelf'));
+  }
+  for(const id of ['laundry-wall-sink','laundry-wall-dryer'])assert(parts(id).filter(m=>m.name.includes('-door-')).length===2);
+  assert(interior.group.getObjectByName('laundry-wall-shelves-towel-0-1') && interior.group.getObjectByName('laundry-wall-shelves-jar-2'));
+  const walk=createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<5 && o.maxZ>3.25),.27);
+  const pt=(x,y)=>interior.localToWorld([x,y]).slice(0,2);
+  for(const [x,y,dx,dy] of [[5.6,6.61,8.28,6.61],[7.47,6.61,7.47,6.9],[6.80,6.61,6.80,5.88],[8.15,6.61,8.15,6.22]]){
+    assert(!walk.pathBlocked(pt(x,y),pt(dx,dy)),'Access through the door to appliances, baskets and ironing board');
+  }
+});
+
+test('the ground-floor guest room and study have usable furnishings and a route past their open doors', () => {
+  const bed=itemBounds('guest-sofa-bed'), bedside=itemBounds('guest-bedside');
+  assert(bedside.min.y>bed.max.y && bedside.min.y-bed.max.y<.25);
+  assert(partCenter('guest-bedside','linen-shade').z>partCenter('guest-bedside','top').z);
+  assert(partCenter('guest-sofa-bed','woven-throw').z>partCenter('guest-sofa-bed','upholstered-frame').z);
+  assert.equal(parts('guest-wardrobe').filter(o=>o.name.includes('-door-')).length,3);
+  const desk=itemBounds('office-desk'),chair=itemBounds('office-chair'),cabinet=itemBounds('office-bookcase');
+  assert.equal(parts('office-chair').filter(o=>o.name.includes('-castor-')).length,5);
+  assert(chair.min.y>desk.max.y && chair.min.x>desk.min.x && chair.max.x<desk.max.x);
+  assert(cabinet.max.y<desk.min.y-.70 && cabinet.max.z<1.75);
+  for(const i of [0,1]) assert(partCenter('office-desk','display-'+i).z>partCenter('office-desk','keycaps').z+.24);
+  const collision=createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<1.70 && o.maxZ>.06));
+  for(const route of [[[10.90,8.85],[12.30,8.85],[12.30,6.03],[12.95,6.03]],[[10.32,9.02],[10.32,10.26],[10.48,11.80],[11.18,11.82],[11.18,11.45]]]){
+    const points=route.map(p=>interior.localToWorld(p).slice(0,2));
+    for(let i=1;i<points.length;i++) assert(!collision.pathBlocked(points[i-1],points[i]),'Door and approach clear');
+  }
+});
+
+test('ground-floor shower admits a walker through its open end and stops them at the fixed glass', () => {
+  const boundsOf=name=>bounds(interior.group.getObjectByName(name));
+  const glass=boundsOf('ground-shower-glass'), tray=boundsOf('ground-shower-tray'), mirror=boundsOf('ground-bath-mirror');
+  close(tray.max.y-glass.max.y,.70,'Clear shower entry');
+  assert(glass.max.z>2 && mirror.min.z>boundsOf('ground-bath-bowl').max.z+.12);
+  assert(boundsOf('ground-wc-flush-large').min.z>boundsOf('ground-wc-seat').max.z+.32);
+  const p=(x,y)=>interior.localToWorld([x,y]).slice(0,2);
+  const collision=createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<1.70 && o.maxZ>.06));
+  const approach=[p(9.83,8.38),p(9.83,7.52),p(8.97,7.52),p(8.97,6.84)];
+  for(let i=1;i<approach.length;i++)assert(!collision.pathBlocked(approach[i-1],approach[i]),'Walk into the shower');
+  assert(collision.pathBlocked(p(9.68,6.95),p(8.97,6.95)),'Fixed glass blocks a direct crossing');
 });

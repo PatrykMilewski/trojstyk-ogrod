@@ -18,6 +18,29 @@ const moveTo = (motion, x, y) => {
   motion.move(1, 0, Math.hypot(dx, dy) / 2.2, Math.atan2(dx, dy));
 };
 
+test('grounded idle skips physics until a move, jump or external relocation', () => {
+  let ceilingQueries = 0;
+  const motion = motionFor({ ...navigation, ceilingHeight: () => { ceilingQueries++; return Infinity; } });
+  motion.reset([4, -2, 3.2]);
+  motion.move(1, 0, .01, 0, true);
+  const before = ceilingQueries, position = motion.getState().position;
+  motion.setPosition(position);
+  assert.deepEqual(motion.move(0, 0, .2, 0, true), position);
+  assert.equal(motion.getState().sprinting, false);
+  assert.equal(ceilingQueries, before);
+  motion.setPosition([8, -2]);
+  motion.move(0, 0, 2);
+  assert.equal(motion.getState().floorHeightM, 0);
+  assert.equal(motion.getState().position[2], 1.7);
+});
+
+test('a diagonal move past a wall slides along its face', () => {
+  const collision = createWalkCollision([{ ring: rect(2, -5, 2.12, 5) }]);
+  const [x, y] = collision.move([0, 0], [3, 3]);
+  assert.ok(Math.abs(x - (2 - collision.radius)) < 1e-6);
+  assert.ok(Math.abs(y - 3) < 1e-6);
+});
+
 test('door passage remains open while walls stop sprinting and jumping', () => {
   for (const sprint of [false, true]) {
     const motion = motionFor(navigation); motion.reset([1, 0]); motion.jump(); motion.move(1, 0, 2, 0, sprint);

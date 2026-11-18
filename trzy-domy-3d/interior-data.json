@@ -447,7 +447,7 @@
     },
     {
       "id": "vestibule-screen",
-      "finish": "reeded-glass",
+      "finish": "clear-glass",
       "a": [
         6.58,
         7.95
@@ -546,7 +546,7 @@
       ],
       "b": [
         6.23,
-        7.89
+        8.03
       ],
       "thickness": 0.14,
       "level": 1,
@@ -561,7 +561,7 @@
       "id": "u-laundry-private",
       "a": [
         8.84,
-        5.11
+        4.26
       ],
       "b": [
         8.84,
@@ -575,7 +575,7 @@
       "id": "u-private-dressing",
       "a": [
         11.62,
-        5.11
+        4.26
       ],
       "b": [
         11.62,
@@ -592,15 +592,15 @@
         7.96
       ],
       "b": [
-        14.14,
+        14.28,
         7.96
       ],
       "thickness": 0.14,
       "level": 1,
       "doors": [
         [
-          3.4,
-          4.3
+          3.7,
+          4.6
         ],
         [
           6.25,
@@ -616,7 +616,7 @@
       ],
       "b": [
         9.87,
-        12.28
+        12.66
       ],
       "thickness": 0.14,
       "level": 1,
@@ -692,7 +692,7 @@
       "Source stair label18×17.68cm sums to3.1824m; visual model uses section+3.20m and uniform18rises.",
       "Published room usable areas on sloped upper floor differ from rectangular floor footprints.",
       "Upper slope follows unchanged exterior roof; interior roof finish thickness and installation void estimated.",
-      "Private-bath doorway traced position shifted25cm within the same partition to provide walk-camera clearance at the perpendicular suite wall; raster-derived design remains approximate.",
+      "The 0.90 m doorway to the private bathroom occupies local x=10.00–10.90 m along the suite partition. Its approximate position is fitted to the traced plan and the junction with the hall wall.",
       "Eight roof windows on the mirrored attic plan have matching openings through the outer roof and the interior lining 45 mm below it. Window centres were digitised from the drawing; glazing size is an estimate. The living room has a solid roof.",
       "The main entry, internal doorways and one terrace slider allow passage. The concealed pantry cabinet door and the vestibule glass leaf appear closed, and the fixed vestibule panes block passage.",
       "Furniture inventory records approximate source footprints and front direction; beds face from head to foot. Dimensions are visual traces, typically uncertain by15–30cm, not product or execution dimensions.",
@@ -711,7 +711,8 @@
       "user-attic": "User-requested furnishings fitted to the supplied mirrored attic plan; furniture sizes are schematic.",
       "upper-plan": "work/icon3d-research/attic-mirror.jpg, publisher mirrored upper floor, converted once into original coordinates",
       "living-render": "work/icon3d-research/top-original.png, publisher living room and kitchen render",
-      "mirrored-ground-plan": "User-supplied publisher mirrored ground-floor plan, room 0.9 with 76 cm under-stair storage allowance."
+      "mirrored-ground-plan": "User-supplied publisher mirrored ground-floor plan, room 0.9 with 76 cm under-stair storage allowance.",
+      "user-ground-rooms": "Furnishings requested for the guest room, study and bathroom, fitted to the published plan. Furniture dimensions and finishes are schematic."
     },
     "furnitureCoordinateUncertaintyM": 0.3
   },
@@ -1220,10 +1221,10 @@
       "type": "chair",
       "room": "0.9",
       "box": [
-        12.229999999999999,
-        11.33,
-        12.67,
-        11.770000000000001
+        11.72,
+        11.21,
+        12.32,
+        11.81
       ],
       "facing": "-y",
       "source": "ground-plan"
@@ -1482,6 +1483,99 @@
       "doors": 2
     },
     {
+      "id": "laundry-basket-one",
+      "type": "laundry-basket",
+      "room": "1.5",
+      "box": [
+        6.33,
+        5.14,
+        6.64,
+        5.55
+      ],
+      "facing": "+y",
+      "source": "user-attic",
+      "height": 0.53,
+      "cloth": "linen"
+    },
+    {
+      "id": "laundry-basket-two",
+      "type": "laundry-basket",
+      "room": "1.5",
+      "box": [
+        6.67,
+        5.14,
+        6.98,
+        5.55
+      ],
+      "facing": "+y",
+      "source": "user-attic",
+      "height": 0.53,
+      "cloth": "sage"
+    },
+    {
+      "id": "laundry-basket-three",
+      "type": "laundry-basket",
+      "room": "1.5",
+      "box": [
+        7.01,
+        5.14,
+        7.32,
+        5.55
+      ],
+      "facing": "+y",
+      "source": "user-attic",
+      "height": 0.53,
+      "cloth": "olive"
+    },
+    {
+      "id": "laundry-wall-sink",
+      "type": "wall-cabinet",
+      "room": "1.5",
+      "box": [
+        6.4,
+        7.56,
+        7.1,
+        7.89
+      ],
+      "facing": "-y",
+      "source": "user-attic",
+      "elevation": 1.48,
+      "height": 0.92,
+      "support": "laundry-sink"
+    },
+    {
+      "id": "laundry-wall-dryer",
+      "type": "wall-cabinet",
+      "room": "1.5",
+      "box": [
+        7.16,
+        7.56,
+        7.76,
+        7.89
+      ],
+      "facing": "-y",
+      "source": "user-attic",
+      "elevation": 1.84,
+      "height": 0.56,
+      "support": "laundry-stack"
+    },
+    {
+      "id": "laundry-wall-shelves",
+      "type": "wall-shelves",
+      "room": "1.5",
+      "box": [
+        7.82,
+        7.56,
+        8.75,
+        7.89
+      ],
+      "facing": "-y",
+      "source": "user-attic",
+      "elevation": 1.92,
+      "height": 0.48,
+      "support": "laundry-storage"
+    },
+    {
       "id": "laundry-ironing-board",
       "type": "ironing-board",
       "room": "1.5",
@@ -1561,7 +1655,7 @@
       ],
       "facing": "+x",
       "source": "upper-plan",
-      "height": 1.6
+      "lowerSectionHeight": 1.6
     },
     {
       "id": "master-dressing-right",
@@ -1575,7 +1669,7 @@
       ],
       "facing": "-x",
       "source": "upper-plan",
-      "height": 1.6
+      "lowerSectionHeight": 1.6
     },
     {
       "id": "master-bed",
@@ -1677,6 +1771,34 @@
       "source": "mirrored-ground-plan",
       "height": 1.28,
       "doors": 2
+    },
+    {
+      "id": "guest-bedside",
+      "type": "table",
+      "room": "0.8",
+      "box": [
+        13.58,
+        7.28,
+        14.1,
+        7.73
+      ],
+      "facing": "-x",
+      "height": 0.52,
+      "source": "user-ground-rooms"
+    },
+    {
+      "id": "office-bookcase",
+      "type": "cabinet",
+      "room": "0.9",
+      "box": [
+        11.68,
+        9.42,
+        12.78,
+        9.68
+      ],
+      "facing": "+y",
+      "height": 1.66,
+      "source": "user-ground-rooms"
     }
   ],
   "rails": [

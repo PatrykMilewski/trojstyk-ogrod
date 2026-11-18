@@ -141,17 +141,14 @@ function grainGeometry(THREE) {
 }
 
 function addGrain(THREE,group,data) {
-  const points=cropPoints(data), dummy=new THREE.Object3D();
+  const points=cropPoints(data);
   const material=new THREE.MeshStandardMaterial({
     map:grainSprayTexture(THREE),side:THREE.DoubleSide,alphaTest:.20,roughness:1
   });
-  const mesh=new THREE.InstancedMesh(grainGeometry(THREE),material,points.length);
-  points.forEach(([x,y,h,angle],i)=>{
-    dummy.position.set(x,y,data.crop.baseZ); dummy.rotation.set(0,0,angle);
-    dummy.scale.set(1,1,h); dummy.updateMatrix(); mesh.setMatrixAt(i,dummy.matrix);
+  const detail = {name:'growing-grain-clumps', tileSize:40, height:data.crop.heightM, minPixels:2, fullPixels:24};
+  addVegetationTiles(THREE, group, points, grainGeometry(THREE), material, detail, (object, [x,y,h,angle]) => {
+    object.position.set(x,y,data.crop.baseZ); object.rotation.z=angle; object.scale.set(1,1,h);
   });
-  mesh.name='growing-grain-clumps'; mesh.castShadow=false; mesh.receiveShadow=true;
-  mesh.instanceMatrix.needsUpdate=true; mesh.computeBoundingSphere(); group.add(mesh);
   return points.length;
 }
 
