@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-18.8",
+  "modelVersion": "2026-11-18.9",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1730,7 +1730,7 @@
     "proceduralCodeSha256": "f28e65f81bfd542148d9fd4925bc2e84fb2d7a8a449e34f84393ac2a653c99e2",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "f6f27de0208ddacc1880061ce21577c8aa17d9cf9595e32efb76d2759fffda44",
-    "runtimeSha256": "0955fabe47fe25ca1cc11f95fed3ee112c65b3a0d6bde8209aafbd9ce78659bf"
+    "runtimeSha256": "fb474e2688ef1cc8404e1e168454deb576a48ec784b4bf6a0ce61ca4decf2f2e"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1758,7 +1758,8 @@
     "Nasadzenia drzew i krzewów rozliczono osobno dla /190, /191 i /193 według powierzchni gruntu obsadzonego w modelu.",
     "Dom /193. Dwa akcenty z forniru, biurka z regulacją wysokości, wyposażenie i materiały według moodboardu.",
     "Dom /193. Nowa posadzka i zabudowa wiatrołapu, łazienka w terakocie i szkliwionej ceramice, fronty kuchenne, osprzęt Loft i dwa legowiska.",
-    "Dom /193. Narożnik w cętki, dywan anatolijski, ściana z farbą projekcyjną i dwa nowe wystroje łazienek na poddaszu."
+    "Dom /193. Narożnik w cętki, dywan anatolijski, ściana z farbą projekcyjną i dwa nowe wystroje łazienek na poddaszu.",
+    "Dom /193. Indygowe schody, terakotowy korytarz, biały sufit salonu, zabudowa kuchenna, szafka RTV i nowe meble tapicerowane."
   ],
   "contextParcels": [
     {
@@ -3597,7 +3598,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "7c87be79667c1b9e6d37c4b6a8d2d5979e2c390d5694fda65041ffb3cd3a2bc7",
+    "dataSha256": "b3a833768fd6725d9b186128ad17a6f5bdd6e18d450819197fc9197ece6a87db",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,

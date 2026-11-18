@@ -323,8 +323,8 @@ test('reference furniture keeps the stone returns and paired coffee tables in sc
   close(smaller.max.x - smaller.min.x, .47, 'Small coffee tabletop diameter');
   assert(smaller.max.z < larger.min.z, 'Smaller table nests below the larger tabletop');
   close(itemBounds('living-rug').min.z, 0, 'Rug rests on the floor');
-  assert(!furniture.has('media-console') && !furniture.has('projection-screen'));
-  assert.equal(parts('sofa').filter(mesh => mesh.name.includes('-scatter-')).length, 3);
+  assert(furniture.has('media-console') && !furniture.has('projection-screen'));
+  assert.equal(parts('sofa').filter(mesh => mesh.name.includes('-scatter-')).length, 2);
   for (const chair of data.furniture.filter(item => item.id.startsWith('dining-') && item.type === 'chair')) {
     const seat = interior.group.getObjectByName(chair.id + '-seat');
     assert.equal(seat.material.color.getHexString(), 'ded8c8', 'Dining seats have ivory upholstery');
@@ -339,8 +339,18 @@ test('garden-end chaise and separate club chair leave a continuous route to the 
   assert(partCenter('sofa', 'arm').y < sofa.min.y + .15, 'Sofa arm finishes the opposite end');
   assert(chaise.min.y - table.max.y >= .35 && sofa.min.x - table.max.x >= .40);
   assert(chair.min.y - island.max.y >= .85 && chair.max.x < sofa.min.x && chair.max.y < table.min.y);
-  assert.equal(parts('living-armchair').filter(mesh => mesh.name.includes('-rolled-arm-')).length, 2);
-  assert(partCenter('living-armchair', 'scatter').z > partCenter('living-armchair', 'seat').z);
+  const get = name => interior.group.getObjectByName('living-armchair-' + name);
+  const hoop = bounds(get('horseshoe-back')), seat = bounds(get('seat'));
+  const supports = parts('living-armchair').filter(mesh => mesh.name.includes('-wrapped-support-'));
+  assert.equal(supports.length, 3);
+  assert(hoop.min.x < seat.min.x && hoop.max.x > seat.max.x && hoop.max.z > seat.max.z + .24);
+  for (const support of supports) {
+    assert.equal(support.material, get('horseshoe-back').material);
+    assert(bounds(support).min.z < .015 && bounds(support).intersectsBox(hoop));
+  }
+  const ends = [get('rounded-end-0'), get('rounded-end-2')].map(bounds);
+  assert(ends.every(end => end.min.y > seat.getCenter(new THREE.Vector3()).y + .10));
+  assert(ends[1].min.x - ends[0].max.x > .22, 'Open front between the upholstered supports');
   const collision = createWalkCollision(interior.navigation.obstacles.filter(o => o.minZ < 1.85 && o.maxZ > .04), .40);
   const route = [[4.55,12.5],[4.55,16.08],[7.65,16.08],[8.65,15.95]].map(xy => interior.localToWorld(xy).slice(0,2));
   for (let i = 1; i < route.length; i++) assert(!collision.pathBlocked(route[i-1], route[i]), '80 cm wide terrace route');
@@ -401,7 +411,12 @@ test('wall-mounted projector aims at a matte white 16:9 surface with the entire 
   const paint=wall.material[2];
   assert.equal(paint.color.getHex(),0xffffff);
   assert(paint.roughness===1 && paint.metalness===0 && paint.emissive.getHex()===0);
-  assert(!interior.group.children.some(o=>/^(projection-screen-|living-sconce-|living-slate-|media-console-)/.test(o.name)));
+  assert(!interior.group.children.some(o=>/^(projection-screen-|living-slate-)/.test(o.name)));
+  const mount=bounds(get('living-sconce-backplate')),opal=bounds(get('living-sconce-opal'));
+  close(mount.min.x,face,'Brass plate mounts on the white plaster');close(mount.max.y-mount.min.y,.258,'Original backplate diameter');
+  close(opal.getCenter(new THREE.Vector3()).y,12.78,'Original sconce station');close(opal.getCenter(new THREE.Vector3()).z,1.69,'Original height');
+  assert(opal.intersectsBox(mount) && opal.max.x>mount.max.x && opal.max.y<screen.min.y);
+  assert(get('sconce-light-living').isPointLight && get('living-sconce-opal').material.emissiveIntensity>0);
   for(const [z,layer] of [[.05,wall],[1.575,wall],[2.76,wall],[3.55,get('upper-main-side')]]){
     for(const y of [12.4,zone.centerY,16.48]){
       const origin=new THREE.Vector3(1,y,z).applyMatrix4(interior.group.matrixWorld);
@@ -488,7 +503,7 @@ test('the closed painted portal joins the ceiling-height kitchen and admits walk
   const door = bounds(interior.group.getObjectByName('kitchen-pantry-closed-leaf'));
   close(door.min.x,1.053,'Left door reveal');
   close(door.max.x,1.947,'Right door reveal');
-  assert(door.min.z<.01 && door.max.z>2.1);
+  close(door.min.z,.008,'Door threshold reveal');close(door.max.z,2.097,'Leaf clears the lintel');
   const run = ['kitchen-pantry','kitchen-back','kitchen-tall'].map(itemBounds);
   for (const section of run) close(section.max.z,data.levels.groundCeiling,'Cabinetry touches slab');
   close(furniture.get('kitchen-island').box[1]-furniture.get('kitchen-back').box[3],1.08,'Island working aisle');
@@ -721,21 +736,64 @@ test('the downstairs bath finishes are confined to its own walls and keep the ha
   }
 });
 
-test('island drawers open toward the work aisle and the salon face has five routed panels', () => {
+test('flush lacquer fronts have edge grips on the working aisle and a continuous oak band inside the niche', () => {
   const get=id=>interior.group.getObjectByName(id);
   const aisle=parts('kitchen-island').filter(o=>o.name.includes('-working-drawer-'));
   const salon=parts('kitchen-island').filter(o=>o.name.includes('-salon-panel-'));
-  assert.equal(aisle.length,10);assert.equal(salon.length,5);
+  assert.equal(aisle.length,10);assert.equal(salon.length,4);
   const tower=get('kitchen-tall-fridge'),portal=get('kitchen-pantry-closed-leaf');
+  assert.equal(tower.material,portal.material);
+  assert.notEqual(tower.material,aisle[0].material);
   for(const door of [tower,portal,...aisle,...salon]){
-    assert(door.geometry.hasAttribute('color') && door.geometry.index.count>100);
-    assert(bounds(door).max.y-bounds(door).min.y>=.020);
+    const face=bounds(door);
+    close(face.max.y-face.min.y,.021,'Unframed 21 mm slab door');
+    assert.equal(door.geometry.type,'BoxGeometry');
+    assert(!door.material.map,'Lacquered panels');
   }
-  assert(bounds(get('kitchen-island-working-pull-2-0')).min.y<bounds(aisle[0]).min.y-.017);
+  for(const front of [...aisle,...salon])assert.equal(front.material,aisle[0].material);
+  const oak=get('kitchen-back-upper-0').material;
+  assert(oak.map && oak.name.includes('oak melamine'));
+  for(let i=0;i<5;i++){
+    assert.equal(get('kitchen-back-upper-'+i).material,oak);
+    assert.equal(get('kitchen-back-crown-'+i).material,tower.material);
+  }
+  const grip=bounds(get('kitchen-island-working-pull-2-0')),drawer=bounds(get('kitchen-island-working-drawer-2-0'));
+  close(grip.max.y,drawer.min.y,'Grip bears on upper edge of drawer');
+  close(grip.max.z,drawer.max.z,'Top edge grip');
+  assert(grip.min.y<drawer.min.y-.018);
   assert(bounds(salon[0]).min.y>bounds(aisle[0]).max.y+.8);
 });
 
-test('study library and matching low-entry pug beds retain their floor space and access', () => {
+test('Yoffers cabinet has catalogue dimensions, curved tambour ends, a plain back and four inset oak legs', () => {
+  const get=id=>interior.group.getObjectByName('media-console-'+id);
+  const all=itemBounds('media-console'),size=all.getSize(new THREE.Vector3()),top=bounds(get('top'));
+  close(size.y,1.60,'Catalogue width');close(size.x,.45,'Catalogue depth');close(size.z,.48,'Catalogue height');
+  close(all.getCenter(new THREE.Vector3()).y,data.projection.centerY,'Cabinet centered under the image');
+  assert(top.max.z<data.projection.centerHeightM-data.projection.heightM/2-.4,'Image clears the cabinet');
+  const slats=get('body'),back=bounds(get('plain-back')),p=slats.geometry.attributes.position;
+  assert(slats.material.map && slats.material.vertexColors);
+  const r=size.x/2,front=[],ends=[];
+  for(let i=0;i<p.count;i+=2){
+    const x=p.getX(i),y=p.getY(i);
+    if(x>r+.006 && x<size.y-r-.006)front.push(y);
+    if(x<r-.01 || x>size.y-r+.01)ends.push(y);
+  }
+  assert(Math.max(...front)-Math.min(...front)>.004 && Math.max(...front)-Math.min(...front)<.008);
+  assert(front.length>160 && Math.max(...ends)-Math.min(...ends)>.43,'Continuous physical fluting wraps both ends');
+  close(back.max.y-back.min.y,1.60-.45,'Straight back between capsule ends');
+  for(const leg of parts('media-console').filter(o=>o.name.includes('dowel-leg'))){
+    const b=bounds(leg);
+    close(b.min.z,0,'Leg bears on floor');close(b.max.z,bounds(get('bottom-rim')).min.z,'Leg supports lower shelf');
+    assert(b.min.x>all.min.x+.04 && b.max.x<all.max.x-.04 && b.min.y>all.min.y+.14 && b.max.y<all.max.y-.14);
+  }
+  assert.equal(parts('media-console').filter(o=>o.name.includes('dowel-leg')).length,4);
+  assert.equal(parts('media-console').filter(o=>o.name.includes('side-stretcher')).length,2);
+  const point=(x,y)=>interior.localToWorld([x,y]).slice(0,2);
+  const walk=createWalkCollision(interior.navigation.obstacles.filter(o=>o.id==='furniture-media-console'));
+  assert(walk.pathBlocked(point(1.35,14.48),point(.66,14.48)));
+});
+
+test('study library and matching striped pug nests retain their floor space and access', () => {
   const library=itemBounds('office-bookcase');
   close(library.max.x-library.min.x,2.15,'Fitted width');
   close(library.max.z,2.76,'Fitted height');
@@ -752,6 +810,16 @@ test('study library and matching low-entry pug beds retain their floor space and
     assert.equal(a.length,b.length);
     for(let i=0;i<a.length;i++)close(a[i],b[i],'Matching local fabric form');
   }
+  const bolster=officeParts.find(part=>part.name.endsWith('-radial-panel-bolster'));
+  const nest=officeParts.find(part=>part.name.endsWith('-nesting-cushion'));
+  assert(bounds(bolster).max.z-bounds(nest).max.z>.06, 'Dog rests inside a deep padded rim');
+  const stripe=bolster.material.map.image,at=u=>{
+    const i=(Math.floor(stripe.height*.5)*stripe.width+Math.floor(u*stripe.width))*4;
+    return Array.from(stripe.data.slice(i,i+3));
+  };
+  const red=at(.25),blue=at(.75);
+  assert(red[0]>red[2]+90 && blue[2]>blue[0]+25);
+  close(bolster.material.map.repeat.x,12,'Twelve tomato and blue pairs around each ring');
   close(ground.min.z,0,'Office bed on floor');
   close(upper.min.z,3.20,'Bedroom bed on floor');
   close(upper.max.z-upper.min.z,.18,'Low rounded bed');
@@ -836,18 +904,48 @@ test('the vestibule routes clear the new console, ottoman and fitted wardrobes',
   assert(sample(.31,.5)>200 && sample(.19,.5)<65);
 });
 
-test('sectional upholstery continues over the garden chaise and the rug has a bound field and fringe', () => {
-  const seat=interior.group.getObjectByName('sofa-seat');
-  const cover=seat.material;
-  assert(cover.map && cover.roughness>.8);
-  for(const part of [...parts('sofa'),...parts('chaise')].filter(m=>!m.name.endsWith('recessed-foot'))){
+test('powder blue modules and garden chaise carry two accent pillows above a carmine Persian carpet', () => {
+  const get = name => interior.group.getObjectByName(name);
+  const cover=get('sofa-seat').material;
+  const sample=(map,u,v)=>{
+    const {width,height,data}=map.image,idx=4*(Math.floor(v*height)*width+Math.floor(u*width));
+    return Array.from(data.slice(idx,idx+3));
+  };
+  const powder=sample(cover.map,.5,.5);
+  assert(powder[2]>powder[0]+22 && powder[0]>135 && cover.roughness>.8);
+  for(const part of [...parts('sofa'),...parts('chaise')].filter(m=>!m.name.includes('-scatter-') && !m.name.endsWith('recessed-foot'))){
     assert.equal(part.material,cover,part.name);
     assert(part.geometry.hasAttribute('uv'),part.name+' has fabric coordinates');
   }
-  const rug=interior.group.getObjectByName('living-rug-woven');
-  assert(rug.material.map && rug.material.map!==cover.map);
-  const fringe=bounds(interior.group.getObjectByName('living-rug-knotted-fringe'));
-  const field=bounds(rug);
+  for(const id of ['sofa','chaise']){
+    const deck=bounds(get(id+'-upholstered-deck')),plinth=bounds(get(id+'-recessed-foot'));
+    assert.equal(get(id+'-upholstered-deck').material,cover);
+    assert(deck.min.z<.02 && deck.max.z>.2 && plinth.max.z<deck.min.z+.02);
+    assert(deck.min.x<plinth.min.x-.11 && deck.max.x>plinth.max.x+.11);
+    assert(deck.min.y<plinth.min.y-.11 && deck.max.y>plinth.max.y+.11);
+  }
+  const deck=bounds(get('sofa-upholstered-deck'));
+  for(const id of ['sofa-seat-0','sofa-seat','sofa-seat-2'])assert(deck.intersectsBox(bounds(get(id))));
+  assert.equal(get('sofa-upholstered-backing').material,cover);
+  const striped=get('sofa-scatter-striped'),olive=get('sofa-scatter-round-olive');
+  const cream=sample(striped.material.map,.075,.51),wine=sample(striped.material.map,.180,.51);
+  assert(cream[0]>200 && cream[1]>175 && wine[0]>wine[1]*1.8 && wine[0]<135);
+  const green=sample(olive.material.map,.5,.5);
+  assert(green[0]>green[2]+25 && green[1]>green[2]+25);
+  const round=bounds(olive).getSize(new THREE.Vector3());
+  assert(round.y>2*round.x*.8 && Math.abs(round.z-round.y)<.07, 'Olive pillow has a round face');
+  const rug=get('living-rug-woven'),map=rug.material.map;
+  const counts={carmine:0,black:0,cream:0,gold:0};
+  for(let x=0;x<100;x++)for(let y=0;y<100;y++){
+    const u=(x+.5)/100,v=(y+.5)/100,[r,g,b]=sample(map,u,v);
+    const edge=Math.min(u,1-u,v,1-v);
+    if(edge>.19 && r>g*1.70 && r>b*1.35)counts.carmine++;
+    if(edge<.13 && r<75 && g<68 && b<68)counts.black++;
+    if(edge<.16 && r>167 && g>135 && b>100)counts.cream++;
+    if(edge>.19 && r>145 && g>92 && b<g*.90)counts.gold++;
+  }
+  assert(counts.carmine>950 && counts.black>350 && counts.cream>450 && counts.gold>200,JSON.stringify(counts));
+  const fringe=bounds(get('living-rug-knotted-fringe')),field=bounds(rug);
   assert(fringe.min.y<field.min.y && fringe.max.y>field.max.y,'Fringe extends beyond both short ends');
 });
 

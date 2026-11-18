@@ -70,7 +70,12 @@ test('actual Icon interior lining callback opens every window through both real 
   }});
   original.group.updateMatrixWorld(true);cut.group.updateMatrixWorld(true);
   const linings=interior=>interior.group.children.filter(m=>m.name.startsWith('interior-roof-lining-'));
-  assert.equal(calls,roofs(models[0]).length);assert.equal(linings(cut).length,calls);
+  const liningNames=linings(cut).map(mesh=>mesh.name);
+  assert.equal(calls,liningNames.length,'Every finished lining is cut for skylights');
+  assert.equal(new Set(liningNames).size,calls,'Each lining has its own finish segment');
+  const sourceIds=roofs(models[0]).map(part=>part.id).sort();
+  const linedIds=liningNames.map(name=>name.slice('interior-roof-lining-'.length).replace(/-living$/,''));
+  assert.deepEqual([...new Set(linedIds)].sort(),sourceIds,'Every original roof face has an interior lining');
   const combined=[...meshes(models[0],true),...linings(cut)];
   for(const opening of own){const p=opening.center;
     assert(hits(linings(original),[p[0],p[1],p[2]+1],[0,0,-1],2).length,`${opening.id}: original actual lining did not block`);

@@ -75,26 +75,37 @@ test('counter tops have no overlapping exposed body faces and exterior walls hav
   for (const mesh of interior.group.children.filter(m => m.isMesh)) for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) assert(!material.polygonOffset, 'No depth offset masking');
 });
 
-test('stairs have continuous flight-to-landing handrails, supported posts and connected stringers', () => {
-  const s = data.stairs, [sx, sy, ex, ey] = s.box, run = 8 * s.tread, half = s.floorHeight / 2;
-  for (const [flight, x, front] of [['lower', sx, 0], ['upper', ex, 3.2]]) {
-    const rail = bounds(object('stair-handrail-' + flight)), side = bounds(object('landing-' + flight + '-top'));
-    close(side.min.y, sy + run, 'Landing rail joins flight');
-    close(side.max.y, ey, 'Landing rail reaches back guard');
-    assert(rail.max.z >= half + 1.05 && rail.min.z <= half + 1.05, 'Rail reaches landing height');
-    for (let i = 0; i < 8; i++) {
-      const post = bounds(object(`stair-${flight}-baluster-${i}`));
-      const expected = flight === 'lower' ? Math.min(half, (i + 1) * half / 9) : half + Math.min(half, (9 - i) * half / 9);
-      close(post.min.z, expected, 'Baluster rests on stair tread');
-      close(post.max.z, front + (half - front) * i / 8 + 1.05, 'Baluster meets handrail');
+test('perforated guards enclose the two flights and landing, with a continuous handrail', () => {
+  const s=data.stairs,[sx,sy,ex,ey]=s.box,turn=sy+(s.rises/2-1)*s.tread,half=s.floorHeight/2;
+  for(const [id,x,y,dir,base] of [['lower',sx,sy,1,0],['upper',ex-s.width,turn,-1,half]]){
+    for(const [side,edge] of [['left',x],['right',x+s.width]]){
+      const name='stair-'+id+'-'+side,screen=object(name+'-perforated-infill');
+      const top=object(name+'-top'),material=screen.material,alpha=material.alphaMap;
+      assert.equal(material.color.getHex(),top.material.color.getHex());
+      assert(material.transparent&&alpha?.isDataTexture&&alpha.generateMipmaps,'Perforations use a filtered alpha mask');
+      const values=alpha.image.data.filter((_,i)=>i%4===1);
+      assert(values.some(v=>v===0)&&values.some(v=>v===255),'Open and solid portions');
+      assert(screen.geometry.attributes.position.count<60,'No per-hole geometry');
+      for(let i=0;i<s.rises/2-1;i++){
+        const fraction=id==='lower'&&side==='left'&&i===0?.75:.5;
+        const py=y+dir*(i+fraction)*s.tread,treadZ=base+(i+1)*s.floorHeight/s.rises;
+        assert(hits(screen,[edge-.06,py,treadZ+.015],[1,0,0],.12).length,'Infill meets each tread');
+        assert(!hits(screen,[edge-.06,py,treadZ-.02],[1,0,0],.12).length,'Infill follows the stair folds');
+        const guardZ=base+1.12+half*(i+fraction)/(s.rises/2-1);
+        assert(hits(screen,[edge-.06,py,guardZ-.02],[1,0,0],.12).length,'Infill reaches sloping handrail');
+      }
     }
-    assert(!interior.group.getObjectByName(`stair-${flight}-baluster-8`), 'Shared endpoint uses one full landing post');
-    const shared = bounds(object(`landing-${flight}-post-0`));
-    close(shared.min.z, half, 'Shared post bears on landing');
-    close(shared.max.z, half + 1.05, 'Shared post joins both rail segments');
-    for (const index of [0, 1]) {
-      const stringer = bounds(object(`stair-stringer-${flight}-${index}`));
-      assert(stringer.min.y <= sy && stringer.max.y >= sy + run && stringer.min.z < half && stringer.max.z > half - .15, 'Stringer connects all treads and landing: '+flight+JSON.stringify(stringer));
+  }
+  for(const [name,p] of [['lower',[sx,(turn+ey)/2]],['back',[(sx+ex)/2,ey]],['upper',[ex,(turn+ey)/2]]]){
+    const across=name==='back'?[0,1,0]:[1,0,0],mesh=object('landing-'+name+'-perforated-infill');
+    for(const h of [.02,.55,1.10])assert(hits(mesh,[p[0]-.05*across[0],p[1]-.05*across[1],half+h],across,.10).length);
+  }
+  for(const [flight,side,x] of [['lower','left',sx],['upper','right',ex]]){
+    const joint=new THREE.Vector3(x,turn,half+1.12);
+    for(const name of ['stair-'+flight+'-'+side+'-top','landing-'+flight+'-top']){
+      const rail=object(name),halfLength=rail.geometry.parameters.height/2;
+      const ends=[-halfLength,halfLength].map(v=>new THREE.Vector3(0,v,0).applyMatrix4(rail.matrix));
+      assert(ends.some(end=>end.distanceTo(joint)<1e-5),'Handrail joins landing at '+name);
     }
   }
   for (const [guard, rim] of [['upper-void-edge', 'upper-void-rim'], ['upper-stair-edge', 'upper-stair-rim']]) {
@@ -175,26 +186,88 @@ test('furniture boxes have no duplicate exposed coplanar faces, including beds, 
   }
 });
 
-test('rectangular stringers stay below every tread and bear inside landing and floor slabs', () => {
-  const s = data.stairs, [sx, sy, ex] = s.box, run = 8 * s.tread, half = s.floorHeight / 2;
-  for (const flight of ['lower', 'upper']) for (const index of [0, 1]) {
-    const stringer = object(`stair-stringer-${flight}-${index}`), x = bounds(stringer).getCenter(new THREE.Vector3()).x;
-    assert.equal(stringer.geometry.type, 'ExtrudeGeometry', 'Rectangular stringer, no round radius above treads');
-    for (let i = 0; i < 8; i++) {
-      const tread = bounds(object(`stair-${flight}-tread-${i}`));
-      for (const y of [tread.min.y + .0001, (tread.min.y + tread.max.y) / 2, tread.max.y - .0001]) {
-        const cast = hits(stringer, [x, y, tread.max.z + .05], [0, 0, -1], 1);
-        assert(cast.length, 'Stringer runs continuously beneath tread');
-        assert(cast[0].point.z <= tread.max.z - .059, `${flight} stringer protrudes through tread ${i}`);
-      }
+test('folded indigo steel follows all 18 rises, with thin treads and risers closing both runs', () => {
+  const s=data.stairs,[sx,sy,ex]=s.box,steps=s.rises/2-1,run=steps*s.tread,half=s.floorHeight/2,rise=s.floorHeight/s.rises;
+  for(const [id,x,front,dir,base] of [['lower',sx+s.width/2,sy,1,0],['upper',ex-s.width/2,sy+run,-1,half]]){
+    const flight=object('stair-'+id+'-folded-flight');
+    assert.equal(flight.material.color.getHex(),0x414a89);
+    assert(flight.material.metalness>0&&flight.material.roughness>.4);
+    close(bounds(flight).max.x-bounds(flight).min.x,s.width,'Flight width');
+    for(let i=0;i<=steps;i++){
+      const y=front+dir*i*s.tread,z=base+(i+1)*rise;
+      const riser=hits(flight,[x,y-dir*.04,z-rise*.5],[0,dir,0],.09);
+      assert(riser.length>=2,'Both surfaces of riser '+i);
+      close(riser.at(-1).distance-riser[0].distance,.009,'Sheet thickness across riser');
+      if(i===steps)continue;
+      const tread=hits(flight,[x,y+dir*.13,z+.035],[0,0,-1],.09);
+      close(tread[0].point.z,z,'Tread height');close(tread.at(-1).point.z,z-.009,'Open underside');
     }
-    const landingY = sy + run + (flight === 'lower' ? .25 : .02);
-    const landingHit = hits(stringer, [x, landingY, 2], [0, 0, -1], 1)[0];
-    assert(landingHit && landingHit.point.z >= half - .15 && landingHit.point.z <= half, 'Stringer tail bears inside landing slab');
-    const floorY = sy - .02, floorZ = flight === 'lower' ? .2 : 3.4;
-    const floorHit = hits(stringer, [x, floorY, floorZ], [0, 0, -1], .6)[0];
-    assert(floorHit && (flight === 'lower' ? floorHit.point.z >= -.12 && floorHit.point.z <= 0 : floorHit.point.z >= 2.8 && floorHit.point.z <= 3.2), 'Stringer nose bears inside floor slab');
+    close(bounds(flight).min.z,base,'First riser reaches floor or landing');
+    close(bounds(flight).max.z,base+half,'Last riser reaches landing or floor');
   }
+  const landing=bounds(object('stair-landing'));
+  close(landing.min.y,sy+run,'Landing at turn');close(landing.max.z,half,'Intermediate landing top');
+  assert(!interior.group.children.some(mesh=>mesh.name.startsWith('stair-stringer-')));
+});
+
+test('coral faces and ceiling stay within the ground hall and both concealed doors swing clear', () => {
+  const paint=object('hall-terracotta-ceiling').material;
+  for(const wall of ['guest-inner','guest-office','hall-front','garage-hall']){
+    const mesh=object(wall);
+    assert.deepEqual(mesh.geometry.groups.map(g=>g.materialIndex),[0,1],'One draw group per paint color');
+  }
+  const requestedFace=(name,x,y,dx,dy,z=1.4)=>{
+    const hit=hits(object(name),[x,y,z],[dx,dy,0],.45)[0];assert(hit,name+' surface');
+    return Array.isArray(hit.object.material)?hit.object.material[hit.face.materialIndex]:hit.object.material;
+  };
+  for(const probe of [['guest-inner',11.10,8.21,1,0],['guest-office',10.9,9.15,0,1],['hall-front',8.88,8.18,0,-1]])
+    assert.equal(requestedFace(...probe),paint);
+  for(const probe of [['guest-inner',11.46,8.21,-1,0],['guest-inner',11.10,6.9,1,0],['guest-office',12.9,9.11,0,1],['hall-front',8.88,7.72,0,1]])
+    assert.notEqual(requestedFace(...probe),paint);
+  const ceiling=object('hall-terracotta-ceiling');
+  for(const [x,y,expected] of [[9.2,8.55,true],[10.5,9.25,true],[7.3,8.22,true],[10.2,7.7,false],[11.45,8.7,false],[10.3,9.6,false],[5.8,8.9,false],[8.2,9.45,false]])
+    assert.equal(hits(ceiling,[x,y,2.70],[0,0,1],.12).length>0,expected,'Hall ceiling at '+[x,y]);
+  for(const [id,wall,x,y,dx,dy] of [['office','guest-office',10.34,9.13,0,1],['playroom','guest-inner',11.04,8.84,1,0]]){
+    const leaf=object('hall-flush-'+id+'-leaf'),door=leaf.parent;
+    const side=door.userData.side;
+    assert.equal(leaf.material[side===1?2:3],paint);
+    assert.equal(leaf.material[side===1?3:2].color.getHex(),0xe9e3d7);
+    const ray=()=>hits(leaf,[x,y,1.25],[dx,dy,0],.32);
+    interior.updateHallDoors(null);interior.group.updateMatrixWorld(true);
+    assert(ray().length,'Closed door covers the aperture');
+    close(ray()[0].distance,.15,'Leaf and hallway plaster are flush');
+    const observer=new THREE.Vector3(...interior.localToWorld([x,y,1.7]));
+    interior.updateHallDoors(observer);interior.group.updateMatrixWorld(true);
+    close(Math.abs(door.rotation.z-door.userData.closedYaw),Math.PI/2,'Opens inward');
+    assert(!ray().length,'Open door clears pedestrian approach');
+    const hinge=door.position,along=new THREE.Vector3(Math.cos(door.userData.closedYaw),Math.sin(door.userData.closedYaw),0);
+    const inward=new THREE.Vector3(along.y*side,-along.x*side,0);
+    for(const direction of [-1,1])for(const metres of [.60,.75,.90]){
+      const local=hinge.clone().addScaledVector(along,.44).addScaledVector(inward,direction*metres);
+      const walker=new THREE.Vector3(...interior.localToWorld([local.x,local.y,1.70]));
+      interior.updateHallDoors(walker);interior.group.updateMatrixWorld(true);
+      const insideDoor=door.worldToLocal(walker.clone()),nearestX=THREE.MathUtils.clamp(insideDoor.x,0,door.userData.width);
+      assert(Math.hypot(insideDoor.x-nearestX,insideDoor.y)>.28+.044,'Swing clears walking capsule on both approaches');
+      if(direction===1)close(Math.abs(door.rotation.z-door.userData.closedYaw),Math.PI/2,'Held open throughout the inward swing area');
+    }
+    assert(!interior.group.children.some(m=>m.name.startsWith(wall+'-opening-')),'No projecting trim');
+    interior.updateHallDoors(null);interior.group.updateMatrixWorld(true);
+  }
+});
+
+test('both living room roof slopes have uninterrupted smooth white plaster and retain the timber ties', () => {
+  const linings=interior.group.children.filter(m=>m.name.startsWith('interior-roof-lining-'));
+  for(const x of [1.65,6.70])for(const y of [10.6,12.3,15,16.98]){
+    const hit=linings.flatMap(mesh=>hits(mesh,[x,y,3.25],[0,0,1],6))[0];
+    assert(hit,'Roof above '+[x,y]);
+    const paint=hit.object.material;
+    assert.equal(paint.color.getHex(),0xf7f6f1);
+    assert.equal(paint.map,null);assert.equal(paint.onBeforeCompile,THREE.Material.prototype.onBeforeCompile);
+    assert(paint.roughness>.9);
+  }
+  const adjacent=linings.flatMap(mesh=>hits(mesh,[2,7,3.25],[0,0,1],6))[0];
+  assert.equal(adjacent.object.material.color.getHex(),0xede8df);
+  for(const y of [11.45,12.95,14.45,15.95])assert(object('living-collar-tie-'+y).material!==linings[0].material);
 });
 
 test('room fixtures are suspended from the slab or the actual sloped lining, with walking headroom', () => {
@@ -212,10 +285,10 @@ test('room fixtures are suspended from the slab or the actual sloped lining, wit
   assert(bounds(shade).min.z-(upper?data.levels.upper:0)>2.30,id+' clear height');
  }
  const lights=interior.group.children.filter(child=>child.isPointLight);
- assert.equal(lights.length,9+4);
- for(const id of ['entry','family-basin','private-basins','ground-bath']){
+ assert.equal(lights.length,9+5);
+ for(const id of ['entry','family-basin','private-basins','ground-bath','living']){
   const lamp=object('sconce-light-'+id);
-  const globe=object(id==='ground-bath'?'light-fixture-bath-sunburst-opal':'light-fixture-mood-'+id+'-opal');
+  const globe=object(id==='living'?'living-sconce-opal':id==='ground-bath'?'light-fixture-bath-sunburst-opal':'light-fixture-mood-'+id+'-opal');
   assert(lamp.isPointLight && lamp.intensity>0 && lamp.distance>=3);
   assert(lamp.position.distanceTo(globe.position)<.15);
  }

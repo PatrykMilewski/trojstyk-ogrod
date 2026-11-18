@@ -220,6 +220,7 @@ function surfaceProfileFor(object, material, key, index) {
   if (name === 'boundary-fence-boards' || (key === 'timber' && parent.name.startsWith('shared-wicket-'))) return 'charred';
   if (parent.name === 'shared-red-sauna') return name === 'sauna-roof-no-eaves' ? 'paneledRoof' : 'redWood';
   if (key === 'garage' || name === 'garage-sectional-door') return 'garage';
+  if (parent.userData.kind === 'hall-flush-door' || object.userData.kind === 'hall-partition') return surfaceInteriorColors[color];
   if (parent.name === 'icon-193-interior' || parent.name === 'floryda-190-interior') {
     if (Array.isArray(object.material) && index === 1) return 'facade';
     if (surfaceInteriorColors[color] === 'oak' && /stair/.test(name)) return 'wood';
