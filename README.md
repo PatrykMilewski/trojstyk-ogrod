@@ -37,6 +37,10 @@ Otwórz http://localhost:8000. Gotowy `index.html` jest samodzielny i działa te
 
 GitHub Pages publikuje pliki z katalogu głównego gałęzi `main`. Nie wymaga serwera aplikacyjnego, kont użytkowników ani kluczy API.
 
+### Aktualna wersja modelu 3D
+
+Kolejne zmiany modelu wprowadzaj w `trzy-domy-3d/` i jego źródłach na podstawie bieżącej gałęzi `main`. Tag `checkpoint/193-przed-odbiciem` wskazuje opublikowany stan całego repozytorium sprzed odbicia domu /193. Ten tag służy do odtworzenia lub porównania wcześniejszej wersji.
+
 ## Geometria i ograniczenia
 
 Granice ULDK z 11.11.2026, obliczenia w metrach na lokalnym układzie opartym na EPSG:2177. Domy ustawione orientacyjnie. To koncepcja, nie pomiar geodezyjny ani projekt wykonawczy. Ostrzeżenia pomagają wykryć nakładanie obiektów i wyjście poza płot, ale nie potwierdzają zgodności budowlanej ani wymaganych stref bezpieczeństwa.

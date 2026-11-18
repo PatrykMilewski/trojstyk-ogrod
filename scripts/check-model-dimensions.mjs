@@ -68,6 +68,34 @@ function checkVehicles(neighbors, registry) {
   assert.ok(neighbors.setbackDimension191M >= registry.clearances.parcel191SoutheastM);
 }
 
+function checkDriveway193(source, garden, icon, neighbors, registry) {
+  const [plot] = source.variants;
+  assert.deepEqual(source.variants.map(v => v.id), ['aktualny']);
+  const gate = garden.lines.find(line => line.id === 'drive-gate-0' && line.kind === 'drive_gate').points;
+  const door = plot.gate;
+  const midpoint = ([a, b]) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const distance = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  const street = midpoint(gate), garage = midpoint(door);
+  const [width, doorWidth, setback, pavedArea] = registry.details.find(d => d.id === 'driveway-193').values;
+  const near = (a, b, name) => assert.ok(Math.abs(a - b) < 0.00001, name);
+  near(distance(...gate), width, 'Street gate width /193');
+  near(distance(...door), doorWidth, 'Garage door width /193');
+  near(distance(street, garage), setback, 'Distance from street gate to garage /193');
+  assert.equal(+plot.areas.drivewayExtra.toFixed(3), pavedArea);
+  assert.deepEqual(icon.metadata.matrix, registry.placementPins['193'].matrix);
+  assert.deepEqual(icon.metadata.translation, registry.placementPins['193'].translation);
+  const road = source.edges.find(edge => edge.road && gate.every(([x,y]) =>
+    Math.abs(edge.n[0] * x + edge.n[1] * y - edge.c) < 0.00001 &&
+    distance(edge.a, [x,y]) + distance([x,y], edge.b) < edge.length + 0.00001));
+  assert.ok(road, 'Gate lies on the road frontage of /193');
+  const car = neighbors.cars.find(c => c.location === 'driveway-193');
+  for (const p of [street, car.position]) {
+    const lateral = ((door[1][0] - door[0][0]) * (p[0] - garage[0]) +
+      (door[1][1] - door[0][1]) * (p[1] - garage[1])) / doorWidth;
+    near(lateral, 0, 'Street gate and car line up with garage door /193');
+  }
+}
+
 function checkDimensions(model, registry) {
   assert.equal(registry.schemaVersion, 1);
   assert.equal(registry.units.length, 'm');
@@ -77,7 +105,8 @@ function checkDimensions(model, registry) {
   }
   assert.equal(model.inputsHash, registry.integrity.inputsSha256, 'Model data changed: review dimensions and placements before updating the registry');
   assert.equal(model.codeHash, registry.integrity.proceduralCodeSha256, 'Procedural geometry changed: measure and review before updating the registry');
-  const [, garden, icon, neighbors] = model.data;
+  const [source, garden, icon, neighbors] = model.data;
+  checkDriveway193(source, garden, icon, neighbors, registry);
   assert.equal(hash(readFileSync(resolve(root, registry.sharedLayout.sourceFile))), registry.sharedLayout.sha256, '2D default changed without synchronizing 3D');
   assert.deepEqual(JSON.parse(readFileSync(resolve(root, registry.sharedLayout.sourceFile), 'utf8')), registry.sharedLayout.state);
   assert.equal(garden.metadata.areasM2.shared, registry.sharedAreaM2);

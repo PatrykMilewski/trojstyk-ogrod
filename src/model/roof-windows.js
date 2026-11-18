@@ -14,9 +14,18 @@ const iconRoofWindowSchedule = [
   ['1.7', 'cross', 12.89, 5.66],
 ];
 
-function iconRoofWindows(source) {
-  const angle = source.rotation * Math.PI / 180, c = Math.cos(angle), s = Math.sin(angle);
-  const t = source.variants.find(item => item.id === 'lustro').t;
+export function iconPlanPoint({matrix, translation, dimensions}, x, y, z) {
+  const u = dimensions.width - x;
+  return [
+    translation[0] + matrix[0][0] * u + matrix[0][1] * y,
+    translation[1] + matrix[1][0] * u + matrix[1][1] * y,
+    z,
+  ];
+}
+
+function iconRoofWindows(metadata) {
+  const [[ux, vx], [uy, vy]] = metadata.matrix;
+  const reverseFace = ux * vy - uy * vx > 0;
   const slope = (8.3 - 4.07) / 4.25;
   const widthM = .72, heightM = 1.48;
   const halfRun = heightM / Math.hypot(1, slope) / 2;
@@ -25,19 +34,19 @@ function iconRoofWindows(source) {
       const u = x + (face === 'cross' ? along * widthM / 2 : across * halfRun);
       const v = y + (face === 'cross' ? across * halfRun : along * widthM / 2);
       const run = face === 'cross' ? v - 4.21 : face === 'left' ? u : 8.5 - u;
-      return [t[0]+(14.64-u)*c+v*s, t[1]+(14.64-u)*s-v*c, 4.07+run*slope+.045];
+      return iconPlanPoint(metadata, u, v, 4.07 + run * slope + .045);
     });
     const number = i - iconRoofWindowSchedule.findIndex(([id]) => id === roomId) + 1;
     return {id: `icon-rooflight-${roomId}-${number}`, parcel: '193', roomId,
-      localCenter: [x,y], widthM, heightM, vertices};
+      localCenter: [x,y], widthM, heightM, vertices: reverseFace ? [vertices[0], ...vertices.slice(1).reverse()] : vertices};
   });
 }
 
-export function roofWindowOpenings(house, neighbors, source) {
+export function roofWindowOpenings(house, neighbors) {
   const openings = neighbors.houses.flatMap(model => model.meshes
     .filter(part => /rooflight/.test(part.id) && part.material === 'glass')
     .map(part => ({id: part.id, parcel: model.parcel, vertices: part.vertices.map(p => [...p])})));
-  openings.push(...iconRoofWindows(source));
+  openings.push(...iconRoofWindows(house.metadata));
   return openings.map(opening => {
     const ring = opening.vertices.map(p => p.slice(0,2));
     const area = ring.reduce((sum,a,i) => {const b=ring[(i+1)%ring.length];return sum+a[0]*b[1]-b[0]*a[1];},0);

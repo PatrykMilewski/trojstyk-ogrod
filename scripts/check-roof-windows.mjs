@@ -9,8 +9,8 @@ const moduleSource=await readFile(new URL('../src/model/roof-windows.js',import.
 const {roofWindowOpenings,cutRoofGeometry,clipRoofSeam,createRoofWindowGlazing}=await load(moduleSource);
 const marker='const [source,garden,house,neighbors]=';
 const start=html.indexOf(marker)+marker.length;
-const [source,,house,neighbors]=JSON.parse(html.slice(start,html.indexOf(';\nconst landscaping=',start)));
-const openings=roofWindowOpenings(house,neighbors,source);
+const [,,house,neighbors]=JSON.parse(html.slice(start,html.indexOf(';\nconst landscaping=',start)));
+const openings=roofWindowOpenings(house,neighbors);
 const models=[{...house,parcel:'193'},...neighbors.houses];
 const roofs=model=>model.meshes.filter(m=>m.kind==='roof');
 function geometry(part){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(part.vertices.flat(),3));g.setIndex(part.faces.flatMap(f=>f.slice(1,-1).flatMap((_,i)=>[f[0],f[i+1],f[i+2]])));return g;}
@@ -83,17 +83,17 @@ test('actual Icon interior lining callback opens every window through both real 
     'generated model must pass the real lining cut callback');
 });
 
-test('Icon skylights follow the mirrored attic schedule and meet the physical roof',async()=>{
+test('Icon skylights follow the catalogue attic schedule and meet the physical roof',async()=>{
   const interior=JSON.parse(await readFile(new URL('../trzy-domy-3d/interior-data.json',import.meta.url),'utf8'));
   const own=openings.filter(o=>o.parcel==='193');
   assert.deepEqual(own.map(o=>o.roomId),['1.1','1.2','1.3','1.3','1.3','1.5','1.6','1.7']);
   const original=meshes(models[0],false);
-  const t=source.variants.find(v=>v.id==='lustro').t;
-  const a=source.rotation*Math.PI/180,c=Math.cos(a),s=Math.sin(a);
+  const {addIconInterior}=await load(await readFile(new URL('../src/model/interior.js',import.meta.url),'utf8'));
+  const roomPlacement=addIconInterior({THREE,scene:new THREE.Scene(),house,data:interior}).group.matrix.clone().invert();
   for(const o of own){
     const [left,front,right,back]=interior.rooms.find(room=>room.id===o.roomId).box;
     for(const [x,y,z] of o.vertices){
-      const u=14.64-(x-t[0])*c-(y-t[1])*s,v=(x-t[0])*s-(y-t[1])*c;
+      const [u,v]=new THREE.Vector3(x,y,z).applyMatrix4(roomPlacement).toArray();
       assert(u>=left&&u<=right&&v>=front&&v<=back, o.id+' outside its room');
       const hit=hits(original,[x,y,12])[0];
       assert(hit&&Math.abs(z-hit.point.z-.045)<.002,o.id+' glazing detached from roof plane');
