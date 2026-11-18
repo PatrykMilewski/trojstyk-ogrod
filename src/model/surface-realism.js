@@ -205,7 +205,7 @@ const surfaceTurfColors = {
   a5b58c: 0x799654, '9db286': 0x719452,
 };
 
-function surfaceProfileFor(object, material, key, index) {
+function surfaceProfileFor(object, material, key, index, hasParquetScan) {
   const {name, parent, geometry} = object;
   if (!material.isMeshStandardMaterial || material.map || material.transparent) return null;
   const color = material.color.getHexString();
@@ -220,7 +220,10 @@ function surfaceProfileFor(object, material, key, index) {
   if (name === 'boundary-fence-boards' || (key === 'timber' && parent.name.startsWith('shared-wicket-'))) return 'charred';
   if (parent.name === 'shared-red-sauna') return name === 'sauna-roof-no-eaves' ? 'paneledRoof' : 'redWood';
   if (key === 'garage' || name === 'garage-sectional-door') return 'garage';
-  if (parent.userData.kind === 'hall-flush-door' || object.userData.kind === 'hall-partition') return surfaceInteriorColors[color];
+  const movingDoor = parent.userData.kind === 'walk-door' || parent.parent?.userData.kind === 'walk-door';
+  if (movingDoor || object.userData.kind === 'hall-partition') return surfaceInteriorColors[color];
+  if (hasParquetScan && parent.name === 'icon-193-interior'
+    && (name === 'ground-floor' || name === 'upper-oak-finish')) return 'parquet';
   if (parent.name === 'icon-193-interior' || parent.name === 'floryda-190-interior') {
     if (Array.isArray(object.material) && index === 1) return 'facade';
     if (surfaceInteriorColors[color] === 'oak' && /stair/.test(name)) return 'wood';
@@ -285,17 +288,28 @@ function surfaceProjectFaces(THREE, object, geometry, tile, angle, uv, splitVert
   const positions = geometry.getAttribute('position'), normals = geometry.getAttribute('normal');
   const points = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
   const edge = new THREE.Vector3(), normal = new THREE.Vector3();
+  // Closed flush leaves share the wall's architectural coordinates for plaster grain.
+  let doorPose;
+  if (object.parent.userData.kind === 'walk-door') {
+    object.parent.updateMatrix();
+    object.updateMatrix();
+    doorPose = new THREE.Matrix4().multiplyMatrices(object.parent.matrix, object.matrix);
+  }
   const step = splitVertices ? 1 : 3;
   for (let i = 0; i < positions.count; i += step) {
     for (let j = 0; j < step; j++) {
       points[j].fromBufferAttribute(positions, i + j);
+      if (doorPose) points[j].applyMatrix4(doorPose);
       if (object.name === 'hot-tub-blue-water') {
         const vertical = points[j].y;
         points[j].y = points[j].z;
         points[j].z = vertical;
       }
     }
-    if (splitVertices) normal.fromBufferAttribute(normals, i);
+    if (splitVertices) {
+      normal.fromBufferAttribute(normals, i);
+      if (doorPose) normal.transformDirection(doorPose);
+    }
     else normal.subVectors(points[1], points[0]).cross(edge.subVectors(points[2], points[0])).normalize();
     surfaceWriteProjection(points, step, normal, tile, angle, uv, i * 2);
   }
@@ -351,6 +365,7 @@ const scannedSurfaces = {
   planting: {metres: 1.3, tint: 0xd3bba3},
   gravel: {metres: 2.25, tint: 0xeee3cf},
   terrace: {metres: 1.5, tint: 0xffefda},
+  parquet: {metres: 3.4, tint: 0xfff6e9, roughness: .63, bump: .003, gain: 1.08},
 };
 
 async function loadSurfaceScans(THREE, scans, anisotropy) {
@@ -372,6 +387,7 @@ export async function applyRealisticSurfaces({THREE, scene, mats, renderer, scan
   const materials = new Map();
   const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   const textures = await loadSurfaceScans(THREE, scans, anisotropy);
+  const hasParquetScan = textures.has('parquet');
   scene.traverse(object => {
     if (!object.isMesh || !object.geometry?.getAttribute('position')) return;
     if (object.isInstancedMesh && object.name.endsWith('-trunks') && textures.has('bark')) {
@@ -379,7 +395,7 @@ export async function applyRealisticSurfaces({THREE, scene, mats, renderer, scan
       return;
     }
     const originals = Array.isArray(object.material) ? object.material : [object.material];
-    const types = originals.map((material, i) => surfaceProfileFor(object, material, keys.get(material), i));
+    const types = originals.map((material, i) => surfaceProfileFor(object, material, keys.get(material), i, hasParquetScan));
     const type = types.find(Boolean);
     if (!type) return;
     const angle = /^surface-(driveway|entry|terrace)$/.test(object.name) ? siteRotation : 0;
@@ -390,7 +406,7 @@ export async function applyRealisticSurfaces({THREE, scene, mats, renderer, scan
     const replacements = originals.map((material, i) => {
       const type = types[i];
       if (!type) return material;
-      const profile = surfaceProfiles[type], key = material.uuid + ':' + type;
+      const profile = surfaceProfiles[type] ?? scannedSurfaces[type], key = material.uuid + ':' + type;
       if (!textures.has(type)) textures.set(type, surfaceTexturePair(THREE, type, profile, anisotropy));
       if (!materials.has(key)) {
         const finish = material.clone();

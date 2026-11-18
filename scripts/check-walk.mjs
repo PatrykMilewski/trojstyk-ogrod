@@ -7,7 +7,7 @@ const core = Buffer.from(imports.three.split(',')[1], 'base64').toString('utf8')
 const THREE = await import(`data:text/javascript;base64,${Buffer.from(core).toString('base64')}`);
 const source = await readFile(new URL('../src/model/walk.js', import.meta.url), 'utf8');
 assert(html.includes(source.replaceAll('export ', '')), 'Walking source must match the published runtime');
-const { createOrbitDepthGuard, createWalkCollision, createWalkMotion, walkHouseFootprints } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+const { createWalkGyroscope, createOrbitDepthGuard, createWalkCollision, createWalkMotion, walkHouseFootprints } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
 const marker = 'const [source,garden,house,neighbors]=';
 const start = html.indexOf(marker) + marker.length;
 const [, , house, neighbors] = JSON.parse(html.slice(start, html.indexOf(';\nconst landscaping=', start)));
@@ -149,4 +149,59 @@ test('jumping and sprinting never bypass any real house footprint', () => {
     assert.ok(end[2] > 1.7); assert.equal(collision.blocked(end), false);
     assert.equal(collision.pathBlocked(start, end), false);
   }
+});
+
+function gyroHarness(requestPermission, touch = true) {
+  const host = new EventTarget(), screen = { orientation: { angle: 0 } }, doc = new EventTarget();
+  Object.assign(host, { DeviceOrientationEvent: { requestPermission }, navigator: { maxTouchPoints: Number(touch) },
+    document: doc, screen, isSecureContext: true, matchMedia: () => ({ matches: false }) });
+  const button = new EventTarget(); button.setAttribute = (key, value) => { button[key] = value; };
+  const view = { yaw: .31, pitch: -.15 };
+  const gyro = createWalkGyroscope(THREE, button, (dx, dy) => { view.yaw += dx; view.pitch += dy; }, host);
+  const radians = Math.PI/180;
+  function pose(yaw, pitch, roll = screen.orientation.angle) {
+    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch*radians,0,-yaw*radians,'ZXY'));
+    q.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),roll*radians));
+    const angles = new THREE.Euler().setFromQuaternion(q, 'ZXY');
+    host.dispatchEvent(Object.assign(new Event('deviceorientation'), {alpha:angles.z/radians,beta:angles.x/radians,gamma:angles.y/radians}));
+  }
+  return { gyro, view, host, doc, screen, button, pose };
+}
+
+const nearAngle = (actual, expected) => assert(Math.abs(actual-expected)<1e-5, `${actual} vs ${expected}`);
+
+test('walk gyro calibrates in portrait, both landscapes, and flat, then composes with drag and heading wrap', () => {
+  for (const angle of [0,90,270]) for (const tilt of [0,55,90]) {
+    const {gyro, view, pose, screen} = gyroHarness(); screen.orientation.angle = angle; gyro.enter();
+    pose(358,tilt); nearAngle(view.yaw,.31); nearAngle(view.pitch,-.15);
+    view.yaw += .6; view.pitch += .3;
+    pose(8,tilt+12); nearAngle(view.yaw,.91+10*Math.PI/180); nearAngle(view.pitch,.15+12*Math.PI/180);
+    pose(358,tilt); nearAngle(view.yaw,.91); nearAngle(view.pitch,.15);
+    gyro.exit(); pose(88,45); nearAngle(view.yaw,.91); nearAngle(view.pitch,.15);
+  }
+});
+
+test('walk gyro rebases after screen rotation, hidden tabs and re-entry and retains an explicit opt-out', () => {
+  const {gyro,view,screen,doc,host,button,pose} = gyroHarness(); gyro.enter(); pose(0,65); pose(10,65);
+  const before = {...view}; screen.orientation.angle=90; pose(174,45); assert.deepEqual(view,before);
+  doc.hidden=true;doc.dispatchEvent(new Event('visibilitychange'));pose(82,42);
+  doc.hidden=false;doc.dispatchEvent(new Event('visibilitychange'));pose(221,18);assert.deepEqual(view,before);
+  host.dispatchEvent(new Event('pageshow'));pose(66,22);assert.deepEqual(view,before);
+  button.dispatchEvent(new Event('click'));assert.equal(button['aria-pressed'],'false');
+  gyro.exit();gyro.enter();pose(66,25);pose(77,49);assert.deepEqual(view,before);
+  button.dispatchEvent(new Event('click'));pose(88,52);assert.deepEqual(view,before);
+  pose(98,52);nearAngle(view.yaw,before.yaw+10*Math.PI/180);
+});
+
+test('iOS requests permission within entry gesture and discards responses after exit; denial and unsupported desktops keep touch look', async () => {
+  let calls=0,resolve;
+  const {gyro,view,button,host,pose}=gyroHarness(()=>{calls++;return new Promise(r=>{resolve=r;});});
+  gyro.enter();assert.equal(calls,1);gyro.exit();resolve('granted');await Promise.resolve();
+  pose(0,80);pose(50,100);nearAngle(view.yaw,.31);
+  gyro.enter();await Promise.resolve();assert.equal(calls,1);
+  host.dispatchEvent(Object.assign(new Event('deviceorientation'),{alpha:null,beta:null,gamma:null}));
+  assert.equal(button.textContent,'Żyroskop · oczekiwanie');pose(87,66);pose(97,66);nearAngle(view.yaw,.31+10*Math.PI/180);
+  const denied=gyroHarness(()=>Promise.resolve('denied'));denied.gyro.enter();await Promise.resolve();
+  assert.equal(denied.button['aria-pressed'],'false');denied.pose(90,75);denied.pose(0,32);nearAngle(denied.view.yaw,.31);
+  const desktop=gyroHarness(()=>{throw new Error('unexpected');},false);desktop.gyro.enter();assert(desktop.button.hidden);
 });

@@ -210,6 +210,18 @@ test('folded indigo steel follows all 18 rises, with thin treads and risers clos
   assert(!interior.group.children.some(mesh=>mesh.name.startsWith('stair-stringer-')));
 });
 
+test('the kitchen and hall share terracotta paint on the real kitchen soffit', () => {
+  const ceiling=object('kitchen-terracotta-ceiling');
+  assert.equal(ceiling.material,object('hall-terracotta-ceiling').material);
+  for(const [x,y] of [[.55,8.70],[4,9.65],[6.48,10.25],[6.73,9.24],[7.4,9.8],[7.91,10.27]]){
+    const from=[x,y,2.72],up=[0,0,1];
+    assert(hits(ceiling,from,up,.11).length);
+    assert(hits(object('upper-structure'),from,up,.11).length);
+  }
+  for(const [x,y] of [[4,10.35],[4,11.5],[4,14],[1.5,8.20],[7.4,8.6],[7.4,9.18],[7.4,10.33],[7.97,9.8],[8,10.1]])
+    assert.equal(hits(ceiling,[x,y,2.72],[0,0,1],.11).length,0);
+});
+
 test('coral faces and ceiling stay within the ground hall and both concealed doors swing clear', () => {
   const paint=object('hall-terracotta-ceiling').material;
   for(const wall of ['guest-inner','guest-office','hall-front','garage-hall']){
@@ -255,6 +267,76 @@ test('coral faces and ceiling stay within the ground hall and both concealed doo
   }
 });
 
+test('all thirteen panel doors use their plan handing, room finishes and usable walking openings on the correct floor', async () => {
+  const {createWalkCollision}=await load(await readFile(new URL('../src/model/walk.js',import.meta.url),'utf8'));
+  const expected=[
+    ['garage-pantry',1,0,1],['garage-utility',-1,0,1],['garage-entry',1,1,0],
+    ['ground-bath',-1,0,1],['playroom',-1,1,0],['office',1,0,1],
+    ['bedroom-one',-1,0,-1],['family-bath',1,1,0],['bedroom-two',-1,-1,0],
+    ['laundry',1,-1,0],['private-bath',1,1,0],['dressing',-1,-1,0],['main-bedroom',1,-1,0],
+  ];
+  const items=data.walls.flatMap(wall=>(wall.doorLeaves??[]).map((spec,i)=>({wall,spec,opening:wall.doors[i]})));
+  assert.deepEqual(items.map(i=>i.spec.id).sort(),expected.map(([id])=>id).sort());
+  const paints={wall:0xe9e3d7,coral:0xc77d59,garage:0x505b57,oat:0xddd4c5,linen:0xc8c2b5,
+    familyBath:0xc8bca9,privateBath:0xb59e87,groundBath:0x81462f};
+  for(const [id,hand,openX,openY] of expected){
+    const {wall,spec,opening:[lo,hi]}=items.find(item=>item.spec.id===id),base=wall.level?data.levels.upper:0;
+    const [x,y]=wall.a,tangent=new THREE.Vector2(...wall.b).sub(new THREE.Vector2(x,y)).normalize();
+    const normal=new THREE.Vector2(-tangent.y,tangent.x),mid=new THREE.Vector2(x,y).addScaledVector(tangent,(lo+hi)/2);
+    const door=object('hall-flush-'+id),leaf=object(door.name+'-leaf'),{width,closedYaw}=door.userData;
+    close(door.position.z,base,id+' storey');close(Math.cos(closedYaw)*tangent.x+Math.sin(closedYaw)*tangent.y,hand,id+' hinge');
+    const near=(offset,z)=>[mid.x+normal.x*offset,mid.y+normal.y*offset,z];
+    const walk=createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<base+1.7&&o.maxZ>base+.00001));
+    const crossing=[-.31,.31].map(offset=>interior.localToWorld(near(offset,base)).slice(0,2));
+    assert(!walk.pathBlocked(...crossing),id+' capsule crosses the full partition');
+    interior.updateHallDoors(null);interior.group.updateMatrixWorld(true);
+    for(const face of [-1,1]){
+      const hit=hits(leaf,near(face*.2,base+1.42),[-face*normal.x,-face*normal.y,0],.4)[0];
+      assert(hit,id+' closed');const finish=face===1?spec.leftFinish:spec.rightFinish;
+      assert.equal(hit.object.material[hit.face.materialIndex].color.getHex(),paints[finish],id+' room facing '+finish);
+    }
+    const feet=leaf.position.z-leaf.geometry.parameters.depth/2;
+    assert(feet>(wall.level?.023:.008)&&feet<.04,'Undercut over finished floor');
+    for(const offset of [-.31,-.12,0,.12,.31]){
+      const eye=new THREE.Vector3(...interior.localToWorld(near(offset,base+1.7)));
+      interior.updateHallDoors(eye);interior.group.updateMatrixWorld(true);
+      if(spec.slide){
+        close((door.position.x-door.userData.x)/(width+.006),openX,id+' pocket direction X');
+        close((door.position.y-door.userData.y)/(width+.006),openY,id+' pocket direction Y');
+      }else{
+        close(Math.cos(door.rotation.z),openX,id+' open leaf X');close(Math.sin(door.rotation.z),openY,id+' open leaf Y');
+      }
+      const p=leaf.worldToLocal(eye.clone());leaf.geometry.computeBoundingBox();
+      assert(leaf.geometry.boundingBox.distanceToPoint(p)>.28,id+' moving panel clears walker');
+    }
+    interior.updateHallDoors(new THREE.Vector3(...interior.localToWorld(near(0,wall.level?1.7:4.9))));
+    close(door.rotation.z,closedYaw,id+' closed on other storey');close(door.position.x,door.userData.x,'Other floor X');close(door.position.y,door.userData.y,'Other floor Y');
+  }
+  interior.updateHallDoors(null);
+});
+
+test('bespoke front, glass, pantry and garden leaves carry their hardware and clear their fixed neighbours', () => {
+  const route=[
+    ['front-entry-door','entry-main-door-leaf','entry-main-pull-1',[7.4,4.45],[0,1]],
+    ['vestibule-glass-door','vestibule-screen-leaf-clear-glass','vestibule-leaf-pull-1',[7.45,7.95],[0,1]],
+    ['concealed-pantry-door','kitchen-pantry-closed-leaf','kitchen-pantry-leaf-pull',[1.5,9.18],[0,1]],
+    ['garden-terrace-slider','terrace-slider-glass','terrace-slider-pull',[8.205,15.93],[1,0]],
+  ];
+  for(const [id,leafName,handleName,[x,y],[nx,ny]] of route){
+    const door=object(id),leaf=object(leafName),pull=object(handleName);
+    assert(door.getObjectById(pull.id)&&door.getObjectById(leaf.id),id+' hardware travels with the leaf');
+    const scan=()=>hits(leaf,[x-.35*nx,y-.35*ny,1.3],[nx,ny,0],.7);
+    interior.updateHallDoors(null);interior.group.updateMatrixWorld(true);
+    assert(scan().length,id+' visible when closed');
+    for(const approach of [-.35,0,.35]){
+      const observer=new THREE.Vector3(...interior.localToWorld([x+approach*nx,y+approach*ny,1.7]));
+      interior.updateHallDoors(observer);interior.group.updateMatrixWorld(true);
+      assert(!scan().length,id+' opens the pedestrian route from either side');
+    }
+  }
+  interior.updateHallDoors(null);interior.group.updateMatrixWorld(true);
+});
+
 test('both living room roof slopes have uninterrupted smooth white plaster and retain the timber ties', () => {
   const linings=interior.group.children.filter(m=>m.name.startsWith('interior-roof-lining-'));
   for(const x of [1.65,6.70])for(const y of [10.6,12.3,15,16.98]){
@@ -297,4 +379,46 @@ test('room fixtures are suspended from the slab or the actual sloped lining, wit
 test('play mat rests on the floor and the train track rests on the mat', () => {
   close(bounds(object('play-mat-woven-edge')).min.z, data.levels.ground, 'mat base');
   close(bounds(object('play-train-beech-track')).min.z, bounds(object('play-mat-woven-face')).max.z, 'track base');
+});
+
+test('surface projection and static batching preserve plaster continuity and independent door movement', async () => {
+  const {applyRealisticSurfaces}=await load(await readFile(new URL('../src/model/surface-realism.js',import.meta.url),'utf8'));
+  const {batchStaticInteriorDetails}=await load(await readFile(new URL('../src/model/static-detail-batches.js',import.meta.url),'utf8'));
+  const scene=new THREE.Scene(),model=addIconInterior({THREE,scene,house,data}),get=name=>model.group.getObjectByName(name);
+  const bespoke=['kitchen-pantry-closed-leaf','entry-main-door-leaf','vestibule-screen-leaf-clear-glass','terrace-slider-glass'];
+  const authored=bespoke.map(name=>get(name).material);
+  await applyRealisticSurfaces({THREE,scene,mats:{},renderer:{capabilities:{getMaxAnisotropy:()=>1}}});
+  batchStaticInteriorDetails(THREE,model.group);
+  for(const [i,name] of bespoke.entries())assert.equal(get(name).material,authored[i],name+' keeps its authored finish');
+  const plaster=get('guest-office').material[0],coral=get('guest-office').material[1];
+  assert(plaster.map&&plaster.bumpMap,'Wall has projected plaster');
+  for(const [id,axis] of [['office','x'],['playroom','y']]){
+    const leaf=get('hall-flush-'+id+'-leaf'),door=leaf.parent,side=door.userData.side;
+    assert.equal(leaf.material[side===1?2:3],coral);assert.equal(leaf.material[side===1?3:2],plaster);
+    const {position,normal,uv}=leaf.geometry.attributes;
+    for(let i=0;i<position.count;i++){
+      if(Math.abs(normal.getY(i))<.99)continue;
+      const point=new THREE.Vector3().fromBufferAttribute(position,i).applyMatrix4(leaf.matrix).applyMatrix4(door.matrix);
+      close(uv.getX(i),point[axis]/2.5,id+' aligns with plaster along the wall');
+      close(uv.getY(i),point.z/2.5,id+' aligns with plaster height');
+    }
+  }
+  const doors=model.group.children.filter(o=>o.userData.kind==='walk-door');
+  assert.equal(doors.length,17);
+  for(const door of doors){
+    const {x,y,ux,uy,width,slide,closedYaw}=door.userData;
+    model.updateHallDoors(new THREE.Vector3(...model.localToWorld([x+ux*width/2,y+uy*width/2,door.position.z+1.7])));
+    if(slide)assert(Math.hypot(door.position.x-x,door.position.y-y)>=width);
+    else close(Math.abs(door.rotation.z-closedYaw),Math.PI/2,door.name+' still swings after batching');
+    model.updateHallDoors(null);
+  }
+});
+
+test('the house can omit the optional pantry cabinet and retain its walking doors', () => {
+  const noPantry={...data,furniture:data.furniture.filter(item=>item.id!=='kitchen-pantry')};
+  const model=addIconInterior({THREE,scene:new THREE.Scene(),house,data:noPantry});
+  assert(!model.group.getObjectByName('concealed-pantry-door'));
+  assert.equal(model.group.children.filter(o=>o.userData.kind==='walk-door').length,16);
+  model.updateHallDoors(new THREE.Vector3(...model.localToWorld([1.5,8.52,1.7])));
+  model.updateHallDoors(null);
 });

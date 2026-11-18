@@ -65,3 +65,38 @@ test('walking depth range covers scene from near and distant viewpoints without 
 test('published ground surface implementation matches source',()=>{
   assert(html.includes(groundSource.replaceAll('export ','')));
 });
+
+test('Icon wooden floors share the measured parquet scan while wet rooms and Floryda keep their own finishes',async()=>{
+  const source=await readFile(new URL('../src/model/surface-realism.js',import.meta.url),'utf8');
+  const {applyRealisticSurfaces}=await load(source);
+  const scene=new THREE.Scene(),icon=new THREE.Group(),floryda=new THREE.Group();
+  icon.name='icon-193-interior';floryda.name='floryda-190-interior';scene.add(icon,floryda);
+  const floor=(parent,name,color)=>{
+    const mesh=new THREE.Mesh(new THREE.PlaneGeometry(3.4,3.4),new THREE.MeshStandardMaterial({color}));
+    mesh.name=name;parent.add(mesh);return mesh;
+  };
+  const {addIconInterior}=await load(await readFile(new URL('../src/model/interior.js',import.meta.url),'utf8'));
+  const data=JSON.parse(await readFile(new URL('../trzy-domy-3d/interior-data.json',import.meta.url),'utf8'));
+  const model=addIconInterior({THREE,scene:new THREE.Scene(),house,data});
+  const [ground,upper,wet]=['ground-floor','upper-oak-finish','finish-0.1'].map(name=>model.group.getObjectByName(name));
+  icon.add(ground,upper,wet);
+  const other=floor(floryda,'ground-floor',0xb9956c);
+  const maps=[new THREE.Texture(),new THREE.Texture()];
+  class Loader {async loadAsync(index){return maps[index];}}
+  await applyRealisticSurfaces({THREE:{...THREE,TextureLoader:Loader},scene,mats:{},
+    renderer:{capabilities:{getMaxAnisotropy:()=>4}},scans:{parquet:[0,1]}});
+  for(const mesh of [ground,upper]){
+    assert.equal(mesh.material.map,maps[0]);assert.equal(mesh.material.bumpMap,maps[1]);
+    const {uv,position,normal}=mesh.geometry.attributes;
+    let vertices=0;
+    for(let i=0;i<uv.count;i++){
+      if(normal.getZ(i)<.99)continue;
+      assert(Math.abs(uv.getX(i)*3.4-position.getX(i))<1e-5);
+      assert(Math.abs(uv.getY(i)*3.4-position.getY(i))<1e-5);
+      vertices++;
+    }
+    assert(vertices>=3,'Each floor has a horizontal parquet surface');
+  }
+  assert.equal(wet.material.name,'tile');assert.equal(other.material.name,'oak');
+  assert(html.includes('"parquet": ["data:image/webp;base64,'),'Standalone viewer contains the floor texture');
+});

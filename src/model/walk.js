@@ -242,7 +242,7 @@ function walkMarkup(button) {
   const panel = document.createElement('section'); panel.id = 'walk-controls'; panel.hidden = true;
   panel.setAttribute('aria-label', 'Sterowanie spacerem');
   panel.innerHTML = `<p id="walk-help">Wysokość oczu 1,70 m · WASD / strzałki: ruch · Shift: sprint · Spacja: skok · przeciągnij widok: rozglądanie · Esc: wyjście</p>
-    <div class="walk-touch" aria-label="Ruch na ekranie dotykowym"><button type="button" data-walk="forward" aria-label="Przytrzymaj, aby iść do przodu">↑ Przód</button><button type="button" data-walk="back" aria-label="Przytrzymaj, aby iść do tyłu">↓ Tył</button></div>`;
+    <div class="walk-touch" style="flex-wrap:wrap" aria-label="Ruch na ekranie dotykowym"><button type="button" data-walk="forward" aria-label="Przytrzymaj, aby iść do przodu">↑ Przód</button><button type="button" data-walk="back" aria-label="Przytrzymaj, aby iść do tyłu">↓ Tył</button><button type="button" id="walk-gyro" aria-pressed="false" hidden>Żyroskop</button></div>`;
   document.body.append(panel);
   return panel;
 }
@@ -352,6 +352,93 @@ function createWalkView(THREE, requestDraw, scene) {
     face: direction => { yaw = Math.atan2(direction.x, direction.y); pitch = 0; } };
 }
 
+function walkOrientationDelta(THREE, look) {
+  const radians = Math.PI / 180, euler = new THREE.Euler(), pose = new THREE.Quaternion();
+  const localAim = new THREE.Vector3(), aim = new THREE.Vector3();
+  let previous = null;
+  function sample({ alpha, beta, gamma }, screenAngle) {
+    if (![alpha, beta, gamma].every(Number.isFinite)) return false;
+    pose.setFromEuler(euler.set(beta * radians, gamma * radians, alpha * radians, 'ZXY'));
+    if (!previous || previous.screenAngle !== screenAngle) {
+      // Use the screen's horizontal axis to calibrate even when the phone starts on a table.
+      const angle = screenAngle * radians;
+      aim.set(Math.cos(angle), -Math.sin(angle), 0).applyQuaternion(pose);
+      if (Math.hypot(aim.x, aim.y) < .02) return false;
+      localAim.set(-aim.y, aim.x, 0).normalize().applyQuaternion(pose.clone().invert());
+      previous = null;
+    }
+    aim.copy(localAim).applyQuaternion(pose);
+    const yaw = Math.atan2(aim.x, aim.y), pitch = Math.atan2(aim.z, Math.hypot(aim.x, aim.y));
+    if (previous) {
+      let dx = Math.atan2(Math.sin(yaw - previous.yaw), Math.cos(yaw - previous.yaw));
+      // Heading is undefined when looking straight up or down.
+      if (Math.abs(pitch) > 1.48 || Math.abs(previous.pitch) > 1.48 ||
+          (Math.abs(pitch) > 1.2 && Math.abs(previous.pitch) > 1.2 && Math.abs(dx) > Math.PI * .75)) dx = 0;
+      const dy = pitch - previous.pitch;
+      if (Math.abs(dx) + Math.abs(dy) > 1e-8) look(dx, dy);
+    }
+    previous = { yaw, pitch, screenAngle };
+    return true;
+  }
+  return { sample, reset() { previous = null; } };
+}
+
+export function createWalkGyroscope(THREE, button, look, host = window) {
+  const sensor = host.DeviceOrientationEvent, doc = host.document;
+  const supported = Boolean(sensor && host.isSecureContext &&
+    (host.navigator.maxTouchPoints > 0 || host.matchMedia('(any-pointer: coarse)').matches));
+  button.hidden = !supported;
+  if (!supported) return { enter() {}, exit() {} };
+  const tracker = walkOrientationDelta(THREE, look);
+  let wanted = true, active = false, attached = false, samples = false, generation = 0, permission;
+  function label(enabled, text) {
+    button.setAttribute('aria-pressed', String(enabled)); button.textContent = text;
+  }
+  function sample(event) {
+    if (doc.hidden) return;
+    const angle = host.screen.orientation?.angle ?? host.orientation ?? 0;
+    if (tracker.sample(event, angle) && !samples) {
+      samples = true; label(true, 'Żyroskop wł.');
+    }
+  }
+  function stop() {
+    generation++; tracker.reset(); samples = false;
+    if (!attached) return;
+    host.removeEventListener('deviceorientation', sample);
+    doc.removeEventListener('visibilitychange', tracker.reset);
+    host.removeEventListener('pageshow', tracker.reset);
+    attached = false;
+  }
+  async function start() {
+    stop(); const current = generation;
+    label(true, 'Żyroskop · oczekiwanie');
+    try {
+      if (sensor.requestPermission) {
+        // Calling this before the first await preserves the walk button's transient activation on iOS.
+        permission ??= sensor.requestPermission();
+        if (await permission !== 'granted') throw new Error('Permission denied');
+      }
+    } catch {
+      permission = undefined;
+      if (current !== generation) return;
+      wanted = false; label(false, 'Żyroskop · brak zgody'); return;
+    }
+    if (current !== generation) return;
+    host.addEventListener('deviceorientation', sample);
+    doc.addEventListener('visibilitychange', tracker.reset);
+    host.addEventListener('pageshow', tracker.reset); attached = true;
+  }
+  button.addEventListener('click', () => {
+    if (!active) return;
+    wanted = !wanted;
+    if (wanted) start(); else { stop(); label(false, 'Żyroskop wył.'); }
+  });
+  return {
+    enter() { active = true; if (wanted) start(); },
+    exit() { active = false; stop(); },
+  };
+}
+
 export function mergeInteriorNavigation(interiors) {
   const sources = interiors.filter(item => item.navigation);
   if (!sources.length) return undefined;
@@ -369,6 +456,7 @@ export function setupWalk({ THREE, scene, house, neighbors, camera, controls, re
   const footprints = walkHouseFootprints(house, neighbors).filter(item => !navigableParcels.has(item.parcel));
   const collision = createWalkCollision(footprints), motion = createWalkMotion(collision, navigation);
   const panel = walkMarkup(button), canvas = renderer.domElement;
+  const gyro = createWalkGyroscope(THREE, panel.querySelector('#walk-gyro'), view.look);
   canvas.tabIndex = 0; canvas.setAttribute('aria-label', 'Interaktywny model 3D');
   let active = false, frame = null, last = 0;
   function move(forward, right, dt, sprint = false) {
@@ -392,7 +480,7 @@ export function setupWalk({ THREE, scene, house, neighbors, camera, controls, re
     view.face(direction ? new THREE.Vector3(direction[0], direction[1], 0) : camera.getWorldDirection(new THREE.Vector3()));
     if (frame !== null) cancelAnimationFrame(frame);
     motion.reset(navigation ? spawn : spawn.slice(0, 2)); perspective.position.set(...motion.getState().position); active = true; controls.enabled = false;
-    input.clear(); panel.hidden = false; document.body.classList.add('walk-mode');
+    input.clear(); gyro.enter(); panel.hidden = false; document.body.classList.add('walk-mode');
     button.setAttribute('aria-pressed', 'true'); button.textContent = 'Wyjdź ze spaceru';
     shortcutButton?.setAttribute('aria-pressed', 'true');
     resize(); view.updateLook(); onCameraChange(perspective); canvas.focus({ preventScroll: true });
@@ -400,7 +488,7 @@ export function setupWalk({ THREE, scene, house, neighbors, camera, controls, re
   }
   function exit() {
     if (!active) return;
-    active = false; input.clear(); motion.reset(perspective.position.toArray().slice(0, 2));
+    active = false; gyro.exit(); input.clear(); motion.reset(perspective.position.toArray().slice(0, 2));
     perspective.position.set(...motion.getState().position); cancelAnimationFrame(frame); frame = null;
     controls.enabled = true; panel.hidden = true; document.body.classList.remove('walk-mode');
     button.setAttribute('aria-pressed', 'false'); button.textContent = 'Spacer · 1,7 m';

@@ -334,6 +334,24 @@
           4.15,
           5.05
         ]
+      ],
+      "doorLeaves": [
+        {
+          "id": "garage-pantry",
+          "hinge": "start",
+          "opensTo": "left",
+          "flushFace": "right",
+          "leftFinish": "wall",
+          "rightFinish": "garage"
+        },
+        {
+          "id": "garage-utility",
+          "hinge": "end",
+          "opensTo": "left",
+          "flushFace": "right",
+          "leftFinish": "wall",
+          "rightFinish": "garage"
+        }
       ]
     },
     {
@@ -352,6 +370,16 @@
           0.3,
           1.2
         ]
+      ],
+      "doorLeaves": [
+        {
+          "id": "garage-entry",
+          "hinge": "start",
+          "opensTo": "right",
+          "flushFace": "right",
+          "leftFinish": "garage",
+          "rightFinish": "wall"
+        }
       ]
     },
     {
@@ -401,6 +429,16 @@
           3.68,
           4.58
         ]
+      ],
+      "doorLeaves": [
+        {
+          "id": "playroom",
+          "hinge": "end",
+          "opensTo": "right",
+          "flushFace": "left",
+          "leftFinish": "coral",
+          "rightFinish": "wall"
+        }
       ]
     },
     {
@@ -419,6 +457,16 @@
           0.85,
           1.75
         ]
+      ],
+      "doorLeaves": [
+        {
+          "id": "office",
+          "hinge": "start",
+          "opensTo": "left",
+          "flushFace": "right",
+          "leftFinish": "wall",
+          "rightFinish": "coral"
+        }
       ]
     },
     {
@@ -482,6 +530,16 @@
           0.87,
           1.77
         ]
+      ],
+      "doorLeaves": [
+        {
+          "id": "ground-bath",
+          "hinge": "end",
+          "opensTo": "left",
+          "flushFace": "left",
+          "leftFinish": "coral",
+          "rightFinish": "groundBath"
+        }
       ]
     },
     {
@@ -501,6 +559,16 @@
           4.75,
           5.65
         ]
+      ],
+      "doorLeaves": [
+        {
+          "id": "bedroom-one",
+          "hinge": "end",
+          "opensTo": "right",
+          "flushFace": "left",
+          "leftFinish": "wall",
+          "rightFinish": "oat"
+        }
       ]
     },
     {
@@ -538,6 +606,24 @@
           3.2,
           4.1
         ]
+      ],
+      "doorLeaves": [
+        {
+          "id": "family-bath",
+          "hinge": "start",
+          "opensTo": "right",
+          "flushFace": "right",
+          "leftFinish": "familyBath",
+          "rightFinish": "wall"
+        },
+        {
+          "id": "bedroom-two",
+          "hinge": "end",
+          "opensTo": "left",
+          "flushFace": "right",
+          "leftFinish": "oat",
+          "rightFinish": "wall"
+        }
       ]
     },
     {
@@ -557,6 +643,16 @@
           2.42,
           3.32
         ]
+      ],
+      "doorLeaves": [
+        {
+          "id": "laundry",
+          "hinge": "start",
+          "opensTo": "left",
+          "flushFace": "left",
+          "leftFinish": "wall",
+          "rightFinish": "linen"
+        }
       ]
     },
     {
@@ -608,6 +704,20 @@
           6.25,
           7.15
         ]
+      ],
+      "doorLeaves": [
+        {
+          "id": "private-bath",
+          "slide": "end",
+          "leftFinish": "oat",
+          "rightFinish": "privateBath"
+        },
+        {
+          "id": "dressing",
+          "slide": "start",
+          "leftFinish": "oat",
+          "rightFinish": "linen"
+        }
       ]
     },
     {
@@ -627,6 +737,16 @@
           0.2,
           1.1
         ]
+      ],
+      "doorLeaves": [
+        {
+          "id": "main-bedroom",
+          "hinge": "start",
+          "opensTo": "left",
+          "flushFace": "left",
+          "leftFinish": "wall",
+          "rightFinish": "oat"
+        }
       ]
     },
     {
@@ -696,7 +816,7 @@
       "Upper slope follows unchanged exterior roof; interior roof finish thickness and installation void estimated.",
       "The 0.90 m doorway to the private bathroom occupies local x=10.00–10.90 m along the suite partition. Its approximate position is fitted to the traced plan and the junction with the hall wall.",
       "Eight roof windows on the mirrored attic plan have matching openings through the outer roof and the interior lining 45 mm below it. Window centres were digitised from the drawing; glazing size is an estimate. The living room has a solid roof.",
-      "The main entry, internal doorways and one terrace slider allow passage. The concealed pantry cabinet door and the vestibule glass leaf appear closed, and the fixed vestibule panes block passage.",
+      "Door handing and the two opposing pocket doors in the main suite follow the catalogue floor plans. Values describe the original plan before the site mirror. The main entry, vestibule glass door, concealed pantry front and terrace slider open on approach. Individual paint colours, hardware and pocket tracks are visual design assumptions.",
       "Furniture inventory records approximate source footprints and front direction; beds face from head to foot. Dimensions are visual traces, typically uncertain by15–30cm, not product or execution dimensions.",
       "Room2 upper partition beside the void is solid; the hall alone has a guardrail. Laundry entry is through the side hall; its rear partition is solid as drawn.",
       "Ground main-side glazing traced to y9.23–12.23m; terrace glazing traced to y13.90–16.60m. These refine openings only, preserving the exterior envelope.",
@@ -710,6 +830,7 @@
     ],
     "furnitureSources": {
       "ground-plan": "work/sources/icon-parter-zwykly.jpg, publisher original ground floor, rooms 0.1–0.9",
+      "user-dining": "Six individual dining chairs tucked under the existing dining table. Chair forms and dimensions are design allowances.",
       "user-lounge": "User-requested lounge layout with the chaise at the garden end, a separate upholstered armchair and wall-mounted projection. Dimensions are schematic.",
       "user-attic": "User-requested furnishings fitted to the supplied mirrored attic plan; furniture sizes are schematic.",
       "upper-plan": "work/icon3d-research/attic-mirror.jpg, publisher mirrored upper floor, converted once into original coordinates",
@@ -1007,78 +1128,84 @@
       "type": "chair",
       "room": "0.4",
       "box": [
-        5.05,
-        13.129999999999999,
-        5.489999999999999,
-        13.57
+        5.3,
+        12.925,
+        5.8,
+        13.401
       ],
       "facing": "+x",
-      "source": "ground-plan"
+      "source": "user-dining",
+      "chairStyle": "wishbone"
     },
     {
       "id": "dining-right-0",
       "type": "chair",
       "room": "0.4",
       "box": [
-        6.710000000000001,
-        13.129999999999999,
-        7.15,
-        13.57
+        6.4,
+        12.932,
+        6.9,
+        13.394
       ],
       "facing": "-x",
-      "source": "ground-plan"
+      "source": "user-dining",
+      "chairStyle": "cane"
     },
     {
       "id": "dining-left-1",
       "type": "chair",
       "room": "0.4",
       "box": [
-        5.05,
-        14.08,
-        5.489999999999999,
-        14.520000000000001
+        5.3,
+        14.06,
+        5.8,
+        14.54
       ],
       "facing": "+x",
-      "source": "ground-plan"
+      "source": "user-dining",
+      "chairStyle": "upholstered"
     },
     {
       "id": "dining-right-1",
       "type": "chair",
       "room": "0.4",
       "box": [
-        6.710000000000001,
-        14.08,
-        7.15,
-        14.520000000000001
+        6.4,
+        14.066,
+        6.9,
+        14.534
       ],
       "facing": "-x",
-      "source": "ground-plan"
+      "source": "user-dining",
+      "chairStyle": "windsor"
     },
     {
       "id": "dining-left-2",
       "type": "chair",
       "room": "0.4",
       "box": [
-        5.05,
-        15.03,
-        5.489999999999999,
-        15.47
+        5.3,
+        15.206,
+        5.8,
+        15.668
       ],
       "facing": "+x",
-      "source": "ground-plan"
+      "source": "user-dining",
+      "chairStyle": "ladder"
     },
     {
       "id": "dining-right-2",
       "type": "chair",
       "room": "0.4",
       "box": [
-        6.710000000000001,
-        15.03,
-        7.15,
-        15.47
+        6.4,
+        15.2095,
+        6.9,
+        15.6645
       ],
       "facing": "-x",
-      "source": "ground-plan"
+      "source": "user-dining",
+      "chairStyle": "bentwood"
     },
     {
       "id": "entry-wardrobe-rear",

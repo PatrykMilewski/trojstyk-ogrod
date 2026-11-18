@@ -64,7 +64,7 @@ const imports = JSON.parse(html.split('<script type="importmap">')[1].split('</s
 const core = Buffer.from(imports.three.split(',')[1], 'base64').toString('utf8')
   .replaceAll("'three/core'", `'${imports['three/core']}'`);
 const THREE = await import(`data:text/javascript;base64,${Buffer.from(core).toString('base64')}`);
-const element = () => ({ setAttribute() {}, addEventListener() {}, focus() {} });
+const element = () => ({ querySelector: () => element(), setAttribute() {}, addEventListener() {}, focus() {} });
 globalThis.window = { addEventListener() {} };
 globalThis.document = { createElement: element, addEventListener() {},
   body: { append() {}, classList: { add() {}, remove() {} } } };
