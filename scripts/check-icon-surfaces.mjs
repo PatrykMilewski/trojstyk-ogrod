@@ -180,7 +180,7 @@ test('stair folds meet the partition flush and screen every tread and riser from
   }
 });
 
-test('the finished stair enclosure presents terracotta to the hall and neutral plaster between the flights', async () => {
+test('indigo on the stair flank follows the lower treads while the hall and office retain their finishes', async () => {
   const {applyRealisticSurfaces}=await load(await readFile(new URL('../src/model/surface-realism.js',import.meta.url),'utf8'));
   const model=interior.group.clone();
   await applyRealisticSurfaces({THREE,scene:model,mats:{},renderer:{capabilities:{getMaxAnisotropy:()=>1}}});
@@ -195,16 +195,28 @@ test('the finished stair enclosure presents terracotta to the hall and neutral p
   };
   const plaster=faceAt([10.85,9.5,1.40],[0,-1,0]);
   assert.equal(plaster.map?.name,'plaster-albedo');
+  const indigo=faceAt([8.78,9.36,1.4],[1,0,0]);
+  assert.equal(indigo.map,plaster.map);
+  assert.equal(indigo.color.getHex(),new THREE.Color('#414a89').multiplyScalar(1.16).getHex());
   for(const x of [8.92,9.02,9.06,9.45,9.78])for(const z of [.10,1.40,2.70])
     assert.equal(faceAt([x,9.02,z],[0,1,0]),frontPaint,'Hall front at '+[x,z]);
   for(const y of [9.231,9.255,9.279])for(const z of [.10,1.40,2.70])
     assert.equal(faceAt([9.12,y,z],[-1,0,0]),frontPaint,'Hall return at '+[y,z]);
   const {box:[sx,sy],width,tread,rises,floorHeight}=data.stairs,steps=rises/2-1,rise=floorHeight/rises;
+  const flank=(y,z)=>faceAt([sx+width-.12,y,z],[1,0,0]);
   for(let i=0;i<steps;i++){
     const y=sy+(i+.5)*tread,lower=(i+1)*rise,upper=floorHeight-(i+1)*rise;
+    for(const z of [.045,lower-.014])assert.equal(flank(y,z),plaster,'Below lower tread '+[i,y,z]);
+    assert.equal(flank(y,lower+.004),indigo,'Immediately above lower tread '+i);
     for(const fraction of [.1,.5,.9]){
       const z=lower+(upper-lower)*fraction;
-      assert.equal(faceAt([sx+width-.12,y,z],[1,0,0]),plaster,'Flank at '+[y,z]);
+      assert.equal(flank(y,z),indigo,'Between flights at '+[y,z]);
+    }
+    assert.equal(flank(y,upper-.014),indigo,'Just under upper flight '+i);
+    const riserY=sy+i*tread,mid=(i+.5)*rise;
+    if(i>0){
+      assert.equal(flank(riserY-.002,mid),indigo,'Before lower riser '+i);
+      assert.equal(flank(riserY+.014,mid),plaster,'Beyond lower riser '+i);
     }
   }
   for(let i=1;i<steps;i++){
@@ -215,8 +227,10 @@ test('the finished stair enclosure presents terracotta to the hall and neutral p
       assert.equal(hits(wall,[sx+width+.04,seam-.01,1],[0,1,0],.02).length,0,'No buried faces at '+seam);
   }
   assert.equal(faceAt([10.85,9.5,1.40],[0,-1,0]).map?.name,'plaster-albedo','Office face keeps neutral plaster');
-  assert.equal(faceAt([8.78,11.300,1.535],[1,0,0]),plaster,'Neutral plaster at landing nose');
-  assert.equal(faceAt([8.78,11.75,.6],[1,0,0]).map?.name,'plaster-albedo','Backing below landing keeps neutral plaster');
+  assert.equal(faceAt([9.95,11.7,2.1],[-1,0,0]),plaster,'Office side of the stair partition');
+  assert.equal(flank(11.300,1.535),indigo,'Exposed sliver before the landing riser');
+  assert.equal(flank(11.312,1.535),plaster,'Past the landing riser');
+  assert.equal(flank(11.75,.6),plaster,'Below the landing');
 });
 
 test('upper hall guards block the drop and the normal staircase remains walkable both ways', async () => {

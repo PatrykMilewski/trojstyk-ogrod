@@ -555,13 +555,18 @@ function iconPerforatedGuardMaterial(THREE,steel) {
  return screen;
 }
 
-function iconFoldedStairFlight({THREE,mesh},id,x,width,y,dir,base,steps,tread,rise,steel) {
+function iconStairFoldProfile(base,steps,tread,rise) {
  const profile=[[0,base]],run=steps*tread;
  for(let i=0;i<=steps;i++){
   const height=base+(i+1)*rise;
   profile.push([i===steps?run-iconStairSheet:i*tread,height]);
   if(i<steps)profile.push([i===steps-1?run-iconStairSheet:(i+1)*tread,height]);
  }
+ return profile;
+}
+
+function iconFoldedStairFlight({THREE,mesh},id,x,width,y,dir,base,steps,tread,rise,steel) {
+ const profile=iconStairFoldProfile(base,steps,tread,rise);
  const underside=profile.map(([u,z],i)=>[u+iconStairSheet,z-(i===0||i===profile.length-1?0:iconStairSheet)]);
  const outline=profile.concat(underside.reverse());
  const shape=new THREE.Shape(outline.map(v=>new THREE.Vector2(...v)));
@@ -624,62 +629,66 @@ function iconInteriorStairs(context) {
  rail('upper-stair-hall-front',[railCorner[0],sy],[sx+s.width,sy],s.floorHeight,steel,false);
 }
 
-function iconClampBackingFace(geometry,face,axis,min,max) {
- const positions=geometry.getAttribute('position');
- for(let i=face.start;i<face.start+face.count;i++){
-  const vertex=geometry.index.getX(i);
-  positions.setComponent(vertex,axis,Math.max(min,Math.min(max,positions.getComponent(vertex,axis))));
+function iconStairBackingGeometry(THREE,[x,from,back,to],height,nextHeight,hallReturnEnd,lowerTreads) {
+ const geometry=new THREE.BufferGeometry(),vertices=[];
+ const quad=(finish,a,b,c,d)=>{
+  geometry.addGroup(vertices.length/3,6,finish);
+  vertices.push(...a,...b,...d,...b,...c,...d);
+ };
+ for(const [start,end,elevation] of lowerTreads){
+  const y0=Math.max(start,from),y1=Math.min(end,to);
+  if(y1<=y0)continue;
+  const split=Math.min(elevation,height);
+  quad(0,[x,y0,0],[x,y0,split],[x,y1,split],[x,y1,0]);
+  if(split<height)quad(2,[x,y0,split],[x,y0,height],[x,y1,height],[x,y1,split]);
  }
-}
-
-function iconFinishBackingFlight(backing,nextHeight,hallReturnEnd) {
- const geometry=backing.geometry,[side,flank,riser,front,top]=geometry.groups;
- geometry.clearGroups();
- backing.userData.kind='hall-partition';
- // Each rise exposes only the band above its neighbour. Omit the buried end faces at every joint.
- const hasRiser=nextHeight<geometry.parameters.depth;
- if(hasRiser)iconClampBackingFace(geometry,riser,2,nextHeight-backing.position.z,Infinity);
- geometry.addGroup(flank.start,flank.count+(hasRiser?riser.count:0),0);
+ if(nextHeight<height)quad(0,[x,to,nextHeight],[x,to,height],[back,to,height],[back,to,nextHeight]);
  if(hallReturnEnd!==undefined){
-  iconClampBackingFace(geometry,side,1,-Infinity,hallReturnEnd-backing.position.y);
-  geometry.addGroup(side.start,side.count,1);
-  geometry.addGroup(front.start,front.count,1);
+  quad(1,[x,from,0],[back,from,0],[back,from,height],[x,from,height]);
+  quad(1,[back,from,0],[back,hallReturnEnd,0],[back,hallReturnEnd,height],[back,from,height]);
  }
- geometry.addGroup(top.start,geometry.index.count-top.start,0);
+ quad(0,[x,from,height],[back,from,height],[back,to,height],[x,to,height]);
+ quad(0,[x,from,0],[x,to,0],[back,to,0],[back,from,0]);
+ geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+ geometry.computeVertexNormals();
+ return geometry;
 }
 
 function iconInteriorOfficeBacking(context) {
- const {data,box,obstacle,mats,navigation}=context;
+ const {THREE,data,mesh,obstacle,mats,navigation,material}=context;
  const cabinets=data.furniture.filter(item=>item.id.startsWith('office-under-stair-'));
  if(!cabinets.length)return;
  const backX=cabinets[0].box[0];
  const stairs=data.stairs,[sx,frontY,,rearY]=stairs.box,half=stairs.floorHeight/2;
  const cover={ramp:navigation.ramps.find(r=>r.id==='stair-upper'),landing:navigation.floors.find(f=>f.id==='stair-landing')};
  const office=data.walls.find(wall=>wall.id==='guest-office');
+ const steps=stairs.rises/2-1,turn=frontY+steps*stairs.tread,rise=stairs.floorHeight/stairs.rises;
+ const profile=iconStairFoldProfile(0,steps,stairs.tread,rise);
+ const lowerTreads=[];
+ for(let i=1;i<profile.length;i+=2){
+  const [start,height]=profile[i],end=profile[i+1];
+  lowerTreads.push([frontY+start,end?frontY+end[0]:rearY,height]);
+ }
+ const paint=material('#414a89',{name:'Indigo mineral paint',roughness:.92});
+ paint.userData.surfaceProfile='plaster';
+ const finishes=[mats.wall,mats.coral,paint];
  const segment=(name,from,to,height,nextHeight)=>{
   const bounds=[sx+stairs.width,Math.max(from,frontY),backX,Math.min(to,rearY)];
   if(bounds[3]<=bounds[1])return;
-  const backing=box(name,bounds,0,height,nextHeight===undefined?mats.wall:[mats.wall,mats.coral]);
-  if(nextHeight!==undefined){
-   const hallReturnEnd=bounds[1]===frontY?office.a[1]-office.thickness/2:undefined;
-   iconFinishBackingFlight(backing,nextHeight,hallReturnEnd);
-  }else{
-   const geometry=backing.geometry,[,flank,,front,top]=geometry.groups,indices=geometry.index.array;
-   geometry.setIndex([...indices.slice(flank.start,front.start),...indices.slice(top.start)]);
-   geometry.clearGroups();
-  }
+  const hallReturnEnd=bounds[1]===frontY?office.a[1]-office.thickness/2:undefined;
+  const geometry=iconStairBackingGeometry(THREE,bounds,height,nextHeight,hallReturnEnd,lowerTreads);
+  mesh(geometry,finishes,name).userData.kind='hall-partition';
   obstacle(name,bounds,0,height,cover);
  };
- const steps=stairs.rises/2-1,turn=frontY+steps*stairs.tread;
  // Set the plaster 2 mm behind the steel underside on horizontal and vertical folds.
- const setback=iconStairSheet+.002,landingHeight=half-iconLandingPlate,rise=stairs.floorHeight/stairs.rises;
+ const setback=iconStairSheet+.002,landingHeight=half-iconLandingPlate;
  for(let i=0;i<steps;i++){
   const y=turn-i*stairs.tread-setback,height=half+(i+1)*rise-setback;
   segment('office-backing-flight-'+i,y-stairs.tread,y,height,i===0?landingHeight:height-rise);
  }
  const noseEnd=turn+iconLandingPlate;
  segment('office-backing-landing-nose',turn-setback,noseEnd,landingHeight,landingHeight);
- segment('office-backing-landing',noseEnd,rearY,landingHeight);
+ segment('office-backing-landing',noseEnd,rearY,landingHeight,0);
  iconInteriorOfficePartition(context,cabinets,frontY,steps*stairs.tread);
 }
 
@@ -1494,6 +1503,17 @@ function iconIslandOven(context,frame,s,p,k,x,face) {
  iconKitchenGrip(frame,'oven-tray-pull',x,face,bottom-.005,.145,false,k.bronze,true);
 }
 
+function iconExtractorDrawerBoxes(frame,k,left,right,front) {
+ const innerLeft=left+.028,innerRight=right-.028,back=front+.400,wall=.012;
+ for(const [i,bottom,height] of [[0,.145,.22],[1,.520,.145]]){
+  const box=(id,l,f,r,b,z,h)=>frame.part('extractor-drawer-box-'+i+'-'+id,[l,f,r,b],z,h,k.recess);
+  box('floor',innerLeft,front,innerRight,back,bottom,wall);
+  box('back',innerLeft,back-wall,innerRight,back,bottom+wall,height-wall);
+  for(const [side,x] of [['left',innerLeft],['right',innerRight-wall]])
+   box(side,x,front,x+wall,back-wall,bottom+wall,height-wall);
+ }
+}
+
 function iconSamsungFinishes({THREE}) {
  const finish=(name,color,roughness,extra={})=>new THREE.MeshStandardMaterial({name,color,roughness,...extra});
  const steel=iconFinishTexture(THREE,'Samsung Metal Cooling brushed aluminium',64,256,.42,(u,v)=>{
@@ -1856,7 +1876,8 @@ function iconKitchenBackCounter({THREE,data},frame,s,p,k,face) {
 
 function iconKitchenSink({THREE},frame,s,p) {
  const {width:w,depth:d}=frame,x=w/2,drainY=.204,z=-.198;
- const metal=new THREE.MeshStandardMaterial({name:'Satin stainless steel sink',color:'#a3a8a8',metalness:.48,roughness:.32});
+ const basin=new THREE.MeshStandardMaterial({name:'Matte black composite sink',color:'#252628',roughness:.65});
+ const steel=new THREE.MeshStandardMaterial({name:'Brushed silver stainless steel',color:'#d1d3d5',metalness:.56,roughness:.29});
  const vertices=[],indices=[],steps=128;
  const ring=(outline,h)=>outline.getSpacedPoints(steps).slice(0,-1).map(q=>[q.x,q.y,h]);
  const rings=[
@@ -1875,20 +1896,20 @@ function iconKitchenSink({THREE},frame,s,p) {
   if(j){const a=(j-1)*steps+i,b=(j-1)*steps+(i+1)%steps;indices.push(a,b,b+steps,a,b+steps,a+steps);}
  }
  const shell=new THREE.BufferGeometry();shell.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
- shell.setIndex(indices);shell.computeVertexNormals();s.add('basin',shell,metal,0,0,0);
+ shell.setIndex(indices);shell.computeVertexNormals();s.add('basin',shell,basin,0,0,0);
  s.disc('waste-recess',x,drainY,z-.003,.0455,.0455,.002,p.black);
- s.add('waste-rim',new THREE.RingGeometry(.034,.047,64),metal,x,drainY,z+.0008);
+ s.add('waste-rim',new THREE.RingGeometry(.034,.047,64),steel,x,drainY,z+.0008);
  const basket=new THREE.Shape();basket.absarc(0,0,.034,0,2*Math.PI,false);
  for(let i=0;i<12;i++){
   const angle=i*Math.PI/6,hole=new THREE.Path();
   hole.absellipse(.023*Math.cos(angle),.023*Math.sin(angle),.007,.0024,0,2*Math.PI,true,angle);basket.holes.push(hole);
  }
- s.add('basket-strainer',new THREE.ShapeGeometry(basket,7),p.silver,x,drainY,z-.0005);
- s.disc('basket-pin',x,drainY,z-.0005,.009,.009,.005,metal);
- s.disc('tap-foot',x,.043,.005,.027,.027,.009,p.brass);
- s.tube('arched-spout',[[x,.043,.014],[x,.043,.19],[x,.050,.257],[x,.086,.300],[x,.141,.303],[x,.188,.273],[x,.207,.213]],.012,p.brass);
- s.disc('tap-aerator',x,.207,.207,.013,.013,.009,metal);
- s.tube('mixer-lever',[[x+.010,.043,.073],[x+.036,.043,.073],[x+.042,.041,.084],[x+.042,.045,.133]],.005,p.brass);
+ s.add('basket-strainer',new THREE.ShapeGeometry(basket,7),steel,x,drainY,z-.0005);
+ s.disc('basket-pin',x,drainY,z-.0005,.009,.009,.005,steel);
+ s.disc('tap-foot',x,.043,.005,.027,.027,.009,steel);
+ s.tube('arched-spout',[[x,.043,.014],[x,.043,.19],[x,.050,.257],[x,.086,.300],[x,.141,.303],[x,.188,.273],[x,.207,.213]],.012,steel);
+ s.disc('tap-aerator',x,.207,.207,.013,.013,.009,steel);
+ s.tube('mixer-lever',[[x+.010,.043,.073],[x+.036,.043,.073],[x+.042,.041,.084],[x+.042,.045,.133]],.005,steel);
 }
 
 function iconLivingKitchen(context,frame,s,p) {
@@ -1906,21 +1927,23 @@ function iconLivingKitchen(context,frame,s,p) {
  if(island){
   const hob=context.data.furniture.find(unit=>unit.id==='hob');
   const cx=(hob.box[0]+hob.box[2])/2-item.box[0],cy=(hob.box[1]+hob.box[3])/2-item.box[1];
-  const [cw,cd]=hob.cutout,left=cx-.4,right=cx+.4,ovenLeft=right+.018,ovenRight=ovenLeft+.60;
+  const [cw,cd]=hob.cutout,left=cx-.4,right=cx+.4,ovenWidth=.60,divider=.018;
+  const ovenRight=left-divider,ovenLeft=ovenRight-ovenWidth;
   const near=back+.021,far=face-.021,rear=cy+cd/2+.075,cap=height-.038;
   part('body',[end,rear,w-end,far],.118,cap-.118,k.yellow);
-  for(const [id,l,r] of [['left',end,left],['divider',right,ovenLeft],['right',ovenRight,w-end]])
+  for(const [id,l,r] of [['left',end,ovenLeft],['divider',ovenRight,left],['right',right,w-end]])
    part('cabinet-'+id,[l,near,r,rear],.118,cap-.118,k.yellow);
   for(const [id,l,r] of [['left',.064,cx-.23],['right',cx+.23,w-.064]])
    part('plinth-'+id,[l,back+.049,r,face-.064],.014,.104,p.shadow);
   iconIslandWorktop(context,frame,s,p,[cx-cw/2,cy-cd/2,cw,cd]);
   iconKitchenIslandTiles(context,frame,back);
-  iconKitchenDrawers(frame,k,end,left,3,back,true);
-  iconKitchenDrawers(frame,k,ovenRight,w-end,2,back,true,3);
-  for(const [i,l,r] of [[0,left,cx],[1,cx,right]]){
-   iconKitchenPanel(frame,'extractor-access-'+i,l+.0025,r-.0025,.122,height-.055,back,k.yellow,true);
-   iconKitchenGrip(frame,'extractor-pull-'+i,(l+r)/2,back,height-.055,.145,false,k.bronze,true);
-  }
+  const firstSeam=end+(left-end)/3,outerSeam=right+divider+ovenWidth;
+  iconKitchenDrawers(frame,k,end,firstSeam,1,back,true);
+  iconKitchenDrawers(frame,k,firstSeam,ovenLeft,1,back,true,1);
+  iconKitchenDrawers(frame,k,left,right,1,back,true,2);
+  iconKitchenDrawers(frame,k,right,outerSeam,1,back,true,3);
+  iconKitchenDrawers(frame,k,outerSeam,w-end,2,back,true,4);
+  iconExtractorDrawerBoxes(frame,k,left,right,near);
   iconIslandOven(context,frame,s,p,k,(ovenLeft+ovenRight)/2,back);
   iconNyttig(context,frame,s,p,cx,back+.049,cy+(hob.box[3]-hob.box[1])/2);
  }else{

@@ -897,7 +897,7 @@ test('Samsung columns preserve product envelopes, removable shelves, drawers and
 test('every kitchen cabinet and concealed pantry door has the same matte yellow slab front', () => {
   const get=id=>interior.group.getObjectByName(id);
   const aisle=parts('kitchen-island').filter(o=>o.name.includes('-working-drawer-'));
-  assert.equal(aisle.length,10);
+  assert.equal(aisle.length,12);
   const portal=get('kitchen-pantry-closed-leaf'),yellow=portal.material;
   assert.equal(yellow.color.getHex(),0xe5c368);
   assert(yellow.roughness>=.6 && !yellow.map);
@@ -921,7 +921,11 @@ test('a single 595 mm built-in oven has a separate bay facing the work aisle bes
   const oven=get('window'),glass=bounds(oven),rail=bounds(get('lower-trim')),handle=bounds(get('handle'));
   const ovenTop=bounds(get('fascia')).max.z,hob=bounds(interior.group.getObjectByName('hob-glass'));
   const island=furniture.get('kitchen-island'),center=glass.getCenter(new THREE.Vector3());
-  assert(center.x-.595/2>hob.max.x+.018,'The oven clears the full 80 cm extractor bay and divider');
+  const hobCenter=hob.getCenter(new THREE.Vector3()),sinkCenter=itemBounds('kitchen-sink').getCenter(new THREE.Vector3());
+  const world=p=>new THREE.Vector3(...interior.localToWorld([p.x,p.y,0]));
+  const forward=world(hobCenter).sub(world(sinkCenter)).normalize(),right=forward.cross(new THREE.Vector3(0,0,1));
+  assert(world(center).sub(world(hobCenter)).dot(right)>.60,'Oven is to the viewer’s right when facing the island from the sink');
+  close(hob.min.x-(center.x+.595/2),.0205,'18 mm divider and 2.5 mm oven fitting clearance');
   close(ovenTop-rail.min.z,.595,'Oven has full 595 mm height');
   close(glass.max.x-glass.min.x+.05,.595,'Full-sized 595 mm front including 25 mm jambs');
   assert(ovenTop<hob.min.z-.06 && handle.max.y<glass.min.y && handle.min.y>island.box[1]);
@@ -930,6 +934,34 @@ test('a single 595 mm built-in oven has a separate bay facing the work aisle bes
   assert(!inventoryMeshes.some(m=>/^kitchen-.*microwave|^kitchen-back-oven/.test(m.name)));
   for(const drawer of parts(island.id).filter(m=>m.name.includes('working-drawer-'))){
     const b=bounds(drawer);assert(b.max.x<=center.x-.30 || b.min.x>=center.x+.30);
+  }
+});
+
+test('two full-width drawers under the hob match the neighboring fronts and clear the extractor', () => {
+  const get=id=>interior.group.getObjectByName(id),hob=bounds(get('hob-glass'));
+  const equipment=['hob-blower','hob-chassis','kitchen-island-nyttig-coupling','kitchen-island-nyttig-riser',
+    'kitchen-island-nyttig-plinth-duct'].map(id=>bounds(get(id)));
+  for(let row=0;row<2;row++){
+    const part=(type,module)=>get('kitchen-island-working-'+type+'-'+module+'-'+row);
+    const front=bounds(part('drawer',2)),neighbor=bounds(part('drawer',3)),pull=bounds(part('pull',2));
+    close(front.min.x,hob.min.x+.0025,'Front spans the bay up to the side reveal');
+    close(front.max.x,hob.max.x-.0025,'Front spans the bay up to the side reveal');
+    for(const side of ['min','max'])for(const axis of ['y','z'])
+      close(front[side][axis],neighbor[side][axis],'Faces and horizontal reveals line up');
+    assert.equal(part('pull',2).material,part('pull',3).material);
+    close(pull.max.x-pull.min.x,.145,'Matching 145 mm edge grip');
+    close((pull.min.x+pull.max.x)/2,(front.min.x+front.max.x)/2,'Pull centered on the full-width front');
+    close(pull.max.y,front.min.y,'Grip sits on the aisle-facing edge');
+    close(pull.max.z,front.max.z,'Grip aligns with the top of each front');
+    for(const side of ['floor','back','left','right']){
+      const box=bounds(get('kitchen-island-extractor-drawer-box-'+row+'-'+side));
+      assert(box.min.z>=front.min.z && box.max.z<front.max.z && box.min.x>front.min.x && box.max.x<front.max.x);
+      assert(equipment.every(obstacle=>!box.intersectsBox(obstacle)),'The drawer clears the hob and all duct sections');
+      if(side==='floor'){
+        close(box.min.y,front.max.y,'Drawer box sits against its front');
+        close(box.max.y-box.min.y,.40,'Reduced 400 mm box depth');
+      }
+    }
   }
 });
 
@@ -956,7 +988,7 @@ test('TÄCKNAN glass, four marked zones and open grilles sit over a dedicated NY
   assert(down(get('hob-filter-bed'),x,slotY).length && get('hob-touch-keys') && get('hob-red-display'));
   close(outlet.max.x-outlet.min.x,.46,'NYTTIG outlet width');close(outlet.max.z-outlet.min.z,.077,'Outlet height');
   close(riser.max.x-riser.min.x,.22,'Riser width');close(riser.max.y-riser.min.y,.055,'Riser depth');
-  assert(riser.max.x<oven.min.x && riser.min.z<riser.max.z && outlet.min.y<riser.min.y);
+  assert(oven.max.x<riser.min.x && riser.min.z<riser.max.z && outlet.min.y<riser.min.y);
   const cutHeight=glass.max.z-outlet.min.z;assert(cutHeight>=.849 && cutHeight<=.935);
   for(const id of ['kitchen-island-body','kitchen-island-cabinet-left','kitchen-island-cabinet-divider','kitchen-island-cabinet-right'])
     assert(!bounds(get(id)).intersectsBox(riser),id+' clears the recirculation duct');
@@ -996,9 +1028,24 @@ test('the 80 cm single bowl is let into the worktop below the full-width mosaic'
   const bowl=get('kitchen-sink-basin'),slab=get('kitchen-back-top'),drain=get('kitchen-sink-basket-strainer');
   const rim=bounds(bowl),stone=bounds(slab),tile=bounds(get('kitchen-back-glazed-tiles'));
   close(rim.max.x-rim.min.x,.80,'Overall sink width including rim');
+  const shell=new THREE.Mesh(bowl.geometry,bowl.material),box=bowl.geometry.boundingBox;
+  const center=box.getCenter(new THREE.Vector3());
+  center.z=box.max.z-.000001;
+  for(const [axis,size] of [['x',.762],['y',.373]]){
+    const direction=new THREE.Vector3();direction[axis]=1;
+    const ray=new THREE.Raycaster(center,direction);
+    const positive=ray.intersectObject(shell)[0].distance;
+    ray.ray.direction.negate();
+    close(positive+ray.intersectObject(shell)[0].distance,size,'Clear bowl opening along '+axis);
+  }
+  const tap=get('kitchen-sink-arched-spout').material;
+  for(const name of ['tap-foot','tap-aerator','mixer-lever'])assert.equal(get('kitchen-sink-'+name).material,tap);
+  const {r,g,b}=tap.color;
+  assert(Math.min(r,g,b)>.5 && Math.max(r,g,b)-Math.min(r,g,b)<.05 && tap.metalness>.5,'Neutral silver faucet');
+  assert(Math.max(bowl.material.color.r,bowl.material.color.g,bowl.material.color.b)<.03 && bowl.material.roughness>.5,'Matte black bowl and lip');
   close(rim.max.z-stone.max.z,.005,'Raised edge on stone');
   assert(bounds(drain).max.z<stone.max.z-.19 && bounds(get('kitchen-sink-tap-aerator')).min.z>stone.max.z+.20);
-  interior.group.updateWorldMatrix(true,true);
+  interior.group.updateMatrixWorld(true);
   for(const x of [3.70,3.91,4.20]){
     const ray=new THREE.Raycaster(new THREE.Vector3(...interior.localToWorld([x,9.03,1.08])),
       new THREE.Vector3(0,0,-1),0,.55);

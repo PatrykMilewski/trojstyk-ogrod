@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-19.8",
+  "modelVersion": "2026-11-19.9",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1740,7 +1740,7 @@
     "proceduralCodeSha256": "f28e65f81bfd542148d9fd4925bc2e84fb2d7a8a449e34f84393ac2a653c99e2",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "f6f27de0208ddacc1880061ce21577c8aa17d9cf9595e32efb76d2759fffda44",
-    "runtimeSha256": "b13042352f735fb4a1972c4643862ab62b6615bb415cca8696bfe86f701bebcb"
+    "runtimeSha256": "9a6ab9401cc0045d31135bbc47b8edd729a2eea1d050daef1664cc81f1deaac3"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1778,7 +1778,8 @@
     "Dom /193: skorygowany narożnik i biegi schodów, szklana balustrada w indygo, złożony MADOX z sześcioma krzesłami, gniazdo wyspy, wyrównane fronty i zabudowa spiżarni z czytelnymi etykietami.",
     "Dom /193: dwa słupki 60 cm, pełny blat i piekarnik pod płytą na wyspie, okładzina Palet Zig Zag Half, gniazdo przy oknie, balustrada bez listwy, szafa w czarno-białym fornirze, spiżarnia BROR i kolory pomieszczeń gospodarczych.",
     "Dom /193: przesuwne skrzydło w potrójnym przeszkleniu ogrodowym, ceglana ściana korytarza, bok schodów indygo i wyspa 435 × 105 cm z jednobarwnymi płytkami Palet 301.",
-    "Dom /193: płyta TÄCKNAN z pochłaniaczem, piekarnik w osobnym module, zlew 80 cm, pełna mozaika nad blatem, pomarańczowo-granatowa wyspa, postać na kanapie i jasny tynk między biegami schodów."
+    "Dom /193: płyta TÄCKNAN z pochłaniaczem, piekarnik w osobnym module, zlew 80 cm, pełna mozaika nad blatem, pomarańczowo-granatowa wyspa, postać na kanapie i jasny tynk między biegami schodów.",
+    "Dom /193: piekarnik po prawej stronie płyty od strony zlewu, dwie szuflady pod pochłaniaczem, czarny zlew ze srebrną baterią oraz indygo między biegami schodów."
   ],
   "contextParcels": [
     {
