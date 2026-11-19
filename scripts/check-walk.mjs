@@ -205,7 +205,7 @@ function joystickHarness(t) {
   enter();
   function tick() { frame(time += 110); return walk.getState().position.slice(0, 2); }
   function touch(target, type, id, x, y) {
-    target.dispatchEvent(Object.assign(new Event(type, { cancelable: true }), { button: 0, pointerId: id, clientX: x, clientY: y }));
+    target.dispatchEvent(Object.assign(new Event(type, { cancelable: true }), { button: 0, pointerType: 'touch', pointerId: id, clientX: x, clientY: y }));
   }
   return { walk, pad, thumb, canvas, doc, host, enter, tick, touch };
 }
@@ -244,6 +244,68 @@ test('joystick and camera use independent fingers and release stale input on int
     touch(pad, 'pointermove', 1, 120, 100);
     assert.deepEqual(tick(), interruption === 'exit' ? [0, 0] : moved);
   }
+});
+
+test('two canvas fingers change the lens without moving, turning or tapping the projector', async t => {
+  const { walk, canvas, touch, tick } = joystickHarness(t);
+  const viewSource = await readFile(new URL('../src/model/view-ui.js', import.meta.url), 'utf8');
+  const { bindModelTap } = await import(`data:text/javascript;base64,${Buffer.from(viewSource).toString('base64')}`);
+  canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 390, height: 844 });
+  let taps = 0; bindModelTap(canvas, () => { taps++; });
+  touch(canvas, 'pointerdown', 1, 80, 100); touch(canvas, 'pointerup', 1, 80, 100); assert.equal(taps, 1);
+  const initial = walk.getState(), projection = walk.camera.projectionMatrix.elements[5];
+  touch(canvas, 'pointerdown', 1, 80, 100); touch(canvas, 'pointerdown', 2, 200, 100);
+  touch(canvas, 'pointermove', 1, 110, 100); touch(canvas, 'pointermove', 2, 170, 100);
+  nearAngle(walk.getState().fov, initial.fov + 18 * Math.log(2));
+  assert(walk.camera.projectionMatrix.elements[5] < projection);
+  assert.deepEqual(tick(), initial.position.slice(0, 2));
+  touch(canvas, 'pointermove', 1, 80, 100); touch(canvas, 'pointermove', 2, 200, 100);
+  nearAngle(walk.getState().fov, initial.fov);
+  nearAngle(walk.getState().yaw, initial.yaw); nearAngle(walk.getState().pitch, initial.pitch);
+  touch(canvas, 'pointercancel', 2); touch(canvas, 'pointermove', 1, 90, 105);
+  nearAngle(walk.getState().yaw, .04); nearAngle(walk.getState().pitch, -.02);
+  nearAngle(walk.getState().fov, initial.fov); touch(canvas, 'pointerup', 1, 90, 105); assert.equal(taps, 1);
+});
+
+test('trackpad zoom prevents browser zoom only in walk mode and respects lens limits', t => {
+  const { walk, canvas, pad, touch } = joystickHarness(t);
+  canvas.clientHeight = 844;
+  function wheel(deltaY, ctrlKey = true, deltaMode = 0) {
+    const event = Object.assign(new Event('wheel', { cancelable: true }), { deltaY, ctrlKey, deltaMode });
+    canvas.dispatchEvent(event); return event.defaultPrevented;
+  }
+  assert.equal(wheel(100, false), false); assert.equal(walk.getState().fov, 65);
+  assert.equal(wheel(2, true, 1), true); nearAngle(walk.getState().fov, 65 + 32 * .18);
+  wheel(-32); nearAngle(walk.getState().fov, 65);
+  wheel(1, true, 2); assert.equal(walk.getState().fov, 80);
+  wheel(-1000); assert.equal(walk.getState().fov, 55);
+  touch(pad, 'pointerdown', 1, 100, 100); touch(canvas, 'pointerdown', 2, 200, 200);
+  touch(canvas, 'pointermove', 2, 210, 200);
+  assert.equal(walk.getState().fov, 55); nearAngle(walk.getState().yaw, .04);
+  walk.exit(); assert.equal(wheel(100), false); assert.equal(walk.getState().fov, 55);
+});
+
+test('Safari trackpad scales once per native gesture and lets direct touches own mobile pinch', t => {
+  const { walk, canvas, host, touch } = joystickHarness(t);
+  function send(name, props = {}) {
+    const event = Object.assign(new Event(name, { cancelable: true }), props);
+    canvas.dispatchEvent(event); return event.defaultPrevented;
+  }
+  assert(send('gesturestart', { scale: 1 }));
+  assert(send('gesturechange', { scale: .75 }));
+  assert(send('wheel', { ctrlKey: true, deltaY: 20, deltaMode: 0 }));
+  assert(send('gesturechange', { scale: .5 }));
+  nearAngle(walk.getState().fov, 65 + 18 * Math.log(2));
+  assert(send('gesturechange', { scale: 1 })); nearAngle(walk.getState().fov, 65);
+  assert(send('gestureend')); assert.equal(send('gesturechange', { scale: .5 }), false);
+  touch(canvas, 'pointerdown', 1, 50, 40); touch(canvas, 'pointerdown', 2, 150, 40);
+  assert(send('gesturestart')); touch(canvas, 'pointermove', 1, 75, 40);
+  assert(send('gesturechange', { scale: .75 })); nearAngle(walk.getState().fov, 65 + 18 * Math.log(1 / .75));
+  touch(canvas, 'pointerup', 1); touch(canvas, 'pointerup', 2);
+  assert(send('gesturechange', { scale: .7 })); nearAngle(walk.getState().fov, 65 + 18 * Math.log(1 / .75));
+  assert(send('gestureend')); assert(send('gesturestart')); host.dispatchEvent(new Event('blur'));
+  assert.equal(send('gesturechange', { scale: 2 }), false);
+  walk.exit(); assert.equal(send('gesturestart'), false); assert.equal(send('gestureend'), false);
 });
 
 test('walk gyro calibrates in portrait, both landscapes, and flat, then composes with drag and heading wrap', () => {

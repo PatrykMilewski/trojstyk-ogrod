@@ -164,9 +164,16 @@ function walkSlabStepClear(wall, point, feet, navigation, radius) {
     Math.abs(z - wall.maxZ) < 1e-6 && Math.hypot(point[0] - end[0], point[1] - end[1]) <= radius + .1));
 }
 
-function walkInteriorCollision(collision, navigation, minFeet, maxFeet, stepPoint) {
+function walkAboveCover(point, feet, { ramp, landing }) {
+  const height = walkRampHeight(point, ramp) ?? (walkInside(point, landing.ring) ? landing.z : Infinity);
+  return feet >= height - 1e-6;
+}
+
+function walkInteriorCollision(collision, navigation, feet, nextFeet, point, grounded = false) {
+  const minFeet = Math.min(feet, nextFeet), maxFeet = Math.max(feet, nextFeet);
   const walls = navigation.obstacles.filter(wall => wall.minZ < maxFeet + 1.7 - 1e-6 && wall.maxZ > minFeet + 1e-6 &&
-    !(stepPoint && walkSlabStepClear(wall, stepPoint, minFeet, navigation, collision.radius)));
+    !(point && wall.cover && walkAboveCover(point, feet, wall.cover)) &&
+    !(grounded && walkSlabStepClear(wall, point, minFeet, navigation, collision.radius)));
   return createWalkCollision([...collision.footprints, ...walls], collision.radius);
 }
 
@@ -198,7 +205,7 @@ function createInteriorWalkMotion(collision, navigation) {
     // Only a small connected rise may be stepped onto; a jump cannot select another storey.
     const support = walkSupport(tentative, navigation, grounded ? feet + .12 : landingCeiling + .12, grounded ? undefined : connectedRamps, grounded ? Infinity : Math.max(feet, nextFeet) + .12);
     if (grounded && support >= feet - .12) nextFeet = support;
-    const walls = walkInteriorCollision(collision, navigation, Math.min(feet, nextFeet), Math.max(feet, nextFeet), grounded ? position : undefined);
+    const walls = walkInteriorCollision(collision, navigation, feet, nextFeet, position, grounded);
     const point = walkCeilingMove(navigation, position, walls.move(position.slice(0, 2), delta), feet);
     const surface = walkSupport(point, navigation, grounded ? feet + .12 : landingCeiling + .12, grounded ? undefined : connectedRamps, grounded ? Infinity : Math.max(feet, nextFeet) + .12);
     if (grounded && surface >= feet - .12) { nextFeet = surface; floorHeightM = surface; landingCeiling = surface; }
@@ -303,30 +310,72 @@ function walkJoystick({ pad, isActive }) {
   return { clear, get right() { return right; }, get forward() { return forward; } };
 }
 
-function walkPointers({ canvas, isActive, look }) {
-  let drag = null;
+function walkPointers({ canvas, isActive, look, widen }) {
+  const contacts = new Map();
+  const trackpad = walkTrackpad(canvas, isActive, widen, () => contacts.values().next().value?.type === 'touch');
   canvas.addEventListener('pointerdown', event => {
-    if (!isActive() || event.button !== 0 || drag) return;
-    canvas.focus({ preventScroll: true }); canvas.setPointerCapture(event.pointerId);
-    drag = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    if (!isActive() || event.button !== 0) return;
+    if (contacts.size && (event.pointerType !== 'touch' || contacts.values().next().value.type !== 'touch')) return;
+    if (!contacts.size) canvas.focus({ preventScroll: true });
+    canvas.setPointerCapture(event.pointerId);
+    contacts.set(event.pointerId, { x: event.clientX, y: event.clientY, type: event.pointerType });
   });
   canvas.addEventListener('pointermove', event => {
-    if (!isActive() || drag?.id !== event.pointerId) return;
-    look((event.clientX - drag.x) * .004, -(event.clientY - drag.y) * .004);
-    drag.x = event.clientX; drag.y = event.clientY;
+    const point = contacts.get(event.pointerId);
+    if (!isActive() || !point) return;
+    if (contacts.size === 1) look((event.clientX - point.x) * .004, -(event.clientY - point.y) * .004);
+    if (contacts.size === 2) {
+      const [first, second] = contacts.values(), other = point === first ? second : first;
+      const before = Math.max(8, Math.hypot(point.x - other.x, point.y - other.y));
+      const after = Math.max(8, Math.hypot(event.clientX - other.x, event.clientY - other.y));
+      widen(18 * Math.log(before / after));
+    }
+    point.x = event.clientX; point.y = event.clientY;
   });
   for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-    canvas.addEventListener(type, event => { if (drag?.id === event.pointerId) drag = null; });
+    canvas.addEventListener(type, event => contacts.delete(event.pointerId));
   }
-  return () => { drag = null; };
+  return () => {
+    for (const id of contacts.keys()) if (canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
+    contacts.clear(); trackpad.clear();
+  };
 }
 
-function walkInput({ canvas, panel, isActive, move, look, jump, exit, clearSprint }) {
+function walkTrackpad(canvas, isActive, widen, touchingCanvas) {
+  let nativeGesture = null;
+  canvas.addEventListener('gesturestart', event => {
+    if (!isActive()) return;
+    event.preventDefault();
+    nativeGesture = { scale: 1, touchscreen: touchingCanvas() };
+  }, { passive: false });
+  canvas.addEventListener('gesturechange', event => {
+    if (!isActive() || !nativeGesture) return;
+    event.preventDefault();
+    nativeGesture.touchscreen ||= touchingCanvas();
+    if (nativeGesture.touchscreen || !Number.isFinite(event.scale) || event.scale <= 0) return;
+    widen(18 * Math.log(nativeGesture.scale / event.scale));
+    nativeGesture.scale = event.scale;
+  }, { passive: false });
+  canvas.addEventListener('gestureend', event => {
+    if (isActive() && nativeGesture) event.preventDefault();
+    nativeGesture = null;
+  }, { passive: false });
+  canvas.addEventListener('wheel', event => {
+    if (!isActive() || !event.ctrlKey) return;
+    event.preventDefault();
+    if (nativeGesture || touchingCanvas()) return;
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? canvas.clientHeight : 1;
+    widen(event.deltaY * unit * .18);
+  }, { passive: false });
+  return { clear() { nativeGesture = null; } };
+}
+
+function walkInput({ canvas, panel, isActive, move, look, widen, jump, exit, clearSprint }) {
   const held = new Set();
   const joystick = walkJoystick({ pad: panel.querySelector('#walk-joystick'), isActive });
   function clear() { held.clear(); clearDrag(); joystick.clear(); clearSprint(); }
   const actions = walkKeyboard({ held, isActive, jump, exit, clear });
-  const clearDrag = walkPointers({ canvas, isActive, look });
+  const clearDrag = walkPointers({ canvas, isActive, look, widen });
   return { clear, tick(dt) {
     const active = new Set([...held].map(code => actions[code]));
     move(joystick.forward + Number(active.has('forward')) - Number(active.has('back')),
@@ -367,7 +416,12 @@ function createWalkView(THREE, requestDraw, scene) {
     perspective.lookAt(perspective.position.clone().add(direction)); perspective.updateMatrixWorld(true); requestDraw();
   }
   function look(dx, dy) { yaw += dx; pitch = THREE.MathUtils.clamp(pitch + dy, -Math.PI * .46, Math.PI * .46); updateLook(); }
-  return { camera: perspective, look, updateLook, getState: () => ({ yaw, pitch }),
+  function widen(delta) {
+    const next = THREE.MathUtils.clamp(perspective.fov + delta, 55, 80);
+    if (next === perspective.fov) return;
+    perspective.fov = next; perspective.updateProjectionMatrix(); requestDraw();
+  }
+  return { camera: perspective, look, widen, updateLook, getState: () => ({ yaw, pitch, fov: perspective.fov }),
     face: direction => { yaw = Math.atan2(direction.x, direction.y); pitch = 0; } };
 }
 
@@ -488,7 +542,8 @@ export function setupWalk({ THREE, scene, house, neighbors, camera, controls, re
     perspective.position.set(...point); view.updateLook();
   }
   const jump = () => active && motion.jump();
-  const input = walkInput({ canvas, panel, isActive: () => active, move, look: view.look, jump, clearSprint: motion.clearSprint, exit: () => exit() });
+  const input = walkInput({ canvas, panel, isActive: () => active, move, look: view.look, widen: view.widen,
+    jump, clearSprint: motion.clearSprint, exit: () => exit() });
   function tick(now) {
     frame = null; if (!active) return;
     input.tick(Math.min(.1, Math.max(0, (now - last) / 1000))); last = now; frame = requestAnimationFrame(tick);

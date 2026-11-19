@@ -15,7 +15,7 @@ test('published interior renderer matches source', { skip: sourceOnly }, () => {
   assert(html.includes(interiorSource.replaceAll('export ', '')), 'Interior renderer must match the published runtime');
 });
 const { addIconInterior } = await load(interiorSource);
-const { createWalkMotion, createWalkCollision } = await load(await readFile(new URL('../src/model/walk.js', import.meta.url), 'utf8'));
+const { createWalkMotion, createWalkCollision, mergeInteriorNavigation } = await load(await readFile(new URL('../src/model/walk.js', import.meta.url), 'utf8'));
 const data = JSON.parse(await readFile(new URL('../trzy-domy-3d/interior-data.json', import.meta.url), 'utf8'));
 const embedded = html.match(/const interiorData=(.*);\nconst interior=addIconInterior/);
 assert(embedded, 'Embedded interior dimensions');
@@ -71,6 +71,54 @@ test('actual staircase descends to the ground and upper-floor jump lands on its 
   assert.ok(motion.getState().grounded); follow(motion, [[8.7, 8.6]], 3.2);
   follow(motion, [...stairs].reverse()); assert.equal(motion.getState().floorHeightM, 0);
 });
+function descendInFrames(route, fps) {
+  const combined = mergeInteriorNavigation([{ parcel: '193', navigation }]);
+  const motion = createWalkMotion(createWalkCollision([]), combined);
+  let start = localToWorld(route[0]);
+  motion.reset(start);
+  for (const local of route.slice(1)) {
+    const end = localToWorld(local), dx = end[0] - start[0], dy = end[1] - start[1];
+    const duration = Math.hypot(dx, dy) / 2.2, frames = Math.ceil(duration * fps);
+    for (let frame = 1; frame <= frames; frame++) {
+      motion.move(1, 0, duration / frames, Math.atan2(dx, dy));
+      const { position, floorHeightM, grounded } = motion.getState(), t = frame / frames;
+      assert.ok(Math.hypot(position[0] - start[0] - dx * t, position[1] - start[1] - dy * t) < 1e-6,
+        `Interrupted descent toward ${local} at frame ${frame}/${frames}`);
+      assert.ok(grounded && Math.abs(floorHeightM - (start[2] + (end[2] - start[2]) * t)) < 1e-6);
+      assert.ok(Math.abs(position[2] - floorHeightM - 1.7) < 1e-6);
+    }
+    start = end;
+  }
+}
+
+test('descent stays continuous across both flight widths and around the landing', () => {
+  const [sx, sy, ex, ey] = data.stairs.box;
+  const turnY = ey - data.stairs.landingDepth, half = data.stairs.floorHeight / 2;
+  for (const [upper, lower, fps] of [[9.2, 8.56, 30], [9.29, 8.5, 60], [9.35, 8.39, 60], [9.50, 8.27, 120]]) {
+    const upperAtTurn = upper + ((ex - data.stairs.width / 2) - upper) * .3;
+    const center = (upperAtTurn + lower) / 2, radius = (upperAtTurn - lower) / 2;
+    const turn = Array.from({ length: 13 }, (_, i) => {
+      const angle = i * Math.PI / 12;
+      return [center + radius * Math.cos(angle), turnY + radius * Math.sin(angle), half];
+    });
+    const foot = lower + ((sx + data.stairs.width / 2) - lower) * .3;
+    descendInFrames([[upper - .05, sy - .50, half * 2], [upper, sy, half * 2], ...turn,
+      [foot, sy, 0], [foot + .07, sy - .43, 0]], fps);
+  }
+});
+
+test('the fitted cabinets below the upper flight remain solid from the office', () => {
+  const motion = createWalkMotion(createWalkCollision([]), navigation);
+  const start = localToWorld([10.45, 10.4, 0]), end = localToWorld([9.12, 10.4, 0]);
+  motion.reset(start);
+  motion.move(1, 0, 1, Math.atan2(end[0] - start[0], end[1] - start[1]));
+  const { position, floorHeightM } = motion.getState();
+  const cabinet = data.furniture.find(item => item.id === 'office-under-stair-2');
+  const contact = localToWorld([cabinet.box[2] + .28, 10.4, 0]);
+  assert.ok(Math.hypot(position[0] - contact[0], position[1] - contact[1]) < 1e-6);
+  assert.equal(floorHeightM, 0);
+});
+
 test('actual roof slope stops walking toward the low knee wall', () => {
   const motion = motionAtEntry(); follow(motion, stairs); follow(motion, routes['1.1'], 3.2);
   follow(motion, [[3, 3.1], [2, 3.1]], 3.2);

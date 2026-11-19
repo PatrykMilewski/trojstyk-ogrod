@@ -35,7 +35,7 @@ function iconInteriorSetup({THREE,scene,house,data,cutRoof=geometry=>geometry}) 
  mats.coral=material('#c77d59',{name:'Hall terracotta mineral paint',roughness:.93});
  const mesh = (geometry,mat,name) => {const m=new THREE.Mesh(geometry,mat);m.name=name;m.castShadow=true;m.receiveShadow=true;group.add(m);return m;};
  const box = (name,b,z,h,mat=mats.wood) => {const m=mesh(new THREE.BoxGeometry(b[2]-b[0],b[3]-b[1],h),mat,name);m.position.set((b[0]+b[2])/2,(b[1]+b[3])/2,z+h/2);return m;};
- const obstacle = (id,b,minZ,maxZ) => navigation.obstacles.push({id,ring:ring(b).map(p=>world(p).slice(0,2)),minZ,maxZ});
+ const obstacle = (id,b,minZ,maxZ,cover) => navigation.obstacles.push({id,ring:ring(b).map(p=>world(p).slice(0,2)),minZ,maxZ,cover});
  const floor = (id,b,z) => navigation.floors.push({id,ring:ring(b).map(p=>world(p).slice(0,2)),z});
  const path = points => new THREE.Path(points.map(p=>new THREE.Vector2(...p)));
  const slab = (id,outline,holes,z,depth,mat) => {const shape=new THREE.Shape(outline.map(p=>new THREE.Vector2(...p)));shape.holes=holes.map(path);const m=mesh(new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:false}),mat,id);m.position.z=z;return m;};
@@ -538,37 +538,36 @@ function iconInteriorStairs(context) {
    end:world([x+s.width/2,y+dir*run]).slice(0,2),width:s.width,z0:base,z1:base+half});
  }
  box('stair-landing',[sx,turn,ex,ey],half-iconLandingPlate,iconLandingPlate,steel);floor('stair-landing',[sx,turn,ex,ey],half);
- for(const [id,a,b] of [['lower',[sx,turn],[sx,ey]],['back',[sx,ey],[ex,ey]],['upper',[ex,ey],[ex,turn]]]){
+ const rearWallStart=data.facades.find(facade=>facade.id==='facade-wing-rear').a[0];
+ for(const [id,a,b] of [['lower',[sx,turn],[sx,ey]],['back',[sx,ey],[rearWallStart,ey]]]){
   const length=Math.hypot(b[0]-a[0],b[1]-a[1]);
-  iconStairGuard(context,'landing-'+id,a,b,[[0,half],[length,half]],half+guardHeight,half+guardHeight,steel,screen,id!=='upper');
+  iconStairGuard(context,'landing-'+id,a,b,[[0,half],[length,half]],half+guardHeight,half+guardHeight,steel,screen,id==='lower');
   obstacle('landing-'+id,[Math.min(a[0],b[0])-.025,Math.min(a[1],b[1])-.025,
    Math.max(a[0],b[0])+.025,Math.max(a[1],b[1])+.025],half,half+guardHeight);
  }
- box('upper-void-rim',[4.84,10.23,8.01,10.37],3.02,.18,mats.wood);
- box('upper-stair-rim',[7.87,10.3,8.01,12.28],3.02,.18,mats.wood);
- box('upper-stair-rim-anchor',[7.94,12.14,9.87,12.28],3.02,.18,mats.wood);
+ box('upper-void-rim',[4.84,10.23,sx,10.37],3.02,.18,mats.wood);
  for(const guard of data.rails)rail(guard.id,guard.a,guard.b,guard.level?3.2:0,true);
  rail('upper-stair-hall-side',[sx,data.void.box[1]],[sx,sy],s.floorHeight,true);
  rail('upper-stair-hall-front',[sx,sy],[sx+s.width+s.gap/2,sy],s.floorHeight,true);
- rail('upper-stair-rear',[sx,ey],[ex,ey],s.floorHeight,true);
 }
 
 function iconInteriorOfficeBacking(context) {
- const {data,box,obstacle,mats}=context;
+ const {data,box,obstacle,mats,navigation}=context;
  const cabinets=data.furniture.filter(item=>item.id.startsWith('office-under-stair-'));
  if(!cabinets.length)return;
  const [backX,startY]=cabinets[0].box,endY=cabinets.at(-1).box[3];
  const stairs=data.stairs,[,frontY,,rearY]=stairs.box,half=stairs.floorHeight/2;
- const segment=(name,from,to,height)=>{
+ const cover={ramp:navigation.ramps.find(r=>r.id==='stair-upper'),landing:navigation.floors.find(f=>f.id==='stair-landing')};
+ const segment=(name,from,to,height,above)=>{
   const bounds=[backX-.04,Math.max(from,startY),backX,Math.min(to,endY)];
   if(bounds[3]<=bounds[1])return;
   box(name,bounds,0,height,mats.wall);
-  obstacle(name,bounds,0,height);
+  obstacle(name,bounds,0,height,above);
  };
  const steps=stairs.rises/2-1;
  for(let i=0;i<steps;i++){
   const y=frontY+i*stairs.tread,underside=half+(steps-i)*stairs.floorHeight/stairs.rises-iconStairSheet;
-  segment('office-backing-flight-'+i,y,y+stairs.tread,underside);
+  segment('office-backing-flight-'+i,y,y+stairs.tread,underside,cover);
  }
  segment('office-backing-landing',frontY+steps*stairs.tread,rearY,half-iconLandingPlate);
  segment('office-backing-rear',rearY,endY,data.levels.groundCeiling);
@@ -594,7 +593,7 @@ function iconInteriorOfficePartition({THREE,data,mesh,obstacle,mats},cabinets,fr
  for(const cabinet of cabinets){
   const [,y0,,y1]=cabinet.box;
   panel(cabinet.id+'-filler',frontX-.033,.032,[[y0,cabinet.height],[y1,cabinet.height],...profile(y0,y1).reverse()],mats.wood);
-  obstacle(cabinet.id+'-upper-enclosure',[frontX-.033,y0,frontX+.055,y1],cabinet.height,ceiling);
+  obstacle(cabinet.id+'-upper-enclosure',[frontX,y0,frontX+.055,y1],cabinet.height,ceiling);
  }
 }
 

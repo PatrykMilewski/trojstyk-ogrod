@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-19.2",
+  "modelVersion": "2026-11-19.3",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1735,7 +1735,7 @@
     "proceduralCodeSha256": "f28e65f81bfd542148d9fd4925bc2e84fb2d7a8a449e34f84393ac2a653c99e2",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "f6f27de0208ddacc1880061ce21577c8aa17d9cf9595e32efb76d2759fffda44",
-    "runtimeSha256": "acba25523e9f921a50c08dc744876bd3e8f7d71928161820530f866c5905fbe1"
+    "runtimeSha256": "4b60262f16238e6d108b89306be58317b6284daec726eb8d6c5964db73843b7a"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1767,7 +1767,8 @@
     "Dom /193. Indygowe schody, terakotowy korytarz, biały sufit salonu, zabudowa kuchenna, szafka RTV i nowe meble tapicerowane.",
     "Dom /193. Dębowa jodełka, drzwi wewnętrzne, żółta kuchnia z wyspą w kaflach, terakotowy sufit kuchni oraz sześć różnych krzeseł przy zaokrąglonym stole. W trybie spaceru na telefonie można rozglądać się ruchem urządzenia.",
     "Spacer mobilny obsługuje joystick dotykowy, a w domu /193 można włączyć i zgasić projekcję nieruchomego obrazu.",
-    "Dom /193: balustrady schodów i otworu na piętrze, start Spaceru w salonie, winylowa jodełka i dodatki przy szafce RTV."
+    "Dom /193: balustrady schodów i otworu na piętrze, start Spaceru w salonie, winylowa jodełka i dodatki przy szafce RTV.",
+    "Dom /193: przejście po schodach, siatka na otwartej części spocznika i balustrada antresoli. Gest dwóch palców reguluje pole widzenia podczas spaceru."
   ],
   "contextParcels": [
     {
@@ -3606,7 +3607,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "004df37ffcc9a4e2a2c6bc43b6a6d5f6990893693f28b587c886740368219a75",
+    "dataSha256": "c6c5450b4cd454b25a96503b272a9db075cbf8da9f95d48753e1a052fef7a6f4",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,

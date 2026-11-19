@@ -102,21 +102,44 @@ test('mirrored lower flight has a right-hand guard and the upper flight protects
         assert(interior.navigation.obstacles.some(o=>o.id===name+'-'+i&&contains(interior.localToWorld([edge,py]),o.ring)));
       }
   }
-  for(const [name,p] of [['lower',[sx,(turn+ey)/2]],['back',[(sx+ex)/2,ey]],['upper',[ex,(turn+ey)/2]]]){
+  const rearWallStart=data.facades.find(facade=>facade.id==='facade-wing-rear').a[0];
+  for(const [name,p] of [['lower',[sx,(turn+ey)/2]],['back',[(sx+rearWallStart)/2,ey]]]){
     const across=name==='back'?[0,1,0]:[1,0,0],mesh=object('landing-'+name+'-perforated-infill');
     for(const h of [.02,.55,1.10])assert(hits(mesh,[p[0]-.05*across[0],p[1]-.05*across[1],half+h],across,.10).length);
   }
+  const rear=object('landing-back-perforated-infill');
+  close(bounds(rear).max.x,rearWallStart,'Landing mesh ends at the wing wall');
+  for(const height of [.02,.55,1.10]){
+    const above=half+height;
+    for(const x of [rearWallStart+.05,ex-.05]){
+      assert(hits(object('facade-wing-rear'),[x,ey-.1,above],[0,1,0],.15).length,'The rear wall encloses the landing');
+      assert(!hits(rear,[x,ey-.1,above],[0,1,0],.15).length);
+      assert(!interior.navigation.obstacles.some(o=>o.id==='landing-back'&&contains(interior.localToWorld([x,ey]),o.ring)));
+    }
+    assert(hits(object('office-stair-partition'),[ex-.1,(turn+ey)/2,above],[1,0,0],.15).length,'The office wall encloses the side');
+  }
+  assert(!interior.group.children.some(m=>m.name.startsWith('landing-upper')));
+  assert(!interior.navigation.obstacles.some(o=>o.id==='landing-upper'));
   const joint=new THREE.Vector3(sx,turn,half+1.12);
   for(const name of ['stair-lower-left-top','landing-lower-top']){
     const rail=object(name),halfLength=rail.geometry.parameters.height/2;
     const ends=[-halfLength,halfLength].map(v=>new THREE.Vector3(0,v,0).applyMatrix4(rail.matrix));
     assert(ends.some(end=>end.distanceTo(joint)<1e-5),'Handrail joins landing at '+name);
   }
-  for (const [guard, rim] of [['upper-void-edge', 'upper-void-rim'], ['upper-stair-edge', 'upper-stair-rim'], ['upper-stair-rear','upper-stair-rim-anchor']]) {
-    const support = bounds(object(rim)); close(support.max.z, 3.2, 'Rim supports upper guard');
-    for (let i = 0; ; i++) { const post = interior.group.getObjectByName(`${guard}-post-${i}`); if (!post) break; const b = bounds(post); assert(b.min.x >= support.min.x - .02 && b.max.x <= support.max.x + .02 && b.min.y >= support.min.y - .02 && b.max.y <= support.max.y + .02); close(b.min.z, support.max.z, 'Guard post bears on rim'); }
+  const support=bounds(object('upper-void-rim'));
+  close(support.max.z,s.floorHeight,'Mezzanine rim supports the guard');
+  close(support.max.x,sx,'Rim ends at the mezzanine corner');
+  for(const post of interior.group.children.filter(m=>m.name.startsWith('upper-void-edge-post-'))){
+    const b=bounds(post);
+    assert(b.min.x>=support.min.x-.02&&b.max.x<=support.max.x+.02&&b.min.y>=support.min.y-.02&&b.max.y<=support.max.y+.02);
+    close(b.min.z,support.max.z,'Mezzanine post bears on rim');
   }
-  assert(bounds(object('upper-stair-rim-anchor')).max.x >= 9.87 - 1e-5, 'Rim is anchored to upper suite floor');
+  const oldWing=['upper-stair-edge','upper-stair-rear','upper-stair-rim'];
+  assert(!interior.group.children.some(mesh=>oldWing.some(prefix=>mesh.name.startsWith(prefix))));
+  assert(!interior.navigation.obstacles.some(o=>oldWing.some(prefix=>o.id.startsWith(prefix))));
+  for(const x of [sx-.04,sx+.04])for(const y of [data.void.box[1]+.12,ey-.12]){
+    assert(!hits(object('upper-oak-finish'),[x,y,s.floorHeight+.15],[0,0,-1],.25).length,'Former extension lay between two voids');
+  }
 });
 
 test('upper hall guards block the drop and the normal staircase remains walkable both ways', async () => {
@@ -129,7 +152,7 @@ test('upper hall guards block the drop and the normal staircase remains walkable
     const dx=tx-px,dy=ty-py;
     return motion.move(1,0,Math.hypot(dx,dy)/2.2,Math.atan2(dx,dy));
   };
-  for(const [id,point,axis] of [['upper-stair-hall-side',[sx,sy+.5],0],['upper-stair-hall-front',[lower,sy],1],['upper-stair-rear',[upper,ey],1]]){
+  for(const [id,point,axis] of [['upper-stair-hall-side',[sx,sy+.5],0],['upper-stair-hall-front',[lower,sy],1]]){
     const origin=[...point,floorHeight+.6],direction=[0,0,0];
     origin[axis]-=.1;direction[axis]=1;
     assert(interior.group.children.filter(m=>m.name.startsWith(id+'-glass-')).some(m=>hits(m,origin,direction,.2).length));
