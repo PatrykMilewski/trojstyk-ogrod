@@ -823,7 +823,7 @@
       "Private bathroom front sanitary fixture symbols overlap a rooflight in the public plan. Shower and WC remain explicit approximations; two wall basins follow the visible source.",
       "Furniture under roof slopes uses schematic heights; source footprints and wall contacts are more reliable than catalogue symbol sizes. No unsupported furniture is inferred from rooflight symbols.",
       "Shared upper bathroom doorway refined to y4.64–5.54m against the source opening, leaving the shower approach clear.",
-      "Closed Beliani MADOX table with six individual dining chairs: two at each long side and one at each end. Chair designs and the inset socket dimensions are visual estimates.",
+      "Custom 135 × 78 cm dining table inspired by Beliani MADOX, shown with its extension stored. Two chairs sit at each long side and one at each end. Chair designs and the inset socket dimensions are visual estimates.",
       "The mirrored ground-floor drawing supplies usable areas 10.29 and 13.45 m²; their dimensioned footprints include finishes and the low office storage beneath the stairs. The four closed cabinet modules and their individual heights approximate a possible fit-out.",
       "Room 1.1 study desk, chair and wardrobe are a proposed fit-out. The upper hall reading corner and the exposed timber at the crossing of the two roofs interpret the supplied interior view. Member sizes and joints are for visualisation only.",
       "Room 0.8 retains the catalogue folded sofa position. Its assumed pull-out daybed extends toward the room centre to 1.65 m overall depth, including frame and back, with a proposed 1.95 × 1.45 m sleeping area."
@@ -831,8 +831,8 @@
     "furnitureSources": {
       "ikea-tacknan": "IKEA TÄCKNAN 296.125.04 with NYTTIG 806.231.27. https://www.ikea.com/pl/pl/p/taecknan-plyta-ind-zint-okap-z-zest-d-pochla-ikea-300-czarny-s29612504/",
       "ground-plan": "work/sources/icon-parter-zwykly.jpg, publisher original ground floor, rooms 0.1–0.9",
-      "beliani-madox": "Closed dark-walnut MADOX 120 × 75 × 75 cm, 2 cm top, 64 cm exposed legs. Beliani product and dimension drawing: https://www.beliani.pl/stol-do-jadalni-ciemne-drewno-rozkladany-120-150-x-75-cm-madox.html",
-      "user-dining": "Six individual chairs around the closed MADOX table. Chair forms and dimensions are design allowances.",
+      "beliani-madox": "Custom 135 × 78 × 75 cm table based on the closed 120 × 75 cm Beliani MADOX. The dark-walnut finish, 2 cm top and 64 cm exposed legs follow the reference. https://www.beliani.pl/stol-do-jadalni-ciemne-drewno-rozkladany-120-150-x-75-cm-madox.html",
+      "user-dining": "Six individual chairs around the custom MADOX-style table. Chair forms and dimensions are design allowances.",
       "user-lounge": "User-requested lounge layout with the chaise at the garden end, a separate upholstered armchair and wall-mounted projection. Dimensions are schematic.",
       "user-attic": "User-requested furnishings fitted to the supplied mirrored attic plan; furniture sizes are schematic.",
       "upper-plan": "work/icon3d-research/attic-mirror.jpg, publisher mirrored upper floor, converted once into original coordinates",
@@ -1197,10 +1197,10 @@
       "type": "table",
       "room": "0.4",
       "box": [
-        5.725,
-        13.7,
-        6.475,
-        14.9
+        5.71,
+        13.625,
+        6.49,
+        14.975
       ],
       "facing": "+y",
       "source": "beliani-madox",
@@ -1211,10 +1211,10 @@
       "type": "chair",
       "room": "0.4",
       "box": [
-        5.345,
-        13.854,
-        5.845,
-        14.284
+        5.33,
+        13.81,
+        5.83,
+        14.24
       ],
       "facing": "+x",
       "source": "user-dining",
@@ -1225,10 +1225,10 @@
       "type": "chair",
       "room": "0.4",
       "box": [
-        6.355,
-        13.854,
-        6.855,
-        14.284
+        6.37,
+        13.81,
+        6.87,
+        14.24
       ],
       "facing": "-x",
       "source": "user-dining",
@@ -1239,10 +1239,10 @@
       "type": "chair",
       "room": "0.4",
       "box": [
-        5.345,
-        14.316,
-        5.845,
-        14.746
+        5.33,
+        14.36,
+        5.83,
+        14.79
       ],
       "facing": "+x",
       "source": "user-dining",
@@ -1253,10 +1253,10 @@
       "type": "chair",
       "room": "0.4",
       "box": [
-        6.355,
-        14.316,
-        6.855,
-        14.746
+        6.37,
+        14.36,
+        6.87,
+        14.79
       ],
       "facing": "-x",
       "source": "user-dining",
@@ -1268,9 +1268,9 @@
       "room": "0.4",
       "box": [
         5.869,
-        13.342,
+        13.267,
         6.331,
-        13.842
+        13.767
       ],
       "facing": "+y",
       "source": "user-dining",
@@ -1282,9 +1282,9 @@
       "room": "0.4",
       "box": [
         5.8725,
-        14.758,
+        14.833,
         6.3275,
-        15.258
+        15.333
       ],
       "facing": "-y",
       "source": "user-dining",

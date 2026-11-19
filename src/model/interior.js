@@ -669,8 +669,7 @@ function iconInteriorOfficeBacking(context) {
   const [start,height]=profile[i],end=profile[i+1];
   lowerTreads.push([frontY+start,end?frontY+end[0]:rearY,height]);
  }
- const paint=material('#414a89',{name:'Indigo mineral paint',roughness:.92});
- paint.userData.surfaceProfile='plaster';
+ const paint=material('#414a89',{name:'Smooth matte indigo paint',roughness:.79});
  const finishes=[mats.wall,mats.coral,paint];
  const segment=(name,from,to,height,nextHeight)=>{
   const bounds=[sx+stairs.width,Math.max(from,frontY),backX,Math.min(to,rearY)];
@@ -1336,17 +1335,17 @@ function iconMadoxTable(THREE,frame,s,p) {
  s.add('solid-top',slab,wood,0,0,top-.020+edge);
  part('butterfly-joint',[edge,d/2-.0007,w-edge,d/2+.0007],top,.00025,p.espresso);
  const apronBase=.64,apronHeight=top-.020-apronBase;
- const cornerX=w/2-.315,cornerY=d/2-.48,halfJoint=.025;
+ const cornerX=.060,cornerY=.120,halfJoint=.025;
  for(const u of [cornerX,w-cornerX])part('long-apron-'+u,[u-.012,cornerY+halfJoint,u+.012,d-cornerY-halfJoint],apronBase,apronHeight,wood);
  for(const v of [cornerY,d-cornerY])part('end-apron-'+v,[cornerX+halfJoint,v-.012,w-cornerX-halfJoint,v+.012],apronBase,apronHeight,wood);
  for(const sx of [-1,1])for(const sy of [-1,1]){
-  const shoulderX=w/2+sx*.315,shoulderY=d/2+sy*.48;
+  const shoulderX=sx<0?cornerX:w-cornerX,shoulderY=sy<0?cornerY:d-cornerY;
   part('corner-joint-'+sx+'-'+sy,[shoulderX-halfJoint,shoulderY-halfJoint,shoulderX+halfJoint,shoulderY+halfJoint],apronBase,apronHeight,wood);
   const leg=new THREE.BoxGeometry(1,1,1),pos=leg.attributes.position;
   for(let i=0;i<pos.count;i++){
    const t=pos.getZ(i)+.5,thickness=.032+.018*t;
-   const x=w/2+sx*.344+(shoulderX-w/2-sx*.344)*t;
-   const y=d/2+sy*.529+(shoulderY-d/2-sy*.529)*t;
+   const x=shoulderX+sx*.029*(1-t);
+   const y=shoulderY+sy*.049*(1-t);
    pos.setXYZ(i,x+thickness*pos.getX(i),y+thickness*pos.getY(i),apronBase*t);
   }
   leg.computeVertexNormals();s.add('splayed-leg-'+sx+'-'+sy,leg,wood,0,0,0);
@@ -2773,7 +2772,7 @@ function iconDiningLantern(context,paper,id,x,y,z,radius,halfHeight) {
  beam(id+'-cap',[x,y,top-.006],[x,y,top+.018],.049,mats.metal);
 }
 
-function iconLivingLighting(context) {
+function iconLivingLighting(context,roofTimber) {
  const {THREE,mesh,box,beam,ceilingAt,mats,data}=context;
  const paper=new THREE.MeshStandardMaterial({color:'#ffebc8',emissive:'#f4cba2',emissiveIntensity:.34,side:THREE.DoubleSide,roughness:.96});
  paper.onBeforeCompile=shader=>{
@@ -2804,27 +2803,35 @@ function iconLivingLighting(context) {
   const half=(ceilingAt(ridge,py)-z)/((8.3-4.07)/4.25);
   const bevel=.17*4.25/(8.3-4.07);
   const section=new THREE.Shape([[-half,0],[half,0],[half-bevel,.17],[-half+bevel,.17]].map(([u,v])=>new THREE.Vector2(u,v)));
-  const tie=mesh(new THREE.ExtrudeGeometry(section,{depth:.11,bevelEnabled:false}),mats.wood,'living-collar-tie-'+py);
+  const geometry=new THREE.ExtrudeGeometry(section,{depth:.11,bevelEnabled:false});
+  const {position,normal,uv}=geometry.attributes;
+  for(let i=0;i<position.count;i++){
+   const across=Math.abs(normal.getZ(i))>.5?position.getY(i):position.getZ(i);
+   uv.setXY(i,across/.32+py*.27,position.getX(i)/2.65+py*.43);
+  }
+  const tie=mesh(geometry,roofTimber,'living-collar-tie-'+py);
   tie.rotation.x=Math.PI/2;tie.position.set(ridge,py+.055,z);
  }
  box('kitchen-linear-light',[.8,10.09,4.68,10.115],2.787,.012,mats.lamp);
 }
 
-function iconMezzanineTrusses(context) {
+function iconMezzanineTrusses(context,roofTimber) {
  const {THREE,mesh,data}=context,{eave,ridge}=data.levels;
- const pitch=(ridge-eave)/4.25,top=ridge-.045,mid=8.46,wood=iconLivingPalette(context).walnut;
+ const pitch=(ridge-eave)/4.25,top=ridge-.045,mid=8.46;
  function timber(name,a,b,width,depth){
   const dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
   const nx=-dy*width/(2*length),ny=dx*width/(2*length);
   const vertices=[a,b].flatMap(([x,y,z])=>[[x+nx,y+ny,z],[x-nx,y-ny,z],[x-nx,y-ny,z-depth],[x+nx,y+ny,z-depth]]);
   const g=new THREE.BufferGeometry(),positions=[],uv=[];
   for(const [i,j,k,l] of [[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7],[3,2,1,0],[4,5,6,7]]){
-   for(const [index,u,v] of [[i,0,0],[j,.15,0],[k,.15,length],[i,0,0],[k,.15,length],[l,0,length]]){
-    positions.push(...vertices[index]);uv.push(u,v);
+   const edge=(p,q)=>Math.hypot(...vertices[p].map((n,c)=>n-vertices[q][c]));
+   const across=edge(i,j)/.32,along=edge(i,l)/2.65;
+   for(const [index,u,v] of [[i,0,0],[j,across,0],[k,across,along],[i,0,0],[k,across,along],[l,0,along]]){
+    positions.push(...vertices[index]);uv.push(u+a[0]*.27+i*.17,v+b[1]*.43);
    }
   }
   g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
-  g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.computeVertexNormals();mesh(g,wood,'gallery-truss-'+name);
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.computeVertexNormals();mesh(g,roofTimber,'gallery-truss-'+name);
  }
  const roofZ=run=>top-.013-run*pitch;
  for(const sign of [-1,1]){
@@ -2906,8 +2913,10 @@ function iconRoomCeilingLights(context) {
 }
 
 function iconInteriorLightingAndRoof(context) {
- iconMezzanineTrusses(context);
- iconLivingLighting(context);
+ const roofTimber=iconLongGrainOak(context.THREE,'Clear-finished light oak roof timber',[207,177,137]);
+ roofTimber.roughness=.72;
+ iconMezzanineTrusses(context,roofTimber);
+ iconLivingLighting(context,roofTimber);
  iconIndoorOlive(context,.97,16.21,.88);
  iconMezzaninePrint(context);
  const {THREE,group,navigation,contains,data,house,ceilingAt}=context;
@@ -2993,6 +3002,7 @@ function iconInteriorCurtains(context) {
  const gable={depth:.265,rise:.075,face:.18,left:.10,right:.10,stack:.33};
  const windows=[
   ['living',['facade-garden-glass-0-pane-0','facade-garden-glass-0-pane-2'],0,-1,garden],
+  ['kitchen',['facade-main-side-glass-0'],1,1,{...ground,left:-.025,right:.225,stack:.205}],
   ['playroom',['facade-front-wing-glass-2'],0,1,ground],
   ['study',['facade-wing-end-glass-1'],1,-1,{...ground,left:.014,right:.23}],
   ['bedroom-one',['front-gable-glass-0'],0,1,gable],

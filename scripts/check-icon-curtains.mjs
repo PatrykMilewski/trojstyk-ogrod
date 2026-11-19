@@ -24,6 +24,7 @@ function bounds(name) {
 }
 const rooms=[
  ['living','facade-garden-glass-0-pane-0','facade-garden-glass-0-pane-2',0,-1],
+ ['kitchen','facade-main-side-glass-0','facade-main-side-glass-0',1,1],
  ['playroom','facade-front-wing-glass-2','facade-front-wing-glass-2',0,1],
  ['study','facade-wing-end-glass-1','facade-wing-end-glass-1',1,-1],
  ['bedroom-one','front-gable-glass-0','front-gable-glass-0',0,1],
@@ -54,6 +55,21 @@ test('open linen panels gather beside the jambs, inside the glass and clear of t
     assert(panel.max.x<x0||panel.min.x>x1||panel.max.y<y0||panel.min.y>y1,name+' clips '+item.id);
    }
   }
+ }
+});
+
+test('kitchen curtains clear the pantry swing and island aisle and leave the middle of the side window open',()=>{
+ const glass=bounds('facade-main-side-glass-0');
+ const pantry=data.furniture.find(f=>f.id==='kitchen-pantry');
+ const island=data.furniture.find(f=>f.id==='kitchen-island');
+ const door=group.getObjectByName('concealed-pantry-door');
+ const [left,right]=['left','right'].map(side=>bounds('curtain-kitchen-'+side));
+ const exposed=Math.min(glass.max.y,right.min.y)-Math.max(glass.min.y,left.max.y);
+ assert(exposed/(glass.max.y-glass.min.y)>.91,'over 91% of the glass width remains clear');
+ for(const b of [left,right,bounds('curtain-kitchen-track')]){
+  assert(b.min.y>pantry.box[3]+.015,'fabric and hardware clear pantry front');
+  assert(b.max.x<door.position.x-.10,'outside the full quarter-turn of the pantry door');
+  assert(island.box[0]-b.max.x>1.45,'unobstructed aisle at the end of the island');
  }
 });
 

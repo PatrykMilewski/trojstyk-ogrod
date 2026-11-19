@@ -196,8 +196,10 @@ test('indigo on the stair flank follows the lower treads while the hall and offi
   const plaster=faceAt([10.85,9.5,1.40],[0,-1,0]);
   assert.equal(plaster.map?.name,'plaster-albedo');
   const indigo=faceAt([8.78,9.36,1.4],[1,0,0]);
-  assert.equal(indigo.map,plaster.map);
-  assert.equal(indigo.color.getHex(),new THREE.Color('#414a89').multiplyScalar(1.16).getHex());
+  assert.equal(indigo.map,null);
+  assert.equal(indigo.bumpMap,null);
+  assert.equal(indigo.normalMap,null);
+  assert.equal(indigo.color.getHex(),0x414a89);
   for(const x of [8.92,9.02,9.06,9.45,9.78])for(const z of [.10,1.40,2.70])
     assert.equal(faceAt([x,9.02,z],[0,1,0]),frontPaint,'Hall front at '+[x,z]);
   for(const y of [9.231,9.255,9.279])for(const z of [.10,1.40,2.70])
@@ -487,8 +489,14 @@ test('bespoke front, glass, pantry and garden leaves carry their hardware and cl
   interior.updateHallDoors(null);interior.group.updateMatrixWorld(true);
 });
 
-test('both living room roof slopes have uninterrupted smooth white plaster and retain the timber ties', () => {
-  const linings=interior.group.children.filter(m=>m.name.startsWith('interior-roof-lining-'));
+test('white living roof slopes and light lengthwise oak survive surface assignment and batching', async () => {
+  const {applyRealisticSurfaces}=await load(await readFile(new URL('../src/model/surface-realism.js',import.meta.url),'utf8'));
+  const {batchStaticInteriorDetails}=await load(await readFile(new URL('../src/model/static-detail-batches.js',import.meta.url),'utf8'));
+  const model=interior.group.clone();
+  await applyRealisticSurfaces({THREE,scene:model,mats:{},renderer:{capabilities:{getMaxAnisotropy:()=>1}}});
+  batchStaticInteriorDetails(THREE,model);
+  model.updateMatrixWorld(true);
+  const linings=model.children.filter(m=>m.name.startsWith('interior-roof-lining-'));
   for(const x of [1.65,6.70])for(const y of [10.6,12.3,15,16.98]){
     const hit=linings.flatMap(mesh=>hits(mesh,[x,y,3.25],[0,0,1],6))[0];
     assert(hit,'Roof above '+[x,y]);
@@ -499,7 +507,30 @@ test('both living room roof slopes have uninterrupted smooth white plaster and r
   }
   const adjacent=linings.flatMap(mesh=>hits(mesh,[2,7,3.25],[0,0,1],6))[0];
   assert.equal(adjacent.object.material.color.getHex(),0xede8df);
-  for(const y of [11.45,12.95,14.45,15.95])assert(object('living-collar-tie-'+y).material!==linings[0].material);
+  const timbers=model.children.filter(m=>/^(living-collar-tie-|gallery-truss-)/.test(m.name));
+  assert.equal(timbers.length,15);
+  const oak=timbers[0].material;
+  assert.equal(oak.map.colorSpace,THREE.SRGBColorSpace);
+  const {data:rgb}=oak.map.image;
+  const red=new Set();
+  for(let i=0;i<rgb.length;i+=4){
+    assert(rgb[i]>175 && rgb[i+2]>105 && rgb[i]>rgb[i+1] && rgb[i+1]>rgb[i+2],'Light warm timber');
+    red.add(rgb[i]);
+  }
+  assert(red.size>=20,'Growth rings vary across the face');
+  for(const member of timbers){
+    assert.equal(member.material,oak);
+    const {position,uv}=member.geometry.attributes;
+    if(member.name.startsWith('gallery-truss-')){
+      for(let i=0;i<24;i+=6){
+        close(uv.getX(i+1),uv.getX(i+2),member.name+' grain runs along each long edge');
+        close(uv.getY(i),uv.getY(i+1),member.name+' grain spacing across face');
+      }
+    }else{
+      for(let i=1;i<position.count;i++)
+        close(uv.getY(i)-uv.getY(0),(position.getX(i)-position.getX(0))/2.65,member.name+' grain follows tie');
+    }
+  }
 });
 
 test('room fixtures are suspended from the slab or the actual sloped lining, with walking headroom', () => {

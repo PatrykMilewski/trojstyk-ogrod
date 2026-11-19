@@ -66,11 +66,11 @@ test('rendered bed heads and sofa backs follow publisher orientation', () => {
   assert(itemBounds('coffee-table').max.x < itemBounds('sofa').min.x);
 });
 
-test('closed MADOX has a thin walnut top, four 64 cm splayed legs and six inward-facing chairs', () => {
+test('the custom MADOX-style table seats six around a 135 × 78 cm closed walnut top', () => {
   const get = id => interior.group.getObjectByName(id);
   const top = get('dining-table-solid-top'), table = bounds(top), center = table.getCenter(new THREE.Vector3());
-  close(table.max.x-table.min.x, .75, 'Catalogue width');
-  close(table.max.y-table.min.y, 1.20, 'Closed length');
+  close(table.max.x-table.min.x, .78, 'Custom width');
+  close(table.max.y-table.min.y, 1.35, 'Closed length');
   close(table.max.z, .75, 'Finished height');
   close(table.max.z-table.min.z, .020, 'Veneered top thickness');
   assert.match(top.material.name, /MADOX.*walnut/);
@@ -81,8 +81,8 @@ test('closed MADOX has a thin walnut top, four 64 cm splayed legs and six inward
   for (const leg of legs) stance.union(bounds(leg));
   close(stance.min.z, 0, 'Feet meet floor');
   close(stance.max.z, .64, 'Exposed leg height');
-  close(stance.max.x-stance.min.x, .72, 'Leg stance across table');
-  close(stance.max.y-stance.min.y, 1.09, 'Leg stance along table');
+  close(stance.max.x-stance.min.x, .75, 'Leg stance across table');
+  close(stance.max.y-stance.min.y, 1.24, 'Leg stance along table');
   close(partCenter('dining-table','butterfly-joint').y,center.y,'Joint centered across short axis');
   const bowl=bounds(get('dining-table-pottery-bowl'));
   close(bowl.min.z,table.max.z,'Pottery rests on top',.001);
@@ -105,12 +105,19 @@ test('closed MADOX has a thin walnut top, four 64 cm splayed legs and six inward
     assert(seat.max.z>.45 && stance.max.z-seat.max.z>.15,item.id+' has thigh clearance below the apron');
     const sideOffset=Math.abs(seat.getCenter(new THREE.Vector3())[cross]-center[cross]);
     if(axis==='y') close(sideOffset,0,'End chair centered');
-    else close(sideOffset,.231,'Side pair distributed symmetrically');
+    else close(sideOffset,.275,'Side pair distributed symmetrically');
     assert.equal(parts(item.id).filter(part=>part.name.includes('-tapered-leg-')).length,4);
   }
   assert(!data.furniture.some(item => item.room === '0.4' && item.type === 'stool'));
   assert(!interior.group.children.some(object => object.name.startsWith('island-stool-')));
   assert(!interior.navigation.obstacles.some(obstacle => obstacle.id.includes('island-stool-')));
+});
+
+test('an 80 cm walking route circles the dining table with all six chairs tucked in', () => {
+  const walk = createWalkCollision(interior.navigation.obstacles.filter(o => o.minZ < 1.85 && o.maxZ > .04), .40);
+  const route = [[4.72,12.39], [7.42,12.39], [7.42,15.95], [4.72,15.95], [4.72,12.39]]
+    .map(point => interior.localToWorld(point).slice(0,2));
+  for (let i = 1; i < route.length; i++) assert(!walk.pathBlocked(route[i-1], route[i]));
 });
 
 test('source wall storage contacts are preserved and cabinet handles face into rooms', () => {
