@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
   "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg data-woodland-sha256="9eea91ae29948280bb7344cc8df117a2aa5ccfd57a684fa0437bede2df0bc7fa" xmlns:xlink="http://www.w3.org/1999/xlink" width="979.2pt" height="662.4pt" viewBox="0 0 979.2 662.4" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<svg data-woodland-sha256="95f41c509e0dc476650c1d1b5e5f3f53866e4165fa738abbb884b6975b7c147e" xmlns:xlink="http://www.w3.org/1999/xlink" width="979.2pt" height="662.4pt" viewBox="0 0 979.2 662.4" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
@@ -146,44 +146,27 @@ z
 " clip-path="url(#pcd110ae4e0)" style="fill: #d7dbb3; stroke: #809561; stroke-width: 1.1; stroke-linejoin: miter"/>
    </g>
    <g id="nasadzenia-190-1">
-    <path d="M 341.576357 256.739399
-L 341.398631 256.346327
-L 341.124139 256.013541
-L 260.149974 180.795213
-L 260.055176 180.707153
-L 260.144301 180.613356
-L 270.668893 169.537071
-L 273.484028 166.574369
-L 273.77355 166.153693
-L 273.918906 165.664139
-L 273.905868 165.153629
-L 273.735711 164.672134
-L 273.425092 164.266786
-L 268.314707 159.410941
-L 267.898847 159.12373
-L 267.415064 158.977499
-L 266.981605 158.985022
-L 266.980474 158.975919
-L 266.940711 158.980864
-L 266.901238 158.987753
-L 266.86128 158.99074
-L 266.370715 159.027415
-L 266.330757 159.030403
-L 266.290699 159.029459
-L 265.798901 159.017874
-L 265.758843 159.01693
-L 265.71907 159.012065
-L 265.565985 158.993337
-L 265.230776 158.95233
-L 265.191003 158.947465
-L 265.151899 158.938724
-L 264.938071 158.89093
-L 264.671811 158.831417
-L 264.632707 158.822676
-L 264.608634 158.81475
-L 264.030571 158.763165
-L 263.467498 158.919589
-L 262.995615 159.26433
+    <path d="M 341.524643 256.567424
+L 341.346918 256.174351
+L 341.072426 255.841565
+L 260.254183 180.768076
+L 260.159384 180.680016
+L 260.24851 180.586219
+L 270.610921 169.680616
+L 292.363347 146.787943
+L 292.654455 146.363938
+L 292.799176 145.870398
+L 292.78314 145.356328
+L 292.607939 144.872769
+L 292.290968 144.467732
+L 288.953535 141.367532
+L 285.380702 138.048664
+L 284.960127 137.76547
+L 284.47294 137.625
+L 283.966153 137.640809
+L 283.488668 137.811372
+L 283.086561 138.120229
+L 255.664014 166.980249
 L 237.258291 186.350787
 L 236.967183 186.774793
 L 236.822462 187.268332
@@ -242,27 +225,28 @@ L 342.006123 258.105483
 L 341.94855 257.952856
 L 341.943609 257.939759
 L 341.939121 257.9265
-L 341.904503 257.824235
 L 341.891686 257.786372
 L 341.887198 257.773113
 L 341.883167 257.759708
-L 341.576357 256.739399
+L 341.699034 257.147369
+L 341.524643 256.567424
 " clip-path="url(#pcd110ae4e0)" style="fill: #a0bd88; stroke: #507148; stroke-width: 0.55; stroke-linejoin: miter"/>
    </g>
    <g id="nasadzenia-190-2">
-    <path d="M 306.134908 131.759395
-L 306.616403 131.589239
-L 307.021751 131.27862
-L 322.103966 115.405805
-L 322.177665 115.328242
-L 322.284624 115.325519
-L 336.477727 114.964167
-L 336.636104 114.960135
-L 336.752173 115.067966
-L 406.959245 180.291514
-L 407.363252 180.56689
-L 407.830691 180.710258
-L 408.863618 180.863478
+    <path d="M 319.751005 105.642112
+L 319.790602 106.121776
+L 319.96837 106.569038
+L 320.268852 106.945011
+L 328.670148 114.749124
+L 329.203659 115.079948
+L 329.822573 115.184947
+L 336.435537 115.016583
+L 336.593914 115.01255
+L 336.709983 115.120381
+L 406.841898 180.274107
+L 407.245905 180.549483
+L 407.713344 180.692851
+L 408.854308 180.862097
 L 408.954278 180.876927
 L 408.993914 180.882806
 L 409.032782 180.892542
@@ -347,23 +331,12 @@ L 402.292282 155.130219
 L 347.174477 103.924853
 L 346.640943 103.593985
 L 346.021989 103.488971
-L 342.929751 103.567698
-L 315.924384 104.255246
-L 315.503439 104.32161
-L 315.114019 104.494671
-L 314.782667 104.762634
-L 302.444614 117.74744
-L 297.859588 122.572809
-L 297.570066 122.993485
-L 297.42471 123.483039
-L 297.437749 123.993549
-L 297.607906 124.475044
-L 297.918525 124.880392
-L 300.541746 127.372955
-L 304.714168 131.337556
-L 305.134844 131.627078
-L 305.624398 131.772434
-L 306.134908 131.759395
+L 321.33819 104.117413
+L 320.864115 104.200465
+L 320.434871 104.418168
+L 320.08778 104.751594
+L 319.853021 105.171753
+L 319.751005 105.642112
 " clip-path="url(#pcd110ae4e0)" style="fill: #a0bd88; stroke: #507148; stroke-width: 0.55; stroke-linejoin: miter"/>
    </g>
    <g id="nasadzenia-190-3">
@@ -543,19 +516,23 @@ L 375.159805 233.075711
 L 374.991951 233.040179
 L 374.95275 233.031881
 L 374.914552 233.019781
-L 374.759095 232.970535
-L 374.306298 232.894822
-L 373.850328 232.948191
-L 373.427255 233.12642
-L 373.070546 233.415411
-L 357.327714 250.355066
-L 354.712727 253.168854
-L 354.438396 253.570493
-L 354.294592 254.035134
-L 354.294085 254.52152
-L 354.436918 254.986461
-L 354.71041 255.388671
-L 355.083257 255.686824
+L 374.795943 232.982208
+L 374.750989 232.967968
+L 374.729616 232.961197
+L 374.268432 232.863559
+L 373.791289 232.904615
+L 373.3466 233.082385
+L 372.972646 233.381565
+L 364.30794 242.704992
+L 354.628637 253.120149
+L 354.354306 253.521788
+L 354.210502 253.986429
+L 354.209995 254.472815
+L 354.352828 254.937755
+L 354.62632 255.339966
+L 355.006185 255.643732
+L 355.036908 255.661526
+L 355.072525 255.679884
 L 355.106171 255.701644
 " clip-path="url(#pcd110ae4e0)" style="fill: #a0bd88; stroke: #507148; stroke-width: 0.55; stroke-linejoin: miter"/>
    </g>
@@ -2330,38 +2307,61 @@ z
 " clip-path="url(#pcd110ae4e0)" style="fill: none; stroke: #43705a; stroke-width: 0.55; stroke-linejoin: miter"/>
    </g>
    <g id="patch_9">
-    <path d="M 311.630946 158.43534
-L 292.904658 178.594596
-L 266.181921 153.202876
-L 285.133588 133.257774
+    <path d="M 321.816812 147.326136
+L 319.701799 145.361463
+L 318.331231 146.836909
+L 293.844242 124.090514
+L 312.79833 104.142865
+L 337.057519 126.677653
+L 335.727827 128.109095
+L 337.842841 130.073768
+L 321.816812 147.326136
 z
 " clip-path="url(#pcd110ae4e0)" style="fill: #c5c9c1; stroke: #668173; stroke-width: 0.8; stroke-linejoin: miter"/>
    </g>
    <g id="patch_10">
-    <path d="M 321.146313 207.693088
-L 289.289615 178.10084
-L 292.047583 175.131828
-L 294.214159 177.144399
-L 310.240187 159.892031
-L 308.073611 157.87946
-L 310.60796 155.151178
-L 321.119867 164.915875
-L 333.195294 151.916416
-L 330.386769 149.307528
-L 346.189178 132.295891
-L 347.794049 133.786684
-L 346.452335 135.231068
-L 361.457883 149.169986
-L 359.668931 151.095832
-L 386.390041 175.917541
-L 367.382426 196.379651
-L 361.123427 190.565557
-L 344.352002 208.620361
-L 331.432787 196.619475
+    <path d="M 320.025703 166.093663
+L 324.151834 161.651793
+L 289.095922 129.087738
+L 284.919597 133.482982
+z
+" clip-path="url(#pcd110ae4e0)" style="fill: #d6c8b2; stroke: #668173; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 361.920431 220.604924
+L 352.772652 212.107391
+L 362.462808 201.675727
+L 356.203825 195.861648
+L 373.347963 177.40561
+L 388.754726 191.717223
+z
+" clip-path="url(#pcd110ae4e0)" style="fill: #d6c8b2; stroke: #668173; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_12">
+    <path d="M 370.342493 154.73233
+L 338.485795 125.140083
+L 335.727827 128.109095
+L 337.894404 130.121666
+L 321.868375 147.374034
+L 319.701799 145.361463
+L 317.16745 148.089744
+L 327.679358 157.85444
+L 315.603932 170.853899
+L 312.795407 168.245011
+L 296.992998 185.256648
+L 298.597869 186.747441
+L 299.939583 185.303057
+L 314.945131 199.241975
+L 316.734083 197.316129
+L 343.455193 222.137838
+L 362.462808 201.675727
+L 356.203809 195.861633
+L 372.975234 177.80683
+L 360.056019 165.805943
 z
 " clip-path="url(#pcd110ae4e0)" style="fill: #c2d2ce; stroke: #2c6156; stroke-linejoin: miter"/>
    </g>
-   <g id="patch_11">
+   <g id="patch_13">
     <path d="M 464.941794 242.609815
 L 444.782538 223.883527
 L 460.652016 206.799096
@@ -2369,7 +2369,7 @@ L 480.811596 225.525035
 z
 " clip-path="url(#pcd110ae4e0)" style="fill: #c5c9c1; stroke: #668173; stroke-width: 0.8; stroke-linejoin: miter"/>
    </g>
-   <g id="patch_12">
+   <g id="patch_14">
     <path d="M 425.563372 313.856289
 L 435.846961 302.785782
 L 451.222664 317.068544
@@ -2387,7 +2387,7 @@ L 404.102306 293.920727
 z
 " clip-path="url(#pcd110ae4e0)" style="fill: #d6c8b2; stroke: #668173; stroke-width: 0.8; stroke-linejoin: miter"/>
    </g>
-   <g id="patch_13">
+   <g id="patch_15">
     <path d="M 467.302819 244.803013
 L 442.428347 221.696678
 L 398.945272 268.507154
@@ -2401,7 +2401,7 @@ L 452.385267 260.862081
 z
 " clip-path="url(#pcd110ae4e0)" style="fill: #c2d2ce; stroke: #2c6156; stroke-linejoin: miter"/>
    </g>
-   <g id="patch_14">
+   <g id="patch_16">
     <path d="M 280.679021 257.850725
 L 266.275684 244.167555
 L 269.487696 240.78649
@@ -2413,7 +2413,7 @@ L 260.957269 278.610464
 z
 " clip-path="url(#pcd110ae4e0)" style="fill: #d6c8b2; stroke: #42695b; stroke-width: 0.8; stroke-linejoin: miter"/>
    </g>
-   <g id="patch_15">
+   <g id="patch_17">
     <path d="M 232.218216 251.308365
 L 227.078998 256.718069
 L 212.844714 243.195499
@@ -2421,7 +2421,7 @@ L 217.983933 237.785795
 z
 " clip-path="url(#pcd110ae4e0)" style="fill: #d6c8b2; stroke: #42695b; stroke-width: 0.8; stroke-linejoin: miter"/>
    </g>
-   <g id="patch_16">
+   <g id="patch_18">
     <path d="M 194.686704 228.454056
 L 207.534752 240.6597
 L 213.926655 233.931381
@@ -2431,7 +2431,7 @@ L 175.735835 248.402339
 z
 " clip-path="url(#pcd110ae4e0)" style="fill: #c5c9c1; stroke: #42695b; stroke-width: 0.8; stroke-linejoin: miter"/>
    </g>
-   <g id="patch_17">
+   <g id="patch_19">
     <path d="M 212.844714 243.195499
 L 227.078998 256.718069
 L 251.939968 230.548626
@@ -2443,7 +2443,7 @@ L 190.681833 266.524847
 z
 " clip-path="url(#pcd110ae4e0)" style="fill: #bcc9c2; stroke: #42695b; stroke-width: 0.8; stroke-linejoin: miter"/>
    </g>
-   <g id="patch_18">
+   <g id="patch_20">
     <path d="M 564.813981 371.093942
 L 533.568252 336.630369
 L 499.990753 369.368431
@@ -2473,6 +2473,21 @@ L 508.40899 282.98513
 L 439.682301 347.818884
 L 436.522664 350.794464
 " clip-path="url(#pcd110ae4e0)" style="fill: none; stroke-dasharray: 2.22,0.96; stroke-dashoffset: 0; stroke: #b57366; stroke-width: 0.6"/>
+   </g>
+   <g id="brama-wjazdowa-190">
+    <path d="M 293.844242 124.090514
+L 312.79833 104.142865
+" clip-path="url(#pcd110ae4e0)" style="fill: none; stroke: #a04e2e; stroke-width: 2"/>
+   </g>
+   <g id="brama-garazowa-190">
+    <path d="M 321.779302 147.366517
+L 337.839474 130.077392
+" clip-path="url(#pcd110ae4e0)" style="fill: none; stroke: #a04e2e; stroke-width: 2"/>
+   </g>
+   <g id="furtka-wejsciowa-190">
+    <path d="M 284.919597 133.482982
+L 289.095922 129.087738
+" clip-path="url(#pcd110ae4e0)" style="fill: none; stroke: #a04e2e; stroke-width: 2"/>
    </g>
    <g id="line2d_3">
     <path d="M 163.469593 261.314173
@@ -2508,7 +2523,7 @@ L 266.067508 564.257834
 " clip-path="url(#pcd110ae4e0)" style="fill: none; stroke: #274a3d; stroke-width: 3; stroke-linecap: square"/>
    </g>
    <g id="text_1">
-    <g id="patch_19">
+    <g id="patch_21">
      <path d="M 322.378105 250.406173
 L 367.921855 250.406173
 L 367.921855 236.406173
@@ -2519,7 +2534,7 @@ z
     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243c32" x="345.14998" y="246.00383" transform="rotate(-0 345.14998 246.00383)">775/190</text>
    </g>
    <g id="text_2">
-    <g id="patch_20">
+    <g id="patch_22">
      <path d="M 425.652264 250.406173
 L 471.196014 250.406173
 L 471.196014 236.406173
@@ -2530,7 +2545,7 @@ z
     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243c32" x="448.424139" y="246.00383" transform="rotate(-0 448.424139 246.00383)">775/191</text>
    </g>
    <g id="text_3">
-    <g id="patch_21">
+    <g id="patch_23">
      <path d="M 250.85001 316.838323
 L 296.39376 316.838323
 L 296.39376 302.838323
@@ -2541,7 +2556,7 @@ z
     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243c32" x="273.621885" y="312.435979" transform="rotate(-0 273.621885 312.435979)">775/193</text>
    </g>
    <g id="text_4">
-    <g id="patch_22">
+    <g id="patch_24">
      <path d="M 392.045912 437.017789
 L 437.589662 437.017789
 L 437.589662 423.017789
@@ -2552,28 +2567,28 @@ z
     <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243c32" x="414.817787" y="432.615446" transform="rotate(-0 414.817787 432.615446)">775/192</text>
    </g>
    <g id="text_5">
-    <g id="patch_23">
-     <path d="M 303.945833 181.095374
-L 374.724583 181.095374
-L 374.724583 169.094749
-L 303.945833 169.094749
+    <g id="patch_25">
+     <path d="M 305.697245 181.271481
+L 372.645995 181.271481
+L 372.645995 169.270856
+L 305.697245 169.270856
 z
 " style="fill: #fffef7; opacity: 0.92"/>
     </g>
-    <text style="font-size: 8px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243c32" x="339.335208" y="177.173499" transform="rotate(-0 339.335208 177.173499)">/190 · odbicie v2</text>
+    <text style="font-size: 8px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243c32" x="339.17162" y="177.349606" transform="rotate(-0 339.17162 177.349606)">/190 · Floryda 6</text>
    </g>
    <g id="text_6">
-    <g id="patch_24">
-     <path d="M 403.346169 279.203584
-L 474.124919 279.203584
-L 474.124919 267.202959
-L 403.346169 267.202959
+    <g id="patch_26">
+     <path d="M 411.401794 279.203584
+L 466.069294 279.203584
+L 466.069294 267.202959
+L 411.401794 267.202959
 z
 " style="fill: #fffef7; opacity: 0.92"/>
     </g>
-    <text style="font-size: 8px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243c32" x="438.735544" y="275.281709" transform="rotate(-0 438.735544 275.281709)">/191 · odbicie v2</text>
+    <text style="font-size: 8px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243c32" x="438.735544" y="275.281709" transform="rotate(-0 438.735544 275.281709)">/191 · Felicje</text>
    </g>
-   <g id="patch_25">
+   <g id="patch_27">
     <path d="M 452.595835 318.524167
 Q 472.982003 340.13442 493.368171 361.744673
 " style="fill: none; stroke: #386f7b; stroke-width: 0.8; stroke-linecap: round"/>
@@ -2589,7 +2604,7 @@ L 500.642252 354.882622
 " style="fill: none; stroke: #386f7b; stroke-width: 0.8; stroke-linecap: round"/>
    </g>
    <g id="text_7">
-    <g id="patch_26">
+    <g id="patch_28">
      <path d="M 450.86365 350.326809
 L 495.098181 350.326809
 L 495.098181 339.266809
@@ -2600,7 +2615,7 @@ z
     <text style="font-size: 7px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243c32" x="472.980915" y="346.615168" transform="rotate(-0 472.980915 346.615168)">SE 13,60 m</text>
    </g>
    <g id="text_8">
-    <g id="patch_27">
+    <g id="patch_29">
      <path d="M 525.977853 376.557256
 L 541.303478 376.557256
 L 541.303478 365.497256
@@ -2610,7 +2625,7 @@ z
     </g>
     <text style="font-size: 7px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #243c32" x="533.640666" y="372.845615" transform="rotate(-0 533.640666 372.845615)">/41</text>
    </g>
-   <g id="patch_28">
+   <g id="patch_30">
     <path d="M 144.815427 163.85011
 Q 144.815427 140.714562 144.815427 119.144261
 " style="fill: none; stroke: #274a3d; stroke-width: 1.4; stroke-linecap: round"/>
@@ -2624,7 +2639,7 @@ z
     <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #274a3d" x="144.815427" y="176.204539" transform="rotate(-0 144.815427 176.204539)">N</text>
    </g>
    <g id="text_10">
-    <g id="patch_29">
+    <g id="patch_31">
      <path d="M 207.174592 579.584917
 L 231.689592 579.584917
 L 231.689592 567.584917
@@ -2636,7 +2651,7 @@ z
    </g>
   </g>
   <g id="axes_2">
-   <g id="patch_30">
+   <g id="patch_32">
     <path d="M 753.042612 141.46722
 L 764.729429 152.331781
 L 777.770946 164.456684
@@ -2690,7 +2705,7 @@ L 757.153891 136.102337
 z
 " clip-path="url(#p46b380ff3a)" style="fill: #cbd2c9; stroke: #7c8c80; stroke-width: 0.5; stroke-linejoin: miter"/>
    </g>
-   <g id="patch_31">
+   <g id="patch_33">
     <path d="M 807.823723 158.606536
 L 824.511473 174.108081
 L 838.341547 159.226598
@@ -2699,7 +2714,7 @@ L 819.52402 146.292918
 z
 " clip-path="url(#p46b380ff3a)" style="fill: #f0f1df; stroke: #a5ad9c; stroke-width: 0.4; stroke-linejoin: miter"/>
    </g>
-   <g id="patch_32">
+   <g id="patch_34">
     <path d="M 824.511473 174.108081
 L 829.161937 178.428294
 L 840.397187 188.868248
@@ -2709,7 +2724,7 @@ L 838.341547 159.226598
 z
 " clip-path="url(#p46b380ff3a)" style="fill: #f0f1df; stroke: #a5ad9c; stroke-width: 0.4; stroke-linejoin: miter"/>
    </g>
-   <g id="patch_33">
+   <g id="patch_35">
     <path d="M 797.70728 169.255424
 L 797.909474 173.932846
 L 816.902237 191.624827
@@ -2719,7 +2734,7 @@ L 807.823723 158.606536
 z
 " clip-path="url(#p46b380ff3a)" style="fill: #f0f1df; stroke: #a5ad9c; stroke-width: 0.4; stroke-linejoin: miter"/>
    </g>
-   <g id="patch_34">
+   <g id="patch_36">
     <path d="M 850.951717 195.648488
 L 863.669723 183.631421
 L 855.211271 174.896638
@@ -2727,7 +2742,7 @@ L 842.479785 186.906965
 z
 " clip-path="url(#p46b380ff3a)" style="fill: #f0f1df; stroke: #a5ad9c; stroke-width: 0.4; stroke-linejoin: miter"/>
    </g>
-   <g id="patch_35">
+   <g id="patch_37">
     <path d="M 816.902237 191.624827
 L 836.279168 209.667277
 L 850.951717 195.648488
@@ -2742,7 +2757,7 @@ z
     <text style="font-size: 9px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(807.831703 73.488)">osobna skala</text>
    </g>
   </g>
-  <g id="patch_36">
+  <g id="patch_38">
    <path d="M 714.816 269.5968
 L 727.5456 269.5968
 L 727.5456 261.648
@@ -2815,19 +2830,20 @@ z
    <text style="font-size: 8.5px; font-family: 'DejaVu Sans'; fill: #a04e2e" transform="translate(714.816 389.789769)">Brama wjazdowa i garażowa w jednej osi.</text>
   </g>
   <g id="text_33">
-   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 414.6811)">/190 · Odbicie modelu v2, skrajne położenie północne.</text>
-   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 423.5136)"/>
-   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 437.155475)">/191 · Odbicie modelu v2. Przesunięcie środka</text>
-   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 448.2811)">o 3,32 m na zachód i 3,08 m na północ.</text>
-   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 459.3211)">Od drogi 5 m, od granicy NW 4 m,</text>
-   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 470.5211)">od granicy SE ok. 13,60 m (min. 10,50 m).</text>
-   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 479.5136)"/>
-   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 492.9211)">/192 · Działka pusta.</text>
-   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 501.9136)"/>
-   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 515.4811)">/41 · Obrys z EGiB ma 104,33 m² i 8 narożników.</text>
-   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 526.69485)">Boki w kolejności źródłowej (m)</text>
-   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 538.01735)">9,98 / 10,06 / 10,07 / 3,37 / 2,00 / 2,72 / 1,99 / 4,03.</text>
-   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 549.09485)">Współrzędne w rejestrze. Wysokość przyjęta w modelu.</text>
+   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 414.5211)">/190 · Lustro lewo–prawo. Rezerwa dochodzi do linii</text>
+   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 425.7211)">5 m od obu krawędzi drogi. Zapas ku NE: 0,00 m.</text>
+   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 434.7136)"/>
+   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 448.355475)">/191 · Odbicie modelu v2. Przesunięcie środka</text>
+   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 459.4811)">o 3,32 m na zachód i 3,08 m na północ.</text>
+   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 470.5211)">Od drogi 5 m, od granicy NW 4 m,</text>
+   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 481.7211)">od granicy SE ok. 13,60 m (min. 10,50 m).</text>
+   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 490.7136)"/>
+   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 504.1211)">/192 · Działka pusta.</text>
+   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 513.1136)"/>
+   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 526.6811)">/41 · Obrys z EGiB ma 104,33 m² i 8 narożników.</text>
+   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 537.89485)">Boki w kolejności źródłowej (m)</text>
+   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 549.21735)">9,98 / 10,06 / 10,07 / 3,37 / 2,00 / 2,72 / 1,99 / 4,03.</text>
+   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #42695b" transform="translate(714.816 560.29485)">Współrzędne w rejestrze. Wysokość przyjęta w modelu.</text>
   </g>
   <g id="text_34">
    <text style="font-size: 18px; font-family: 'DejaVu Serif'; text-anchor: start; fill: #243c32" x="39.168" y="33.12" transform="rotate(-0 39.168 33.12)">Rzut kontrolny · domy i kontekst działek</text>
@@ -2835,7 +2851,7 @@ z
   <g id="text_35">
    <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #617269" transform="translate(39.168 602.811625)">Wspólny układ metryczny EPSG:2177 · północ siatki u góry · źródła: GUGiK ULDK i EGiB Starosty Kartuskiego</text>
    <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #617269" transform="translate(39.168 612.733812)">Główny kadr pokazuje fragment drogi; pełny urzędowy obrys /133 w ramce i w modelu 3D. Linia przerywana: przyjęte odsunięcia.</text>
-   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #617269" transform="translate(39.168 622.656)">Góra działek w schemacie nie jest tożsama z północą geograficzną. Koncepcja usytuowania, nie projekt wykonawczy. Codex · 18.11.2026.</text>
+   <text style="font-size: 8px; font-family: 'DejaVu Sans'; fill: #617269" transform="translate(39.168 622.656)">Góra działek w schemacie nie jest tożsama z północą geograficzną. Koncepcja usytuowania, nie projekt wykonawczy. Codex · 19.11.2026.</text>
   </g>
  </g>
  <defs>

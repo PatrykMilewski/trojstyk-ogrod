@@ -733,7 +733,7 @@ test('upper rooms have layered beds, usable workstations and fitted dressing-roo
     for (const detail of ['rail-0','rail-1','drawer-2','shelf-1.12']) assert(get(id+'-'+detail));
   }
   for (const id of ['upper-bath','private-sink-one','private-sink-two']) {
-    for (const detail of ['bowl','drain','mirror','tap','vanity']) assert(get(id+'-'+detail));
+    for (const detail of ['bowl','drain','tap','vanity']) assert(get(id+'-'+detail));
     assert(get(id+'-bowl').geometry.type==='LatheGeometry');
   }
   assert(get('gallery-chair-scatter') && get('gallery-reading-lamp-diffuser'));
@@ -1267,18 +1267,22 @@ test('the 70 cm single bowl is let into the worktop below the full-width mosaic'
 
 test('the matte oak scan follows the 435 × 105 cm island, its folded ends and the back counter', async () => {
   const get=id=>interior.group.getObjectByName(id);
-  const skin=get('kitchen-island-palet-cladding'),top=get('kitchen-island-top'),hob=get('hob-glass');
+  const skin=get('kitchen-island-figured-veneer-salon'),top=get('kitchen-island-top'),hob=get('hob-glass');
   const texture=skin.material.map,{position,normal,uv}=skin.geometry.attributes;
-  assert.equal(skin.material.name,'Palet orange and indigo glaze');
-  assert(skin.material.clearcoat>0 && skin.material.roughness<.45);
-  assert.equal(get('kitchen-island-tile-backing-salon').material.color.getHex(),0xeee2cd);
-  const pixels=texture.image.data;
-  let orange=0,indigo=0;
-  for(let i=0;i<pixels.length;i+=4){
-    if(pixels[i]>pixels[i+2]*2.2)orange++;
-    if(pixels[i+2]>pixels[i]*1.08)indigo++;
+  assert(skin.material.roughness>.5 && skin.material.metalness===0);
+  assert(!get('kitchen-island-palet-cladding') && !get('kitchen-island-tile-backing-salon'));
+  const {data:pixels,width,height}=texture.image;
+  let slate=0,ash=0,across=0,along=0;
+  for(let y=0;y<height-1;y+=3)for(let x=0;x<width-1;x+=3){
+    const i=4*(y*width+x),red=pixels[i],blue=pixels[i+2];
+    if(blue-red>28 && red<100)slate++;
+    if(red>175 && red-blue>4)ash++;
+    across+=Math.abs(red-pixels[i+4]);
+    along+=Math.abs(red-pixels[i+4*width]);
   }
-  assert(orange>pixels.length/4*.55 && indigo>pixels.length/4*.06,'Both photographed glazes survive atlas sampling');
+  const samples=Math.ceil((height-1)/3)*Math.ceil((width-1)/3);
+  assert(slate>samples*.20 && ash>samples*.20,'Both dyed slate and pale ash grain are visible');
+  assert(across>2*along,'The grain runs predominantly up the panels');
   const surface=bounds(skin),slab=bounds(top);
   close(slab.max.x-slab.min.x,4.35,'Island length');
   close(slab.max.y-slab.min.y,1.05,'Island depth');
@@ -1311,8 +1315,8 @@ test('the matte oak scan follows the 435 × 105 cm island, its folded ends and t
     close(topUv.getX(i),topPoints.getX(i)/1.88,'Oak grain runs along the worktop');
     close(topUv.getY(i),topPoints.getY(i)/1.08,'Scan retains the physical aspect ratio');
   }
-  close(surface.max.z,slab.min.z,'Tile meets the underside of the slab');
-  close(surface.min.y,surface.max.y,'Palet only on the long salon plane');
+  close(surface.max.z,slab.min.z,'Veneer meets the underside of the slab');
+  close(surface.min.y,surface.max.y,'Veneer only on the long salon plane');
   close(slab.max.y-surface.max.y,.018,'Worktop overhang at salon face');
   for(const [end,outer,inner] of [['left','min','max'],['right','max','min']]){
     const panel=get('kitchen-island-waterfall-'+end),b=bounds(panel);
@@ -1320,7 +1324,7 @@ test('the matte oak scan follows the 435 × 105 cm island, its folded ends and t
     close(b.min.z,0,'End reaches floor');close(b.max.z,slab.min.z,'End meets top');
     for(const edge of ['min','max'])close(b[edge].y,slab[edge].y,'End closes the entire depth');
     close(b[outer].x,slab[outer].x,'Flush outer face');
-    close(b[inner].x,surface[outer].x,'Tile terminates against the panel');
+    close(b[inner].x,surface[outer].x,'Veneer terminates against the waterfall');
     const seamU=object=>{
       const {position,normal,uv}=object.geometry.attributes;
       for(let i=0;i<position.count;i++)if(normal.getX(i)*(end==='left'?-1:1)>.99 &&
@@ -1329,22 +1333,14 @@ test('the matte oak scan follows the 435 × 105 cm island, its folded ends and t
     };
     close(seamU(top),seamU(panel),'Decor flows over each bend');
   }
-  const faces=new Map(),variants=new Set(),xyz=i=>new THREE.Vector3().fromBufferAttribute(position,i);
+  assert.equal(position.count,24,'Six full-height panels');
   for(let i=0;i<position.count;i+=4){
-    const l=xyz(i),t=xyz(i+1),r=xyz(i+2),n=new THREE.Vector3().fromBufferAttribute(normal,i);
-    const width=t.distanceTo(r),height=t.z-l.z;
-    assert(width<=.14901 && height<=.14901 && width>0 && height>0);
-    if(Math.abs(width-.149)>.00001 || Math.abs(height-.149)>.00001)continue;
-    variants.add(Math.floor(uv.getX(i)*4)+':'+Math.floor(uv.getY(i)*6));
-    const face=[n.x,n.y].map(Math.round).join(',');
-    if(!faces.has(face))faces.set(face,[]);
-    if(Math.abs(t.z-surface.max.z)<.00001)faces.get(face).push(Math.abs(n.y)>.5?l.x:l.y);
-  }
-  assert.equal(variants.size,24,'All reference tile faces are used');
-  assert.deepEqual([...faces.keys()],['0,1']);
-  for(const edges of faces.values()){
-    edges.sort((a,b)=>a-b);assert(edges.length>=4);
-    for(let i=1;i<edges.length;i++)close(edges[i]-edges[i-1]-.149,.002,'Two mm of grout between full tiles');
+    close(position.getZ(i),.018,'Veneer clears floor');
+    close(position.getZ(i+1),slab.min.z,'Full height sheet');
+    close(normal.getY(i),1,'Facing the living room');
+    close(uv.getX(i),uv.getX(i+1),'Vertical veneer axis');
+    close(uv.getY(i),0,'Bottom of veneer');close(uv.getY(i+1),1,'Top of veneer');
+    if(i)close(position.getX(i)-position.getX(i-2),.002,'Two millimetre vertical joint');
   }
 });
 
@@ -1611,6 +1607,26 @@ test('powder blue modules and garden chaise carry two accent pillows above a car
   assert(counts.carmine>950 && counts.black>350 && counts.cream>450 && counts.gold>200,JSON.stringify(counts));
   const fringe=bounds(get('living-rug-knotted-fringe')),field=bounds(rug);
   assert(fringe.min.y<field.min.y && fringe.max.y>field.max.y,'Fringe extends beyond both short ends');
+});
+
+test('the private double vanity has two open inset basins and one orange segmented mirror', () => {
+  const get=id=>interior.group.getObjectByName(id),mirror=bounds(get('bath-private-vanity-mirror'));
+  assert(get('upper-bath-mirror'));
+  for(const id of ['private-sink-one','private-sink-two']){
+    const sink=bounds(get(id+'-bowl')),counter=get(id+'-counter'),center=partCenter(id,'bowl');
+    assert(sink.min.z<bounds(counter).max.z-.10);
+    assert(Math.abs(sink.max.z-bounds(counter).max.z)<.008);
+    assert(center.y>mirror.min.y && center.y<mirror.max.y);
+    const ray=new THREE.Raycaster(new THREE.Vector3(...interior.localToWorld([center.x,center.y,4.24])),new THREE.Vector3(0,0,-1));
+    interior.group.updateMatrixWorld(true);
+    assert(!ray.intersectObject(counter).length,'Open stone cutout at basin centre');
+    assert(ray.intersectObject(get(id+'-drain')).length);
+  }
+  const frame=interior.group.children.filter(o=>o.name.startsWith('bath-private-tangerine-frame-'));
+  assert.equal(frame.length,4);assert(frame.every(o=>o.material.clearcoat>.7));
+  assert.equal(get('bath-private-paint-double-vanity').material.name,'Sepia tigers and tropical fronds on ivory');
+  assert(get('private-shower-screen').material.transparent);
+  assert.equal(get('private-shower-screen').material.name,'Pressed sage glass with square relief');
 });
 
 test('the private bath ledge blocks walking and vessels sit on the exposed family bath shelf', () => {

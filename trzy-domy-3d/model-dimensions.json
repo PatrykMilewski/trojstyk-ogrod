@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-19.18",
+  "modelVersion": "2026-11-19.19",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -15,7 +15,7 @@
     "Jeżeli opis nie podaje inaczej, wysokość wyposażenia jest liczona od podstawy obiektu (baseElevationM), a nie od globalnego poziomu Z=0.",
     "Pomiary obwiedni zapisano do 0,000001 m wyłącznie dla kontroli numerycznej modelu, nie jako dokładność projektu wykonawczego.",
     "Nie wolno automatycznie nadpisywać rejestru podczas budowania. Zmiana skali, geometrii lub ustawienia wymaga porównania, ponownego pomiaru i jawnej zmiany wersji.",
-    "Kierunek góra działki to +Y schematu; północ mapy to +Y EPSG:2177. Przesunięcie190 to w osiach mapy około2.961m na wschód i0.075m na północ.",
+    "Na /190 odbicie lewo–prawo zachowuje środek rezerwy katalogowej 15,50 × 17,66 m. Rezerwa jest już 5 m od obu przyległych krawędzi drogi. Maksymalne przesunięcie na azymut siatkowy 45° wynosi 0 m.",
     "Na każdym podjeździe jest dokładnie jeden samochód; dwa samochody na drodze /133.",
     "Elewacja /41 skierowana ku /191: jedno lewe górne okno, 1,6 × 1,3 m, parapet 3,15 m.",
     "Symulacja słońca: czas Europe/Warsaw, współrzędne użytkownika i poprawka północy siatkowej EPSG:2177. Teren modelu pozostaje płaski; przeszkody spoza modelu i refrakcja pominięte.",
@@ -78,7 +78,7 @@
     },
     {
       "parcel": "190",
-      "name": "Willa Floryda 6 — odbicie modelu 2026-11-16.2",
+      "name": "Willa Floryda 6 — lustro lewo–prawo względem wersji 2026-11-19.18",
       "source": "catalogue-190",
       "catalogueEnvelopeM": {
         "width": 15.5,
@@ -1313,8 +1313,8 @@
         ]
       },
       "groundPosition": [
-        4.5,
-        34.3,
+        9.065791189981558,
+        32.39424346620509,
         0.06
       ],
       "rotationRad": -2.4
@@ -1459,48 +1459,34 @@
           1
         ],
         [
-          -1,
+          1,
           0
         ]
       ],
       "translation": [
         -26.41538143153089,
-        25.143405154666652
+        9.643405154666652
       ],
-      "variant": "odbicie względem modelu 2026-11-16.2",
-      "northernPlacement": {
-        "objective": "Within 0.01m of global maximum common-plot +Y, maximize map-grid north (NW on plot).",
-        "northVectorCommon": [
-          -0.6805872861464128,
-          0.7326670089036768
+      "variant": "lustro lewo–prawo względem wersji 2026-11-19.18",
+      "northeastPlacement": {
+        "directionEastNorth": [
+          0.7071067811865475,
+          0.7071067811865475
         ],
-        "uppermostFeasibleYM": 25.143405154666652,
-        "previousTranslation": [
-          -26.415381431530896,
-          9.643405154666652
+        "directionCommon": [
+          0.03682592512397655,
+          0.9993216955709322
         ],
-        "movementCommonM": [
-          7.105427357601002e-15,
-          15.5
-        ],
-        "movementEastNorthM": [
-          10.549102935269406,
-          11.356338638006985
-        ],
-        "bodyCentroidMovementCommonM": [
-          7.105427357601002e-15,
+        "objective": "Maximize translation on the 45-degree grid-northeast ray from the centre-preserving mirror of the published reservation.",
+        "maximumTranslationM": 0,
+        "reserveCenterMovementEastNorthM": [
+          0,
           0
         ],
-        "bodyCentroidMovementEastNorthM": [
-          5.205912209075881e-15,
-          -4.835863522220143e-15
+        "exteriorWallCentroidMovementEastNorthM": [
+          -0.03507819937240282,
+          -0.03776244419350408
         ],
-        "bodyCentroidMovementLengthM": 7.105427357601002e-15,
-        "relativeReflectionDeterminant": -1,
-        "matrixDeterminant": 1,
-        "upperBoundaryOptimalityGapM": 0,
-        "northTieBreakOptimalityGapM": 0,
-        "globalMapNorthOptimalityGapM": 0,
         "activeSetbacks": [
           {
             "edge": 2,
@@ -1515,57 +1501,68 @@
             "actualM": 5
           }
         ],
-        "feasibleTranslations": {
-          "type": "Polygon",
-          "coordinates": [
-            [
-              [
-                -28.533296597646547,
-                23.073153650113255
-              ],
-              [
-                -26.41538143153089,
-                25.143405154666652
-              ],
-              [
-                -21.65777356403785,
-                25.143151878950274
-              ],
-              [
-                -21.658341681241506,
-                22.682613125676664
-              ],
-              [
-                -23.098095228327665,
-                19.50000002159148
-              ],
-              [
-                -28.57367327247309,
-                19.50000002158362
-              ],
-              [
-                -28.533296597646547,
-                23.073153650113255
-              ]
-            ]
+        "reserveEdgeDistancesM": [
+          9.643405133079938,
+          8.757607799156208,
+          5,
+          5,
+          7.094387589455351
+        ],
+        "actualWallEdgeDistancesM": [
+          9.64340513310137,
+          11.481471833054188,
+          5.000443802201211,
+          5,
+          7.094387589455351
+        ],
+        "limitingEdgeNormalsEastNorth": [
+          [
+            0.6806262893972369,
+            0.7326307761631015
+          ],
+          [
+            -0.025451441360970606,
+            0.9996760595976322
           ]
-        },
-        "proof": "Full parcel half-plane intersection includes catalogue reservation setbacks and whole terrace/pergola containment; triangulated Minkowski obstacles remove shared-zone overlaps. Linear objectives attain maxima at resulting polygon vertices. Driveway and entry of selected maximizer pass containment and shared-zone checks, so these checks do not reduce this maximum.",
+        ],
+        "garageDoorWorld": [
+          [
+            12.008391105985776,
+            33.13858421353595
+          ],
+          [
+            15.452162773886627,
+            36.845879278588555
+          ]
+        ],
+        "streetGateWorld": [
+          [
+            6.01829541524674,
+            38.12964144073281
+          ],
+          [
+            10.082607359962928,
+            42.40700199526703
+          ]
+        ],
         "occupiedOutsideParcelM2": 0,
         "occupiedSharedOverlapM2": 0
       },
       "reflectionRelativeToModel": {
-        "baseline": "2026-11-16.2",
-        "baselineFile": "work/mirror-v3-before/placement-draft.json",
+        "baseline": "2026-11-19.18",
         "previousMatrix": [
           [
             0,
             1
           ],
           [
-            1,
+            -1,
             0
           ]
+        ],
+        "previousTranslation": [
+          -26.41538143153089,
+          25.143405154666652
         ],
         "relativeMatrix": [
           [
@@ -1745,11 +1742,11 @@
   "sharedAreaM2": 156.18903025919093,
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
-    "inputsSha256": "8b6d221b5cb50afe91603930a89f8a988566456df566fe9e2feda2edc8f2ca22",
-    "proceduralCodeSha256": "69e6fdebc6c17d20de8f41e46f082eec1cc7e31d6e2035b7fa5bdf9615ac44ac",
+    "inputsSha256": "ffff3a71a4e703d74ed4743e94c3381b1f7a958872a426d523b8ee370438c5c8",
+    "proceduralCodeSha256": "023ebb5ef33b0fab0cf7f6069117e4867fdd5efe5a6d8284fb6acd62d8f1cf95",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
-    "planSha256": "f6f27de0208ddacc1880061ce21577c8aa17d9cf9595e32efb76d2759fffda44",
-    "runtimeSha256": "7c9cb6ccd8df470aa897aafbfd8448b24fc1d7fd9eaf331d1190e45cdf1fe756"
+    "planSha256": "dedbf868ca446a18874c8f882848a59920e8d9ab12833f73284c22fd2a100119",
+    "runtimeSha256": "d1000cf033ebd5841202b680a4cfcfbed2d1c359febab0da0fca391f124efd07"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1797,7 +1794,8 @@
     "Dom /193: niska szafka pod schodami dopasowana szerokością do stacji robota, z dostępem do stacji i Apple TV.",
     "Dom /193: zlew centralnie nad jedną szafką, usunięte gniazdko przy zlewie, ceglasty narożnik przy wiatrołapie i żaluzja we wnęce okna kuchennego. Tryb Spacer: C przełącza kucanie, X przełącza czołganie.",
     "Dom /193: czarne żaluzje w kuchni, jedna wysuwana szuflada pod zlewem i obrazy na wybranych ścianach.",
-    "Dom /193: dwie rozsunięte zasłony na szynie umieszczonej we wnęce okna kuchennego."
+    "Dom /193: dwie rozsunięte zasłony na szynie umieszczonej we wnęce okna kuchennego.",
+    "Dom /193: fornir na wyspie i nowa aranżacja prywatnej łazienki na piętrze. Dom /190: odbicie lewo–prawo i dopasowanie podjazdu do garażu przy zachowaniu obu odstępów 5 m od drogi."
   ],
   "contextParcels": [
     {
@@ -2585,35 +2583,35 @@
       "id": "car-190-0",
       "kind": "suv",
       "position": [
-        6.736909321539328,
-        31.22346542910459,
+        11.839996056964715,
+        36.74814694432,
         0.055
       ],
-      "angleRad": -0.7598634395529511,
+      "angleRad": -0.7485639096176435,
       "location": "driveway-190",
       "footprint": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              4.325475227984849,
-              32.16983248920499
+              9.418022631603138,
+              37.667206097390306
             ],
             [
-              7.805139628316817,
-              28.863484706369327
+              12.934824274340786,
+              34.400387123887526
             ],
             [
-              9.148343415093807,
-              30.277098369004186
+              14.261969482326291,
+              35.82908779124969
             ],
             [
-              5.66867901476184,
-              33.58344615183985
+              10.745167839588644,
+              39.09590676475247
             ],
             [
-              4.325475227984849,
-              32.16983248920499
+              9.418022631603138,
+              37.667206097390306
             ]
           ]
         ]
@@ -2699,8 +2697,8 @@
       "id": "car-road-190",
       "kind": "sedan",
       "position": [
-        4.20733127247993,
-        39.998305280093874,
+        -3.6046687276709406,
+        31.776805280295044,
         0.01
       ],
       "angleRad": -2.3306597663478477,
@@ -2710,24 +2708,24 @@
         "coordinates": [
           [
             [
-              5.121062591274715,
-              42.30280524257023
+              -2.690937408876156,
+              34.0813052427714
             ],
             [
-              1.9524792993905322,
-              38.968126858918765
+              -5.8595207007603385,
+              30.74662685911993
             ],
             [
-              3.2935999536851455,
-              37.69380531761752
+              -4.518400046465725,
+              29.472305317818684
             ],
             [
-              6.462183245569328,
-              41.02848370126898
+              -1.3498167545815427,
+              32.80698370147015
             ],
             [
-              5.121062591274715,
-              42.30280524257023
+              -2.690937408876156,
+              34.0813052427714
             ]
           ]
         ]
@@ -2799,11 +2797,11 @@
       "measuredWidth": 1.9500000476837158,
       "measuredHeight": 1.7000000619888307,
       "groundPosition": [
-        6.736909321539328,
-        31.22346542910459,
+        11.839996056964715,
+        36.74814694432,
         0.055
       ],
-      "angleRad": -0.7598634395529511,
+      "angleRad": -0.7485639096176435,
       "units": "metres",
       "upAxis": "z",
       "lengthAxis": "x"
@@ -2904,8 +2902,8 @@
       "measuredWidth": 1.850000023841858,
       "measuredHeight": 1.480000011920929,
       "groundPosition": [
-        4.20733127247993,
-        39.998305280093874,
+        -3.6046687276709406,
+        31.776805280295044,
         0.01
       ],
       "angleRad": -2.3306597663478477,
@@ -3636,7 +3634,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "013be98b8f57b992a513cef48d2f850f8b007dbc6598851530a1cdb7558a8d9a",
+    "dataSha256": "f9c034af0f624589b4a41c39f3247fc00e8a9346945adfe0dfa0ece3064b4304",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,

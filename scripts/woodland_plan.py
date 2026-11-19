@@ -53,7 +53,7 @@ def figures(garden, site):
         return [a*x+b*y+t for (a, b), t in zip(meta["sharedRotation"], meta["sharedTranslation"])]
 
     return [Point(xy[:2]).buffer(1.15) for xy in [
-        (2, -7), (3.2, -6.5), (6, -6), (7, -6), (4.5, 34.3),
+        (2, -7), (3.2, -6.5), (6, -6), (7, -6), site['figurePlacements'].get('person-190-path', {}).get('position', (4.5, 34.3)),
         shared_xy(-7.2, 17.6), shared_xy(-7, 18.2), shared_xy(27, 13.6),
         site["figurePlacements"]["person-191-front"]["position"],
     ]]

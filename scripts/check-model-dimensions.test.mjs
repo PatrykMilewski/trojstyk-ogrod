@@ -43,7 +43,7 @@ test('rejects an unreviewed existing-building height assumption change', (t) => 
 });
 
 test('rejects restoring the previous unreflected house transform', (t) => {
-  const result = runCandidate(t, (html) => html.replace('"matrix": [[0.0, 1.0], [-1.0, 0.0]]', '"matrix": [[0.0, 1.0], [1.0, 0.0]]'));
+  const result = runCandidate(t, (html) => html.replace('"matrix": [[0.0, 1.0], [1.0, 0.0]]', '"matrix": [[0.0, 1.0], [-1.0, 0.0]]'));
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /Model data changed/);
 });

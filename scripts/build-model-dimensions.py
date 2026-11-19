@@ -144,7 +144,7 @@ if 'interior' in registry:
             ['Wolne stanowiska w garażu', str(bays['count']) + ' stanowiska po ' + dimensions([bays['widthM'], bays['lengthM']]) + ' m'],
             ['Drzwi przechodnie w spacerze', 'Szklane skrzydło wiatrołapu i ukryty front kuchenny']]))
 if 'florydaInterior' in registry:
-    content += section('Wnętrze Willa Floryda 6 /190', '<p>Ściany, otwory i wyposażenie odtworzono z rzutów MG Projekt. Wysokości pochodzą z przekroju; położenia ścian i mebli odczytane z rastra są przybliżone. Zachowano obecne odbicie i ustawienie domu.</p>' + table(['Element', 'Wartość'], [
+    content += section('Wnętrze Willa Floryda 6 /190', '<p>Ściany, otwory i wyposażenie odtworzono z rzutów MG Projekt. Wysokości pochodzą z przekroju; położenia ścian i mebli odczytane z rastra są przybliżone. Dom, wnętrze i przeszklenia odbito lewo–prawo względem wersji 2026-11-19.18. Środek rezerwy pozostał na miejscu.</p>' + table(['Element', 'Wartość'], [
         ['Podłoga piętra', '3,35 m'], ['Wysokość parteru / piętra', '3,00 / 2,70 m'],
         ['Schody', '12 + 6 podniesień; spocznik +2,23 m; stopnica 0,27 m'], ['Sterowanie', 'Widoki i sterowanie → Wnętrze /190']]) + '<p><a href="floryda-interior-data.json">Współrzędne, wymiary, meble i źródła /190</a></p>')
 if 'roofWindows' in registry:
@@ -158,6 +158,9 @@ content += section('Nasadzenia — wartości nominalne koncepcji', table(['Drzew
 content += section('Odsunięcia projektowanych domów /190, /191 i /193', table(['Granica', 'Odległość (m)'], [
     ['Droga', number(registry['clearances']['roadM'])],
     ['Pozostałe granice — przyjęte założenie', number(registry['clearances']['otherBoundariesAssumedM'])],
+    ['/190 od drogi po stronie północno-wschodniej — rezerwa', number(registry['placementPins']['190']['northeastPlacement']['activeSetbacks'][0]['actualM'])],
+    ['/190 od ukośnej krawędzi drogi — rezerwa', number(registry['placementPins']['190']['northeastPlacement']['activeSetbacks'][1]['actualM'])],
+    ['/190 — maksymalne dalsze przesunięcie środka ku NE', number(registry['placementPins']['190']['northeastPlacement']['maximumTranslationM'])],
     ['/191 od SE — wymagane minimum', number(registry['clearances']['parcel191SoutheastM'])],
     ['/191 od SE — rzeczywiste minimum w modelu', number(registry['clearances']['actualParcel191SoutheastM'])],
     ['/191 od NW — rzeczywiste odsunięcie w modelu', number(registry['clearances']['parcel191NorthwestM'])]]))

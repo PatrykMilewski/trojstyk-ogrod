@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {checkFlorydaSiting} from './check-floryda-siting.mjs';
 import {checkWoodyPlanting} from './check-woody-beds.mjs';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -110,6 +111,8 @@ function checkDimensions(model, registry) {
   assert.equal(model.codeHash, registry.integrity.proceduralCodeSha256, 'Procedural geometry changed: measure and review before updating the registry');
   const [source, garden, icon, neighbors] = model.data;
   checkDriveway193(source, garden, icon, neighbors, registry);
+  checkFlorydaSiting(neighbors, {rotation: garden.metadata.sharedRotation, translation: garden.metadata.sharedTranslation},
+    JSON.parse(readFileSync(resolve(root, 'src/geometry.json'), 'utf8')), registry);
   const woodyFile = readFileSync(resolve(root, 'trzy-domy-3d', registry.woodyPlanting.dataFile));
   const woodyData = JSON.parse(woodyFile);
   const planSvg = readFileSync(resolve(root, 'trzy-domy-3d/plan-kontrolny.svg'), 'utf8');

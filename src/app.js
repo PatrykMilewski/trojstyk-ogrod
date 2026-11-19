@@ -74,8 +74,15 @@ function makeHouse(n) {
  const ring=GEO.houses[n],b=bounds(ring),c=center(ring);
  return {id:`dom-${n}`,kind:'dom',name:`Dom /${n}`,x:c[0],y:c[1],w:b.maxX-b.minX,h:b.maxY-b.minY,angle:0,locked:true,shape:'polygon',category:'dom',color:'#fffdf8',vertices:ring.map(p=>[(p[0]-c[0])/(b.maxX-b.minX),(p[1]-c[1])/(b.maxY-b.minY)])};
 }
+const suppliedLayout=JSON.parse(document.getElementById('default-layout').textContent);
+function currentHouseGeometry(layout) {
+ const index=layout.objects.findIndex(o=>o.id==='dom-190');
+ const original=suppliedLayout.objects.find(o=>o.id==='dom-190');
+ if(index>=0&&JSON.stringify(layout.objects[index])===JSON.stringify(original))layout.objects[index]=makeHouse('190');
+ return layout;
+}
 function initialState() {
- return validateImport(JSON.parse(document.getElementById('default-layout').textContent));
+ return currentHouseGeometry(validateImport(suppliedLayout));
 }
 function project(p,a,b) {
  const d=sub(b,a),den=dot(d,d);const t=den?limit(dot(sub(p,a),d)/den,0,1):0;
@@ -167,7 +174,7 @@ function validateImport(value) {
 let state=initialState(),selection=null,mode='select',view={x:-10,y:-14,w:30,h:28},drag=null,space=false;
 let lastFenceClick=null;
 let history=[],future=[],renderQueued=false,saveTimer=null,toastTimer=null,lastMetrics=null;
-try{const saved=localStorage.getItem(storageKey);if(saved)state=validateImport(JSON.parse(saved));}catch{$('save-status').textContent='Stan startowy';}
+try{const saved=localStorage.getItem(storageKey);if(saved)state=currentHouseGeometry(validateImport(JSON.parse(saved)));}catch{$('save-status').textContent='Stan startowy';}
 const initial=initialState();
 function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,3800);}
 function persist() {
@@ -267,7 +274,7 @@ function renderParcels() {
  for(const [id,ring] of Object.entries(GEO.parcels)) {
   html+=`<polygon points="${points(ring)}" fill="${COLORS[id]}" fill-opacity=".6" stroke="#839087" stroke-width=".06"/>`;
   const pos={'193':[-20,-22],'190':[-18,27],'191':[24,12]}[id];html+=label(...pos,`775/${id}`,1.1,'#758177','font-weight="bold"');
-  for(const field of ['terraces','driveways'])html+=`<polygon points="${points(GEO[field][id])}" fill="${field==='terraces'?'#d9c4a3':'#d3d6ce'}" stroke="#b9bdb2" stroke-width=".025"/>`;
+  for(const field of ['terraces','driveways','entries'])if(GEO[field]?.[id])html+=`<polygon points="${points(GEO[field][id])}" fill="${field==='terraces'?'#d9c4a3':'#d3d6ce'}" stroke="#b9bdb2" stroke-width=".025"/>`;
  }
  return html;
 }
