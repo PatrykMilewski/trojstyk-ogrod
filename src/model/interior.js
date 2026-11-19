@@ -4,7 +4,9 @@ export function addIconInterior(options) {
  iconInteriorFacades(context);
  iconInteriorCurtains(context);
  iconInteriorStairs(context);
+ iconInteriorOfficeBacking(context);
  iconInteriorFurnishings(context);
+ iconRecliningAdult(context);
  options.fitGarage?.(context);
  const projector=iconLivingProjector(context);
  const appliances=iconApplianceControls(context);
@@ -620,7 +622,6 @@ function iconInteriorStairs(context) {
  const railCorner=data.rails.find(r=>r.id==='upper-void-edge').b;
  rail('upper-stair-hall-side',railCorner,[railCorner[0],sy],s.floorHeight,steel);
  rail('upper-stair-hall-front',[railCorner[0],sy],[sx+s.width,sy],s.floorHeight,steel,false);
- iconInteriorOfficeBacking(context,steel);
 }
 
 function iconClampBackingFace(geometry,face,axis,min,max) {
@@ -638,16 +639,16 @@ function iconFinishBackingFlight(backing,nextHeight,hallReturnEnd) {
  // Each rise exposes only the band above its neighbour. Omit the buried end faces at every joint.
  const hasRiser=nextHeight<geometry.parameters.depth;
  if(hasRiser)iconClampBackingFace(geometry,riser,2,nextHeight-backing.position.z,Infinity);
- geometry.addGroup(flank.start,flank.count+(hasRiser?riser.count:0),1);
+ geometry.addGroup(flank.start,flank.count+(hasRiser?riser.count:0),0);
  if(hallReturnEnd!==undefined){
   iconClampBackingFace(geometry,side,1,-Infinity,hallReturnEnd-backing.position.y);
-  geometry.addGroup(side.start,side.count,2);
-  geometry.addGroup(front.start,front.count,2);
+  geometry.addGroup(side.start,side.count,1);
+  geometry.addGroup(front.start,front.count,1);
  }
  geometry.addGroup(top.start,geometry.index.count-top.start,0);
 }
 
-function iconInteriorOfficeBacking(context,steel) {
+function iconInteriorOfficeBacking(context) {
  const {data,box,obstacle,mats,navigation}=context;
  const cabinets=data.furniture.filter(item=>item.id.startsWith('office-under-stair-'));
  if(!cabinets.length)return;
@@ -658,7 +659,7 @@ function iconInteriorOfficeBacking(context,steel) {
  const segment=(name,from,to,height,nextHeight)=>{
   const bounds=[sx+stairs.width,Math.max(from,frontY),backX,Math.min(to,rearY)];
   if(bounds[3]<=bounds[1])return;
-  const backing=box(name,bounds,0,height,nextHeight===undefined?mats.wall:[mats.wall,steel,mats.coral]);
+  const backing=box(name,bounds,0,height,nextHeight===undefined?mats.wall:[mats.wall,mats.coral]);
   if(nextHeight!==undefined){
    const hallReturnEnd=bounds[1]===frontY?office.a[1]-office.thickness/2:undefined;
    iconFinishBackingFlight(backing,nextHeight,hallReturnEnd);
@@ -1040,6 +1041,156 @@ function iconVelvetSectional(THREE,frame,s,p) {
  pillow.rotateX(.22);pillow.rotateY(.08);
 }
 
+function iconRecliningAdult(context) {
+ const sofa=context.data.furniture.find(item=>item.id==='sofa');
+ if(!sofa)return;
+ const {THREE,material}=context,frame=iconInteriorFurnitureFrame(context,{...sofa,id:'lounge-reader'});
+ const s=iconLivingShapes(context,frame),p=iconLivingPalette(context);
+ const sphere=new THREE.SphereGeometry(1,20,14),detailSphere=new THREE.SphereGeometry(1,10,7);
+ const start=context.group.children.length;
+ const fabric=(name,color)=>material(color,{name,map:p.linen.map,roughness:.96});
+ const skin=material('#c48e71',{name:'Warm skin',roughness:.84}),hair=material('#342720',{name:'Dark chestnut hair',roughness:.83});
+ const knit=fabric('Rust cotton knit','#ad6047'),rib=fabric('Ribbed knit edging','#944b37');
+ const denim=fabric('Indigo lounge trousers','#354958'),sock=fabric('Oatmeal socks','#e4dbc3');
+ const lips=material('#995e54'),brow=material('#4e382d');
+ const ball=(name,center,radii,mat)=>{
+  const mesh=s.add(name,Math.max(...radii)<.012?detailSphere:sphere,mat,...center);
+  mesh.scale.set(...radii);return mesh;
+ };
+ const sweep=(name,rows,mat,sides)=>iconBodySweep(THREE,s,name,rows,mat,sides);
+ const pad=iconVelvetBlock(THREE,s,'head-pillow',.53,.674,.524,.52,.52,.142,p.linen,0,.68);
+ pad.rotateZ(.06);
+ sweep('pullover',[[.647,.68,.642,.060,.054],[.682,.68,.64,.113,.081],[.728,.678,.631,.166,.108],
+  [.783,.675,.621,.192,.119],[.883,.674,.607,.185,.131],[.977,.676,.588,.161,.119],
+  [1.046,.677,.579,.146,.106],[1.066,.677,.580,.148,.110],[1.080,.677,.575,.144,.103],
+  [1.118,.676,.571,.152,.104],[1.145,.676,.570,.154,.105],[1.162,.676,.566,.150,.098]],knit,26);
+ sweep('pullover-waistband',[[1.158,.676,.568,.156,.104],[1.166,.676,.566,.158,.103],
+  [1.198,.675,.560,.156,.095],[1.209,.675,.559,.151,.091]],rib);
+ sweep('trousers-seat',[[1.174,.673,.559,.131,.083],[1.212,.673,.560,.149,.093],
+  [1.269,.673,.559,.157,.096],[1.327,.673,.557,.149,.090],[1.381,.669,.551,.120,.076]],denim);
+ iconRestingLegs(sweep,denim,sock);
+ iconRestingArms(THREE,s,sweep,ball,knit,rib,skin);
+ sweep('neck',[[.603,.678,.675,.056,.059],[.645,.679,.660,.064,.062],[.687,.68,.642,.064,.061]],skin);
+ sweep('crew-neck',[[.650,.680,.646,.065,.059],[.659,.68,.645,.075,.068],[.678,.68,.642,.079,.070]],rib);
+ iconRestingFace(THREE,s,ball,skin,hair,brow,lips);
+ for(const object of context.group.children.slice(start))object.userData={furnitureId:'lounge-reader',room:sofa.room,pose:'reclining'};
+}
+
+// Each cross-section follows the centreline, so bent fabric keeps its volume through elbows and knees.
+function iconBodySweep(THREE,s,name,rows,mat,sides=18){
+ const vertices=[],uv=[],index=[],centers=rows.map(row=>new THREE.Vector3(...row.slice(0,3)));
+ for(const [i,row] of rows.entries()){
+  const tangent=centers[Math.min(i+1,rows.length-1)].clone().sub(centers[Math.max(i-1,0)]).normalize();
+  const side=new THREE.Vector3(0,1,0);side.addScaledVector(tangent,-side.dot(tangent)).normalize();
+  const up=tangent.clone().cross(side),[,,,width,thickness]=row;
+  for(let j=0;j<=sides;j++){
+   const angle=j*2*Math.PI/sides,point=centers[i].clone()
+    .addScaledVector(side,width*Math.cos(angle)).addScaledVector(up,thickness*Math.sin(angle));
+   vertices.push(...point.toArray());uv.push(j/sides,i/(rows.length-1));
+   if(i&&j){const d=i*(sides+1)+j,a=d-sides-2;index.push(a,a+1,d,a,d,d-1);}
+  }
+ }
+ const geometry=new THREE.BufferGeometry();
+ geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+ geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.setIndex(index);geometry.computeVertexNormals();
+ return s.add(name,geometry,mat,0,0,0);
+}
+
+function iconRestingLegs(sweep,denim,sock) {
+ const legs=[
+  [[1.28,.610,.558,.086,.090],[1.40,.591,.558,.083,.092],[1.57,.577,.550,.071,.085],
+   [1.697,.569,.537,.060,.067],[1.755,.572,.532,.058,.064],[1.872,.594,.532,.056,.065],
+   [2.00,.614,.518,.046,.050],[2.099,.637,.508,.036,.039]],
+  [[1.275,.742,.560,.085,.091],[1.414,.765,.602,.088,.096],[1.535,.783,.662,.076,.088],
+   [1.635,.794,.712,.065,.073],[1.686,.794,.710,.062,.072],[1.76,.785,.651,.061,.070],
+   [1.86,.773,.580,.052,.062],[1.988,.750,.516,.036,.042]]
+ ];
+ for(const [i,leg] of legs.entries()){
+  sweep('trouser-leg-'+i,leg,denim);
+  const [x,y,z]=leg.at(-1);
+  sweep('sock-'+i,[[x-.018,y,z+.006,.036,.037],[x+.015,y,z,.039,.04],
+   [x+.046,y+.006,z+.001,.045,.042],[x+.067,y+.014,z+.031,.044,.043],
+   [x+.082,y+.035,z+.074,.042,.038],[x+.092,y+.051,z+.104,.037,.031],
+   [x+.098,y+.058,z+.118,.019,.014],[x+.099,y+.059,z+.12,.002,.002]],sock);
+ }
+}
+
+function iconRestingArms(THREE,s,sweep,ball,knit,rib,skin) {
+ const arms=[
+  [[.717,.538,.639,.006,.008],[.728,.531,.640,.036,.039],[.744,.524,.637,.053,.058],[.764,.519,.631,.061,.068],[.824,.494,.618,.061,.061],[.931,.479,.585,.051,.055],
+   [1.018,.464,.545,.049,.050],[1.065,.469,.539,.048,.05],[1.129,.489,.538,.046,.044],[1.229,.522,.523,.034,.035]],
+  [[.710,.814,.640,.006,.008],[.720,.822,.640,.035,.036],[.738,.828,.64,.055,.056],[.764,.830,.638,.062,.065],[.834,.864,.615,.063,.062],[.941,.895,.571,.053,.054],
+   [1.010,.906,.553,.050,.05],[1.026,.906,.549,.050,.049],[1.038,.897,.556,.049,.049],
+   [1.047,.886,.569,.049,.049],[1.06,.859,.601,.047,.048],[1.084,.778,.674,.034,.034]]
+ ];
+ for(const [i,arm] of arms.entries()){
+  sweep('pullover-sleeve-'+i,arm,knit);
+  const [x,y,z]=arm.at(-1),forearm=new THREE.Vector3(x,y,z).sub(new THREE.Vector3(...arm.at(-2).slice(0,3))).normalize();
+  const axis=forearm.toArray(),from=length=>[x+length*axis[0],y+length*axis[1],z+length*axis[2]];
+  sweep('sleeve-cuff-'+i,[[...from(-.008),.036,.036],[...from(-.006),.037,.037],[...from(.017),.033,.032]],rib);
+  const wrist=from(.017),tip=i?[1.086,.670,.694]:[1.331,.553,.515];
+  const forward=new THREE.Vector3(...tip).sub(new THREE.Vector3(...wrist)).normalize();
+  const lateral=new THREE.Vector3(-forward.y,forward.x,0).normalize();
+  const at=(length,offset,lift)=>new THREE.Vector3(...wrist).addScaledVector(forward,length).addScaledVector(lateral,offset).add(new THREE.Vector3(0,0,lift)).toArray();
+  const palm=ball('hand-'+i,at(.041,0,.001),[.051,.036,.022],skin);palm.rotateZ(Math.atan2(forward.y,forward.x));
+  for(let finger=0;finger<4;finger++){
+   const length=[.048,.055,.051,.040][finger],offset=(finger-1.5)*.0135;
+   s.tube('hand-'+i+'-finger-'+finger,[at(.065,offset,.003),at(.067+length*.5,offset*1.12,.002),at(.067+length,offset*1.15,-.005)],.0078,skin);
+   ball('hand-'+i+'-fingertip-'+finger,at(.067+length,offset*1.15,-.005),[.008,.008,.008],skin);
+  }
+  s.tube('thumb-'+i,[at(.022,-.018,.006),at(.045,-.039,.010),at(.071,-.044,.002)],.012,skin);
+ }
+}
+
+function iconRestingFace(THREE,s,ball,skin,hair,brow,lips) {
+ // The head is turned toward the room; the back of the skull nestles into the linen cushion.
+ const center=[.537,.683,.674],tilt=-.55,cos=Math.cos(tilt),sin=Math.sin(tilt);
+ const head=(x,y,z)=>[center[0]+x,center[1]+y*cos-z*sin,center[2]+y*sin+z*cos];
+ const oval=(name,x,y,z,radii,mat)=>ball(name,head(x,y,z),radii,mat).rotateX(tilt);
+ const curve=(name,points,r,mat)=>s.tube(name,points.map(q=>head(...q)),r,mat);
+ const radii=x=>{
+  const t=Math.max(0,1-(x/.126)**2)**.5,jaw=Math.max(0,x/.126);
+  return [.085*t*(1-.19*jaw**2),.096*t*(1-.14*jaw),-.009*jaw];
+ };
+ const surface=(x,a,offset=0)=>{
+  const [w,h,z]=radii(x);
+  const v=(w+offset)*Math.sin(a),front=Math.cos(a),bump=(u,dx,y,dy)=>Math.exp(-(((x-u)/dx)**2+((v-y)/dy)**2));
+  const relief=.019*bump(.017,.037,0,.009)+.022*bump(.041,.014,0,.012)
+   +.008*bump(.043,.009,Math.sign(v)*.012,.008)
+   +.005*bump(.032,.03,Math.sign(v)*.045,.02)-.004*bump(0,.015,Math.sign(v)*.030,.015)
+   +.004*bump(.066,.012,0,.018)+.005*bump(.091,.014,0,.023);
+  return [x,v,z+(h+offset)*front+Math.max(0,front)**4*relief];
+ };
+ const hairline=a=>-.048+.132*(1-Math.cos(a))/2+.013*Math.sin(a*2+.3)+.006*Math.sin(a*5+.6);
+ for(const isHair of [false,true]){
+  const vertices=[],indices=[],uv=[],colors=[],rings=isHair?28:52,sides=isHair?108:84;
+  for(let i=0;i<=rings;i++)for(let j=0;j<=sides;j++){
+   const a=j*2*Math.PI/sides;
+   const fringe=hairline(a);
+   const t=i/rings,x=-.126+t*(isHair?fringe+.126:.252);
+   const ridge=.5+.5*Math.cos(28*a+2*Math.sin(4*a)+Math.sin(7*a)-4*t-.7*Math.sin(Math.PI*t));
+   const offset=isHair?Math.min(1,8*t)*(.006+.003*ridge):0;
+   vertices.push(...head(...surface(x,a,offset)));uv.push(j/sides,t);
+   if(isHair){const tone=.80+.27*ridge+.13*Math.sin(3*a-.4*t)**2;colors.push(tone,tone,tone);}
+   if(i&&j){const d=i*(sides+1)+j,b=d-sides-2;indices.push(b,d,b+1,b,d-1,d);}
+  }
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+  geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.setIndex(indices);geometry.computeVertexNormals();
+  if(isHair){geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));hair.vertexColors=true;}
+  s.add(isHair?'hair':'face',geometry,isHair?hair:skin,0,0,0);
+ }
+ const onFace=(x,y,lift=0)=>{
+  const [w]=radii(x),p=surface(x,Math.asin(y/w));p[2]+=lift;return p;
+ };
+ for(const side of [-1,1]){
+  oval('ear-'+side,.021,side*.08,-.002,[.021,.010,.015],skin);
+  curve('eyelid-'+side,[[.002,.013],[.004,.026],[.003,.039],[.001,.047]].map(([x,y])=>onFace(x,side*y,.0011)),.0012,brow);
+  curve('eyebrow-'+side,[[-.010,.015],[-.016,.029],[-.016,.040],[-.012,.049]].map(([x,y])=>onFace(x,side*y,.0014)),.0021,brow);
+ }
+ curve('mouth',[[.069,-.019],[.068,-.010],[.069,0],[.068,.010],[.069,.019]].map(([x,y])=>onFace(x,y,.0009)),.00135,lips);
+}
+
 function iconHorseshoeChair(THREE,frame,s,p) {
  const {width:w,depth:d}=frame,cx=w/2,cy=d*.51,rx=w*.377,ry=d*.381,r=.113;
  const start=Math.PI*.76,arc=Math.PI*1.48;
@@ -1244,7 +1395,8 @@ function iconKitchenPantry(context,frame,k) {
 }
 
 function iconKitchenMosaic(context,frame,left,right,bottom,top) {
- const {THREE,mesh}=context,vertices=[],colors=[],cols=24,rows=15;
+ const {THREE,mesh}=context,vertices=[],colors=[],rows=15;
+ const cols=Math.round((right-left)/((top-bottom)/rows));
  const glaze=['#eaddc7','#e4d4b8','#f0e6d2','#885644','#68515a'].map(c=>new THREE.Color(c));
  for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
   const edge=Math.min(row,rows-1-row,col,cols-1-col);
@@ -1278,12 +1430,10 @@ function iconKitchenEspresso(frame,s,p,x,z) {
 function iconKitchenNiche(context,frame,s,p,k) {
  const {width:w,depth:d,part}=frame,top=context.data.levels.groundCeiling;
  const counter=frame.item.height,upper=1.58,crown=2.1,front=d-.065,bay=w/5;
- part('slab-backsplash',[0,0,w,.029],counter,upper-counter,p.chalk);
- const left=.056,right=bay*1.69;
- part('mosaic-grout',[left,.029,right,.035],counter+.013,upper-counter-.028,p.putty);
- iconKitchenMosaic(context,frame,left,right,counter+.013,upper-.015);
- iconKitchenEspresso(frame,s,p,(left+right)/2,counter);
- part('niche-end-trim',[.010,.029,.028,.393],counter,upper-counter,p.accentWalnut);
+ part('slab-backsplash',[0,0,w,.0359],counter,upper-counter,p.putty);
+ iconKitchenMosaic(context,frame,.028,w,counter,upper);
+ iconKitchenEspresso(frame,s,p,(.056+bay*1.69)/2,counter);
+ part('niche-end-trim',[.010,.0359,.028,.393],counter,upper-counter,p.accentWalnut);
  part('upper-carcass',[0,0,w,.423],upper,crown-upper,k.recess);
  part('crown-carcass',[0,0,w,front-.021],crown,top-crown,k.recess);
  for(let i=0;i<5;i++){
@@ -1512,26 +1662,84 @@ function iconKitchenDrawers(frame,k,start,end,count,face,reverse=false,first=0) 
  }
 }
 
-function iconPaletSage(THREE) {
- const pitch=.149+.002,glaze=[192,206,172],grout=[182,195,167];
- const material=iconFinishTexture(THREE,'Palet 301',256,256,.36,(u,v)=>{
-  const edge=Math.min(u,1-u,v,1-v)*pitch;
-  return edge<.001?grout:glaze;
- },[1/pitch,1/pitch]);
- material.userData.source='https://palet.shop/shop?color-1=301&color-2=301&design=marble-extra-light';
- return material;
+function iconPaletGlaze(THREE,swatch) {
+ const {width,height,palette,pixels}=swatch,colors=atob(palette),indices=atob(pixels);
+ const rgba=new Uint8Array(width*height*4);
+ for(let i=0;i<indices.length;i++){
+  const index=indices.charCodeAt(i)*3;
+  rgba.set([colors.charCodeAt(index),colors.charCodeAt(index+1),colors.charCodeAt(index+2),255],4*i);
+ }
+ const map=new THREE.DataTexture(rgba,width,height);
+ map.colorSpace=THREE.SRGBColorSpace;map.magFilter=THREE.LinearFilter;
+ map.minFilter=THREE.LinearMipmapLinearFilter;map.generateMipmaps=true;map.anisotropy=4;map.needsUpdate=true;
+ return new THREE.MeshPhysicalMaterial({name:'Palet orange and indigo glaze',map,roughness:.36,clearcoat:.22,clearcoatRoughness:.25});
 }
 
-function iconIslandWorktop({THREE},frame,s,p) {
+function iconKitchenOutline(path,x,y,w,d,r=0) {
+ if(!r){
+  path.moveTo(x,y);path.lineTo(x+w,y);path.lineTo(x+w,y+d);path.lineTo(x,y+d);path.closePath();return path;
+ }
+ path.moveTo(x+r,y);path.lineTo(x+w-r,y);path.quadraticCurveTo(x+w,y,x+w,y+r);
+ path.lineTo(x+w,y+d-r);path.quadraticCurveTo(x+w,y+d,x+w-r,y+d);
+ path.lineTo(x+r,y+d);path.quadraticCurveTo(x,y+d,x,y+d-r);
+ path.lineTo(x,y+r);path.quadraticCurveTo(x,y,x+r,y);path.closePath();
+ return path;
+}
+
+function iconTacknanControls(THREE,s,z) {
+ const keys=[],digits=[];
+ const mark=(set,x,y,w,h)=>set.push(iconKitchenOutline(new THREE.Shape(),x,y,w,h,0));
+ for(const x of [.269,.320,.480,.531]){
+  for(const dx of [-.012,.009])mark(keys,x+dx-.003,.043,.006,.0012);
+  mark(keys,x+.0084,.0406,.0012,.006);
+  mark(keys,x-.003,.026,.006,.001);mark(keys,x-.003,.031,.006,.001);
+  for(const dx of [-.003,.002])mark(keys,x+dx,.027,.001,.004);
+  for(const y of [.040,.048])mark(digits,x-.002,y,.004,.0008);
+  for(const dx of [-.0028,.0021])mark(digits,x+dx,.041,.0007,.006);
+ }
+ for(const x of [.197,.210,.226,.373,.389,.406,.422,.438,.556,.573,.591]){
+  const key=new THREE.Shape();key.absarc(x,.043,.0021,0,Math.PI*2,false);
+  const hole=new THREE.Path();hole.absarc(x,.043,.0012,0,Math.PI*2,true);key.holes.push(hole);keys.push(key);
+ }
+ for(const [name,shapes,color] of [['touch-keys',keys,'#b6bab8'],['red-display',digits,'#d54b35']]){
+  const o=s.add(name,new THREE.ShapeGeometry(shapes),new THREE.MeshBasicMaterial({color}),0,0,z);
+  o.castShadow=o.receiveShadow=false;
+ }
+}
+
+function iconTacknan({THREE},frame,s,p) {
+ const {width:w,depth:d,item,part}=frame,h=item.height,cx=w/2;
+ const glass=new THREE.MeshStandardMaterial({name:'TÄCKNAN black ceramic glass',color:'#17191a',roughness:.13,metalness:.22});
+ const iron=new THREE.MeshStandardMaterial({name:'TÄCKNAN graphite intake',color:'#404345',roughness:.43,metalness:.38});
+ const print=new THREE.MeshBasicMaterial({color:'#9eaaa8'});
+ const outline=iconKitchenOutline(new THREE.Shape(),0,0,w,d,.004);
+ outline.holes.push(iconKitchenOutline(new THREE.Path(),cx-.042,.102,.084,.372,.009));
+ s.add('glass',new THREE.ExtrudeGeometry(outline,{depth:h,bevelEnabled:false,curveSegments:4}),glass,0,0,0);
+ const grille=iconKitchenOutline(new THREE.Shape(),cx-.041,.103,.082,.370,.008);
+ for(let j=0;j<16;j++)grille.holes.push(iconKitchenOutline(new THREE.Path(),cx-.032,.117+j*.0211,.064,.015,.0073));
+ s.add('extractor-grille',new THREE.ExtrudeGeometry(grille,{depth:.004,bevelEnabled:false,curveSegments:4}),iron,0,0,.0004);
+ part('filter-bed',[cx-.040,.104,cx+.040,.472],-.032,.002,p.black);
+ part('filter-spine',[cx-.002,.106,cx+.002,.470],-.029,.008,iron);
+ for(const [row,y,diameter,inset] of [['front',.173,.16,.178],['rear',.394,.22,.157]]){
+  for(const [side,x] of [['left',inset],['right',w-inset]]){
+   const symbols=[[x-diameter/2,y-.0008,diameter/2-.021,.0016],[x-.0026,y-.0026,.0052,.0052],[x+.021,y-.0008,diameter/2-.021,.0016]];
+   const zone=s.add('induction-zone-'+row+'-'+side,new THREE.ShapeGeometry(symbols.map(b=>iconKitchenOutline(new THREE.Shape(),...b))),print,0,0,h+.00015);
+   zone.castShadow=zone.receiveShadow=false;
+  }
+ }
+ iconTacknanControls(THREE,s,h+.00015);
+ const chassis=iconKitchenOutline(new THREE.Shape(),cx-.3725,(d-.487)/2,.745,.487,.004);
+ chassis.holes.push(iconKitchenOutline(new THREE.Path(),cx-.041,.103,.082,.370,.008));
+ s.add('chassis',new THREE.ExtrudeGeometry(chassis,{depth:.045,bevelEnabled:false,curveSegments:4}),p.black,0,0,h-.049);
+ s.cushion('blower',cx,d/2,h-.1495,.43,.435,.201,.028,iron);
+}
+
+function iconIslandWorktop({THREE},frame,s,p,cutout) {
  const {width:w,depth:d,item}=frame,{height,socket}=item;
- if(!socket)return frame.part('top',[0,0,w,d],height-.05,.05,p.stone);
  const [cx,cy]=socket.center,[sw,sd]=socket.size;
- const rectangle=(shape,x,y,width,depth)=>{
-  shape.moveTo(x,y);shape.lineTo(x+width,y);shape.lineTo(x+width,y+depth);shape.lineTo(x,y+depth);shape.closePath();return shape;
- };
- const plate=(name,outline,hole,z,thickness,material)=>{
-  const shape=rectangle(new THREE.Shape(),...outline);
-  if(hole)shape.holes.push(rectangle(new THREE.Path(),...hole));
+ const plate=(name,outline,holes,z,thickness,material)=>{
+  const shape=iconKitchenOutline(new THREE.Shape(),...outline);
+  for(const hole of holes)shape.holes.push(iconKitchenOutline(new THREE.Path(),...hole));
   const geometry=new THREE.ExtrudeGeometry(shape,{depth:thickness,bevelEnabled:false});
   return s.add(name,geometry,material,0,0,z);
  };
@@ -1542,70 +1750,181 @@ function iconIslandWorktop({THREE},frame,s,p) {
   const hairline=1.7*Math.sin(2*Math.PI*93*v)+1.2*Math.cos(2*Math.PI*47*v);
   return [235+hairline,235+hairline,232+hairline];
  },[1,6]);aluminium.metalness=.27;
- const slab=plate('top',[0,0,w,d],opening,height-.05,.05,p.stone);
+ const slab=plate('top',[0,0,w,d],[opening,cutout],height-.038,.038,p.stone);
+ plate('stone-edge',[0,0,w,d],[[.018,.018,w-.036,d-.036]],height-.05,.012,p.stone);
  const uv=slab.geometry.attributes.uv,normal=slab.geometry.attributes.normal;
  for(let i=0;i<uv.count;i++)if(Math.abs(normal.getZ(i))>.9)uv.setXY(i,uv.getX(i)/w,uv.getY(i)/d);
- plate('socket-housing',opening,null,height-.060,.057,p.black);
- plate('socket-bezel',opening,reveal,height-.003,.003,aluminium);
- plate('socket-lid',lid,null,height-.0029,.0026,aluminium);
+ plate('socket-housing',opening,[],height-.060,.057,p.black);
+ plate('socket-bezel',opening,[reveal],height-.003,.003,aluminium);
+ plate('socket-lid',lid,[],height-.0029,.0026,aluminium);
 }
 
-function iconKitchenIslandTiles({THREE,mesh},frame,back) {
- const {width:w,depth:d,item,point,part}=frame;
+function iconPaletFace(frame,a,b,start,bottom,top,swatch,vertices,uv,indices) {
+ const side=.149,pitch=side+.002,dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
+ const [cols,rows]=swatch.grid,tiles=cols*rows;
+ for(let col=Math.floor(start/pitch);col*pitch<start+length;col++){
+  const origin=col*pitch,l=Math.max(origin,start),r=Math.min(origin+side,start+length);
+  if(r<=l)continue;
+  for(let row=0;top-row*pitch>bottom;row++){
+   const high=top-row*pitch,low=Math.max(high-side,bottom);
+   const index=(13*col+7*row+5*Math.floor(col/cols)+11*Math.floor(col/7))%tiles;
+   const tx=index%cols,ty=Math.floor(index/cols),base=vertices.length/3;
+   for(const [u,z] of [[l,low],[l,high],[r,high],[r,low]]){
+    const along=(u-start)/length;
+    vertices.push(...frame.point(a[0]+dx*along,a[1]+dy*along,z));
+    const su=(u-origin)/side,sv=1-(high-z)/side;
+    uv.push((tx+su)/cols+(.5-su)/swatch.width,(ty+sv)/rows+(.5-sv)/swatch.height);
+   }
+   indices.push(base,base+1,base+2,base,base+2,base+3);
+  }
+ }
+ return length;
+}
+
+function iconKitchenIslandTiles({THREE,mesh,data},frame,back) {
+ const {width:w,depth:d,item,part}=frame;
  const inset=.018,y0=back,y1=d-inset,x0=inset,x1=w-inset;
  const bottom=.018,top=item.height-.05,thick=.024;
- const grout=new THREE.MeshStandardMaterial({name:'Island tile backing',color:'#b6c3a7',roughness:.85});
+ const grout=new THREE.MeshStandardMaterial({name:'Ivory island tile grout',color:'#eee2cd',roughness:.85});
  for(const [id,box] of [['left',[x0+.001,y0,x0+thick,y1-.001]],
                         ['right',[x1-thick,y0,x1-.001,y1-.001]],
                         ['salon',[x0+thick,y1-thick,x1-thick,y1-.001]]])
   part('tile-backing-'+id,box,bottom,top-bottom,grout);
  const points=[[x0,y0],[x0,y1],[x1,y1],[x1,y0]],vertices=[],uv=[],indices=[];
+ const swatch=data.finishes.islandPalet;
  let run=0;
  for(let i=0;i<3;i++){
-  const a=points[i],b=points[i+1],len=Math.hypot(b[0]-a[0],b[1]-a[1]),idx=i*4;
-  vertices.push(...point(...a,bottom),...point(...a,top),...point(...b,top),...point(...b,bottom));
-  uv.push(run,0,run,top-bottom,run+len,top-bottom,run+len,0);
-  indices.push(idx,idx+1,idx+2,idx,idx+2,idx+3);
-  run+=len;
+  run+=iconPaletFace(frame,points[i],points[i+1],run,bottom,top,swatch,vertices,uv,indices);
  }
  const g=new THREE.BufferGeometry();
  g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
  g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(indices);g.computeVertexNormals();
- mesh(g,iconPaletSage(THREE),item.id+'-palet-cladding');
+ mesh(g,iconPaletGlaze(THREE,swatch),item.id+'-palet-cladding');
+}
+
+function iconNyttig({THREE},frame,s,p,x,front,hobRear) {
+ const {part,item}=frame,grilleWidth=.46,grilleHeight=.077,z=.032,ductWidth=.22,ductDepth=.055;
+ const rear=front+.487,axis=rear-ductDepth/2,elbow=item.height-.238;
+ const shell=new THREE.MeshStandardMaterial({name:'NYTTIG charcoal duct',color:'#303335',roughness:.66,side:THREE.DoubleSide});
+ const white=shell.clone();white.name='NYTTIG white riser';white.color.set('#deded9');
+ const edge=new THREE.MeshStandardMaterial({name:'NYTTIG satin grille',color:'#989b99',metalness:.55,roughness:.44});
+ const duct=(name,sections,mat)=>{
+  const vertices=[],indices=[];
+  for(const [y,h,width,depth,angle] of sections){
+   for(const [u,v] of [[-1,-1],[1,-1],[1,1],[-1,1]])
+    vertices.push(u*width/2,y-v*depth/2*Math.sin(angle),h+v*depth/2*Math.cos(angle));
+  }
+  for(let i=0;i<sections.length-1;i++)for(let j=0;j<4;j++){
+   const a=i*4+j,b=i*4+(j+1)%4;indices.push(a,b+4,b,a,a+4,b+4);
+  }
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+  g.setIndex(indices);g.computeVertexNormals();return s.add('nyttig-'+name,g,mat,x,0,0);
+ };
+ const riserBase=[axis,z+.102,ductWidth,ductDepth,Math.PI/2],riserTop=[axis,elbow-.13,ductWidth,ductDepth,Math.PI/2];
+ duct('plinth-duct',[[front,z+grilleHeight/2,.454,.073,0],[front+.14,z+.036,.28,.060,0],
+    [axis-.058,z+.036,ductWidth,ductDepth,0],[axis-.016,z+.052,ductWidth,ductDepth,Math.PI/4],riserBase],shell);
+ duct('riser',[riserBase,riserTop],white);
+ duct('coupling',[riserTop,[axis,elbow-.065,ductWidth,ductDepth,Math.PI/2],
+    [axis-.019,elbow-.023,ductWidth,ductDepth,Math.PI*.75],[hobRear-.115,elbow,ductWidth,ductDepth,Math.PI]],shell);
+ const opening=[x-grilleWidth/2,front,x+grilleWidth/2,front+.016];
+ part('plinth-under-outlet',opening,.014,z-.014,p.shadow);
+ part('plinth-over-outlet',opening,z+grilleHeight,.118-z-grilleHeight,p.shadow);
+ const rim=iconKitchenOutline(new THREE.Shape(),-grilleWidth/2,0,grilleWidth,grilleHeight,.005);
+ for(let col=0;col<9;col++)for(let row=0;row<4;row++)
+  rim.holes.push(iconKitchenOutline(new THREE.Path(),-.211+col*.0475,.009+row*.015,.042,.010,.002));
+ const metal=new THREE.ExtrudeGeometry(rim,{depth:.003,bevelEnabled:false,curveSegments:3});metal.rotateX(Math.PI/2);
+ s.add('nyttig-outlet',metal,edge,x,front,z);
+}
+
+function iconKitchenBackCounter({THREE,data},frame,s,p,k,face) {
+ const {width:w,depth:d,item,part}=frame,h=item.height;
+ part('body',[0,0,w,.018],.118,h-.168,k.yellow);
+ part('cabinet-floor',[0,.018,w,face-.021],.118,.018,k.yellow);
+ for(const x of [0,w-.018])part('cabinet-end-'+x,[x,.018,x+.018,face-.021],.136,h-.186,k.yellow);
+ const outline=new THREE.Shape();
+ outline.moveTo(0,0);outline.lineTo(w,0);outline.lineTo(w,d);outline.lineTo(0,d);outline.closePath();
+ const sink=data.furniture.find(unit=>unit.id==='kitchen-sink'&&unit.support===item.id);
+ if(sink){
+  const [l,b,r,f]=sink.box.map((n,i)=>n-item.box[i%2]);
+  outline.holes.push(iconKitchenOutline(new THREE.Path(),l+.009,b+.009,r-l-.018,f-b-.018,.024));
+ }
+ const slab=new THREE.ExtrudeGeometry(outline,{depth:.05,bevelEnabled:false,curveSegments:8});
+ const {uv,normal}=slab.attributes;
+ for(let i=0;i<uv.count;i++)if(Math.abs(normal.getZ(i))>.9)uv.setXY(i,uv.getX(i)/w,uv.getY(i)/d);
+ s.add('top',slab,p.stone,0,0,h-.05);
+}
+
+function iconKitchenSink({THREE},frame,s,p) {
+ const {width:w,depth:d}=frame,x=w/2,drainY=.204,z=-.198;
+ const metal=new THREE.MeshStandardMaterial({name:'Satin stainless steel sink',color:'#a3a8a8',metalness:.48,roughness:.32});
+ const vertices=[],indices=[],steps=128;
+ const ring=(outline,h)=>outline.getSpacedPoints(steps).slice(0,-1).map(q=>[q.x,q.y,h]);
+ const rings=[
+  [0,0,w,d,.032,.001],[0,0,w,d,.032,.004],[.004,.004,w-.004,d-.004,.029,.005],
+  [.019,.079,w-.019,d-.018,.044,.005],[.023,.083,w-.023,d-.022,.044,.001],
+  [.028,.088,w-.028,d-.027,.044,-.009],[.040,.100,w-.040,d-.039,.055,-.150],
+  [.046,.106,w-.046,d-.045,.058,-.168],[.063,.123,w-.063,d-.062,.065,-.180]
+ ].map(([l,b,r,f,radius,h])=>ring(iconKitchenOutline(new THREE.Path(),l,b,r-l,f-b,radius),h));
+ const edge=rings.at(-1);
+ rings.push(edge.map(([u,v])=>{
+  const a=Math.atan2(v-drainY,u-x);
+  return [x+.045*Math.cos(a),drainY+.045*Math.sin(a),z];
+ }));
+ for(const [j,points] of rings.entries())for(let i=0;i<steps;i++){
+  vertices.push(...points[i]);
+  if(j){const a=(j-1)*steps+i,b=(j-1)*steps+(i+1)%steps;indices.push(a,b,b+steps,a,b+steps,a+steps);}
+ }
+ const shell=new THREE.BufferGeometry();shell.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+ shell.setIndex(indices);shell.computeVertexNormals();s.add('basin',shell,metal,0,0,0);
+ s.disc('waste-recess',x,drainY,z-.003,.0455,.0455,.002,p.black);
+ s.add('waste-rim',new THREE.RingGeometry(.034,.047,64),metal,x,drainY,z+.0008);
+ const basket=new THREE.Shape();basket.absarc(0,0,.034,0,2*Math.PI,false);
+ for(let i=0;i<12;i++){
+  const angle=i*Math.PI/6,hole=new THREE.Path();
+  hole.absellipse(.023*Math.cos(angle),.023*Math.sin(angle),.007,.0024,0,2*Math.PI,true,angle);basket.holes.push(hole);
+ }
+ s.add('basket-strainer',new THREE.ShapeGeometry(basket,7),p.silver,x,drainY,z-.0005);
+ s.disc('basket-pin',x,drainY,z-.0005,.009,.009,.005,metal);
+ s.disc('tap-foot',x,.043,.005,.027,.027,.009,p.brass);
+ s.tube('arched-spout',[[x,.043,.014],[x,.043,.19],[x,.050,.257],[x,.086,.300],[x,.141,.303],[x,.188,.273],[x,.207,.213]],.012,p.brass);
+ s.disc('tap-aerator',x,.207,.207,.013,.013,.009,metal);
+ s.tube('mixer-lever',[[x+.010,.043,.073],[x+.036,.043,.073],[x+.042,.041,.084],[x+.042,.045,.133]],.005,p.brass);
 }
 
 function iconLivingKitchen(context,frame,s,p) {
  const {item,width:w,depth:d,part}=frame;
  if(item.id==='kitchen-sink'){
-  part('rim',[0,0,w,d],.002,.012,p.black);part('basin',[.035,.025,w-.035,d-.025],.014,.003,p.shadow);
-  s.tube('arched-spout',[[w*.5,.035,.014],[w*.5,.035,.21],[w*.5,.062,.30],[w*.5,.15,.31],[w*.5,.19,.26],[w*.5,.19,.22]],.012,p.brass);return;
+  iconKitchenSink(context,frame,s,p);return;
  }
- if(item.id==='hob'){
-  part('glass',[0,0,w,d],0,.012,p.black);
-  for(const x of [.17,w-.17])for(const y of [.16,d-.16])s.disc('induction-zone-'+x+'-'+y,x,y,.012,.105,.105,.001,p.screen);
-  return;
- }
+ if(item.id==='hob'){iconTacknan(context,frame,s,p);return;}
  const k=context.kitchenFinishes??=iconKitchenFinishes(context);
  if(item.id==='kitchen-pantry'){iconKitchenPantry(context,frame,k);return;}
  const island=item.id==='kitchen-island',tall=item.id==='kitchen-tall',height=item.height;
  const face=island?d-.15:d-.065,end=island?.053:0,back=island?.045:0;
- part('recessed-plinth',[.064,back+.049,w-.064,(tall?d-.035:face)-.064],.014,.105,p.shadow);
+ if(!island)part('recessed-plinth',[.064,back+.049,w-.064,(tall?d-.035:face)-.064],.014,.105,p.shadow);
  if(tall){iconSamsungTower(context,frame,k,d-.035);return;}
  if(island){
   const hob=context.data.furniture.find(unit=>unit.id==='hob');
-  const center=hob?(hob.box[0]+hob.box[2])/2-item.box[0]:w/2,left=center-.30,right=center+.30;
-  const carcass=new context.THREE.Shape(),near=back+.021,far=face-.021,nicheBack=back+.56;
-  carcass.moveTo(end,near);carcass.lineTo(left,near);carcass.lineTo(left,nicheBack);carcass.lineTo(right,nicheBack);
-  carcass.lineTo(right,near);carcass.lineTo(w-end,near);carcass.lineTo(w-end,far);carcass.lineTo(end,far);carcass.closePath();
-  s.add('body',new context.THREE.ExtrudeGeometry(carcass,{depth:height-.168,bevelEnabled:false}),k.yellow,0,0,.118);
-  iconIslandWorktop(context,frame,s,p);
+  const cx=(hob.box[0]+hob.box[2])/2-item.box[0],cy=(hob.box[1]+hob.box[3])/2-item.box[1];
+  const [cw,cd]=hob.cutout,left=cx-.4,right=cx+.4,ovenLeft=right+.018,ovenRight=ovenLeft+.60;
+  const near=back+.021,far=face-.021,rear=cy+cd/2+.075,cap=height-.038;
+  part('body',[end,rear,w-end,far],.118,cap-.118,k.yellow);
+  for(const [id,l,r] of [['left',end,left],['divider',right,ovenLeft],['right',ovenRight,w-end]])
+   part('cabinet-'+id,[l,near,r,rear],.118,cap-.118,k.yellow);
+  for(const [id,l,r] of [['left',.064,cx-.23],['right',cx+.23,w-.064]])
+   part('plinth-'+id,[l,back+.049,r,face-.064],.014,.104,p.shadow);
+  iconIslandWorktop(context,frame,s,p,[cx-cw/2,cy-cd/2,cw,cd]);
   iconKitchenIslandTiles(context,frame,back);
   iconKitchenDrawers(frame,k,end,left,3,back,true);
-  iconKitchenDrawers(frame,k,right,w-end,3,back,true,3);
-  iconIslandOven(context,frame,s,p,k,center,back);
+  iconKitchenDrawers(frame,k,ovenRight,w-end,2,back,true,3);
+  for(const [i,l,r] of [[0,left,cx],[1,cx,right]]){
+   iconKitchenPanel(frame,'extractor-access-'+i,l+.0025,r-.0025,.122,height-.055,back,k.yellow,true);
+   iconKitchenGrip(frame,'extractor-pull-'+i,(l+r)/2,back,height-.055,.145,false,k.bronze,true);
+  }
+  iconIslandOven(context,frame,s,p,k,(ovenLeft+ovenRight)/2,back);
+  iconNyttig(context,frame,s,p,cx,back+.049,cy+(hob.box[3]-hob.box[1])/2);
  }else{
-  part('body',[0,0,w,face-.021],.118,height-.168,k.yellow);
-  part('top',[0,0,w,d],height-.05,.05,p.stone);
+  iconKitchenBackCounter(context,frame,s,p,k,face);
   iconKitchenDrawers(frame,k,0,w,5,face);
   iconKitchenNiche(context,frame,s,p,k);
  }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-19.7",
+  "modelVersion": "2026-11-19.8",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -52,7 +52,7 @@
     "Samsung BRZ22700EWW/EF": "https://www.samsung.com/pl/refrigerators/built-in-one-door/brr6000b-built-in-1door-freezer-with-smartthings-218l-white-brz22700eww-ef/",
     "Beliani · MADOX 120/150 cm, ciemny orzech": "https://www.beliani.pl/stol-do-jadalni-ciemne-drewno-rozkladany-120-150-x-75-cm-madox.html",
     "IKEA · system BROR": "https://www.ikea.com/pl/pl/cat/system-bror-42245/",
-    "Palet · szkliwo 301": "https://palet.shop/shop?color-1=301&color-2=301&design=marble-extra-light"
+    "IKEA · TÄCKNAN z zestawem NYTTIG": "https://www.ikea.com/pl/pl/p/taecknan-plyta-ind-zint-okap-z-zest-d-pochla-ikea-300-czarny-s29612504/"
   },
   "houses": [
     {
@@ -1740,7 +1740,7 @@
     "proceduralCodeSha256": "f28e65f81bfd542148d9fd4925bc2e84fb2d7a8a449e34f84393ac2a653c99e2",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "f6f27de0208ddacc1880061ce21577c8aa17d9cf9595e32efb76d2759fffda44",
-    "runtimeSha256": "8760af540bb867a7c625001cca27c87499c21d4e400dcf5fbd7d3ef256e49ec5"
+    "runtimeSha256": "b13042352f735fb4a1972c4643862ab62b6615bb415cca8696bfe86f701bebcb"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1777,7 +1777,8 @@
     "Dom /193: zabudowa spiżarni z blatem i regałem oraz osobno otwierane lodówka i zamrażarka Samsung w kuchni.",
     "Dom /193: skorygowany narożnik i biegi schodów, szklana balustrada w indygo, złożony MADOX z sześcioma krzesłami, gniazdo wyspy, wyrównane fronty i zabudowa spiżarni z czytelnymi etykietami.",
     "Dom /193: dwa słupki 60 cm, pełny blat i piekarnik pod płytą na wyspie, okładzina Palet Zig Zag Half, gniazdo przy oknie, balustrada bez listwy, szafa w czarno-białym fornirze, spiżarnia BROR i kolory pomieszczeń gospodarczych.",
-    "Dom /193: przesuwne skrzydło w potrójnym przeszkleniu ogrodowym, ceglana ściana korytarza, bok schodów indygo i wyspa 435 × 105 cm z jednobarwnymi płytkami Palet 301."
+    "Dom /193: przesuwne skrzydło w potrójnym przeszkleniu ogrodowym, ceglana ściana korytarza, bok schodów indygo i wyspa 435 × 105 cm z jednobarwnymi płytkami Palet 301.",
+    "Dom /193: płyta TÄCKNAN z pochłaniaczem, piekarnik w osobnym module, zlew 80 cm, pełna mozaika nad blatem, pomarańczowo-granatowa wyspa, postać na kanapie i jasny tynk między biegami schodów."
   ],
   "contextParcels": [
     {
@@ -3616,7 +3617,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "6f86e238b9b3388763d81eb52ab0510dcc0796d70cb0a51550f844fba0151762",
+    "dataSha256": "520c46b504b9f738d9d50235bb451d5190c2dc315bf74dd5099462ccd199dc56",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,

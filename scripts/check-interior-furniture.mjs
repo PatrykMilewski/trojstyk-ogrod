@@ -889,15 +889,15 @@ test('Samsung columns preserve product envelopes, removable shelves, drawers and
   }
   const counter=bounds(get('kitchen-back-top')),sink=itemBounds('kitchen-sink');
   close(counter.max.x-counter.min.x,3.20,'Full 3.10 m original counter plus 100 mm released from the two columns');
-  close(counter.max.x-sink.max.x,.85,'85 cm of counter to the right of the sink');
-  close(sink.min.x-counter.min.x,1.45,'145 cm to the left');
+  close(counter.max.x-sink.max.x,.90,'90 cm of counter to the right of the sink');
+  close(sink.min.x-counter.min.x,1.50,'150 cm to the left');
   close(counter.max.x,furniture.get('kitchen-tall').box[0],'Perimeter counter meets the first column');
 });
 
 test('every kitchen cabinet and concealed pantry door has the same matte yellow slab front', () => {
   const get=id=>interior.group.getObjectByName(id);
   const aisle=parts('kitchen-island').filter(o=>o.name.includes('-working-drawer-'));
-  assert.equal(aisle.length,12);
+  assert.equal(aisle.length,10);
   const portal=get('kitchen-pantry-closed-leaf'),yellow=portal.material;
   assert.equal(yellow.color.getHex(),0xe5c368);
   assert(yellow.roughness>=.6 && !yellow.map);
@@ -916,12 +916,12 @@ test('every kitchen cabinet and concealed pantry door has the same matte yellow 
   assert(grip.min.y<drawer.min.y-.018);
 });
 
-test('a single 595 mm built-in oven faces the working aisle below the induction hob', () => {
+test('a single 595 mm built-in oven has a separate bay facing the work aisle beside the extractor', () => {
   const get=id=>interior.group.getObjectByName('kitchen-island-oven-'+id);
   const oven=get('window'),glass=bounds(oven),rail=bounds(get('lower-trim')),handle=bounds(get('handle'));
   const ovenTop=bounds(get('fascia')).max.z,hob=bounds(interior.group.getObjectByName('hob-glass'));
   const island=furniture.get('kitchen-island'),center=glass.getCenter(new THREE.Vector3());
-  close(center.x,(hob.min.x+hob.max.x)/2,'Oven shares the hob centre line');
+  assert(center.x-.595/2>hob.max.x+.018,'The oven clears the full 80 cm extractor bay and divider');
   close(ovenTop-rail.min.z,.595,'Oven has full 595 mm height');
   close(glass.max.x-glass.min.x+.05,.595,'Full-sized 595 mm front including 25 mm jambs');
   assert(ovenTop<hob.min.z-.06 && handle.max.y<glass.min.y && handle.min.y>island.box[1]);
@@ -931,6 +931,35 @@ test('a single 595 mm built-in oven faces the working aisle below the induction 
   for(const drawer of parts(island.id).filter(m=>m.name.includes('working-drawer-'))){
     const b=bounds(drawer);assert(b.max.x<=center.x-.30 || b.min.x>=center.x+.30);
   }
+});
+
+test('TÄCKNAN glass, four marked zones and open grilles sit over a dedicated NYTTIG service bay', () => {
+  const get=id=>interior.group.getObjectByName(id),glass=bounds(get('hob-glass'));
+  const slab=get('kitchen-island-top'),top=bounds(slab),outlet=bounds(get('kitchen-island-nyttig-outlet'));
+  const riser=bounds(get('kitchen-island-nyttig-riser')),oven=bounds(get('kitchen-island-oven-window'));
+  close(glass.max.x-glass.min.x,.8,'Glass width');close(glass.max.y-glass.min.y,.515,'Glass depth');
+  close(glass.max.z-glass.min.z,.004,'Glass thickness');close(glass.min.z,top.max.z,'Top-mounted glass');
+  close(top.max.z-top.min.z,.038,'Worktop sits within the 18–40 mm installation range');
+  const down=(object,x,y)=>{
+    object.updateMatrix();object.matrixWorld.copy(object.matrix);
+    return new THREE.Raycaster(new THREE.Vector3(x,y,1.20),new THREE.Vector3(0,0,-1)).intersectObject(object,false);
+  };
+  const {x,y}=glass.getCenter(new THREE.Vector3());
+  for(const [dx,dy] of [[.379,0],[-.379,0],[0,.244],[0,-.244]])assert.equal(down(slab,x+dx,y+dy).length,0);
+  for(const [dx,dy] of [[.381,0],[-.381,0],[0,.246],[0,-.246]])assert(down(slab,x+dx,y+dy).length);
+  for(const [row,diameter] of [['front',.16],['rear',.22]])for(const side of ['left','right']){
+    const zone=bounds(get('hob-induction-zone-'+row+'-'+side));
+    close(zone.max.x-zone.min.x,diameter,'Catalogue zone marking span');
+  }
+  const slotY=glass.min.y+.124;
+  for(const id of ['hob-glass','hob-extractor-grille','hob-chassis'])assert.equal(down(get(id),x,slotY).length,0,id+' leaves a real intake opening');
+  assert(down(get('hob-filter-bed'),x,slotY).length && get('hob-touch-keys') && get('hob-red-display'));
+  close(outlet.max.x-outlet.min.x,.46,'NYTTIG outlet width');close(outlet.max.z-outlet.min.z,.077,'Outlet height');
+  close(riser.max.x-riser.min.x,.22,'Riser width');close(riser.max.y-riser.min.y,.055,'Riser depth');
+  assert(riser.max.x<oven.min.x && riser.min.z<riser.max.z && outlet.min.y<riser.min.y);
+  const cutHeight=glass.max.z-outlet.min.z;assert(cutHeight>=.849 && cutHeight<=.935);
+  for(const id of ['kitchen-island-body','kitchen-island-cabinet-left','kitchen-island-cabinet-divider','kitchen-island-cabinet-right'])
+    assert(!bounds(get(id)).intersectsBox(riser),id+' clears the recirculation duct');
 });
 
 test('white covered socket is set into a real worktop opening well away from the hob', () => {
@@ -951,7 +980,7 @@ test('white covered socket is set into a real worktop opening well away from the
   close(rim.max.y-rim.min.y,.27,'270 mm opening across the island');
   close(rim.min.x-slab.min.x,.26,'260 mm of stone to window-side end');
   close(rim.min.y-slab.min.y,.175,'175 mm to the near working edge');
-  close(hob.min.x-rim.max.x,1.52,'Clear counter between socket and hob');
+  close(hob.min.x-rim.max.x,1.445,'Clear counter between socket and hob');
   const center = flap.getCenter(new THREE.Vector3()), ray = new THREE.Raycaster();
   ray.set(new THREE.Vector3(center.x,center.y,1.1),new THREE.Vector3(0,0,-1));
   for(const obj of [top,bezel,lid]){
@@ -962,21 +991,43 @@ test('white covered socket is set into a real worktop opening well away from the
   assert(ray.intersectObject(lid,false).length>0,'Closed cover occupies the opening');
 });
 
-test('Solid Palet tiles wrap three faces of the shallower 435 × 105 cm island', () => {
+test('the 80 cm single bowl is let into the worktop below the full-width mosaic', () => {
+  const get=id=>interior.group.getObjectByName(id);
+  const bowl=get('kitchen-sink-basin'),slab=get('kitchen-back-top'),drain=get('kitchen-sink-basket-strainer');
+  const rim=bounds(bowl),stone=bounds(slab),tile=bounds(get('kitchen-back-glazed-tiles'));
+  close(rim.max.x-rim.min.x,.80,'Overall sink width including rim');
+  close(rim.max.z-stone.max.z,.005,'Raised edge on stone');
+  assert(bounds(drain).max.z<stone.max.z-.19 && bounds(get('kitchen-sink-tap-aerator')).min.z>stone.max.z+.20);
+  interior.group.updateWorldMatrix(true,true);
+  for(const x of [3.70,3.91,4.20]){
+    const ray=new THREE.Raycaster(new THREE.Vector3(...interior.localToWorld([x,9.03,1.08])),
+      new THREE.Vector3(0,0,-1),0,.55);
+    const hit=ray.intersectObjects([...parts('kitchen-back'),...parts('kitchen-sink')])[0];
+    assert.equal(hit.object,bowl,'Open stone and cabinet reveal the continuous basin at '+x);
+    assert(hit.distance>.29 && hit.distance<.34,'Floor of the bowl is recessed across its width');
+  }
+  close(tile.min.x,bounds(get('kitchen-back-niche-end-trim')).max.x+.0009,'Mosaic begins at trim');
+  close(tile.max.x,stone.max.x-.0009,'Mosaic meets appliance column');
+  close(tile.min.z,stone.max.z+.0009,'Mosaic starts at the slab');
+  close(tile.max.z,bounds(get('kitchen-back-upper-0')).min.z-.0009,'Mosaic finishes under the upper cabinets');
+  const socket=data.electrical.points.findIndex(o=>o.support==='kitchen-back-slab-backsplash');
+  assert(bounds(get('loft-fixture-'+socket+'-frame')).min.y>=tile.max.y,'Socket mounts to the finished face');
+});
+
+test('orange and indigo Palet tiles wrap three faces of the 435 × 105 cm island', () => {
   const get=id=>interior.group.getObjectByName(id);
   const skin=get('kitchen-island-palet-cladding'),top=get('kitchen-island-top'),hob=get('hob-glass');
   const texture=skin.material.map,{position,normal,uv}=skin.geometry.attributes;
-  assert.equal(skin.material.name,'Palet 301');
-  assert.match(skin.material.userData.source,/color-1=301&color-2=301&design=marble-extra-light$/);
-  assert.equal(texture.wrapS,THREE.RepeatWrapping);assert.equal(texture.wrapT,THREE.RepeatWrapping);
-  close(1/texture.repeat.x,.149+.002,'149 mm tile with 2 mm grout');
-  const {data:pixels,width,height}=texture.image;
-  const pixel=(x,y)=>Array.from(pixels.slice((y*width+x)*4,(y*width+x)*4+3));
-  const glaze=[192,206,172],joint=pixel(0,Math.floor(height/2));
-  assert(joint.some((c,i)=>c!==glaze[i]) && joint.every((c,i)=>Math.abs(c-glaze[i])<=12));
-  for(let y=3;y<height-3;y++)for(let x=3;x<width-3;x++)
-    assert.deepEqual(pixel(x,y),glaze,'Tile face is a single glaze');
-  close(texture.repeat.x,texture.repeat.y,'Square tiles');
+  assert.equal(skin.material.name,'Palet orange and indigo glaze');
+  assert(skin.material.clearcoat>0 && skin.material.roughness<.45);
+  assert.equal(get('kitchen-island-tile-backing-salon').material.color.getHex(),0xeee2cd);
+  const pixels=texture.image.data;
+  let orange=0,indigo=0;
+  for(let i=0;i<pixels.length;i+=4){
+    if(pixels[i]>pixels[i+2]*2.2)orange++;
+    if(pixels[i+2]>pixels[i]*1.08)indigo++;
+  }
+  assert(orange>pixels.length/4*.55 && indigo>pixels.length/4*.06,'Both photographed glazes survive atlas sampling');
   const surface=bounds(skin),slab=bounds(top),drawers=bounds(get('kitchen-island-working-drawer-2-0'));
   close(slab.max.x-slab.min.x,4.35,'Island length');
   close(slab.max.y-slab.min.y,1.05,'Island depth');
@@ -989,17 +1040,25 @@ test('Solid Palet tiles wrap three faces of the shallower 435 × 105 cm island',
   assert.equal(top.material,get('kitchen-back-top').material);
   assert.notEqual(top.material,skin.material);
   close(bounds(hob).min.z,slab.max.z,'Hob sits on worktop');
-  close(surface.max.z,slab.min.z,'Cladding reaches stone underside');
+  close(surface.max.z,bounds(get('kitchen-island-stone-edge')).min.z,'Cladding reaches the underside of the mitred stone edge');
   close(surface.min.y,drawers.min.y,'Tile ends terminate at the drawer face');
   close(slab.max.y-surface.max.y,.018,'Stone overhang at salon face');
-  assert.equal(position.count,12);assert.equal(skin.geometry.index.count,18);
-  for(let face=0;face<3;face++){
-    const i=face*4,xyz=j=>new THREE.Vector3().fromBufferAttribute(position,j);
-    const direction=[[-1,0,0],[0,1,0],[1,0,0]][face];
-    assert(new THREE.Vector3().fromBufferAttribute(normal,i).distanceTo(new THREE.Vector3(...direction))<.001);
-    close(uv.getX(i+3)-uv.getX(i),xyz(i+3).distanceTo(xyz(i)),'Horizontal unwrapped metres');
-    close(uv.getY(i+1)-uv.getY(i),xyz(i+1).distanceTo(xyz(i)),'Vertical unwrapped metres');
-    if(i)close(uv.getX(i),uv.getX(i-1),'Pattern continues around corner');
+  const faces=new Map(),variants=new Set(),xyz=i=>new THREE.Vector3().fromBufferAttribute(position,i);
+  for(let i=0;i<position.count;i+=4){
+    const l=xyz(i),t=xyz(i+1),r=xyz(i+2),n=new THREE.Vector3().fromBufferAttribute(normal,i);
+    const width=t.distanceTo(r),height=t.z-l.z;
+    assert(width<=.14901 && height<=.14901 && width>0 && height>0);
+    if(Math.abs(width-.149)>.00001 || Math.abs(height-.149)>.00001)continue;
+    variants.add(Math.floor(uv.getX(i)*4)+':'+Math.floor(uv.getY(i)*6));
+    const face=[n.x,n.y].map(Math.round).join(',');
+    if(!faces.has(face))faces.set(face,[]);
+    if(Math.abs(t.z-surface.max.z)<.00001)faces.get(face).push(Math.abs(n.y)>.5?l.x:l.y);
+  }
+  assert.equal(variants.size,24,'All reference tile faces are used');
+  assert.deepEqual([...faces.keys()].sort(),['-1,0','0,1','1,0']);
+  for(const edges of faces.values()){
+    edges.sort((a,b)=>a-b);assert(edges.length>=4);
+    for(let i=1;i<edges.length;i++)close(edges[i]-edges[i-1]-.149,.002,'Two mm of grout between full tiles');
   }
 });
 
@@ -1367,4 +1426,29 @@ test('pantry printing reads left to right from the aisle in the default mirrored
     const reading=vertex(1).sub(vertex(0)).multiplyScalar(uv.getX(1)-uv.getX(0));
     assert(reading.dot(right)>0,label.name+' reads from left to right');
   }
+});
+
+test('the reclining adult rests on the sectional within its walk footprint', () => {
+  const get = suffix => interior.group.getObjectByName('lounge-reader-' + suffix);
+  const adult = parts('lounge-reader');
+  assert(adult.length > 0 && adult.every(piece => piece.userData.pose === 'reclining'));
+  const sofa = itemBounds('sofa'), figure = itemBounds('lounge-reader');
+  for (const axis of ['x','y']) {
+    assert(figure.min[axis] >= sofa.min[axis] && figure.max[axis] <= sofa.max[axis], 'Figure fits inside the sofa on '+axis);
+  }
+  const seat = bounds(interior.group.getObjectByName('sofa-seat')), cushion = bounds(get('head-pillow'));
+  const face = bounds(get('face')), hip = bounds(get('trousers-seat'));
+  assert(cushion.min.z <= seat.max.z && cushion.max.z > seat.max.z + .10);
+  assert(cushion.intersectsBox(face) && face.min.z > seat.max.z + .07);
+  assert(Math.abs(hip.min.z - seat.max.z) < .022, 'Hips bear on the seat');
+  const legs = [0,1].map(i => bounds(get('trouser-leg-'+i)));
+  assert(legs[1].max.z > legs[0].max.z + .11, 'One knee is raised');
+  for(const i of [0,1]) {
+    assert(Math.abs(bounds(get('sock-'+i)).min.z - seat.max.z) < .022, 'Socks rest on the cushion');
+  }
+  const extent = bounds(get('sock-0')).max.y - face.min.y;
+  assert(extent > 1.70 && extent < 1.90, 'Adult head-to-foot length in the reclined pose');
+  assert(figure.max.z < sofa.max.z + .02, 'Figure stays under the backrest silhouette');
+  assert(adult.reduce((sum,piece) => sum + piece.geometry.index.count / 3,0) < 35000);
+  assert(!interior.navigation.obstacles.some(obstacle => obstacle.id.includes('lounge-reader')));
 });
