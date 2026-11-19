@@ -108,3 +108,16 @@ test('walk enters either house and travels between both houses through the open 
   assert.ok(walk.getState().grounded);
   walk.exit();
 });
+
+test('default walking view returns to its configured position and heading after visiting another house', () => {
+  const startView = { position: [-1, 2, 0], target: [-3, 4, 0] };
+  const walk = setup({ interiors, startView });
+  for (let visit = 0; visit < 2; visit++) {
+    walk.enter();
+    assert.deepEqual(walk.getState().position, [-1, 2, 1.7]);
+    assert.ok(Math.abs(walk.getState().yaw + Math.PI / 4) < 1e-6);
+    walk.enter([20, 1, 0], [1, 0]);
+    assert.deepEqual(walk.getState().position, [20, 1, 1.7]);
+    walk.exit();
+  }
+});

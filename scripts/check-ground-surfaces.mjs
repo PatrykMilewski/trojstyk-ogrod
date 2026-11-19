@@ -66,7 +66,7 @@ test('published ground surface implementation matches source',()=>{
   assert(html.includes(groundSource.replaceAll('export ','')));
 });
 
-test('Icon wooden floors share the measured parquet scan while wet rooms and Floryda keep their own finishes',async()=>{
+test('Icon floors use 592 × 148 mm Dąb Virgin vinyl at the existing heights and wet rooms and Floryda keep their finishes',async()=>{
   const source=await readFile(new URL('../src/model/surface-realism.js',import.meta.url),'utf8');
   const {applyRealisticSurfaces}=await load(source);
   const scene=new THREE.Scene(),icon=new THREE.Group(),floryda=new THREE.Group();
@@ -81,22 +81,34 @@ test('Icon wooden floors share the measured parquet scan while wet rooms and Flo
   const [ground,upper,wet]=['ground-floor','upper-oak-finish','finish-0.1'].map(name=>model.group.getObjectByName(name));
   icon.add(ground,upper,wet);
   const other=floor(floryda,'ground-floor',0xb9956c);
+  const heights=[ground,upper].map(mesh=>({origin:mesh.position.z,vertices:Array.from(mesh.geometry.attributes.position.array)}));
   const maps=[new THREE.Texture(),new THREE.Texture()];
   class Loader {async loadAsync(index){return maps[index];}}
   await applyRealisticSurfaces({THREE:{...THREE,TextureLoader:Loader},scene,mats:{},
-    renderer:{capabilities:{getMaxAnisotropy:()=>4}},scans:{parquet:[0,1]}});
-  for(const mesh of [ground,upper]){
+    renderer:{capabilities:{getMaxAnisotropy:()=>4}},scans:{virginOakVinyl:[0,1]}});
+  // Four plank lengths cross the texture diagonal per axis (16 widths at 45 degrees).
+  const repeat=4*.592*Math.SQRT2;
+  for(const [index,mesh] of [ground,upper].entries()){
+    assert.equal(mesh.material.name,'virginOakVinyl');
+    assert.equal(mesh.material.color.getHex(),0xffffff);
+    assert.equal(mesh.material.bumpScale,.00065);
+    assert.equal(mesh.position.z,heights[index].origin);
+    assert.deepEqual(Array.from(mesh.geometry.attributes.position.array),heights[index].vertices);
     assert.equal(mesh.material.map,maps[0]);assert.equal(mesh.material.bumpMap,maps[1]);
     const {uv,position,normal}=mesh.geometry.attributes;
     let vertices=0;
     for(let i=0;i<uv.count;i++){
       if(normal.getZ(i)<.99)continue;
-      assert(Math.abs(uv.getX(i)*3.4-position.getX(i))<1e-5);
-      assert(Math.abs(uv.getY(i)*3.4-position.getY(i))<1e-5);
+      assert(Math.abs(uv.getX(i)*repeat-position.getX(i))<1e-5);
+      assert(Math.abs(uv.getY(i)*repeat-position.getY(i))<1e-5);
       vertices++;
     }
-    assert(vertices>=3,'Each floor has a horizontal parquet surface');
+    assert(vertices>=3,'Each floor has a horizontal vinyl surface');
   }
   assert.equal(wet.material.name,'tile');assert.equal(other.material.name,'oak');
-  assert(html.includes('"parquet": ["data:image/webp;base64,'),'Standalone viewer contains the floor texture');
+  const images=await Promise.all(['.webp','-relief.webp'].map(async suffix=>{
+    const bytes=await readFile(new URL('../src/model/surface-scans/virgin_oak_click'+suffix,import.meta.url));
+    return 'data:image/webp;base64,'+bytes.toString('base64');
+  }));
+  assert(html.includes('"virginOakVinyl": ["'+images.join('", "')+'"]'),'Standalone viewer embeds the current vinyl and its registered relief');
 });

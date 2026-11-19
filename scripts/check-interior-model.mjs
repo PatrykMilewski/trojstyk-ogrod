@@ -24,7 +24,7 @@ test('published interior dimensions match source', { skip: sourceOnly }, () => {
 });
 const { navigation, localToWorld } = addIconInterior({ THREE, scene: new THREE.Scene(), house, data });
 const stairs = [[7.4, 8.8, 0], [8.39, 9.23, 0], [8.39, 11.31, 1.6], [8.39, 11.8, 1.6],
-  [9.35, 11.8, 1.6], [9.35, 11.31, 1.6], [9.35, 9.23, 3.2], [8.7, 8.6, 3.2]];
+  [9.35, 11.8, 1.6], [9.35, 11.31, 1.6], [9.35, 9.23, 3.2], [9.35, 8.6, 3.2], [8.7, 8.6, 3.2]];
 const routes = {
   '0.1': [[7.4, 5.5], [5.5, 5.5]],
   '0.2': [[7.4, 5.5], [2.1, 5.5], [2.1, 7.5]],

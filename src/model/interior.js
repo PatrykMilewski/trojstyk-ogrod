@@ -9,6 +9,7 @@ export function addIconInterior(options) {
  options.fitGarage?.(context);
  const projector=iconLivingProjector(context);
  iconLivingWallSconce(context);
+ iconLivingMediaAccessories(context);
  iconInteriorLightingAndRoof(context);
  iconMoodEntryBathFinishes(context);
  if(context.data.electrical)iconLoftElectrical(context);
@@ -523,18 +524,15 @@ function iconInteriorStairs(context) {
  const screen=iconPerforatedGuardMaterial(THREE,steel);
  for(const [flight,x,y,dir,base] of [['lower',sx,sy,1,0],['upper',ex-s.width,turn,-1,half]]){
   const profile=iconFoldedStairFlight(context,flight,x,s.width,y,dir,base,steps,s.tread,rise,steel);
-  // Follow the upper face of every fold so the perforated infill has no triangular gap below it.
+  // In the mirrored house the minimum-x edge is the lower flight's right side and the upper flight's open side.
+  const id='stair-'+flight+'-left',lower=flight==='lower',approach=lower?s.tread/2:0;
   const guardBase=profile.slice(1,-1).concat([[run,base+half]]);
-  for(const [side,edge] of [['left',x],['right',x+s.width]]){
-   const id='stair-'+flight+'-'+side;
-   const approach=flight==='lower'&&side==='left'?s.tread/2:0;
-   const infill=approach?[[0,base+rise],...guardBase.filter(([u])=>u>approach).map(([u,z])=>[u-approach,z])]:guardBase;
-   iconStairGuard(context,id,[edge,y+dir*approach],[edge,y+dir*run],infill,base+guardHeight+half*approach/run,
-    base+half+guardHeight,steel,screen,flight==='lower'&&side==='left',approach?base+rise:base);
-   for(let i=0;i<steps;i++){
-    const lo=y+dir*Math.max(approach,i*s.tread),hi=y+dir*(i+1)*s.tread;
-    obstacle(id+'-'+i,[edge-.012,Math.min(lo,hi),edge+.012,Math.max(lo,hi)],base+i*rise,base+(i+1)*half/steps+guardHeight);
-   }
+  const infill=lower?[[0,base+rise],...guardBase.filter(([u])=>u>approach).map(([u,z])=>[u-approach,z])]:guardBase;
+  iconStairGuard(context,id,[x,y+dir*approach],[x,y+dir*run],infill,base+guardHeight+half*approach/run,
+   base+half+guardHeight,steel,screen,lower,lower?base+rise:base);
+  for(let i=0;i<steps;i++){
+   const lo=y+dir*Math.max(approach,i*s.tread),hi=y+dir*(i+1)*s.tread;
+   obstacle(id+'-'+i,[x-.012,Math.min(lo,hi),x+.012,Math.max(lo,hi)],base+i*rise,base+(i+1)*half/steps+guardHeight);
   }
   navigation.ramps.push({id:'stair-'+flight,start:world([x+s.width/2,y]).slice(0,2),
    end:world([x+s.width/2,y+dir*run]).slice(0,2),width:s.width,z0:base,z1:base+half});
@@ -542,7 +540,7 @@ function iconInteriorStairs(context) {
  box('stair-landing',[sx,turn,ex,ey],half-iconLandingPlate,iconLandingPlate,steel);floor('stair-landing',[sx,turn,ex,ey],half);
  for(const [id,a,b] of [['lower',[sx,turn],[sx,ey]],['back',[sx,ey],[ex,ey]],['upper',[ex,ey],[ex,turn]]]){
   const length=Math.hypot(b[0]-a[0],b[1]-a[1]);
-  iconStairGuard(context,'landing-'+id,a,b,[[0,half],[length,half]],half+guardHeight,half+guardHeight,steel,screen,true);
+  iconStairGuard(context,'landing-'+id,a,b,[[0,half],[length,half]],half+guardHeight,half+guardHeight,steel,screen,id!=='upper');
   obstacle('landing-'+id,[Math.min(a[0],b[0])-.025,Math.min(a[1],b[1])-.025,
    Math.max(a[0],b[0])+.025,Math.max(a[1],b[1])+.025],half,half+guardHeight);
  }
@@ -550,7 +548,9 @@ function iconInteriorStairs(context) {
  box('upper-stair-rim',[7.87,10.3,8.01,12.28],3.02,.18,mats.wood);
  box('upper-stair-rim-anchor',[7.94,12.14,9.87,12.28],3.02,.18,mats.wood);
  for(const guard of data.rails)rail(guard.id,guard.a,guard.b,guard.level?3.2:0,true);
- obstacle('stair-divider',[sx+s.width,sy,sx+s.width+s.gap,turn],0,s.floorHeight);
+ rail('upper-stair-hall-side',[sx,data.void.box[1]],[sx,sy],s.floorHeight,true);
+ rail('upper-stair-hall-front',[sx,sy],[sx+s.width+s.gap/2,sy],s.floorHeight,true);
+ rail('upper-stair-rear',[sx,ey],[ex,ey],s.floorHeight,true);
 }
 
 function iconInteriorOfficeBacking(context) {
@@ -1287,6 +1287,42 @@ function iconLivingYoffers({THREE},frame,s) {
   part('side-stretcher-'+i,[x-.011,.08,x+.011,d-.08],.127,.039,oak);
  }
  part('underframe-rail',[.213,d/2-.014,w-.213,d/2+.014],.15,.043,oak);
+}
+
+function iconMediaArtBook({THREE},s,name,u,v,z,w,d,h,angle,cover,pages) {
+ const board=.003;
+ function layer(id,width,depth,height,offsetY,base,material) {
+  const geometry=new THREE.BoxGeometry(width,depth,height);
+  geometry.translate(0,offsetY,base+height/2);
+  geometry.rotateZ(angle);
+  s.add(name+'-'+id,geometry,material,u,v,z);
+ }
+ layer('back-cover',w,d,board,0,0,cover);
+ layer('paper',w-.007,d-.009,h-2*board,-.001,board,pages);
+ layer('spine',w,.005,h-2*board,d/2-.0025,board,cover);
+ layer('front-cover',w,d,board,0,h-board,cover);
+}
+
+function iconLivingMediaAccessories(context) {
+ const {THREE,data,obstacle}=context,cabinet=data.furniture.find(item=>item.id==='media-console');
+ if(!cabinet)return;
+ const frame=iconInteriorFurnitureFrame(context,{...cabinet,id:'media-decor'});
+ const s=iconLivingShapes(context,frame),p=iconLivingPalette(context),top=cabinet.height;
+ const u=.43,v=frame.depth/2;
+ iconMediaArtBook(context,s,'indigo-folio',u,v,top,.331,.242,.035,-.035,p.indigo,p.chalk);
+ iconMediaArtBook(context,s,'linen-folio',u+.008,v+.003,top+.035,.282,.211,.027,.055,p.linen,p.ivory);
+ iconUpperCeramic(s,THREE,'footed-dish',u+.019,v+.013,top+.062,.094,.094,
+  [[0,0],[.45,0],[.46,.011],[.38,.017],[.61,.022],[.88,.036],[1,.049],[.99,.054],[.90,.052],[.64,.034],[.32,.026],[0,.024]],p.cocoa);
+ const urn=frame.width+.38,depth=frame.depth*.50,rx=.157,ry=.145,handleReach=.204;
+ const clay=new THREE.MeshStandardMaterial({name:'Oxblood glazed earthenware',color:'#854839',roughness:.48});
+ iconUpperCeramic(s,THREE,'floor-amphora',urn,depth,0,rx,ry,
+  [[0,0],[.55,0],[.57,.021],[.54,.036],[.66,.08],[.82,.16],[.96,.27],[1,.35],[.98,.415],[.88,.477],[.66,.513],[.40,.538],[.37,.563],[.38,.619],[.44,.625],[.44,.641],[.35,.641],[.33,.621],[.32,.562],[.36,.544]],clay);
+ for(const side of [-1,1]) {
+  const at=(offset,z)=>[urn+side*offset,depth,z];
+  s.tube('amphora-handle-'+side,[at(.058,.587),at(.113,.592),at(.163,.556),at(handleReach-.014,.480),at(.166,.421),at(.147,.399)],.014,clay);
+ }
+ const [x,y]=frame.point(urn,depth);
+ obstacle('media-floor-amphora',[x-ry,y-handleReach,x+ry,y+handleReach],0,.641);
 }
 
 function iconLivingWallSconce(context) {

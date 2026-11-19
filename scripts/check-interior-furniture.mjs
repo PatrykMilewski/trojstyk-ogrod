@@ -872,6 +872,27 @@ test('Yoffers cabinet has catalogue dimensions, curved tambour ends, a plain bac
   assert(walk.pathBlocked(point(1.35,14.48),point(.66,14.48)));
 });
 
+test('media wall decor rests on its supports, with the floor vase tucked behind the cabinet front', () => {
+  const decor=id=>bounds(interior.group.getObjectByName('media-decor-'+id));
+  const cabinet=itemBounds('media-console'),base=decor('indigo-folio-back-cover'),upper=decor('linen-folio-back-cover'),dish=decor('footed-dish');
+  close(base.min.z,cabinet.max.z,'Lower book rests on cabinet');
+  close(upper.min.z,decor('indigo-folio-front-cover').max.z,'Books are stacked');
+  close(dish.min.z,decor('linen-folio-front-cover').max.z,'Dish rests on upper cover');
+  for(const piece of [base,upper,dish]){
+    assert(piece.min.x>cabinet.min.x && piece.max.x<cabinet.max.x && piece.min.y>cabinet.min.y && piece.max.y<cabinet.max.y);
+    assert(piece.max.z<data.projection.centerHeightM-data.projection.heightM/2-.25);
+  }
+  const vase=decor('floor-amphora').union(decor('amphora-handle--1')).union(decor('amphora-handle-1'));
+  close(vase.min.z,0,'Floor vase rests on floor');
+  assert(vase.max.z>cabinet.max.z && vase.max.z<.7 && vase.min.x>cabinet.min.x && vase.max.x<cabinet.max.x);
+  assert(vase.max.y<cabinet.min.y-.12 && vase.min.y>bounds(interior.group.getObjectByName('living-sconce-backplate')).max.y);
+  const point=(x,y)=>interior.localToWorld([x,y]).slice(0,2);
+  const walk=createWalkCollision(interior.navigation.obstacles.filter(o=>o.id==='media-floor-amphora'));
+  const center=vase.getCenter(new THREE.Vector3());
+  assert(walk.pathBlocked(point(1.4,center.y),point(center.x,center.y)));
+  assert(!walk.pathBlocked(point(1.35,center.y-.5),point(1.35,center.y+.5)));
+});
+
 test('study library and matching striped pug nests retain their floor space and access', () => {
   const library=itemBounds('office-bookcase');
   close(library.max.x-library.min.x,2.15,'Fitted width');

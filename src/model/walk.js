@@ -469,7 +469,7 @@ export function mergeInteriorNavigation(interiors) {
     ceilingHeight: point => Math.min(Infinity, ...sources.map(({ navigation }) => navigation.ceilingHeight?.(point) ?? Infinity)) };
 }
 
-export function setupWalk({ THREE, scene, house, neighbors, camera, controls, renderer, requestDraw, onCameraChange, button, shortcutButton, interior, interiors }) {
+export function setupWalk({ THREE, scene, house, neighbors, camera, controls, renderer, requestDraw, onCameraChange, button, shortcutButton, interior, interiors, startView }) {
   const view = createWalkView(THREE, requestDraw, scene), perspective = view.camera;
   const sources = interiors ?? [{ parcel: '193', navigation: interior?.navigation }];
   const navigation = mergeInteriorNavigation(sources);
@@ -495,10 +495,11 @@ export function setupWalk({ THREE, scene, house, neighbors, camera, controls, re
   }
   function enter(preferred, direction) {
     if (active && !preferred) return;
-    const point = preferred ?? [controls.target.x, controls.target.y];
+    const point = preferred ?? startView?.position ?? [controls.target.x, controls.target.y];
     const spawnCollision = navigation ? walkInteriorCollision(collision, navigation, point[2] ?? 0, point[2] ?? 0) : collision;
     const spawn = [...spawnCollision.safeSpawn(point.slice(0, 2)), point[2] ?? 0];
-    view.face(direction ? new THREE.Vector3(direction[0], direction[1], 0) : camera.getWorldDirection(new THREE.Vector3()));
+    const facing = direction ?? (!preferred && startView ? [startView.target[0] - point[0], startView.target[1] - point[1]] : null);
+    view.face(facing ? new THREE.Vector3(facing[0], facing[1], 0) : camera.getWorldDirection(new THREE.Vector3()));
     if (frame !== null) cancelAnimationFrame(frame);
     motion.reset(navigation ? spawn : spawn.slice(0, 2)); perspective.position.set(...motion.getState().position); active = true; controls.enabled = false;
     input.clear(); gyro.enter(); panel.hidden = false; document.body.classList.add('walk-mode');

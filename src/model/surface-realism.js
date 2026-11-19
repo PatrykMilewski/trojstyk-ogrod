@@ -205,7 +205,7 @@ const surfaceTurfColors = {
   a5b58c: 0x799654, '9db286': 0x719452,
 };
 
-function surfaceProfileFor(object, material, key, index, hasParquetScan) {
+function surfaceProfileFor(object, material, key, index, hasVinylTexture) {
   const {name, parent, geometry} = object;
   if (!material.isMeshStandardMaterial || material.map || material.transparent) return null;
   const color = material.color.getHexString();
@@ -222,8 +222,8 @@ function surfaceProfileFor(object, material, key, index, hasParquetScan) {
   if (key === 'garage' || name === 'garage-sectional-door') return 'garage';
   const movingDoor = parent.userData.kind === 'walk-door' || parent.parent?.userData.kind === 'walk-door';
   if (movingDoor || object.userData.kind === 'hall-partition') return surfaceInteriorColors[color];
-  if (hasParquetScan && parent.name === 'icon-193-interior'
-    && (name === 'ground-floor' || name === 'upper-oak-finish')) return 'parquet';
+  if (hasVinylTexture && parent.name === 'icon-193-interior'
+    && (name === 'ground-floor' || name === 'upper-oak-finish')) return 'virginOakVinyl';
   if (parent.name === 'icon-193-interior' || parent.name === 'floryda-190-interior') {
     if (Array.isArray(object.material) && index === 1) return 'facade';
     if (surfaceInteriorColors[color] === 'oak' && /stair/.test(name)) return 'wood';
@@ -365,7 +365,8 @@ const scannedSurfaces = {
   planting: {metres: 1.3, tint: 0xd3bba3},
   gravel: {metres: 2.25, tint: 0xeee3cf},
   terrace: {metres: 1.5, tint: 0xffefda},
-  parquet: {metres: 3.4, tint: 0xfff6e9, roughness: .63, bump: .003, gain: 1.08},
+  // The square repeat spans 16 diagonal grid steps of a 592 × 148 mm English herringbone.
+  virginOakVinyl: {metres: 16 * Math.SQRT2 * .148, tint: 0xffffff, roughness: .60, bump: .00065, gain: 1},
 };
 
 async function loadSurfaceScans(THREE, scans, anisotropy) {
@@ -387,7 +388,7 @@ export async function applyRealisticSurfaces({THREE, scene, mats, renderer, scan
   const materials = new Map();
   const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   const textures = await loadSurfaceScans(THREE, scans, anisotropy);
-  const hasParquetScan = textures.has('parquet');
+  const hasVinylTexture = textures.has('virginOakVinyl');
   scene.traverse(object => {
     if (!object.isMesh || !object.geometry?.getAttribute('position')) return;
     if (object.isInstancedMesh && object.name.endsWith('-trunks') && textures.has('bark')) {
@@ -395,7 +396,7 @@ export async function applyRealisticSurfaces({THREE, scene, mats, renderer, scan
       return;
     }
     const originals = Array.isArray(object.material) ? object.material : [object.material];
-    const types = originals.map((material, i) => surfaceProfileFor(object, material, keys.get(material), i, hasParquetScan));
+    const types = originals.map((material, i) => surfaceProfileFor(object, material, keys.get(material), i, hasVinylTexture));
     const type = types.find(Boolean);
     if (!type) return;
     const angle = /^surface-(driveway|entry|terrace)$/.test(object.name) ? siteRotation : 0;

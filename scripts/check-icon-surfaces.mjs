@@ -75,11 +75,17 @@ test('counter tops have no overlapping exposed body faces and exterior walls hav
   for (const mesh of interior.group.children.filter(m => m.isMesh)) for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) assert(!material.polygonOffset, 'No depth offset masking');
 });
 
-test('perforated guards enclose the two flights and landing, with a continuous handrail', () => {
+test('mirrored lower flight has a right-hand guard and the upper flight protects its open side', () => {
   const s=data.stairs,[sx,sy,ex,ey]=s.box,turn=sy+(s.rises/2-1)*s.tread,half=s.floorHeight/2;
-  for(const [id,x,y,dir,base] of [['lower',sx,sy,1,0],['upper',ex-s.width,turn,-1,half]]){
-    for(const [side,edge] of [['left',x],['right',x+s.width]]){
-      const name='stair-'+id+'-'+side,screen=object(name+'-perforated-infill');
+  for(const [id,edge,y,dir,base] of [['lower',sx,sy,1,0],['upper',ex-s.width,turn,-1,half]]){
+      const name='stair-'+id+'-left',screen=object(name+'-perforated-infill');
+      const removed='stair-'+id+'-right';
+      assert(!interior.group.children.some(mesh=>mesh.name.startsWith(removed)),'Removed guard has no visible components');
+      assert(!interior.navigation.obstacles.some(o=>o.id.startsWith(removed)),'Removed guard has no collision');
+      const ramp=interior.navigation.ramps.find(r=>r.id==='stair-'+id);
+      const forward=new THREE.Vector2(...ramp.end).sub(new THREE.Vector2(...ramp.start));
+      const atEdge=new THREE.Vector2(...interior.localToWorld([edge,y])).sub(new THREE.Vector2(...ramp.start));
+      assert.equal(Math.sign(forward.cross(atEdge)),id==='lower'?-1:1,'Handedness in the mirrored scene');
       const top=object(name+'-top'),material=screen.material,alpha=material.alphaMap;
       assert.equal(material.color.getHex(),top.material.color.getHex());
       assert(material.transparent&&alpha?.isDataTexture&&alpha.generateMipmaps,'Perforations use a filtered alpha mask');
@@ -87,32 +93,61 @@ test('perforated guards enclose the two flights and landing, with a continuous h
       assert(values.some(v=>v===0)&&values.some(v=>v===255),'Open and solid portions');
       assert(screen.geometry.attributes.position.count<60,'No per-hole geometry');
       for(let i=0;i<s.rises/2-1;i++){
-        const fraction=id==='lower'&&side==='left'&&i===0?.75:.5;
+        const fraction=id==='lower'&&i===0?.75:.5;
         const py=y+dir*(i+fraction)*s.tread,treadZ=base+(i+1)*s.floorHeight/s.rises;
         assert(hits(screen,[edge-.06,py,treadZ+.015],[1,0,0],.12).length,'Infill meets each tread');
         assert(!hits(screen,[edge-.06,py,treadZ-.02],[1,0,0],.12).length,'Infill follows the stair folds');
         const guardZ=base+1.12+half*(i+fraction)/(s.rises/2-1);
         assert(hits(screen,[edge-.06,py,guardZ-.02],[1,0,0],.12).length,'Infill reaches sloping handrail');
+        assert(interior.navigation.obstacles.some(o=>o.id===name+'-'+i&&contains(interior.localToWorld([edge,py]),o.ring)));
       }
-    }
   }
   for(const [name,p] of [['lower',[sx,(turn+ey)/2]],['back',[(sx+ex)/2,ey]],['upper',[ex,(turn+ey)/2]]]){
     const across=name==='back'?[0,1,0]:[1,0,0],mesh=object('landing-'+name+'-perforated-infill');
     for(const h of [.02,.55,1.10])assert(hits(mesh,[p[0]-.05*across[0],p[1]-.05*across[1],half+h],across,.10).length);
   }
-  for(const [flight,side,x] of [['lower','left',sx],['upper','right',ex]]){
-    const joint=new THREE.Vector3(x,turn,half+1.12);
-    for(const name of ['stair-'+flight+'-'+side+'-top','landing-'+flight+'-top']){
-      const rail=object(name),halfLength=rail.geometry.parameters.height/2;
-      const ends=[-halfLength,halfLength].map(v=>new THREE.Vector3(0,v,0).applyMatrix4(rail.matrix));
-      assert(ends.some(end=>end.distanceTo(joint)<1e-5),'Handrail joins landing at '+name);
-    }
+  const joint=new THREE.Vector3(sx,turn,half+1.12);
+  for(const name of ['stair-lower-left-top','landing-lower-top']){
+    const rail=object(name),halfLength=rail.geometry.parameters.height/2;
+    const ends=[-halfLength,halfLength].map(v=>new THREE.Vector3(0,v,0).applyMatrix4(rail.matrix));
+    assert(ends.some(end=>end.distanceTo(joint)<1e-5),'Handrail joins landing at '+name);
   }
-  for (const [guard, rim] of [['upper-void-edge', 'upper-void-rim'], ['upper-stair-edge', 'upper-stair-rim']]) {
+  for (const [guard, rim] of [['upper-void-edge', 'upper-void-rim'], ['upper-stair-edge', 'upper-stair-rim'], ['upper-stair-rear','upper-stair-rim-anchor']]) {
     const support = bounds(object(rim)); close(support.max.z, 3.2, 'Rim supports upper guard');
     for (let i = 0; ; i++) { const post = interior.group.getObjectByName(`${guard}-post-${i}`); if (!post) break; const b = bounds(post); assert(b.min.x >= support.min.x - .02 && b.max.x <= support.max.x + .02 && b.min.y >= support.min.y - .02 && b.max.y <= support.max.y + .02); close(b.min.z, support.max.z, 'Guard post bears on rim'); }
   }
   assert(bounds(object('upper-stair-rim-anchor')).max.x >= 9.87 - 1e-5, 'Rim is anchored to upper suite floor');
+});
+
+test('upper hall guards block the drop and the normal staircase remains walkable both ways', async () => {
+  const {createWalkMotion,createWalkCollision}=await load(await readFile(new URL('../src/model/walk.js',import.meta.url),'utf8'));
+  const motion=createWalkMotion(createWalkCollision([]),interior.navigation);
+  const {box:[sx,sy,ex,ey],width,floorHeight}=data.stairs;
+  const lower=sx+width/2,upper=ex-width/2,landingY=ey-data.stairs.landingDepth/2;
+  const moveTo=(x,y)=>{
+    const [px,py]=motion.getState().position,[tx,ty]=interior.localToWorld([x,y]);
+    const dx=tx-px,dy=ty-py;
+    return motion.move(1,0,Math.hypot(dx,dy)/2.2,Math.atan2(dx,dy));
+  };
+  for(const [id,point,axis] of [['upper-stair-hall-side',[sx,sy+.5],0],['upper-stair-hall-front',[lower,sy],1],['upper-stair-rear',[upper,ey],1]]){
+    const origin=[...point,floorHeight+.6],direction=[0,0,0];
+    origin[axis]-=.1;direction[axis]=1;
+    assert(interior.group.children.filter(m=>m.name.startsWith(id+'-glass-')).some(m=>hits(m,origin,direction,.2).length));
+    assert(interior.navigation.obstacles.some(o=>o.id===id&&o.minZ===floorHeight&&contains(interior.localToWorld(point),o.ring)));
+  }
+  for(const [start,target] of [[[sx-.5,sy+.5],[sx+.4,sy+.5]],[[lower,sy-.5],[lower,sy+.4]]]){
+    motion.reset(interior.localToWorld([...start,floorHeight]));
+    const stop=moveTo(...target),destination=interior.localToWorld(target);
+    assert(Math.hypot(stop[0]-destination[0],stop[1]-destination[1])>.6);
+    close(motion.getState().floorHeightM,floorHeight,'Upper hallway guard prevents falling');
+  }
+  motion.reset(interior.localToWorld([lower,sy-.5,0]));
+  for(const [x,y,z] of [[lower,landingY,floorHeight/2],[upper,landingY,floorHeight/2],[upper,sy-.5,floorHeight],
+    [upper,landingY,floorHeight/2],[lower,landingY,floorHeight/2],[lower,sy-.5,0]]){
+    const final=moveTo(x,y),expected=interior.localToWorld([x,y]);
+    close(final[0],expected[0],'Walk reaches x');close(final[1],expected[1],'Walk reaches y');
+    close(motion.getState().floorHeightM,z,'Walk reaches correct floor');
+  }
 });
 
 test('roof joins are checked against actual lining triangles, and exterior inner faces reach them', () => {
