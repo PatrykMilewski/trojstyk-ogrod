@@ -378,7 +378,7 @@
           "opensTo": "right",
           "flushFace": "right",
           "leftFinish": "garage",
-          "rightFinish": "wall"
+          "rightFinish": "vestibule"
         }
       ]
     },
@@ -437,7 +437,7 @@
           "opensTo": "right",
           "flushFace": "left",
           "leftFinish": "coral",
-          "rightFinish": "wall"
+          "rightFinish": "playroom"
         }
       ]
     },
@@ -464,7 +464,7 @@
           "hinge": "start",
           "opensTo": "left",
           "flushFace": "right",
-          "leftFinish": "wall",
+          "leftFinish": "office",
           "rightFinish": "coral"
         }
       ]
@@ -829,6 +829,7 @@
       "Room 0.8 retains the catalogue folded sofa position. Its assumed pull-out daybed extends toward the room centre to 1.65 m overall depth, including frame and back, with a proposed 1.95 × 1.45 m sleeping area."
     ],
     "furnitureSources": {
+      "user-plant": "Proposed equipment for room 0.3, with an outdoor air-source unit on the blank garage side and an indicative PV inverter. Equipment sizes, pipe and duct terminations and mounting positions are visual design allowances. Final selection, sizing, routing and service clearances require installer design.",
       "ikea-tacknan": "IKEA TÄCKNAN 296.125.04 with NYTTIG 806.231.27. https://www.ikea.com/pl/pl/p/taecknan-plyta-ind-zint-okap-z-zest-d-pochla-ikea-300-czarny-s29612504/",
       "ground-plan": "work/sources/icon-parter-zwykly.jpg, publisher original ground floor, rooms 0.1–0.9",
       "beliani-madox": "Custom 135 × 78 × 75 cm table based on the closed 120 × 75 cm Beliani MADOX. The dark-walnut finish, 2 cm top and 64 cm exposed legs follow the reference. https://www.beliani.pl/stol-do-jadalni-ciemne-drewno-rozkladany-120-150-x-75-cm-madox.html",
@@ -968,47 +969,107 @@
       "wallShelfSource": "bror-wall"
     },
     {
-      "id": "utility-left",
-      "type": "cabinet",
+      "id": "dhw-cylinder",
+      "type": "dhw-cylinder",
       "room": "0.3",
       "box": [
-        3.87,
-        6.79,
-        4.47,
-        7.79
-      ],
-      "facing": "+x",
-      "source": "ground-plan",
-      "height": 1.6
-    },
-    {
-      "id": "utility-plant",
-      "type": "cabinet",
-      "room": "0.3",
-      "box": [
-        3.87,
-        7.79,
-        5.45,
+        3.89,
+        7.73,
+        4.55,
         8.39
       ],
       "facing": "-y",
-      "source": "ground-plan",
-      "height": 1.6
+      "source": "user-plant",
+      "height": 1.76
     },
     {
       "id": "heat-pump-module",
-      "type": "appliance",
+      "type": "hydrobox",
       "room": "0.3",
       "box": [
-        5.45,
-        7.79,
-        6.4,
+        4.55,
+        8.04,
+        5.22,
         8.39
       ],
       "facing": "-y",
-      "source": "ground-plan",
-      "height": 1.8,
-      "approximation": "Schematic plant equipment; catalogue gives position, not product dimensions."
+      "source": "user-plant",
+      "height": 1.54,
+      "elevation": 0.4
+    },
+    {
+      "id": "utility-hrv",
+      "type": "ventilation-unit",
+      "room": "0.3",
+      "box": [
+        5.70,
+        8.045,
+        6.43,
+        8.39
+      ],
+      "facing": "-y",
+      "source": "user-plant",
+      "height": 1.48,
+      "elevation": 1.32
+    },
+    {
+      "id": "utility-softener",
+      "type": "water-softener",
+      "room": "0.3",
+      "box": [
+        3.87,
+        6.82,
+        4.33,
+        7.33
+      ],
+      "facing": "+x",
+      "source": "user-plant",
+      "height": 1.13
+    },
+    {
+      "id": "utility-water-meter",
+      "type": "meter-assembly",
+      "room": "0.3",
+      "box": [
+        3.87,
+        7.33,
+        4.07,
+        7.72
+      ],
+      "facing": "+x",
+      "source": "user-plant",
+      "height": 0.48,
+      "elevation": 0.61
+    },
+    {
+      "id": "utility-network-rack",
+      "type": "network-rack",
+      "room": "0.3",
+      "box": [
+        5.855,
+        6.79,
+        6.425,
+        7.175
+      ],
+      "facing": "+y",
+      "source": "user-plant",
+      "height": 0.405,
+      "elevation": 1.36
+    },
+    {
+      "id": "utility-pv-inverter",
+      "type": "inverter",
+      "room": "0.3",
+      "box": [
+        6.2,
+        7.46,
+        6.44,
+        7.87
+      ],
+      "facing": "-x",
+      "source": "user-plant",
+      "height": 0.76,
+      "elevation": 0.86
     },
     {
       "id": "kitchen-pantry",
@@ -2198,7 +2259,8 @@
           "end": 7.39,
           "bottom": 0,
           "top": 2.35,
-          "glass": true
+          "glass": true,
+          "casement": { "sill": 0.96 }
         }
       ]
     },
@@ -2285,6 +2347,12 @@
       ]
     }
   ],
+  "outdoorHeatPump": {
+    "id": "utility-outdoor-unit",
+    "box": [-0.89, 4.4, 0, 5.60],
+    "facing": "-x",
+    "source": "user-plant"
+  },
   "garageFitout": {
     "unit": "m",
     "source": "Concept storage layout. Parking rectangles are checked in the clear inside the double garage door.",

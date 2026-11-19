@@ -85,7 +85,7 @@ test('terrace and wing walls meet at a single right angle behind the staircase o
 test('inner wall faces end at their inner corner rather than crossing the outer cladding',()=>{
  for(const [name,x,minY,maxY] of [['wing-gable',14.28,4.57,12.35],['facade-wing-end',14.16,4.69,12.23],['upper-main-side',.36,.36,17.77]]){
   const mesh=object(name),p=mesh.geometry.attributes.position,ys=[];
-  for(const group of mesh.geometry.groups.filter(g=>g.materialIndex===0))for(let i=group.start;i<group.start+group.count;i+=3){
+  for(const group of mesh.geometry.groups.filter(g=>g.materialIndex!==1))for(let i=group.start;i<group.start+group.count;i+=3){
    if([0,1,2].every(j=>Math.abs(p.getX(i+j)-x)<1e-5))for(let j=0;j<3;j++)ys.push(p.getY(i+j));
   }
   assert(ys.length,name);assert(Math.min(...ys)>=minY-1e-5,`${name} start crosses neighboring facade`);assert(Math.max(...ys)<=maxY+1e-5,`${name} end crosses neighboring facade`);

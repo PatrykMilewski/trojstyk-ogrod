@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-19.10",
+  "modelVersion": "2026-11-19.11",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -52,7 +52,8 @@
     "Samsung BRZ22700EWW/EF": "https://www.samsung.com/pl/refrigerators/built-in-one-door/brr6000b-built-in-1door-freezer-with-smartthings-218l-white-brz22700eww-ef/",
     "Beliani · MADOX 120/150 cm, ciemny orzech": "https://www.beliani.pl/stol-do-jadalni-ciemne-drewno-rozkladany-120-150-x-75-cm-madox.html",
     "IKEA · system BROR": "https://www.ikea.com/pl/pl/cat/system-bror-42245/",
-    "IKEA · TÄCKNAN z zestawem NYTTIG": "https://www.ikea.com/pl/pl/p/taecknan-plyta-ind-zint-okap-z-zest-d-pochla-ikea-300-czarny-s29612504/"
+    "IKEA · TÄCKNAN z zestawem NYTTIG": "https://www.ikea.com/pl/pl/p/taecknan-plyta-ind-zint-okap-z-zest-d-pochla-ikea-300-czarny-s29612504/",
+    "Trina Solar · Vertex S+ TSM-500NEG18R.28": "https://www-cdn.trinasolar.com/wwwstorage/sites/7/Datasheet_Vertex-S_NEG18R.28_EN_2024_C_web.pdf"
   },
   "houses": [
     {
@@ -1740,7 +1741,7 @@
     "proceduralCodeSha256": "f28e65f81bfd542148d9fd4925bc2e84fb2d7a8a449e34f84393ac2a653c99e2",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "f6f27de0208ddacc1880061ce21577c8aa17d9cf9595e32efb76d2759fffda44",
-    "runtimeSha256": "80b6509682ab76b0f79e70e285c4cce46ee7f59f3e186b30a996d73e03a73c4e"
+    "runtimeSha256": "23b4908fc1a04d0cf3de0e943dac50be44958d0a05da98cf089d041cb26d7140"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1780,7 +1781,8 @@
     "Dom /193: przesuwne skrzydło w potrójnym przeszkleniu ogrodowym, ceglana ściana korytarza, bok schodów indygo i wyspa 435 × 105 cm z jednobarwnymi płytkami Palet 301.",
     "Dom /193: płyta TÄCKNAN z pochłaniaczem, piekarnik w osobnym module, zlew 80 cm, pełna mozaika nad blatem, pomarańczowo-granatowa wyspa, postać na kanapie i jasny tynk między biegami schodów.",
     "Dom /193: piekarnik po prawej stronie płyty od strony zlewu, dwie szuflady pod pochłaniaczem, czarny zlew ze srebrną baterią oraz indygo między biegami schodów.",
-    "Dom /193: rozsunięte zasłony przy oknie kuchni, jasne drewno więźby, stół 135 × 78 cm i gładka farba indygo między biegami schodów."
+    "Dom /193: rozsunięte zasłony przy oknie kuchni, jasne drewno więźby, stół 135 × 78 cm i gładka farba indygo między biegami schodów.",
+    "Dom /193: kolory wiatrołapu, bawialni i gabinetu, otwierane okno biura, blaty z laminatu, rośliny, wyposażenie techniczne i południowo-zachodnia instalacja PV 20 × 500 Wp."
   ],
   "contextParcels": [
     {
@@ -3619,7 +3621,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "2d9b13c348d8df7430cdc3b818ba1aadfda0135fe94f95edc50742bb58d8e719",
+    "dataSha256": "ba6807d9153e5f020e311da48969f6ef1959766f694399052a80fe72364ff1ae",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,

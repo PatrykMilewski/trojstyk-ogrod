@@ -171,6 +171,42 @@ test('sanitary fixtures face the usable room and ambiguous fixtures are disclose
   assert(tub.max.y - tub.min.y > tub.max.x - tub.min.x, 'Shared bathroom tub runs along side wall');
 });
 
+test('plant equipment fits room 0.3, with both service sides reachable around its open garage door', () => {
+  const signature = {
+    'dhw-cylinder':['insulated-vessel','access-cover','top-union-1'],
+    'heat-pump-module':['hydronic-casing','controller-display','encoder','tank-connection-1'],
+    'utility-water-meter':['meter-body','totalizer','isolation-1'],
+    'utility-softener':['brine-cabinet','salt-lid','valve-head'],
+    'utility-hrv':['counterflow-casing','filter-drawer','condensate-outlet'],
+    'utility-pv-inverter':['heat-sink','indicator-window','cable-gland-3'],
+    'utility-network-rack':['perforated-door-insert','vented-side-1','router','ethernet-switch','patch-panel','patch-lead-3'],
+  };
+  assert.deepEqual(data.furniture.filter(item=>item.room==='0.3').map(item=>item.id).sort(),Object.keys(signature).sort());
+  for(const [id,details] of Object.entries(signature)){
+    for(const suffix of details)assert(interior.group.getObjectByName(id+'-'+suffix)?.isMesh);
+    assert(itemBounds(id).max.x<=6.44+.001,'Equipment stays clear of the room-side face of the eastern partition');
+  }
+  const get=name=>interior.group.getObjectByName(name);
+  assert(get('utility-network-rack-perforated-door-insert').material.alphaMap);
+  assert.equal(parts('utility-network-rack').filter(o=>o.name.startsWith('utility-network-rack-rj45-')).length,20);
+  for(let i=0;i<4;i++)close(bounds(get('utility-hrv-air-duct-'+i)).max.z,2.8,'Four duct runs meet ceiling',.002);
+  close(itemBounds('dhw-cylinder').min.z,.008,'Vessel plinth rests on tiled floor');
+  close(itemBounds('utility-softener').min.z,.008,'Softener base rests on tiled floor');
+  const pivot=get('hall-flush-garage-utility'),openMatrix=new THREE.Matrix4().makeRotationZ(pivot.userData.closedYaw+pivot.userData.swing*Math.PI/2);
+  openMatrix.setPosition(pivot.position);
+  const door=pivot.children.reduce((result,mesh)=>result.union(bounds(mesh).applyMatrix4(openMatrix)),new THREE.Box3());
+  const ring=[[door.min.x,door.min.y],[door.max.x,door.min.y],[door.max.x,door.max.y],[door.min.x,door.max.y]].map(p=>interior.localToWorld(p).slice(0,2));
+  const walk=groundWalk([{ring}]);
+  assertGroundRoute(walk,[[5.10,6.25],[5.10,7.45],[4.64,7.41],[4.67,7.19]]);
+  assertGroundRoute(walk,[[5.10,7.45],[5.20,7.66],[5.36,7.77],[5.53,7.77],[5.68,7.74],[5.77,7.72],[5.84,7.66],[5.88,7.60],[5.90,7.50]]);
+  const outdoor=data.outdoorHeatPump,fan=get(outdoor.id+'-fan-hub');
+  assert(fan.isMesh && parts(outdoor.id).filter(o=>o.name.includes('fan-blade')).length===5);
+  const exterior=itemBounds(outdoor.id);
+  assert(exterior.max.x<=.001 && exterior.min.y>0 && exterior.max.y<6.53,'Outside the solid garage-side wall');
+  assert(interior.navigation.obstacles.some(o=>o.id===outdoor.id));
+  close(bounds(get(outdoor.id+'-rubber-foot-0.19')).min.z,bounds(get(outdoor.id+'-precast-pad')).max.z,'Outdoor isolators sit on plinth');
+});
+
 test('furniture does not occupy another furniture footprint or an internal doorway approach', () => {
   const occupied = data.furniture.filter(item => item.type !== 'rug' && !item.support);
   for (let i = 0; i < occupied.length; i++) for (let j = i + 1; j < occupied.length; j++) {
@@ -1005,7 +1041,7 @@ test('white covered socket is set into a real worktop opening well away from the
   const get = id => interior.group.getObjectByName('kitchen-island-'+id);
   const top = get('top'), bezel = get('socket-bezel'), lid = get('socket-lid'), housing = get('socket-housing');
   const slab = bounds(top), rim = bounds(bezel), flap = bounds(lid), casing = bounds(housing);
-  close(rim.max.z,slab.max.z,'Bezel flush with stone');
+  close(rim.max.z,slab.max.z,'Bezel flush with laminate');
   close(flap.max.z,rim.max.z-.0003,'Lid sits inside the bezel');
   assert(rim.min.x<flap.min.x && rim.max.x>flap.max.x && rim.min.y<flap.min.y && rim.max.y>flap.max.y);
   assert.equal(lid.material,bezel.material);
@@ -1017,7 +1053,7 @@ test('white covered socket is set into a real worktop opening well away from the
   assert(rim.min.y>=window.start&&rim.max.y<=window.end);
   close(rim.max.x-rim.min.x,.12,'120 mm opening along the island');
   close(rim.max.y-rim.min.y,.27,'270 mm opening across the island');
-  close(rim.min.x-slab.min.x,.26,'260 mm of stone to window-side end');
+  close(rim.min.x-slab.min.x,.26,'260 mm of worktop to window-side end');
   close(rim.min.y-slab.min.y,.175,'175 mm to the near working edge');
   close(hob.min.x-rim.max.x,1.445,'Clear counter between socket and hob');
   const center = flap.getCenter(new THREE.Vector3()), ray = new THREE.Raycaster();
@@ -1025,7 +1061,7 @@ test('white covered socket is set into a real worktop opening well away from the
   for(const obj of [top,bezel,lid]){
     obj.updateMatrix();obj.matrixWorld.copy(obj.matrix);
   }
-  assert.equal(ray.intersectObject(top,false).length,0,'Stone has a cut-out below the lid');
+  assert.equal(ray.intersectObject(top,false).length,0,'Worktop has a cut-out below the lid');
   assert.equal(ray.intersectObject(bezel,false).length,0,'Bezel surrounds a separate moving lid');
   assert(ray.intersectObject(lid,false).length>0,'Closed cover occupies the opening');
 });
@@ -1050,14 +1086,14 @@ test('the 80 cm single bowl is let into the worktop below the full-width mosaic'
   const {r,g,b}=tap.color;
   assert(Math.min(r,g,b)>.5 && Math.max(r,g,b)-Math.min(r,g,b)<.05 && tap.metalness>.5,'Neutral silver faucet');
   assert(Math.max(bowl.material.color.r,bowl.material.color.g,bowl.material.color.b)<.03 && bowl.material.roughness>.5,'Matte black bowl and lip');
-  close(rim.max.z-stone.max.z,.005,'Raised edge on stone');
+  close(rim.max.z-stone.max.z,.005,'Raised edge on worktop');
   assert(bounds(drain).max.z<stone.max.z-.19 && bounds(get('kitchen-sink-tap-aerator')).min.z>stone.max.z+.20);
   interior.group.updateMatrixWorld(true);
   for(const x of [3.70,3.91,4.20]){
     const ray=new THREE.Raycaster(new THREE.Vector3(...interior.localToWorld([x,9.03,1.08])),
       new THREE.Vector3(0,0,-1),0,.55);
     const hit=ray.intersectObjects([...parts('kitchen-back'),...parts('kitchen-sink')])[0];
-    assert.equal(hit.object,bowl,'Open stone and cabinet reveal the continuous basin at '+x);
+    assert.equal(hit.object,bowl,'Open worktop and cabinet reveal the continuous basin at '+x);
     assert(hit.distance>.29 && hit.distance<.34,'Floor of the bowl is recessed across its width');
   }
   close(tile.min.x,bounds(get('kitchen-back-niche-end-trim')).max.x+.0009,'Mosaic begins at trim');
@@ -1068,7 +1104,7 @@ test('the 80 cm single bowl is let into the worktop below the full-width mosaic'
   assert(bounds(get('loft-fixture-'+socket+'-frame')).min.y>=tile.max.y,'Socket mounts to the finished face');
 });
 
-test('orange and indigo Palet tiles wrap three faces of the 435 × 105 cm island', () => {
+test('matched laminate waterfalls flank the salon-side Palet tiles on the 435 × 105 cm island', () => {
   const get=id=>interior.group.getObjectByName(id);
   const skin=get('kitchen-island-palet-cladding'),top=get('kitchen-island-top'),hob=get('hob-glass');
   const texture=skin.material.map,{position,normal,uv}=skin.geometry.attributes;
@@ -1082,7 +1118,7 @@ test('orange and indigo Palet tiles wrap three faces of the 435 × 105 cm island
     if(pixels[i+2]>pixels[i]*1.08)indigo++;
   }
   assert(orange>pixels.length/4*.55 && indigo>pixels.length/4*.06,'Both photographed glazes survive atlas sampling');
-  const surface=bounds(skin),slab=bounds(top),drawers=bounds(get('kitchen-island-working-drawer-2-0'));
+  const surface=bounds(skin),slab=bounds(top);
   close(slab.max.x-slab.min.x,4.35,'Island length');
   close(slab.max.y-slab.min.y,1.05,'Island depth');
   close(slab.max.z,.96,'Island height');
@@ -1094,9 +1130,27 @@ test('orange and indigo Palet tiles wrap three faces of the 435 × 105 cm island
   assert.equal(top.material,get('kitchen-back-top').material);
   assert.notEqual(top.material,skin.material);
   close(bounds(hob).min.z,slab.max.z,'Hob sits on worktop');
-  close(surface.max.z,bounds(get('kitchen-island-stone-edge')).min.z,'Cladding reaches the underside of the mitred stone edge');
-  close(surface.min.y,drawers.min.y,'Tile ends terminate at the drawer face');
-  close(slab.max.y-surface.max.y,.018,'Stone overhang at salon face');
+  assert.match(top.material.name,/HPL/);
+  const grain=top.material.map.image.data;
+  assert(grain[0]>80 && grain[0]<125 && grain[0]>grain[2],'Medium-dark warm laminate');
+  close(surface.max.z,slab.min.z,'Tile meets the underside of the slab');
+  close(surface.min.y,surface.max.y,'Palet only on the long salon plane');
+  close(slab.max.y-surface.max.y,.018,'Worktop overhang at salon face');
+  for(const [end,outer,inner] of [['left','min','max'],['right','max','min']]){
+    const panel=get('kitchen-island-waterfall-'+end),b=bounds(panel);
+    assert.equal(panel.material,top.material);
+    close(b.min.z,0,'End reaches floor');close(b.max.z,slab.min.z,'End meets top');
+    for(const edge of ['min','max'])close(b[edge].y,slab[edge].y,'End closes the entire depth');
+    close(b[outer].x,slab[outer].x,'Flush outer face');
+    close(b[inner].x,surface[outer].x,'Tile terminates against the panel');
+    const seamU=object=>{
+      const {position,normal,uv}=object.geometry.attributes;
+      for(let i=0;i<position.count;i++)if(normal.getX(i)*(end==='left'?-1:1)>.99 &&
+        Math.abs(position.getZ(i)+object.position.z-slab.min.z)<1e-6)return uv.getX(i);
+      assert.fail('Outer seam has texture coordinates');
+    };
+    close(seamU(top),seamU(panel),'Decor flows over each bend');
+  }
   const faces=new Map(),variants=new Set(),xyz=i=>new THREE.Vector3().fromBufferAttribute(position,i);
   for(let i=0;i<position.count;i+=4){
     const l=xyz(i),t=xyz(i+1),r=xyz(i+2),n=new THREE.Vector3().fromBufferAttribute(normal,i);
@@ -1109,10 +1163,69 @@ test('orange and indigo Palet tiles wrap three faces of the 435 × 105 cm island
     if(Math.abs(t.z-surface.max.z)<.00001)faces.get(face).push(Math.abs(n.y)>.5?l.x:l.y);
   }
   assert.equal(variants.size,24,'All reference tile faces are used');
-  assert.deepEqual([...faces.keys()].sort(),['-1,0','0,1','1,0']);
+  assert.deepEqual([...faces.keys()],['0,1']);
   for(const edges of faces.values()){
     edges.sort((a,b)=>a-b);assert(edges.length>=4);
     for(let i=1;i<edges.length;i++)close(edges[i]-edges[i-1]-.149,.002,'Two mm of grout between full tiles');
+  }
+});
+
+test('three room plants fit their floor and clear the projection, curtains and furniture', () => {
+  const get=name=>interior.group.getObjectByName(name);
+  const curtains=inventoryMeshes.filter(o=>/^curtain-.*-(left|right)$/.test(o.name));
+  assert(curtains.length>=6);
+  for(const [id,roomId,floor] of [['parlour-palm','0.4',0],['cast-iron-plant','0.9',0],['prayer-plant','1.1',3.215]]){
+    const crown=get(id+'-foliage'),canopy=bounds(crown),pot=bounds(get(id+'-pot')),room=rooms.get(roomId).box;
+    close(pot.min.z,floor,'Pot sits on finish');
+    const soil=bounds(get(id+'-soil'));
+    assert(canopy.min.z<soil.max.z && canopy.max.z>pot.max.z+.2);
+    assert(crown.material.vertexColors && crown.geometry.index.count/3<12000,'Single bounded foliage mesh');
+    assert(interior.navigation.obstacles.some(o=>o.id===id+'-pot' && o.minZ===floor));
+    assert(canopy.min.x>=room[0] && canopy.min.y>=room[1] && canopy.max.x<=room[2] && canopy.max.y<=room[3]);
+    for(const it of furniture.values()){
+      if(it.room===roomId && it.type!=='rug')assert(!itemBounds(it.id).intersectsBox(canopy),id+' clears '+it.id);
+    }
+    if(id==='cast-iron-plant'){
+      const window=data.facades.find(f=>f.id==='facade-wing-end').openings.find(o=>o.casement);
+      assert(canopy.max.z<window.casement.sill-.08,'Leaves stay below the moving sash');
+      assert(canopy.min.y-itemBounds('office-pug-bed').max.y>.75,'Clearance from the dog bed');
+    }
+    if(id==='parlour-palm'){
+      assert(canopy.max.z>1.7 && canopy.max.x-canopy.min.x>1);
+      assert(canopy.max.y<data.projection.centerY-data.projection.widthM/2,'Palm stays outside the image');
+    }
+    for(const m of curtains)assert(!bounds(m).intersectsBox(canopy),id+' clears '+m.name);
+  }
+});
+
+test('flowering tabletop plants rest on their furniture and have an open sightline to glazing', () => {
+  const get=id=>interior.group.getObjectByName(id);
+  interior.group.updateMatrixWorld(true);
+  for(const [id,support,topName,windowName] of [
+    ['african-violet','play-cubbies','shelf-0.618','facade-wing-end-glass-0'],
+    ['moth-orchid','master-bedside-right','top','wing-gable-glass-0']
+  ]){
+    const top=bounds(get(support+'-'+topName)),pot=bounds(get(id+'-pot')),leaves=get(id+'-foliage');
+    close(pot.min.z,top.max.z,id+' sits directly on furniture');
+    for(const axis of ['x','y'])assert(pot.min[axis]>top.min[axis] && pot.max[axis]<top.max[axis],id+' pot fits the top');
+    const canopy=bounds(leaves),tri=new THREE.Triangle(),g=leaves.geometry;
+    assert(canopy.max.z>pot.max.z+.06 && !interior.navigation.obstacles.some(o=>o.id===id+'-pot'));
+    for(const decor of parts(support).filter(part=>bounds(part).min.z>=top.max.z-.00001)){
+      const b=bounds(decor);assert(!b.intersectsBox(pot),id+' pot clears '+decor.name);
+      if(!b.intersectsBox(canopy))continue;
+      for(let i=0;i<g.index.count;i+=3){
+        for(const [j,v] of [tri.a,tri.b,tri.c].entries())v.fromBufferAttribute(g.attributes.position,g.index.getX(i+j)).applyMatrix4(leaves.matrix);
+        assert(!b.intersectsTriangle(tri),id+' leaves and blooms clear '+decor.name);
+      }
+    }
+    const pane=bounds(get(windowName)),to=pane.getCenter(new THREE.Vector3());
+    to.y=pane.min.y+(pane.max.y-pane.min.y)*.34;
+    const start=canopy.getCenter(new THREE.Vector3()).applyMatrix4(interior.group.matrixWorld),end=to.applyMatrix4(interior.group.matrixWorld);
+    const dir=end.sub(start),ray=new THREE.Raycaster(start,dir.clone().normalize(),0,dir.length()+.005);
+    const hit=ray.intersectObjects(inventoryMeshes.filter(o=>!o.name.startsWith(id+'-')),false)[0];
+    assert.equal(hit?.object.name,windowName,id+' receives light directly from the window');
+    const colors=g.attributes.color;
+    assert(Array.from({length:colors.count},(_,i)=>colors.getX(i)-colors.getY(i)).filter(delta=>delta>.07).length>28,id+' has blossoms among the leaves');
   }
 });
 

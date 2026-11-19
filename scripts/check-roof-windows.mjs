@@ -126,3 +126,41 @@ test('all roof-window positions and dimensions match the frozen registry',async(
  const registry=JSON.parse(await readFile(new URL('../trzy-domy-3d/model-dimensions.json',import.meta.url),'utf8'));
  assert.deepEqual(registry.roofWindows.openings,openings);
 });
+
+test('20 landscape PV modules deliver 10 kWp on the south-west slope and clear every rooflight',async()=>{
+  const {addIconInterior}=await load(await readFile(new URL('../src/model/interior.js',import.meta.url),'utf8'));
+  const data=JSON.parse(await readFile(new URL('../trzy-domy-3d/interior-data.json',import.meta.url),'utf8'));
+  const {group}=addIconInterior({THREE,scene:new THREE.Scene(),house,data});
+  group.updateMatrixWorld(true);
+  const frames=group.getObjectByName('pv-module-frames'),cells=group.getObjectByName('pv-module-cells');
+  assert.equal(frames.count,20);
+  assert.equal(frames.count*frames.userData.powerWp,10000);
+  assert.equal(cells.count,frames.count);
+  frames.geometry.computeBoundingBox();
+  const box=frames.geometry.boundingBox,size=box.getSize(new THREE.Vector3());
+  const close=(actual,expected)=>assert(Math.abs(actual-expected)<.001,actual+' differs from '+expected);
+  close(size.x,1.134);close(size.y,1.961);close(size.z,.030);
+  const roof=meshes(models[0],true),inverse=group.matrixWorld.clone().invert();
+  const apertures=openings.filter(o=>o.parcel==='193').map(o=>new THREE.Box3().setFromPoints(
+    o.vertices.map(p=>new THREE.Vector3(...p).applyMatrix4(inverse))));
+  const arrayBounds=[];
+  for(let i=0;i<frames.count;i++){
+    const transform=new THREE.Matrix4();frames.getMatrixAt(i,transform);transform.premultiply(frames.matrixWorld);
+    const normal=new THREE.Vector3(0,0,1).transformDirection(transform);
+    const azimuth=(Math.atan2(normal.x,normal.y)*180/Math.PI+360)%360;
+    assert(azimuth>220 && azimuth<228);
+    const footprint=new THREE.Box2();
+    for(const x of [box.min.x,0,box.max.x])for(const y of [box.min.y,0,box.max.y]){
+      const back=new THREE.Vector3(x,y,box.min.z).applyMatrix4(transform);
+      const hit=hits(roof,back.toArray(),normal.clone().negate().toArray(),.12)[0];
+      assert(hit,'Panel extends over an opening or roof edge');close(hit.distance,.09);
+      const local=hit.point.clone().applyMatrix4(inverse);
+      assert(local.x>.30 && local.x<4.25-.25 && local.y>.35 && local.y<18.13-.35);
+      footprint.expandByPoint(new THREE.Vector2(local.x,local.y));
+    }
+    for(const a of apertures)assert(!footprint.intersectsBox(new THREE.Box2(
+      new THREE.Vector2(a.min.x-.2,a.min.y-.2),new THREE.Vector2(a.max.x+.2,a.max.y+.2))),'Rooflight clearance');
+    assert(arrayBounds.every(other=>!other.intersectsBox(footprint)),'Overlapping PV modules');
+    arrayBounds.push(footprint);
+  }
+});

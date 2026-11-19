@@ -140,3 +140,62 @@ test('master bath doorway clears the hall partition and closes the slit toward t
   ['u-private-dressing',11.62,4.48,4.17],['u-suite-hall',9.87,12.44,4.17]
  ])assert(hits(object(name),[x-.2,y,z],[1,0,0],.4).length,name+' closes at the eaves');
 });
+
+test('office casement opens and closes from a visible walking view and the open aperture is clear',()=>{
+ const sash=object('office-window-sash'),pane=object('office-window-sash-glass'),control=interior.officeWindow;
+ const camera=new THREE.PerspectiveCamera(68,1.4,.05,35);
+ const aim=(eye,target)=>{
+  camera.up.set(0,0,1);
+  camera.position.fromArray(interior.localToWorld(eye));
+  camera.lookAt(new THREE.Vector3(...interior.localToWorld(target)));camera.updateMatrixWorld();
+ };
+ const ndc={x:0,y:0},local=mesh=>mesh.getWorldPosition(new THREE.Vector3()).applyMatrix4(interior.group.matrixWorld.clone().invert()).toArray();
+ const eye=[12.15,10.13,1.62];
+ const tap=()=>control.toggleAt(ndc,camera);
+ const paneCenter=()=>{interior.group.updateMatrixWorld(true);return local(pane);};
+ assert.equal(control.isOpen,false);const closed=paneCenter();
+ aim([12.15,8.7,1.62],closed);assert.equal(tap(),false,'Partition blocks taps through walls');
+ aim(eye,[14.4,11.15,.55]);assert.equal(tap(),false,'Fixed lower light is distinct');
+ aim(eye,closed);assert.equal(tap(),true);assert.equal(control.isOpen,true);
+ control.update(performance.now()+350);const open=paneCenter();
+ assert(open[0]<closed[0]-.4&&open[1]<closed[1]-.35);
+ const aperture=[14,11.18,1.6],direction=[1,0,0];
+ assert.equal(hits(pane,aperture,direction,1).length,0);
+ assert.equal(hits(object('facade-wing-end-glass-1'),aperture,direction,1).length,0);
+ for(const z of [.16,.56,.91])assert(hits(object('facade-wing-end-glass-1'),[14,11.16,z],direction,1).length);
+ assert(hits(object('facade-wing-end-glass-1'),[14,10.07,1.65],direction,1).length);
+ aim(eye,open);assert.equal(tap(),true);assert.equal(control.isOpen,false);
+ control.update(performance.now()+350);const restored=paneCenter();
+ restored.forEach((v,i)=>close(v,closed[i],'Closed sash returns to frame'));
+ assert(hits(pane,aperture,direction,1).length,'Closed moving light seals the aperture');
+});
+
+test('office sash clears the actual linen folds, desk, chair, dog bed and head through its inward swing',()=>{
+ const sash=object('office-window-sash'),inverse=interior.group.matrixWorld.clone().invert();
+ const worldBounds=mesh=>{
+  mesh.geometry.computeBoundingBox();
+  return mesh.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(mesh.matrixWorld));
+ };
+ const furnitureIds=['office-desk-window','office-chair-window','office-pug-bed'];
+ const wing=data.facades.find(f=>f.id==='facade-wing-end'),opening=wing.openings.find(o=>o.casement);
+ const neighbours=['curtain-study-left','curtain-study-right','curtain-study-track','office-window-head',
+  'office-window-jamb-north','office-window-transom','office-window-mullion','office-window-stop-latch','office-window-stop-top']
+  .map(name=>[name,worldBounds(object(name))]);
+ interior.group.traverse(mesh=>{
+  if(mesh.isMesh&&furnitureIds.includes(mesh.userData.furnitureId))neighbours.push([mesh.name,worldBounds(mesh)]);
+ });
+ assert(neighbours.length>14);
+ const initial=sash.rotation.z;
+ try{
+  for(let angle=0;angle<=84;angle+=2){
+   sash.rotation.z=THREE.MathUtils.degToRad(angle);interior.group.updateMatrixWorld(true);
+   for(const moving of sash.children){
+    const sweptPart=worldBounds(moving);
+    assert(sweptPart.min.y>wing.a[1]+opening.start&&sweptPart.max.y<wing.a[1]+opening.end,'Clears both wall reveals');
+    assert(sweptPart.min.z>opening.bottom&&sweptPart.max.z<opening.top,'Clears the lintel and sill');
+    for(const [name,obstacle] of neighbours)
+     assert(!sweptPart.intersectsBox(obstacle),moving.name+' clips '+name+' at '+angle+' degrees');
+   }
+  }
+ }finally{sash.rotation.z=initial;interior.group.updateMatrixWorld(true);}
+});

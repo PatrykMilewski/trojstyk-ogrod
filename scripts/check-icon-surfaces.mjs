@@ -193,7 +193,8 @@ test('indigo on the stair flank follows the lower treads while the hall and offi
     assert(hit,'Missing surface at '+origin);
     return Array.isArray(hit.object.material)?hit.object.material[hit.face.materialIndex]:hit.object.material;
   };
-  const plaster=faceAt([10.85,9.5,1.40],[0,-1,0]);
+  const officePaint=faceAt([10.85,9.5,1.40],[0,-1,0]);
+  const plaster=model.getObjectByName('office-backing-flight-0').material[0];
   assert.equal(plaster.map?.name,'plaster-albedo');
   const indigo=faceAt([8.78,9.36,1.4],[1,0,0]);
   assert.equal(indigo.map,null);
@@ -228,8 +229,8 @@ test('indigo on the stair flank follows the lower treads while the hall and offi
     for(const wall of [section,neighbour])
       assert.equal(hits(wall,[sx+width+.04,seam-.01,1],[0,1,0],.02).length,0,'No buried faces at '+seam);
   }
-  assert.equal(faceAt([10.85,9.5,1.40],[0,-1,0]).map?.name,'plaster-albedo','Office face keeps neutral plaster');
-  assert.equal(faceAt([9.95,11.7,2.1],[-1,0,0]),plaster,'Office side of the stair partition');
+  assert.equal(officePaint.map?.name,'plaster-albedo');assert.notEqual(officePaint,plaster);
+  assert.equal(faceAt([9.95,11.7,2.1],[-1,0,0]),officePaint,'Office side of the stair partition');
   assert.equal(flank(11.300,1.535),indigo,'Exposed sliver before the landing riser');
   assert.equal(flank(11.312,1.535),plaster,'Past the landing riser');
   assert.equal(flank(11.75,.6),plaster,'Below the landing');
@@ -377,7 +378,7 @@ test('coral faces and ceiling stay within the ground hall and both concealed doo
   const paint=object('hall-terracotta-ceiling').material;
   for(const wall of ['guest-inner','guest-office','hall-front','garage-hall']){
     const mesh=object(wall);
-    assert.deepEqual(mesh.geometry.groups.map(g=>g.materialIndex),wall==='garage-hall'?[0,1,2]:[0,1],'One draw group per paint color');
+    assert.deepEqual(mesh.geometry.groups.map(g=>g.materialIndex),wall==='hall-front'?[0,1]:[0,1,2,3],'One draw group per paint color');
   }
   const requestedFace=(name,x,y,dx,dy,z=1.4)=>{
     const hit=hits(object(name),[x,y,z],[dx,dy,0],.45)[0];assert(hit,name+' surface');
@@ -394,7 +395,7 @@ test('coral faces and ceiling stay within the ground hall and both concealed doo
     const leaf=object('hall-flush-'+id+'-leaf'),door=leaf.parent;
     const side=door.userData.side;
     assert.equal(leaf.material[side===1?2:3],paint);
-    assert.equal(leaf.material[side===1?3:2].color.getHex(),0xe9e3d7);
+    assert.equal(leaf.material[side===1?3:2].color.getHex(),id==='office'?0xaec4cd:0xb7ccaf);
     const ray=()=>hits(leaf,[x,y,1.25],[dx,dy,0],.32);
     interior.updateHallDoors(null);interior.group.updateMatrixWorld(true);
     assert(ray().length,'Closed door covers the aperture');
@@ -429,6 +430,7 @@ test('all thirteen panel doors use their plan handing, room finishes and usable 
   const items=data.walls.flatMap(wall=>(wall.doorLeaves??[]).map((spec,i)=>({wall,spec,opening:wall.doors[i]})));
   assert.deepEqual(items.map(i=>i.spec.id).sort(),expected.map(([id])=>id).sort());
   const paints={wall:0xe9e3d7,coral:0xc77d59,garage:0x505b57,oat:0xddd4c5,linen:0xc8c2b5,
+    vestibule:0xeadbc7,playroom:0xb7ccaf,office:0xaec4cd,
     familyBath:0xc8bca9,privateBath:0xb59e87,groundBath:0x81462f};
   for(const [id,hand,openX,openY] of expected){
     const {wall,spec,opening:[lo,hi]}=items.find(item=>item.spec.id===id),base=wall.level?data.levels.upper:0;
@@ -534,7 +536,7 @@ test('white living roof slopes and light lengthwise oak survive surface assignme
 });
 
 test('room fixtures are suspended from the slab or the actual sloped lining, with walking headroom', () => {
- const names=['pantry','hall','guest','office','upper-hall','upper-one','upper-two','upper-master'];
+ const names=['pantry','plant-room','hall','guest','office','upper-hall','upper-one','upper-two','upper-master'];
  for(const id of names){
   const name='light-fixture-'+id+'-',shade=object(name+'shade'),canopy=object(name+'canopy');
   assert.equal(shade.geometry.type,'LatheGeometry');
@@ -575,7 +577,7 @@ test('surface projection and static batching preserve plaster continuity and ind
   assert(plaster.map&&plaster.bumpMap,'Wall has projected plaster');
   for(const [id,axis] of [['office','x'],['playroom','y']]){
     const leaf=get('hall-flush-'+id+'-leaf'),door=leaf.parent,side=door.userData.side;
-    assert.equal(leaf.material[side===1?2:3],coral);assert.equal(leaf.material[side===1?3:2],plaster);
+    assert.equal(leaf.material[side===1?2:3],coral);assert.equal(leaf.material[side===1?3:2],get(id==='office'?'guest-office':'guest-inner').material[2]);
     const {position,normal,uv}=leaf.geometry.attributes;
     for(let i=0;i<position.count;i++){
       if(Math.abs(normal.getY(i))<.99)continue;
@@ -650,4 +652,33 @@ test('rendered service-room paints retain plaster rather than facade cladding', 
   }
   assert.equal(pantry,group.children[2].material);
   assert.notEqual(garage.color.getHex(),pantry.color.getHex());
+});
+
+test('linen, sage and mist follow each front room wall, its inward reveals and the actual ceiling edges',()=>{
+  const paints={vestibule:0xeadbc7,playroom:0xb7ccaf,office:0xaec4cd};
+  const probes=[
+    ['vestibule','garage-hall',[6.68,7.3,1],[-1,0,0]],['vestibule','entry-garage-jamb-return',[7,4.65,1],[-1,0,0]],
+    ['vestibule','facade-front-wing',[8.1,4.92,1],[0,-1,0]],['vestibule','guest-inner',[11,5,1],[1,0,0]],
+    ['vestibule','vestibule-bath-top',[10,6.1,1],[0,1,0]],['vestibule','bath-left',[8.3,7.5,1],[1,0,0]],
+    ['vestibule','bath-left',[8.56,5.52,1],[0,1,0]],['vestibule','facade-front-wing',[8.57,4.57,1],[-1,0,0]],
+    ['playroom','facade-front-wing',[13.7,4.93,1],[0,-1,0]],['playroom','facade-wing-end',[14,7,1],[1,0,0]],
+    ['playroom','guest-office',[13,9.08,1],[0,1,0]],['playroom','guest-inner',[11.5,7.1,1],[-1,0,0]],
+    ['office','guest-office',[13,9.65,1],[0,-1,0]],['office','facade-wing-end',[14,12,1],[1,0,0]],
+    ['office','facade-wing-rear',[13,12,1],[0,1,0]],['office','office-stair-partition',[10,11.7,2.1],[-1,0,0]],
+    ['office','facade-wing-end',[14.21,10.9,2.27],[0,0,1]],
+  ];
+  for(const [room,id,start,direction] of probes){
+    const hit=hits(object(id),start,direction,.5)[0];assert(hit,id+' '+start);
+    const mat=Array.isArray(hit.object.material)?hit.object.material[hit.face.materialIndex]:hit.object.material;
+    assert.equal(mat.color.getHex(),paints[room],id+' '+start);
+  }
+  for(const [name,color,points,excluded] of [
+    ['vestibule',paints.vestibule,[[7.7,4.7],[11.18,6.30],[8.48,7.92],[6.59,4.72]],[[8.65,6.52],[7.65,8.0],[6.52,5.1]]],
+    ['playroom',0xdee7d9,[[11.34,4.70],[14.15,9.27]],[[11.18,4.84],[13.2,9.48]]],
+    ['office',0xdee6e9,[[9.87,9.43],[14.15,12.20]],[[9.6,10.8],[13.1,9.24]]],
+  ]){
+    const ceiling=object(name+'-painted-ceiling');assert.equal(ceiling.material.color.getHex(),color);
+    for(const [x,y] of points)assert(hits(ceiling,[x,y,2.75],[0,0,1],.1).length,name+' '+[x,y]);
+    for(const [x,y] of excluded)assert.equal(hits(ceiling,[x,y,2.75],[0,0,1],.1).length,0);
+  }
 });
