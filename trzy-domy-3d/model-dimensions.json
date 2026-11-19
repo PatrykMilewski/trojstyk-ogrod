@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-19.11",
+  "modelVersion": "2026-11-19.12",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -53,7 +53,13 @@
     "Beliani · MADOX 120/150 cm, ciemny orzech": "https://www.beliani.pl/stol-do-jadalni-ciemne-drewno-rozkladany-120-150-x-75-cm-madox.html",
     "IKEA · system BROR": "https://www.ikea.com/pl/pl/cat/system-bror-42245/",
     "IKEA · TÄCKNAN z zestawem NYTTIG": "https://www.ikea.com/pl/pl/p/taecknan-plyta-ind-zint-okap-z-zest-d-pochla-ikea-300-czarny-s29612504/",
-    "Trina Solar · Vertex S+ TSM-500NEG18R.28": "https://www-cdn.trinasolar.com/wwwstorage/sites/7/Datasheet_Vertex-S_NEG18R.28_EN_2024_C_web.pdf"
+    "Trina Solar · Vertex S+ TSM-500NEG18R.28": "https://www-cdn.trinasolar.com/wwwstorage/sites/7/Datasheet_Vertex-S_NEG18R.28_EN_2024_C_web.pdf",
+    "Thermatec PREMIUM R290 · instrukcja montażu": "https://thermatec.pl/assets/files/Thermatec-instrukcja-R290-www.pdf",
+    "Roborock Qrevo Curv 2 Pro": "https://pl.roborock.com/products/roborock-qrevo-curv-2-pro",
+    "Apple TV 4K · wymiary": "https://support.apple.com/pl-pl/111839",
+    "De’Longhi Magnifica Evo ECAM290.21.B": "https://www.delonghi.com/pl-pl/p/magnifica-evo-automatyczny-ekspres-magnifica-evo-ecam290.21.b/ECAM290.21.B.html",
+    "PVGIS 5.3 · połać południowo-zachodnia": "https://re.jrc.ec.europa.eu/api/v5_3/PVcalc?lat=54.4321&lon=18.4407&peakpower=1&loss=14&angle=44.86&aspect=43.89&raddatabase=PVGIS-SARAH3&outputformat=json",
+    "PVGIS 5.3 · połać południowo-wschodnia": "https://re.jrc.ec.europa.eu/api/v5_3/PVcalc?lat=54.4321&lon=18.4407&peakpower=1&loss=14&angle=44.86&aspect=-46.11&raddatabase=PVGIS-SARAH3&outputformat=json"
   },
   "houses": [
     {
@@ -1741,7 +1747,7 @@
     "proceduralCodeSha256": "f28e65f81bfd542148d9fd4925bc2e84fb2d7a8a449e34f84393ac2a653c99e2",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "f6f27de0208ddacc1880061ce21577c8aa17d9cf9595e32efb76d2759fffda44",
-    "runtimeSha256": "23b4908fc1a04d0cf3de0e943dac50be44958d0a05da98cf089d041cb26d7140"
+    "runtimeSha256": "932da2b51d1dfbc63cf993ef55db28825b3153d870c80f58ff6a3a9995e959d5"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1782,7 +1788,8 @@
     "Dom /193: płyta TÄCKNAN z pochłaniaczem, piekarnik w osobnym module, zlew 80 cm, pełna mozaika nad blatem, pomarańczowo-granatowa wyspa, postać na kanapie i jasny tynk między biegami schodów.",
     "Dom /193: piekarnik po prawej stronie płyty od strony zlewu, dwie szuflady pod pochłaniaczem, czarny zlew ze srebrną baterią oraz indygo między biegami schodów.",
     "Dom /193: rozsunięte zasłony przy oknie kuchni, jasne drewno więźby, stół 135 × 78 cm i gładka farba indygo między biegami schodów.",
-    "Dom /193: kolory wiatrołapu, bawialni i gabinetu, otwierane okno biura, blaty z laminatu, rośliny, wyposażenie techniczne i południowo-zachodnia instalacja PV 20 × 500 Wp."
+    "Dom /193: kolory wiatrołapu, bawialni i gabinetu, otwierane okno biura, blaty z laminatu, rośliny, wyposażenie techniczne i południowo-zachodnia instalacja PV 20 × 500 Wp.",
+    "Dom /193: czarna pompa Thermatec przy garażu. Instalacja PV 10 kWp na dwóch połaciach: 12 modułów na SW i 8 na SE (6 + 4 kWp). PVGIS-SARAH3, 2005–2023, 14% strat: ok. 9737 kWh/rok przed lokalnym zacienieniem, poprzednio ok. 9745 kWh/rok. Pełnowysokie otwierane skrzydło gabinetu, zlew 70 cm, ekspres De’Longhi oraz wnęka pod spocznikiem na Roborock Qrevo Curv 2 Pro i Apple TV."
   ],
   "contextParcels": [
     {
@@ -3621,7 +3628,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "ba6807d9153e5f020e311da48969f6ef1959766f694399052a80fe72364ff1ae",
+    "dataSha256": "e0fc0a7eb7ae09756bc4da5e8ef28b966a1a37af491d92772f52ee217331112f",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,

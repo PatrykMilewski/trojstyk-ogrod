@@ -1119,9 +1119,9 @@
       "type": "basin",
       "room": "0.4",
       "box": [
-        3.55,
+        3.60,
         8.73,
-        4.35,
+        4.30,
         9.2
       ],
       "facing": "+y",
@@ -2260,7 +2260,7 @@
           "bottom": 0,
           "top": 2.35,
           "glass": true,
-          "casement": { "sill": 0.96 }
+          "casement": true
         }
       ]
     },
@@ -2349,7 +2349,10 @@
   ],
   "outdoorHeatPump": {
     "id": "utility-outdoor-unit",
-    "box": [-0.89, 4.4, 0, 5.60],
+    "box": [-1.01, 4.90, 0, 6.10],
+    "referenceModel": "Thermatec PREMIUM R290-020-1P-DTU",
+    "productUrl": "https://thermatec.pl/produkty/pompy-ciepla-premium",
+    "installationManualUrl": "https://thermatec.pl/assets/files/Thermatec-instrukcja-R290-www.pdf",
     "facing": "-x",
     "source": "user-plant"
   },

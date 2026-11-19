@@ -9,7 +9,7 @@ const THREE = await load(Buffer.from(imports.three.split(',')[1], 'base64').toSt
   .replaceAll("'three/core'", `'${imports['three/core']}'`));
 const marker = 'const [source,garden,house,neighbors]=';
 const start = html.indexOf(marker) + marker.length;
-const [, , house] = JSON.parse(html.slice(start, html.indexOf(';\nconst landscaping=', start)));
+const [, garden, house] = JSON.parse(html.slice(start, html.indexOf(';\nconst landscaping=', start)));
 const { addIconInterior } = await load(await readFile(new URL('../src/model/interior.js', import.meta.url), 'utf8'));
 const { createWalkCollision } = await load(await readFile(new URL('../src/model/walk.js', import.meta.url), 'utf8'));
 const data = JSON.parse(await readFile(new URL('../trzy-domy-3d/interior-data.json', import.meta.url), 'utf8'));
@@ -199,12 +199,51 @@ test('plant equipment fits room 0.3, with both service sides reachable around it
   const walk=groundWalk([{ring}]);
   assertGroundRoute(walk,[[5.10,6.25],[5.10,7.45],[4.64,7.41],[4.67,7.19]]);
   assertGroundRoute(walk,[[5.10,7.45],[5.20,7.66],[5.36,7.77],[5.53,7.77],[5.68,7.74],[5.77,7.72],[5.84,7.66],[5.88,7.60],[5.90,7.50]]);
-  const outdoor=data.outdoorHeatPump,fan=get(outdoor.id+'-fan-hub');
-  assert(fan.isMesh && parts(outdoor.id).filter(o=>o.name.includes('fan-blade')).length===5);
+});
+
+test('the Thermatec outdoor unit faces the unobstructed road side of the garage',()=>{
+  const outdoor=data.outdoorHeatPump,piece=suffix=>interior.group.getObjectByName(outdoor.id+'-'+suffix);
+  const cabinet=bounds(piece('weatherproof-cabinet')).union(bounds(piece('intake-surround-front')));
+  const feet=bounds(piece('mounting-rail-0'));
+  const grille=bounds(piece('discharge-louvres')),intake=bounds(piece('rear-exchanger-fins'));
+  close(cabinet.max.y-cabinet.min.y,1.167,'Thermatec casing width',.001);
+  close(intake.max.x-grille.min.x,.407,'Thermatec casing depth',.001);
+  close(cabinet.max.z-feet.min.z,.795,'Thermatec overall equipment height',.001);
+  const hub=partCenter(outdoor.id,'fan-hub');
+  assert(hub.y>=rooms.get('1.2').box[1] && hub.y<=rooms.get('1.2').box[3],'Fan aligns with upper bathroom');
+  assert(-intake.max.x>.50 && feet.min.z>.30,'Rear intake and height above grade exceed manual clearances');
+  assert(grille.max.x<bounds(piece('fan-hub')).min.x && piece('fan-blade-2').isMesh);
+  assert(piece('weatherproof-cabinet').material.name.includes('matte black'));
+  interior.group.updateMatrixWorld(true);
+  const towardSide=new THREE.Vector3(0,1,0).transformDirection(interior.group.matrixWorld);
+  const sideHit=z=>{
+    const eye=new THREE.Vector3(-.70,outdoor.box[1]-.20,z).applyMatrix4(interior.group.matrixWorld);
+    return new THREE.Raycaster(eye,towardSide,0,.5).intersectObjects(parts(outdoor.id))[0];
+  };
+  const rib=sideHit(.718),gap=sideHit(.725);
+  assert.equal(rib?.object,piece('side-intake-fins'),'Side louvres are visible from outside the cabinet');
+  assert.equal(gap?.object,piece('intake-plenum'),'Intake opening shows the recessed plenum between fins');
+  assert(gap.distance-rib.distance>.015,'Side intake has a real recess');
+  const frame=interior.group.matrix.clone().invert();
+  const strip=new THREE.Box3(new THREE.Vector3(grille.min.x-1.50,cabinet.min.y,-.01),
+    new THREE.Vector3(grille.min.x,cabinet.max.y,.01));
+  const local=([x,y])=>new THREE.Vector3(x,y,0).applyMatrix4(frame);
+  for(const bed of garden.polygons.filter(item=>item.kind==='planting')){
+    const ring=bed.ring.map(local);
+    for(let i=0;i<ring.length;i++){
+      const a=ring[i],b=ring[(i+1)%ring.length],direction=b.clone().sub(a);
+      assert(!strip.containsPoint(a),'No planting in front of the grille');
+      if(direction.lengthSq()===0)continue;
+      const hit=new THREE.Ray(a,direction.clone().normalize()).intersectBox(strip,new THREE.Vector3());
+      assert(!hit||a.distanceToSquared(hit)>direction.lengthSq(),'Discharge strip stays outside planting beds');
+    }
+  }
+  const facade=data.facades.find(wall=>wall.id==='facade-main-side');
+  assert(facade.openings.every(o=>o.end<cabinet.min.y-1 || o.start>cabinet.max.y+1));
   const exterior=itemBounds(outdoor.id);
-  assert(exterior.max.x<=.001 && exterior.min.y>0 && exterior.max.y<6.53,'Outside the solid garage-side wall');
+  assert(exterior.max.x<=.001 && exterior.min.x>=outdoor.box[0] && exterior.max.y<6.53);
   assert(interior.navigation.obstacles.some(o=>o.id===outdoor.id));
-  close(bounds(get(outdoor.id+'-rubber-foot-0.19')).min.z,bounds(get(outdoor.id+'-precast-pad')).max.z,'Outdoor isolators sit on plinth');
+  close(bounds(piece('rubber-foot-0')).min.z,bounds(piece('precast-support-0')).max.z,'Isolators bear on concrete');
 });
 
 test('furniture does not occupy another furniture footprint or an internal doorway approach', () => {
@@ -366,6 +405,46 @@ test('each entry wardrobe door has an accessible handle and space to open beside
       if (axis === 'y') assert(door.min.y >= 4.71 && door.max.y <= 5.71);
     });
   }
+});
+
+test('under the half-landing the Curv has tank lift room and a level approach beside the vented AV cupboard', () => {
+  const part = name => bounds(interior.group.getObjectByName(name));
+  const shell = part('landing-service-curv-dock-shell').union(part('landing-service-wash-tray'));
+  const robot = part('landing-service-robot-bumper').union(part('landing-service-robot-base')).union(part('landing-service-robot-lid'));
+  const av = part('landing-av-apple-tv-4k'), shelf = part('landing-service-av-shelf');
+  const door = part('landing-service-av-removable-front'), cap = part('landing-service-av-cap');
+  const backing = part('landing-service-back');
+  const size = box => box.getSize(new THREE.Vector3()).toArray();
+  size(shell).forEach((length, i) => close(length, .45, 'Dock axis ' + i));
+  size(robot).forEach((length, i) => close(length, [.352,.35,.0798][i], 'Robot axis ' + i));
+  size(av).forEach((length, i) => close(length, [.093,.093,.031][i], 'Apple TV axis ' + i));
+  close(av.min.z,shelf.max.z,'Apple TV rests on shelf');
+  assert(door.max.x<av.min.x && av.max.z<cap.min.z && av.min.y>door.min.y && av.max.y<door.max.y);
+  close(cap.max.z,backing.max.z,'Common joinery height');
+  close(backing.max.z,.68,'Backing stays below the stair drawing');
+  const opening = [part('landing-service-cheek-dry').max.y,part('landing-service-cheek-rear').min.y];
+  assert(opening[1]-opening[0] > .80 && shelf.max.y < opening[0]);
+  close(shell.max.x,part('landing-service-back').min.x,'Dock against backing');
+  const headroom = part('stair-landing').min.z;
+  close(headroom,1.578,'Landing underside');
+  interior.group.updateMatrixWorld(true);
+  function hits(from,dir,length) {
+    const start = new THREE.Vector3(...from).applyMatrix4(interior.group.matrixWorld);
+    const direction = new THREE.Vector3(...dir).transformDirection(interior.group.matrixWorld);
+    return new THREE.Raycaster(start,direction,.001,length).intersectObjects(interior.group.children,true);
+  }
+  const across = y => hits([door.min.x-.05,y,.506],[1,0,0],.07);
+  assert.equal(across((av.min.y+av.max.y)/2)[0]?.object.name,'landing-service-av-removable-front','Door hides the device');
+  for (let i=0;i<7;i++) {
+    const vent = hits([door.min.x-.05,door.min.y+.024+i*.013,.55],[1,0,0],.085);
+    assert.equal(vent.length,0,'Routed vents pass through the front');
+  }
+  for (let i=0;i<2;i++)close(part('landing-service-av-magnetic-catch-'+i).min.x,door.max.x,'Catch meets removable front');
+  for(const x of [shell.min.x+.01,shell.max.x-.03])for(const y of [shell.min.y+.01,shell.max.y-.01])
+    assert.equal(hits([x,y,shell.max.z+.001],[0,0,1],headroom-shell.max.z-.003).length,0,'Lift tanks straight up');
+  for(const y of [opening[0]+.005,(opening[0]+opening[1])/2,opening[1]-.005])
+    for(const z of [.008,.08,.40,.89])
+      assert.equal(hits([shell.min.x-.005,y,z],[-1,0,0],1.30).length,0,'Clear approach to living room');
 });
 
 test('opaque office backing seals the gap above the cabinets up to the flight, landing and rear wall', () => {
@@ -932,8 +1011,8 @@ test('Samsung columns preserve product envelopes, removable shelves, drawers and
   }
   const counter=bounds(get('kitchen-back-top')),sink=itemBounds('kitchen-sink');
   close(counter.max.x-counter.min.x,3.20,'Full 3.10 m original counter plus 100 mm released from the two columns');
-  close(counter.max.x-sink.max.x,.90,'90 cm of counter to the right of the sink');
-  close(sink.min.x-counter.min.x,1.50,'150 cm to the left');
+  close(counter.max.x-sink.max.x,.95,'95 cm of counter to the right of the sink');
+  close(sink.min.x-counter.min.x,1.55,'155 cm to the left');
   close(counter.max.x,furniture.get('kitchen-tall').box[0],'Perimeter counter meets the first column');
 });
 
@@ -1066,15 +1145,32 @@ test('white covered socket is set into a real worktop opening well away from the
   assert(ray.intersectObject(lid,false).length>0,'Closed cover occupies the opening');
 });
 
-test('the 80 cm single bowl is let into the worktop below the full-width mosaic', () => {
+test('the black Magnifica Evo sits near the worktop end with access to its tank, wand and controls',()=>{
+ const get=name=>interior.group.getObjectByName('kitchen-back-'+name);
+ const machine=parts('kitchen-back').filter(m=>m.name.includes('-magnifica-'));
+ const envelope=machine.reduce((box,m)=>box.union(bounds(m)),new THREE.Box3()),size=envelope.getSize(new THREE.Vector3());
+ close(size.x,.240,'Machine width');close(size.y,.440,'Machine depth');close(size.z,.360,'Machine height');
+ const counter=bounds(get('top')),tiles=bounds(get('glazed-tiles')),upper=bounds(get('upper-0'));
+ close(envelope.min.z,counter.max.z,'Feet on the worktop');
+ assert(envelope.min.x-bounds(get('niche-end-trim')).max.x>.065&&envelope.min.x-counter.min.x<.11);
+ assert(envelope.min.y-tiles.max.y>.05&&counter.max.y-envelope.max.y>.08);
+ assert(upper.min.z-envelope.max.z>.26,'Bean lid clearance');
+ assert(itemBounds('kitchen-sink').min.x-envelope.max.x>1.2,'Continuous free preparation surface');
+ for(const name of ['touch-panel','hopper-lid','steam-wand','dispensing-head','spout-0','spout-1','drip-grille'])assert(get('magnifica-'+name),name);
+ const body=get('magnifica-rear-body');
+ assert.equal(body.material.name,'DeLonghi Magnifica Evo ECAM290.21.B black ABS');
+ assert(Math.max(body.material.color.r,body.material.color.g,body.material.color.b)<.03);
+});
+
+test('the 70 cm single bowl is let into the worktop below the full-width mosaic', () => {
   const get=id=>interior.group.getObjectByName(id);
   const bowl=get('kitchen-sink-basin'),slab=get('kitchen-back-top'),drain=get('kitchen-sink-basket-strainer');
   const rim=bounds(bowl),stone=bounds(slab),tile=bounds(get('kitchen-back-glazed-tiles'));
-  close(rim.max.x-rim.min.x,.80,'Overall sink width including rim');
+  close(rim.max.x-rim.min.x,.70,'Overall sink width including rim');
   const shell=new THREE.Mesh(bowl.geometry,bowl.material),box=bowl.geometry.boundingBox;
   const center=box.getCenter(new THREE.Vector3());
   center.z=box.max.z-.000001;
-  for(const [axis,size] of [['x',.762],['y',.373]]){
+  for(const [axis,size] of [['x',.662],['y',.373]]){
     const direction=new THREE.Vector3();direction[axis]=1;
     const ray=new THREE.Raycaster(center,direction);
     const positive=ray.intersectObject(shell)[0].distance;
@@ -1186,8 +1282,8 @@ test('three room plants fit their floor and clear the projection, curtains and f
       if(it.room===roomId && it.type!=='rug')assert(!itemBounds(it.id).intersectsBox(canopy),id+' clears '+it.id);
     }
     if(id==='cast-iron-plant'){
-      const window=data.facades.find(f=>f.id==='facade-wing-end').openings.find(o=>o.casement);
-      assert(canopy.max.z<window.casement.sill-.08,'Leaves stay below the moving sash');
+      const wing=data.facades.find(f=>f.id==='facade-wing-end'),window=wing.openings.find(o=>o.casement);
+      assert(canopy.min.y>wing.a[1]+window.end,'Leaves stand beyond the full-height opening');
       assert(canopy.min.y-itemBounds('office-pug-bed').max.y>.75,'Clearance from the dog bed');
     }
     if(id==='parlour-palm'){

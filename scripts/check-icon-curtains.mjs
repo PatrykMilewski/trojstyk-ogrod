@@ -18,22 +18,22 @@ function geometry(name){
  return part.geometry;
 }
 function bounds(name) {
- const g=geometry(name);
- g.computeBoundingBox();
- return g.boundingBox;
+ const part=group.getObjectByName(name),g=geometry(name);
+ part.updateWorldMatrix(true,false);g.computeBoundingBox();
+ return g.boundingBox.clone().applyMatrix4(group.matrixWorld.clone().invert().multiply(part.matrixWorld));
 }
 const rooms=[
  ['living','facade-garden-glass-0-pane-0','facade-garden-glass-0-pane-2',0,-1],
  ['kitchen','facade-main-side-glass-0','facade-main-side-glass-0',1,1],
  ['playroom','facade-front-wing-glass-2','facade-front-wing-glass-2',0,1],
- ['study','facade-wing-end-glass-1','facade-wing-end-glass-1',1,-1],
+ ['study','facade-wing-end-glass-1','office-window-frame-latch',1,-1],
  ['bedroom-one','front-gable-glass-0','front-gable-glass-0',0,1],
  ['master','wing-gable-glass-0','wing-gable-glass-0',1,-1]
 ];
 
 test('open linen panels gather beside the jambs, inside the glass and clear of the furniture',()=>{
  for(const [name,first,last,axis,inward] of rooms){
-  const a=bounds(first),b=bounds(last),min=a.min.getComponent(axis),max=b.max.getComponent(axis);
+  const a=bounds(first),b=bounds(last),min=a.min.getComponent(axis),max=(name==='study'?b.min:b.max).getComponent(axis);
   const prefix='curtain-'+name,panels=['left','right'].map(side=>bounds(prefix+'-'+side));
   const clear=Math.min(max,panels[1].min.getComponent(axis))-Math.max(min,panels[0].max.getComponent(axis));
   assert(clear/(max-min)>=.78,name+' clear glass span '+clear/(max-min));
@@ -76,7 +76,7 @@ test('kitchen curtains clear the pantry swing and island aisle and leave the mid
 test('garden curtain and its rail fit the recessed transom below the upper glass and clear the terrace door',()=>{
  const glass=bounds('garden-gable-glass-0'),transom=group.getObjectByName('garden-window-transom');
  transom.updateMatrix();
- const front=bounds(transom.name).clone().applyMatrix4(transom.matrix).min.y;
+ const front=bounds(transom.name).min.y;
  const door=data.facades.find(f=>f.id==='facade-terrace').openings.find(o=>!o.glass);
  const doorEnd=data.facades.find(f=>f.id==='facade-terrace').a[1]+door.end;
  const rail=bounds('curtain-living-track');

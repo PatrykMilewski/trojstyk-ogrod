@@ -127,40 +127,69 @@ test('all roof-window positions and dimensions match the frozen registry',async(
  assert.deepEqual(registry.roofWindows.openings,openings);
 });
 
-test('20 landscape PV modules deliver 10 kWp on the south-west slope and clear every rooflight',async()=>{
+test('12 SW and 8 SE modules fit the actual Icon roof, every rooflight, seam and mounting stack',async()=>{
   const {addIconInterior}=await load(await readFile(new URL('../src/model/interior.js',import.meta.url),'utf8'));
   const data=JSON.parse(await readFile(new URL('../trzy-domy-3d/interior-data.json',import.meta.url),'utf8'));
   const {group}=addIconInterior({THREE,scene:new THREE.Scene(),house,data});
   group.updateMatrixWorld(true);
-  const frames=group.getObjectByName('pv-module-frames'),cells=group.getObjectByName('pv-module-cells');
-  assert.equal(frames.count,20);
-  assert.equal(frames.count*frames.userData.powerWp,10000);
-  assert.equal(cells.count,frames.count);
-  frames.geometry.computeBoundingBox();
-  const box=frames.geometry.boundingBox,size=box.getSize(new THREE.Vector3());
-  const close=(actual,expected)=>assert(Math.abs(actual-expected)<.001,actual+' differs from '+expected);
-  close(size.x,1.134);close(size.y,1.961);close(size.z,.030);
+  const instances=name=>{
+    const mesh=group.getObjectByName(name);
+    mesh.geometry.computeBoundingBox();
+    return Array.from({length:mesh.count},(_,i)=>{
+      const transform=new THREE.Matrix4();mesh.getMatrixAt(i,transform);transform.premultiply(mesh.matrixWorld);
+      return {transform,inverse:transform.clone().invert(),box:mesh.geometry.boundingBox};
+    });
+  };
+  const panels=instances('pv-module-frames'),cells=instances('pv-module-cells');
+  const rails=instances('pv-mounting-rails'),feet=instances('pv-roof-feet'),clamps=instances('pv-frame-clamps');
+  const close=(actual,expected)=>assert(Math.abs(actual-expected)<.001,`${actual} differs from ${expected}`);
+  const point=(instance,x,y,z)=>new THREE.Vector3(x,y,z).applyMatrix4(instance.transform);
+  const normal=instance=>new THREE.Vector3(0,0,1).transformDirection(instance.transform);
+  const contains=(instance,p)=>instance.box.clone().expandByScalar(.0001).containsPoint(p.clone().applyMatrix4(instance.inverse));
   const roof=meshes(models[0],true),inverse=group.matrixWorld.clone().invert();
   const apertures=openings.filter(o=>o.parcel==='193').map(o=>new THREE.Box3().setFromPoints(
     o.vertices.map(p=>new THREE.Vector3(...p).applyMatrix4(inverse))));
-  const arrayBounds=[];
-  for(let i=0;i<frames.count;i++){
-    const transform=new THREE.Matrix4();frames.getMatrixAt(i,transform);transform.premultiply(frames.matrixWorld);
-    const normal=new THREE.Vector3(0,0,1).transformDirection(transform);
-    const azimuth=(Math.atan2(normal.x,normal.y)*180/Math.PI+360)%360;
-    assert(azimuth>220 && azimuth<228);
+  const seams=house.lines.filter(l=>l.kind==='roof-seam').flatMap(l=>clipRoofSeam(l.points,openings.filter(o=>o.parcel==='193'))
+    .map(pair=>new THREE.Line3(...pair.map(([x,y,z])=>new THREE.Vector3(x,y,z-.012)))));
+  const size=panels[0].box.getSize(new THREE.Vector3());
+  close(size.x,1.134);close(size.y,1.961);close(size.z,.030);
+  assert.equal(cells.length,panels.length);
+  assert.equal(panels.length*group.getObjectByName('pv-module-frames').userData.powerWp,10000);
+  const counts={SW:0,SE:0},footprints=[];
+  for(const [i,panel] of panels.entries()){
+    const up=normal(panel),azimuth=(Math.atan2(up.x,up.y)*180/Math.PI+360)%360;
+    const face=azimuth>180?'SW':'SE';counts[face]++;
+    close(azimuth,face==='SW'?223.5312:133.5312);
+    close(Math.acos(up.z),Math.atan2(4.23,4.25));
+    const delta=point(cells[i],0,0,0).sub(point(panel,0,0,0));
+    close(delta.length(),.0128);close(delta.dot(up),.0128);
     const footprint=new THREE.Box2();
-    for(const x of [box.min.x,0,box.max.x])for(const y of [box.min.y,0,box.max.y]){
-      const back=new THREE.Vector3(x,y,box.min.z).applyMatrix4(transform);
-      const hit=hits(roof,back.toArray(),normal.clone().negate().toArray(),.12)[0];
-      assert(hit,'Panel extends over an opening or roof edge');close(hit.distance,.09);
+    for(const x of [-size.x/2,0,size.x/2])for(const y of [-size.y/2,0,size.y/2]){
+      const back=point(panel,x,y,-size.z/2);
+      const hit=hits(roof,back.toArray(),up.clone().negate().toArray(),.12)[0];
+      assert(hit,'Panel over roof edge or window');close(hit.distance,.09);
       const local=hit.point.clone().applyMatrix4(inverse);
-      assert(local.x>.30 && local.x<4.25-.25 && local.y>.35 && local.y<18.13-.35);
+      if(face==='SW')assert(local.x>1.95 && local.x<3.81 && local.y>3.1 && local.y<15.6);
+      else assert(local.x>9.93 && local.x<14 && local.y>8.95 && local.y<12.25,'SE external wing edge and valley setbacks');
       footprint.expandByPoint(new THREE.Vector2(local.x,local.y));
     }
     for(const a of apertures)assert(!footprint.intersectsBox(new THREE.Box2(
       new THREE.Vector2(a.min.x-.2,a.min.y-.2),new THREE.Vector2(a.max.x+.2,a.max.y+.2))),'Rooflight clearance');
-    assert(arrayBounds.every(other=>!other.intersectsBox(footprint)),'Overlapping PV modules');
-    arrayBounds.push(footprint);
+    assert(footprints.every(other=>!other.intersectsBox(footprint)),'Overlapping PV modules');
+    footprints.push(footprint);
+    for(const x of [-1,1])for(const y of [-.520,.520]){
+      const lip=x*(size.x/2-.006);
+      assert.equal(rails.filter(rail=>contains(rail,point(panel,lip,y,-.015))).length,1,'Crossbeam supports the frame');
+      assert.equal(clamps.filter(clamp=>contains(clamp,point(panel,lip,y,.017))).length,1,'Clamp grips the frame');
+    }
   }
+  assert.deepEqual(counts,{SW:12,SE:8});assert.equal(rails.length,16);assert.equal(feet.length,40);assert.equal(clamps.length,56);
+  for(const foot of feet){
+    const base=point(foot,0,0,-.0275),up=normal(foot),start=base.clone().addScaledVector(up,.05);
+    const hit=hits(roof,start.toArray(),up.clone().negate().toArray(),.06)[0];
+    assert(hit,'Mount contact requires solid roof');close(hit.distance,.05);
+    assert(seams.some(seam=>seam.closestPointToPoint(base,true,new THREE.Vector3()).distanceTo(base)<.001),'Foot hugs a real roof seam');
+    assert.equal(rails.filter(rail=>contains(rail,point(foot,0,0,.0275))).length,1,'Foot contacts rail underside');
+  }
+  for(const rail of rails)assert(feet.filter(foot=>contains(rail,point(foot,0,0,.0275))).length>=2,'Rail rests on multiple feet');
 });

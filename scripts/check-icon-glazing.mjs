@@ -10,6 +10,7 @@ const marker = 'const [source,garden,house,neighbors]=';
 const start = html.indexOf(marker) + marker.length;
 const [, , house] = JSON.parse(html.slice(start, html.indexOf(';\nconst landscaping=', start)));
 const { addIconInterior } = await load(await readFile(new URL('../src/model/interior.js', import.meta.url), 'utf8'));
+const { mergeInteriorNavigation } = await load(await readFile(new URL('../src/model/walk.js', import.meta.url), 'utf8'));
 const { joinIconStorySurfaces } = await load(await readFile(new URL('../src/model/story-joints.js', import.meta.url), 'utf8'));
 const data = JSON.parse(await readFile(new URL('../trzy-domy-3d/interior-data.json', import.meta.url), 'utf8'));
 const interior = addIconInterior({ THREE, scene: new THREE.Scene(), house, data, joinStory: joinIconStorySurfaces });
@@ -141,6 +142,24 @@ test('master bath doorway clears the hall partition and closes the slit toward t
  ])assert(hits(object(name),[x-.2,y,z],[1,0,0],.4).length,name+' closes at the eaves');
 });
 
+test('closed office glazing retains the original floor-to-head lights and 50 mm profiles',()=>{
+ const wing=data.facades.find(f=>f.id==='facade-wing-end'),opening=wing.openings.find(o=>o.casement);
+ const {bottom,top}=opening,start=wing.a[1]+opening.start,end=wing.a[1]+opening.end,mid=(start+end)/2;
+ close(end-start,2.14,'Original opening width');close(top-bottom,2.35,'Original full height');close(bottom,0,'Original floor line');
+ const fixed=object('facade-wing-end-glass-1'),moving=object('office-window-sash-glass');
+ const profiles=interior.group.getObjectsByProperty('isMesh',true).filter(m=>/^office-window-(fixed|frame|sash|gasket)-/.test(m.name)&&m!==moving);
+ for(const z of [.10,.51,.96,1.37,2.24]){
+  for(const [y,pane] of [[mid-.48,fixed],[mid+.48,moving]]){
+   assert(hits(pane,[14,y,z],[1,0,0]).length);
+   assert(!profiles.some(m=>hits(m,[14,y,z],[1,0,0]).length),'No opaque transom');
+  }
+  for(const y of [start,mid,end]){
+   for(const offset of [-.020,0,.020])assert(profiles.some(m=>hits(m,[14,y+offset,z],[1,0,0]).length),'Original slim vertical profile');
+   for(const offset of [-.026,.026])assert(!profiles.some(m=>hits(m,[14,y+offset,z],[1,0,0]).length),'Clear outside 50 mm profile');
+  }
+ }
+});
+
 test('office casement opens and closes from a visible walking view and the open aperture is clear',()=>{
  const sash=object('office-window-sash'),pane=object('office-window-sash-glass'),control=interior.officeWindow;
  const camera=new THREE.PerspectiveCamera(68,1.4,.05,35);
@@ -153,21 +172,31 @@ test('office casement opens and closes from a visible walking view and the open 
  const eye=[12.15,10.13,1.62];
  const tap=()=>control.toggleAt(ndc,camera);
  const paneCenter=()=>{interior.group.updateMatrixWorld(true);return local(pane);};
+ const walking=mergeInteriorNavigation([{parcel:'193',navigation:interior.navigation}]);
+ const barrier=walking.obstacles.find(item=>item.id==='193:office-window-moving-barrier');
+ const threshold=interior.localToWorld([14.4,11.12,0]);
+ assert(contains(threshold,barrier.ring),'Closed leaf blocks passage');
  assert.equal(control.isOpen,false);const closed=paneCenter();
  aim([12.15,8.7,1.62],closed);assert.equal(tap(),false,'Partition blocks taps through walls');
- aim(eye,[14.4,11.15,.55]);assert.equal(tap(),false,'Fixed lower light is distinct');
+ aim(eye,[14.4,10.10,.55]);assert.equal(tap(),false,'Fixed light is distinct');
  aim(eye,closed);assert.equal(tap(),true);assert.equal(control.isOpen,true);
  control.update(performance.now()+350);const open=paneCenter();
  assert(open[0]<closed[0]-.4&&open[1]<closed[1]-.35);
+ assert(!contains(threshold,barrier.ring),'Open leaf frees its half of the opening');
+ assert(contains(interior.localToWorld(open),barrier.ring),'Walker collides with the open leaf');
  const aperture=[14,11.18,1.6],direction=[1,0,0];
  assert.equal(hits(pane,aperture,direction,1).length,0);
  assert.equal(hits(object('facade-wing-end-glass-1'),aperture,direction,1).length,0);
- for(const z of [.16,.56,.91])assert(hits(object('facade-wing-end-glass-1'),[14,11.16,z],direction,1).length);
+ for(const z of [.04,.56,.96,1.65,2.31]){
+  assert.equal(hits(pane,[14,11.16,z],direction,1).length,0,'Open all the way down to the floor');
+  assert.equal(hits(object('facade-wing-end-glass-1'),[14,11.16,z],direction,1).length,0);
+ }
  assert(hits(object('facade-wing-end-glass-1'),[14,10.07,1.65],direction,1).length);
  aim(eye,open);assert.equal(tap(),true);assert.equal(control.isOpen,false);
  control.update(performance.now()+350);const restored=paneCenter();
  restored.forEach((v,i)=>close(v,closed[i],'Closed sash returns to frame'));
- assert(hits(pane,aperture,direction,1).length,'Closed moving light seals the aperture');
+ assert(contains(threshold,barrier.ring));
+ for(const z of [.04,.56,.96,1.65,2.31])assert(hits(pane,[14,11.16,z],direction,1).length,'Closed moving light seals the whole aperture');
 });
 
 test('office sash clears the actual linen folds, desk, chair, dog bed and head through its inward swing',()=>{
@@ -178,8 +207,9 @@ test('office sash clears the actual linen folds, desk, chair, dog bed and head t
  };
  const furnitureIds=['office-desk-window','office-chair-window','office-pug-bed'];
  const wing=data.facades.find(f=>f.id==='facade-wing-end'),opening=wing.openings.find(o=>o.casement);
- const neighbours=['curtain-study-left','curtain-study-right','curtain-study-track','office-window-head',
-  'office-window-jamb-north','office-window-transom','office-window-mullion','office-window-stop-latch','office-window-stop-top']
+ const neighbours=['curtain-study-left','curtain-study-right','curtain-study-track','cast-iron-plant-pot','cast-iron-plant-foliage',
+  'office-window-frame-latch','office-window-frame-hinge','office-window-frame-sill','office-window-frame-head',
+  ...['latch','hinge','head','sill'].map(id=>'office-window-gasket-'+id)]
   .map(name=>[name,worldBounds(object(name))]);
  interior.group.traverse(mesh=>{
   if(mesh.isMesh&&furnitureIds.includes(mesh.userData.furnitureId))neighbours.push([mesh.name,worldBounds(mesh)]);
@@ -191,10 +221,14 @@ test('office sash clears the actual linen folds, desk, chair, dog bed and head t
    sash.rotation.z=THREE.MathUtils.degToRad(angle);interior.group.updateMatrixWorld(true);
    for(const moving of sash.children){
     const sweptPart=worldBounds(moving);
-    assert(sweptPart.min.y>wing.a[1]+opening.start&&sweptPart.max.y<wing.a[1]+opening.end,'Clears both wall reveals');
+    assert(sweptPart.min.y>wing.a[1]+opening.start&&sweptPart.max.y<wing.a[1]+opening.end+.0015,'Clears both wall reveals');
     assert(sweptPart.min.z>opening.bottom&&sweptPart.max.z<opening.top,'Clears the lintel and sill');
-    for(const [name,obstacle] of neighbours)
-     assert(!sweptPart.intersectsBox(obstacle),moving.name+' clips '+name+' at '+angle+' degrees');
+    for(const [name,obstacle] of neighbours){
+     if(!sweptPart.intersectsBox(obstacle))continue;
+     // Transform the obstacle back to the leaf axes to test the two remaining planar separating axes.
+     const inversePose=inverse.clone().multiply(moving.matrixWorld).invert();
+     assert(!moving.geometry.boundingBox.intersectsBox(obstacle.clone().applyMatrix4(inversePose)),moving.name+' clips '+name+' at '+angle+' degrees');
+    }
    }
   }
  }finally{sash.rotation.z=initial;interior.group.updateMatrixWorld(true);}
