@@ -57,45 +57,43 @@ test('open linen panels gather beside the jambs, inside the glass and clear of t
  }
 });
 
-test('two tilted Venetian blinds fit inside the kitchen reveal and admit light between their slats',()=>{
- const glass=bounds('facade-main-side-glass-0');
- const facade=data.facades.find(f=>f.id==='facade-main-side');
- const depth=facade.thickness??.48;
- const mullion=bounds('facade-main-side-mullion-0');
+test('the kitchen linen stacks and direct-mounted track fit the reveal with an open central view',()=>{
+ const glass=bounds('facade-main-side-glass-0'),mullion=bounds('facade-main-side-mullion-0');
+ const wallFace=bounds('facade-main-side').max.x,floor=bounds('ground-floor').max.z;
  const island=data.furniture.find(f=>f.id==='kitchen-island');
- const door=group.getObjectByName('concealed-pantry-door');
- assert(!group.children.some(m=>m.name.startsWith('curtain-kitchen-')));
+ const rail=bounds('curtain-kitchen-track'),panels=['left','right'].map(side=>bounds('curtain-kitchen-'+side));
+ assert(!group.children.some(m=>m.name.startsWith('blind-kitchen-')));
  assert(navigation.obstacles.some(o=>o.id==='facade-main-side-glass-barrier-0'));
- const parts=group.children.filter(m=>m.name.startsWith('blind-kitchen-'));
- assert.equal(parts.length,3,'the complete blind uses three draw calls');
- const boxes={};
- for(const mesh of parts){
-  assert(mesh.isInstancedMesh);
-  assert.equal(mesh.material.color.getHex(),mesh.name.endsWith('-tapes')?0x191919:0x202020);
-  mesh.geometry.computeBoundingBox();
-  boxes[mesh.name]=Array.from({length:mesh.count},(_,i)=>{
-   const matrix=new THREE.Matrix4();mesh.getMatrixAt(i,matrix);
-   const b=mesh.geometry.boundingBox.clone().applyMatrix4(matrix);
-   assert(b.min.x>mullion.max.x+.01 && b.max.x<facade.a[0]+depth,'in the recess, clear of the glass and frame');
-   assert(b.min.y>=glass.min.y && b.max.y<=glass.max.y && b.max.z<=glass.max.z+.00001 && b.min.z>glass.min.z);
-   assert(b.max.x<door.position.x-.10 && island.box[0]-b.max.x>1.45,'clear of pantry swing and island aisle');
-   return b;
-  });
+ for(const part of [rail,...panels]){
+  assert(part.min.x>mullion.max.x+.01 && part.max.x<wallFace-.01,'entirely inside the reveal, in front of the mullion');
+  assert(part.min.y>glass.min.y+.009 && part.max.y<glass.max.y-.009,'clear of both jambs');
+  assert(part.min.z>floor+.018 && part.max.z<=glass.max.z+.00001,'above the floor and below the lintel');
+  assert(island.box[0]-part.max.x>1.45,'island aisle');
  }
- const rails=boxes['blind-kitchen-rails'].sort((a,b)=>b.max.z-a.max.z);
- assert.equal(rails.length,4);
- assert(rails.slice(0,2).every(b=>Math.abs(b.max.z-glass.max.z)<.0001),'top-mounted housings touch the lintel');
- assert.equal(boxes['blind-kitchen-tapes'].length,8,'each bay has two pairs of ladder tapes');
- for(const bank of [0,1]){
-  const center=glass.min.y+(bank+.5)*(glass.max.y-glass.min.y)/2;
-  const slats=boxes['blind-kitchen-slats'].filter(b=>b.min.y<center && b.max.y>center).sort((a,b)=>a.min.z-b.min.z);
-  assert(slats.length>40 && slats.length<60);
-  for(const [i,slat] of slats.entries()){
-   assert(slat.max.y-slat.min.y>1.45 && slat.max.x-slat.min.x>.04);
-   assert(slat.max.z-slat.min.z>.017 && slat.max.z-slat.min.z<.026,'visible slat tilt');
-   if(i)assert(slat.min.z-slats[i-1].max.z>.018,'open line of sight between adjacent slats');
+ assert(Math.abs(rail.max.z-glass.max.z)<.00001,'screwed directly to the lintel');
+ assert(rail.max.x-rail.min.x<.035 && rail.max.z-rail.min.z<.025,'slim track');
+ assert(rail.max.y-rail.min.y>glass.max.y-glass.min.y-.04,'track spans the opening');
+ assert(panels[0].min.y-glass.min.y<.045 && glass.max.y-panels[1].max.y<.045,'gathered against opposite jambs');
+ const clear=panels[1].min.y-panels[0].max.y;
+ assert(clear/(glass.max.y-glass.min.y)>.86,'uncovered central span');
+ for(const [i,panel] of panels.entries()){
+  assert(Math.abs(panel.max.z-rail.min.z)<.00001 && panel.min.z<floor+.05,'floor-length panels hang from the track');
+  assert(panel.max.x-panel.min.x>.10,'folds have visible depth');
+  const side=i===0?'left':'right',mesh=group.getObjectByName('curtain-kitchen-'+side);
+  assert(mesh.material.map && mesh.material.roughness>.9 && mesh.material.side===THREE.DoubleSide,'matte woven fabric');
+  assert.equal(mesh.geometry.attributes.uv.count,mesh.geometry.attributes.position.count,'fabric texture covers every vertex');
+ }
+ const door=group.getObjectByName('concealed-pantry-door');
+ const {closedYaw,swing}=door.userData;
+ for(let step=0;step<=18;step++){
+  door.rotation.z=closedYaw+swing*Math.PI/2*step/18;
+  door.updateMatrixWorld(true);
+  for(const name of ['kitchen-pantry-closed-leaf','kitchen-pantry-leaf-pull']){
+   const hardware=bounds(name);
+   assert(panels.every(p=>hardware.min.x-p.max.x>.55),'pantry door and pull throughout swing');
   }
  }
+ door.rotation.z=closedYaw;door.updateMatrixWorld(true);
 });
 
 test('garden curtain and its rail fit the recessed transom below the upper glass and clear the terrace door',()=>{

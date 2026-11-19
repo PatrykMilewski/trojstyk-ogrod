@@ -6867,9 +6867,10 @@ function iconCurtainOpening({group}, panes, axis, inward, fullSpan) {
 }
 
 function iconCurtainPanel({THREE,mesh},name,opening,settings,edge,sign,cloth) {
- const {stack,depth,rise}=settings,folds=Math.max(4,Math.round(stack/.095)),columns=folds*9;
+ const {stack,depth,foldScale=1,headOffset=settings.rise-.019}=settings;
+ const folds=settings.folds??Math.max(4,Math.round(stack/.095)),columns=folds*9;
  const rows=[0,.014,.03,.14,.37,.62,.84,.965,.981,1];
- const vertices=[],colors=[],indices=[];
+ const vertices=[],colors=[],indices=[],uv=[];
  for(const [j,t] of rows.entries()) for(let i=0;i<=columns;i++){
   const s=i/columns,wave=s*folds*2*Math.PI;
   const phase=wave+.13*Math.sin(wave*.45)+.31*(1-t)*Math.sin(wave*.27+sign);
@@ -6877,8 +6878,9 @@ function iconCurtainPanel({THREE,mesh},name,opening,settings,edge,sign,cloth) {
   const u=edge+sign*(.02+stack*(s*flare+.022*(1-t)*Math.sin(phase)));
   const ripple=(.030+.013*(1-t))*Math.cos(phase)+.005*Math.sin(2*phase);
   const hem=opening.sill+.033+.008*Math.sin(phase+.8);
-  const head=opening.top(u)+rise-.019;
-  vertices.push(...opening.at(u,depth+ripple,hem+(head-hem)*t));
+  const head=opening.top(u)+headOffset,z=hem+(head-hem)*t;
+  vertices.push(...opening.at(u,depth+ripple*foldScale,z));
+  if(cloth.map)uv.push(s*folds,(z-hem)*5);
   const shade=(j===1||j===8?.91:1)*(.976+.024*Math.sin(wave*.47+1));
   colors.push(shade,shade,shade);
   if(i&&j){const n=j*(columns+1)+i;indices.push(n-columns-2,n-columns-1,n,n-columns-2,n,n-1);}
@@ -6886,6 +6888,7 @@ function iconCurtainPanel({THREE,mesh},name,opening,settings,edge,sign,cloth) {
  const geometry=new THREE.BufferGeometry();
  geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
  geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+ if(uv.length)geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
  geometry.setIndex(indices);geometry.computeVertexNormals();
  mesh(geometry,cloth,'curtain-'+name+(sign>0?'-left':'-right'));
 }
@@ -6910,42 +6913,24 @@ function iconCurtainTrack({THREE,mesh},name,opening,settings,start,end,metal) {
  geometry.computeVertexNormals();mesh(geometry,metal,'curtain-'+name+'-track');
 }
 
-function iconKitchenBlind(context) {
- const {THREE,group}=context,opening=iconCurtainOpening(context,['facade-main-side-glass-0'],1,1);
- const {start,end,sill}=opening,mid=(start+end)/2,head=opening.top(mid),foot=sill+.18;
- const x=opening.at(mid,.095,head)[0],rows=Math.round((head-foot-.07)/.044);
- const width=(end-start)/2-.024,tilt=THREE.MathUtils.degToRad(24);
- const finish=new THREE.MeshStandardMaterial({name:'Matte black powder-coated aluminium',color:'#202020',metalness:.18,roughness:.64});
- const tape=new THREE.MeshStandardMaterial({name:'Black woven ladder tapes',color:'#191919',roughness:.94});
- function instances(name,geometry,material,placements){
-  const parts=new THREE.InstancedMesh(geometry,material,placements.length);
-  const pose=new THREE.Object3D();
-  for(const [i,[cx,cy,cz,sx,sy,sz]] of placements.entries()){
-   pose.position.set(cx,cy,cz);pose.scale.set(sx,sy,sz);pose.updateMatrix();parts.setMatrixAt(i,pose.matrix);
-  }
-  parts.name='blind-kitchen-'+name;parts.castShadow=true;parts.receiveShadow=true;group.add(parts);
- }
- // A shallow crown stiffens the 50 mm aluminium strip. Both faces share the same tilt.
- const profile=[[-.025,0],[-.013,.002],[0,.0027],[.013,.002],[.025,0],[.025,-.001],
-  [.013,.001],[0,.0017],[-.013,.001],[-.025,-.001]];
- const slat=new THREE.ExtrudeGeometry(new THREE.Shape(profile.map(p=>new THREE.Vector2(...p))),{depth:width,bevelEnabled:false});
- slat.translate(0,0,-width/2);slat.rotateX(Math.PI/2);slat.rotateY(tilt);
- const blades=[],rails=[],tapes=[];
- for(const center of [(start+mid)/2,(mid+end)/2]){
-  rails.push([x,center,head-.027,.061,width+.012,.054],[x,center,foot+.009,.051,width,.018]);
-  const pitch=(head-.054-foot-.018)/rows;
-  for(let i=0;i<rows;i++)blades.push([x,center,head-.054-(i+.5)*pitch,1,1,1]);
-  for(const u of [center-width*.34,center+width*.34])for(const d of [-.023,.023])
-   tapes.push([x+d,u,(head-.054+foot+.018)/2,.0016,.010,head-.054-foot-.018]);
- }
- instances('slats',slat,finish,blades);
- const box=new THREE.BoxGeometry();
- instances('rails',box,finish,rails);instances('tapes',box,tape,tapes);
+function iconKitchenCurtains(context) {
+ const {THREE,data,box,material}=context,facade=data.facades.find(wall=>wall.id==='facade-main-side');
+ const opening=iconCurtainOpening(context,['facade-main-side-glass-0'],1,1);
+ const start=opening.start+.012,end=opening.end-.012,head=opening.top(start),railHeight=.016;
+ const glassX=opening.at(start,0,head)[0],wallFace=facade.a[0]+iconGroundFacadeDepth(facade);
+ const depth=(wallFace-glassX)/2,x=glassX+depth;
+ const metal=material('#d5cabc',{name:'Satin ivory ceiling track',metalness:.32,roughness:.58});
+ box('curtain-kitchen-track',[x-.014,start,x+.014,end],head-railHeight,railHeight,metal);
+ const linen=iconLoungeFabric(THREE,'Natural flax linen',[222,211,191]);
+ linen.side=THREE.DoubleSide;linen.vertexColors=true;linen.roughness=.97;
+ const gathered={stack:.166,folds:8,foldScale:1.5,depth,headOffset:-railHeight};
+ iconCurtainPanel(context,'kitchen',opening,gathered,start,1,linen);
+ iconCurtainPanel(context,'kitchen',opening,gathered,end,-1,linen);
 }
 
 function iconInteriorCurtains(context) {
  const {THREE}=context;
- iconKitchenBlind(context);
+ iconKitchenCurtains(context);
  const cloth=new THREE.MeshStandardMaterial({color:'#dbccb3',roughness:.97,vertexColors:true,side:THREE.DoubleSide});
  const metal=new THREE.MeshStandardMaterial({color:'#786750',roughness:.55,metalness:.39});
  const garden={depth:.18,rise:.076,face:.12,left:-.028,right:-.028,stack:.46};
