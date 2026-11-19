@@ -56,25 +56,69 @@ test('recess keeps the full glass polygon and does not cover it with reveal surf
  assert.equal(hits(sill,[4,17.3,3.5],[0,0,-1],.4).length,0,'No projecting shelf in front of glazing');
 });
 
-test('garden slider has three equal clear panels and two full-height dividers', () => {
- const panes=interior.group.children.filter(o=>o.name.startsWith('facade-garden-glass-'));
- const dividers=interior.group.children.filter(o=>o.name.startsWith('facade-garden-mullion-'));
- assert.equal(panes.length,3);
- assert.equal(dividers.length,2);
+test('lower garden glazing has two fixed sidelights and a framed centre leaf on a parallel track', () => {
  const left=1,right=7.5,width=(right-left)/3;
- panes.forEach((pane,i)=>{
-  const b=bounds(pane);
-  close(b.min.x,left+i*width,'panel start');
-  close(b.max.x,left+(i+1)*width,'panel end');
-  close(b.min.y,16.85,'glazing recess');
-  close(b.min.z,0,'sill');close(b.max.z,2.35,'head');
+ const leaf=object('living-garden-slider');
+ interior.updateHallDoors(null);interior.group.updateMatrixWorld(true);
+ close(leaf.position.x,left+width+.003,'moving panel clears first divider');
+ close(leaf.userData.width,width-.006,'centre sash fits between equal bays');
+ close(leaf.position.y,16.785,'moving track');
+ const glass=object('living-slider-glass');
+ assert(glass.material.transparent);assert.equal(glass.castShadow,false);
+ for(const i of [0,2]){
+  const pane=object('facade-garden-glass-0-pane-'+i),b=bounds(pane);
+  close(b.min.x,left+i*width,'fixed panel start');close(b.max.x,left+(i+1)*width,'fixed panel end');
+  close(b.min.y,16.85,'fixed glazing recess');close(b.min.z,0,'sill');close(b.max.z,2.35,'head');
   assert(pane.material.transparent);assert.equal(pane.castShadow,false);
- });
- dividers.forEach((divider,i)=>{
-  const b=bounds(divider);
-  close((b.min.x+b.max.x)/2,left+(i+1)*width,'divider between panels');
+ }
+ for(const i of [1,2]){
+  const b=bounds(object('facade-garden-mullion-0-'+i));
+  close((b.min.x+b.max.x)/2,left+i*width,'divider between panels');
   close(b.min.z,0,'divider base');close(b.max.z,2.35,'divider top');
- });
+ }
+});
+
+test('a walker can cross the centre from the garden or living room while the fixed bays block passage', async () => {
+ const {createWalkCollision,createWalkMotion}=await load(await readFile(new URL('../src/model/walk.js',import.meta.url),'utf8'));
+ const leaf=object('living-garden-slider'),parts=leaf.children;
+ const world=(x,y,z=0)=>interior.localToWorld([x,y,z]);
+ const pose=eye=>{interior.updateHallDoors(eye&&new THREE.Vector3(...eye));interior.group.updateMatrixWorld(true);};
+ const inHouse=mesh=>{
+  mesh.geometry.computeBoundingBox();
+  const matrix=interior.group.matrixWorld.clone().invert().multiply(mesh.matrixWorld);
+  return mesh.geometry.boundingBox.clone().applyMatrix4(matrix);
+ };
+ const fixed=['facade-garden-glass-0-pane-0','facade-garden-glass-0-pane-2','facade-garden-mullion-0-1',
+  'facade-garden-mullion-0-2','curtain-living-left','curtain-living-right','curtain-living-track'].map(object);
+ const occupied=createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<1.7&&o.maxZ>0));
+ for(const x of [2.25,6.3])assert(occupied.pathBlocked(world(x,16.3),world(x,17.45)),'fixed bay blocks a walking capsule');
+ for(const side of [-1,1]){
+  const x=4.7,start=16.785+side*1.4,end=16.785-side*1.4;
+  const motion=createWalkMotion(createWalkCollision([]),interior.navigation);
+  const a=world(x,start),b=world(x,end),yaw=Math.atan2(b[0]-a[0],b[1]-a[1]);
+  motion.reset(a);pose(motion.getState().position);
+  assert(hits(object('living-slider-glass'),[x,16.3,1.3],[0,1,0],1).length,'leaf closes at a distance');
+  let halfway=false,fullyOpen=false;
+  for(let i=0;i<70;i++){
+   const position=motion.move(1,0,Math.abs(end-start)/70/2.2,yaw);
+   pose(position);
+   const travelled=leaf.position.x-leaf.userData.x;
+   halfway||=travelled>.01&&travelled<leaf.userData.width-.01;
+   fullyOpen||=travelled>=leaf.userData.width;
+   const eye=new THREE.Vector3(...position).applyMatrix4(interior.group.matrixWorld.clone().invert());
+   for(const part of parts){
+    const box=inHouse(part);
+    assert(box.max.x<7.5,part.name+' clears right masonry jamb');
+    for(const neighbour of fixed)assert(!box.intersectsBox(inHouse(neighbour)),part.name+' clears '+neighbour.name);
+    const capsulePoint=new THREE.Vector3(eye.x,eye.y,THREE.MathUtils.clamp(eye.z-.4,box.min.z,box.max.z));
+    assert(box.distanceToPoint(capsulePoint)>.28,part.name+' clears walker');
+   }
+  }
+  assert(halfway&&fullyOpen,'leaf slides progressively and parks beside the opening');
+  const p=motion.getState().position;close(p[0],b[0],'crossed X');close(p[1],b[1],'crossed Y');
+  close(leaf.position.x,leaf.userData.x,'leaf closes behind walker');
+ }
+ pose(null);
 });
 
 test('vertical gable bars touch both the sill and the sloping frame', () => {

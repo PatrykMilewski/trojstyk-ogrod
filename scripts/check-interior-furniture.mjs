@@ -962,16 +962,30 @@ test('white covered socket is set into a real worktop opening well away from the
   assert(ray.intersectObject(lid,false).length>0,'Closed cover occupies the opening');
 });
 
-test('Palet island tiles wrap three faces at physical scale with one draw and clear the aisle', () => {
+test('Solid Palet tiles wrap three faces of the shallower 435 × 105 cm island', () => {
   const get=id=>interior.group.getObjectByName(id);
-  const skin=get('kitchen-island-palet-zigzag-cladding'),top=get('kitchen-island-top'),hob=get('hob-glass');
+  const skin=get('kitchen-island-palet-cladding'),top=get('kitchen-island-top'),hob=get('hob-glass');
   const texture=skin.material.map,{position,normal,uv}=skin.geometry.attributes;
-  assert.equal(skin.material.name,'Palet Zig Zag Half 173 / 334');
-  assert.match(skin.material.userData.source,/color-1=173&color-2=334&design=zig-zag-half$/);
+  assert.equal(skin.material.name,'Palet 301');
+  assert.match(skin.material.userData.source,/color-1=301&color-2=301&design=marble-extra-light$/);
   assert.equal(texture.wrapS,THREE.RepeatWrapping);assert.equal(texture.wrapT,THREE.RepeatWrapping);
-  close(1/(texture.repeat.x*4),.149+.002,'Four 149 mm tiles with 2 mm grout per repeat');
+  close(1/texture.repeat.x,.149+.002,'149 mm tile with 2 mm grout');
+  const {data:pixels,width,height}=texture.image;
+  const pixel=(x,y)=>Array.from(pixels.slice((y*width+x)*4,(y*width+x)*4+3));
+  const glaze=[192,206,172],joint=pixel(0,Math.floor(height/2));
+  assert(joint.some((c,i)=>c!==glaze[i]) && joint.every((c,i)=>Math.abs(c-glaze[i])<=12));
+  for(let y=3;y<height-3;y++)for(let x=3;x<width-3;x++)
+    assert.deepEqual(pixel(x,y),glaze,'Tile face is a single glaze');
   close(texture.repeat.x,texture.repeat.y,'Square tiles');
   const surface=bounds(skin),slab=bounds(top),drawers=bounds(get('kitchen-island-working-drawer-2-0'));
+  close(slab.max.x-slab.min.x,4.35,'Island length');
+  close(slab.max.y-slab.min.y,1.05,'Island depth');
+  close(slab.max.z,.96,'Island height');
+  close(slab.min.y,10.35,'Working edge retained');
+  for(const fixture of [hob,get('kitchen-island-socket-bezel'),get('kitchen-island-oven-enamel-back')]){
+    const b=bounds(fixture);
+    assert(b.min.x>slab.min.x && b.max.x<slab.max.x && b.min.y>slab.min.y && b.max.y<slab.max.y);
+  }
   assert.equal(top.material,get('kitchen-back-top').material);
   assert.notEqual(top.material,skin.material);
   close(bounds(hob).min.z,slab.max.z,'Hob sits on worktop');

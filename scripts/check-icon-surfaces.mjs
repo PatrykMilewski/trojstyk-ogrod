@@ -179,6 +179,44 @@ test('stair folds meet the partition flush and screen every tread and riser from
   }
 });
 
+test('the finished stair enclosure presents terracotta to the hall and indigo between the flights', async () => {
+  const {applyRealisticSurfaces}=await load(await readFile(new URL('../src/model/surface-realism.js',import.meta.url),'utf8'));
+  const model=interior.group.clone();
+  await applyRealisticSurfaces({THREE,scene:model,mats:{},renderer:{capabilities:{getMaxAnisotropy:()=>1}}});
+  model.updateMatrixWorld(true);
+  const frontPaint=model.getObjectByName('hall-terracotta-ceiling').material;
+  const flightSteel=model.getObjectByName('stair-upper-folded-flight').material;
+  const faceAt=(origin,direction)=>{
+    const ray=new THREE.Raycaster(new THREE.Vector3(...origin).applyMatrix4(model.matrix),
+      new THREE.Vector3(...direction).transformDirection(model.matrix),0,.4);
+    const [hit]=ray.intersectObject(model);
+    assert(hit,'Missing surface at '+origin);
+    return Array.isArray(hit.object.material)?hit.object.material[hit.face.materialIndex]:hit.object.material;
+  };
+  for(const x of [8.92,9.02,9.06,9.45,9.78])for(const z of [.10,1.40,2.70])
+    assert.equal(faceAt([x,9.02,z],[0,1,0]),frontPaint,'Hall front at '+[x,z]);
+  for(const y of [9.231,9.255,9.279])for(const z of [.10,1.40,2.70])
+    assert.equal(faceAt([9.12,y,z],[-1,0,0]),frontPaint,'Hall return at '+[y,z]);
+  const {box:[sx,sy],width,tread,rises,floorHeight}=data.stairs,steps=rises/2-1,rise=floorHeight/rises;
+  for(let i=0;i<steps;i++){
+    const y=sy+(i+.5)*tread,lower=(i+1)*rise,upper=floorHeight-(i+1)*rise;
+    for(const fraction of [.1,.5,.9]){
+      const z=lower+(upper-lower)*fraction;
+      assert.equal(faceAt([sx+width-.12,y,z],[1,0,0]),flightSteel,'Flank at '+[y,z]);
+    }
+  }
+  for(let i=1;i<steps;i++){
+    const section=model.getObjectByName('office-backing-flight-'+i);
+    const neighbour=model.getObjectByName('office-backing-flight-'+(i-1));
+    const seam=bounds(section).max.y;
+    for(const wall of [section,neighbour])
+      assert.equal(hits(wall,[sx+width+.04,seam-.01,1],[0,1,0],.02).length,0,'No buried faces at '+seam);
+  }
+  assert.equal(faceAt([10.85,9.5,1.40],[0,-1,0]).map?.name,'plaster-albedo','Office face keeps neutral plaster');
+  assert.equal(faceAt([8.78,11.300,1.535],[1,0,0]),flightSteel,'Indigo meets the last lower riser');
+  assert.equal(faceAt([8.78,11.75,.6],[1,0,0]).map?.name,'plaster-albedo','Backing below landing keeps neutral plaster');
+});
+
 test('upper hall guards block the drop and the normal staircase remains walkable both ways', async () => {
   const {createWalkMotion,createWalkCollision}=await load(await readFile(new URL('../src/model/walk.js',import.meta.url),'utf8'));
   const motion=createWalkMotion(createWalkCollision([]),interior.navigation);
@@ -416,6 +454,7 @@ test('bespoke front, glass, pantry and garden leaves carry their hardware and cl
     ['vestibule-glass-door','vestibule-screen-leaf-clear-glass','vestibule-leaf-pull-1',[7.45,7.95],[0,1]],
     ['concealed-pantry-door','kitchen-pantry-closed-leaf','kitchen-pantry-leaf-pull',[1.5,9.18],[0,1]],
     ['garden-terrace-slider','terrace-slider-glass','terrace-slider-pull',[8.205,15.93],[1,0]],
+    ['living-garden-slider','living-slider-glass','living-slider-pull',[4.25,16.785],[0,1]],
   ];
   for(const [id,leafName,handleName,[x,y],[nx,ny]] of route){
     const door=object(id),leaf=object(leafName),pull=object(handleName);
@@ -480,7 +519,7 @@ test('surface projection and static batching preserve plaster continuity and ind
   const {applyRealisticSurfaces}=await load(await readFile(new URL('../src/model/surface-realism.js',import.meta.url),'utf8'));
   const {batchStaticInteriorDetails}=await load(await readFile(new URL('../src/model/static-detail-batches.js',import.meta.url),'utf8'));
   const scene=new THREE.Scene(),model=addIconInterior({THREE,scene,house,data}),get=name=>model.group.getObjectByName(name);
-  const bespoke=['kitchen-pantry-closed-leaf','entry-main-door-leaf','vestibule-screen-leaf-clear-glass','terrace-slider-glass'];
+  const bespoke=['kitchen-pantry-closed-leaf','entry-main-door-leaf','vestibule-screen-leaf-clear-glass','terrace-slider-glass','living-slider-glass'];
   const authored=bespoke.map(name=>get(name).material);
   await applyRealisticSurfaces({THREE,scene,mats:{},renderer:{capabilities:{getMaxAnisotropy:()=>1}}});
   batchStaticInteriorDetails(THREE,model.group);
@@ -499,7 +538,7 @@ test('surface projection and static batching preserve plaster continuity and ind
     }
   }
   const doors=model.group.children.filter(o=>o.userData.kind==='walk-door');
-  assert.equal(doors.length,17);
+  assert.equal(doors.length,18);
   for(const door of doors){
     const {x,y,ux,uy,width,slide,closedYaw}=door.userData;
     model.updateHallDoors(new THREE.Vector3(...model.localToWorld([x+ux*width/2,y+uy*width/2,door.position.z+1.7])));
@@ -522,7 +561,7 @@ test('the house can omit the optional pantry cabinet and retain its walking door
   const noPantry={...data,furniture:data.furniture.filter(item=>item.id!=='kitchen-pantry')};
   const model=addIconInterior({THREE,scene:new THREE.Scene(),house,data:noPantry});
   assert(!model.group.getObjectByName('concealed-pantry-door'));
-  assert.equal(model.group.children.filter(o=>o.userData.kind==='walk-door').length,16);
+  assert.equal(model.group.children.filter(o=>o.userData.kind==='walk-door').length,17);
   model.updateHallDoors(new THREE.Vector3(...model.localToWorld([1.5,8.52,1.7])));
   model.updateHallDoors(null);
 });
