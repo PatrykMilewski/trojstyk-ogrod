@@ -23,6 +23,31 @@ function hits(mesh, origin, direction, far = 1) {
 function bounds(mesh) { mesh.updateMatrix(); mesh.geometry.computeBoundingBox(); return mesh.geometry.boundingBox.clone().applyMatrix4(mesh.matrix); }
 const contains = (p, ring) => { let inside = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const a = ring[i], b = ring[j]; if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside; } return inside; };
 
+test('four prints face their rooms with every corner on solid wall, clear of fixtures and furniture', () => {
+  const mounts = [
+    ['hall-still-life','hall-front',[0,1],'Dzbanek i gruszka'],
+    ['playroom-hare','facade-wing-end',[-1,0],'Zając w biegu'],
+    ['bedroom-lake','u-room1',[0,-1],'Cisza nad jeziorem'],
+    ['suite-lunaria','u-suite-hall',[1,0],'Miesiącznica'],
+  ];
+  const obstacles = interior.group.children.filter(m => m.isMesh && !m.name.startsWith('wall-art-'));
+  for (const [id, wall, [nx, ny], title] of mounts) {
+    const print = object('wall-art-'+id+'-print'), frame = object('wall-art-'+id+'-frame');
+    const extent = bounds(frame), mid = extent.getCenter(new THREE.Vector3()), size = extent.getSize(new THREE.Vector3());
+    assert.equal(print.material.name, title);
+    for (const along of [-.493, 0, .493]) for (const high of [-.493, 0, .493]) {
+      const origin = [mid.x + nx*.22 + size.x*along*Math.abs(ny), mid.y + ny*.22 + size.y*along*Math.abs(nx), mid.z + high*size.z];
+      const dir = [-nx,-ny,0], support = hits(object(wall), origin, dir, .3)[0];
+      assert(support && Math.abs(support.distance-.236)<1e-5, id+' is mounted on the wall');
+      const facing = along || high ? frame : print;
+      const face = hits(facing, origin, dir, .23)[0];
+      assert(face && face.distance < support.distance, id+' faces the viewer');
+      const visibleRay = new THREE.Raycaster(new THREE.Vector3(...origin).applyMatrix4(interior.group.matrix), new THREE.Vector3(...dir).transformDirection(interior.group.matrix), 0, face.distance);
+      assert.equal(visibleRay.intersectObjects(obstacles,false)[0]?.object.name, undefined, id+' stays clear');
+    }
+  }
+});
+
 test('open interior doorways match their rendered openings and collision bands', () => {
   for (const wall of data.walls.filter(wall => wall.finish !== 'clear-glass')) {
     const dx = wall.b[0] - wall.a[0], dy = wall.b[1] - wall.a[1], length = Math.hypot(dx, dy), ux = dx / length, uy = dy / length, base = wall.level ? 3.2 : 0;

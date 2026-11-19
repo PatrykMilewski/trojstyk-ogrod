@@ -1712,6 +1712,63 @@ test('both moving doors clear a continuous kitchen–pantry–garage walking rou
   interior.updateHallDoors(null);
 });
 
+test('the full-height sink drawer slides around the fixed waste and leaves a walkable aisle', async () => {
+  const scene=new THREE.Scene(),model=addIconInterior({THREE,scene,house,data}),{group,appliances}=model;
+  const get=name=>group.getObjectByName(name),drawer=get('kitchen-sink-pullout'),runners=get('kitchen-sink-telescoping-slides');
+  const front=get('kitchen-back-front-2-0'),pull=get('kitchen-back-drawer-pull-2-0');
+  const tray=drawer.children.filter(part=>part.name.includes('sink-tray-'));
+  assert.equal(front.parent,drawer);assert.equal(pull.parent,drawer);assert(tray.length>=10);
+  const fixed=['kitchen-sink-basin','kitchen-back-top','kitchen-back-sink-waste-trap','kitchen-back-sink-waste-coupling'].map(name=>bounds(get(name)));
+  const rails=['left','right'].map(side=>[0,1,2].map(i=>bounds(get('kitchen-back-sink-slide-'+side+'-'+i))));
+  const {batchStaticInteriorDetails}=await load(await readFile(new URL('../src/model/static-detail-batches.js',import.meta.url),'utf8'));
+  batchStaticInteriorDetails(THREE,group);
+  const world=v=>group.localToWorld(new THREE.Vector3(...v)),yaw=new THREE.Vector3(0,0,1);
+  const camera=new THREE.PerspectiveCamera(62,1,.03,100);camera.up.copy(yaw);
+  const eye=[4.12,10.02,1.58],face=bounds(front),cx=(face.max.x+face.min.x)/2;
+  function tap(from,to){camera.position.copy(world(from));camera.lookAt(world(to));return appliances.toggleAt({x:0,y:0},camera);}
+  const target=[cx,face.max.y,.62],ring=model.navigation.obstacles.find(o=>o.id===drawer.name).ring;
+  const closedRing=structuredClone(ring);
+  const blocker=new THREE.Mesh(new THREE.BoxGeometry(.36,.18,.32),new THREE.MeshBasicMaterial());
+  blocker.position.copy(world(eye).lerp(world(target),.5));scene.add(blocker);
+  assert(!tap(eye,target),'Opaque nearer geometry consumes the hit');scene.remove(blocker);
+  assert(!tap([cx,9.61,1.58],target),'A standing viewer within the slide stroke blocks opening');
+  const surfaceAt=(x,y)=>{
+    scene.updateMatrixWorld(true);
+    return new THREE.Raycaster(world([x,y,1.33]),new THREE.Vector3(0,0,-1),0,1).intersectObjects(group.children,true)[0].point.z;
+  };
+  const locations=[[3.75,9.03],[4.39,9.03]],initial=locations.map(([x,y])=>surfaceAt(x,y));
+  assert(tap(eye,target),'The closed full-height front opens from the aisle');assert.notDeepEqual(ring,closedRing);
+  const start=performance.now();
+  for(const elapsed of [0,85,170,255,350]){
+    appliances.update(start+elapsed);
+    const delta=new THREE.Vector3(0,drawer.position.y,0);
+    for(const part of tray){
+      const box=bounds(part).translate(delta);
+      assert(fixed.every(obstacle=>!box.intersectsBox(obstacle)),part.name+' clears basin, counter and waste throughout the stroke');
+    }
+    close(runners.position.y,delta.y/2,'Intermediate slide moves at half speed');
+    for(const [outer,mid,inner] of rails){
+      const center=mid.clone().translate(delta.clone().multiplyScalar(.5)),end=inner.clone().translate(delta);
+      assert(outer.max.y-center.min.y>.22 && center.max.y-end.min.y>.22,'Adjacent rail stages remain engaged');
+    }
+  }
+  close(drawer.position.y,.45,'The complete pull-out travels 45 cm');
+  locations.forEach(([x,y],i)=>close(surfaceAt(x,y),initial[i],'Bowl and worktop remain fixed'));
+  const walk=createWalkCollision(model.navigation.obstacles.filter(o=>o.minZ<1.70&&o.maxZ>.04),.28);
+  const point=(x,y)=>model.localToWorld([x,y]).slice(0,2);
+  assert(walk.blocked(point(cx,9.55)),'The open drawer has a walk collider');
+  assert(!walk.pathBlocked(point(3.12,10.01),point(4.76,10.01)),'A 56 cm walking envelope passes the fully open drawer');
+  assert(tap(eye,[cx,face.max.y+drawer.position.y,.62]),'Tapping the extended front closes it');
+  appliances.update(performance.now()+400);
+  close(drawer.position.y,0,'Returns flush');assert.deepEqual(ring,closedRing);
+  assert(!walk.blocked(point(cx,9.62)),'Closing releases the aisle');
+  assert(tap(eye,target));appliances.update(performance.now()+400);
+  const side=get('kitchen-back-sink-tray-side-right'),sidePoint=bounds(side).getCenter(new THREE.Vector3());
+  sidePoint.y+=drawer.position.y;
+  assert(tap([4.65,9.89,1.58],sidePoint.toArray()),'The visible storage box also closes the drawer');
+  appliances.update(performance.now()+400);close(drawer.position.y,0,'Tray and front return together');
+});
+
 test('the two kitchen appliance doors toggle independently from the aisle after batching', async () => {
   const scene = new THREE.Scene(), model = addIconInterior({ THREE, scene, house, data });
   const { batchStaticInteriorDetails } = await load(await readFile(new URL('../src/model/static-detail-batches.js', import.meta.url), 'utf8'));

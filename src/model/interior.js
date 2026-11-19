@@ -19,6 +19,7 @@ export function addIconInterior(options) {
  iconLivingMediaAccessories(context);
  iconInteriorLightingAndRoof(context);
  iconMoodEntryBathFinishes(context);
+ iconFramedArt(context);
  if(context.data.electrical)iconLoftElectrical(context);
  options.joinStory?.(options.THREE,context.group);
  const exteriorLights=iconExteriorLighting(context);
@@ -2159,7 +2160,40 @@ function iconNyttig({THREE},frame,s,p,x,front,hobRear) {
  s.add('nyttig-outlet',metal,edge,x,front,z);
 }
 
-function iconKitchenBackCounter({THREE,data},frame,s,k,face) {
+function iconSinkPullout(context,frame,s,k,face,left,right,sink) {
+ const {part,item}=frame,p=iconLivingPalette(context),centre=(left+right)/2;
+ const back=.056,front=face-.021,notch=.383,halfNotch=.085,wall=.012,floor=.165;
+ const drain=sink.box[1]-item.box[1]+.204,wasteTop=item.height-.200;
+ s.tube('sink-waste-trap',[[centre,drain,wasteTop],[centre,drain,.413],[centre,drain-.033,.364],
+  [centre,drain-.075,.375],[centre,drain-.101,.433],[centre,drain-.138,.451],[centre,.018,.451]],.021,p.putty);
+ s.disc('sink-waste-coupling',centre,drain,wasteTop-.030,.042,.042,.030,p.putty);
+ const moving=[],runners=[],tray=(id,l,b,r,f,z,h,mat=p.ash)=>moving.push(part('sink-tray-'+id,[l,b,r,f],z,h,mat));
+ const l=left+.027,r=right-.027;
+ tray('floor-front',l,notch,r,front,floor,wall);
+ tray('notch-front',centre-halfNotch,notch,centre+halfNotch,notch+wall,floor+wall,.215);
+ for(const [side,sign,edge,seam] of [['left',1,l,left+.009],['right',-1,r,right-.009]]){
+  const span=(a,b)=>[Math.min(a,b),Math.max(a,b)];
+  const [a,b]=span(edge,centre-sign*halfNotch);
+  tray('floor-'+side,a,back,b,notch,floor,wall);
+  tray('back-'+side,a,back,b,back+wall,floor+wall,.215);
+  const [outer,inner]=span(edge,edge+sign*wall),[n0,n1]=span(centre-sign*halfNotch,centre-sign*(halfNotch+wall));
+  tray('side-'+side,outer,back+wall,inner,front,floor+wall,.295);
+  tray('notch-'+side,n0,back+wall,n1,notch,floor+wall,.215);
+  for(const [i,[inset,width,height]] of [[0,.006,.048],[.006,.006,.034],[.012,.006,.022]].entries()){
+   const [u,v]=span(seam+sign*inset,seam+sign*(inset+width));
+   const member=part('sink-slide-'+side+'-'+i,[u,back,v,front-.006],floor+.044-height/2,height,p.silver);
+   if(i===1)runners.push(member);
+   if(i===2)moving.push(member);
+  }
+ }
+ const first=context.group.children.length;
+ iconKitchenDrawers(frame,k,left,right,1,face,false,2);
+ moving.push(...context.group.children.slice(first));
+ frame.sinkPullout={moving,runners,box:[item.box[0]+left,item.box[1]+face-.021,item.box[0]+right,item.box[1]+face+.021]};
+}
+
+function iconKitchenBackCounter(context,frame,s,k,face) {
+ const {THREE,data}=context;
  const {width:w,depth:d,item,part}=frame,h=item.height;
  part('body',[0,0,w,.018],.118,h-.168,k.yellow);
  part('cabinet-floor',[0,.018,w,face-.021],.118,.018,k.yellow);
@@ -2172,7 +2206,8 @@ function iconKitchenBackCounter({THREE,data},frame,s,k,face) {
  for(const [i,seam] of [left/2,left,right,(right+w)/2].entries())
   part('cabinet-divider-'+i,[seam-.009,.018,seam+.009,face-.021],.136,h-.186,k.yellow);
  iconKitchenDrawers(frame,k,0,left,2,face);
- iconKitchenDrawers(frame,k,left,right,1,face,false,2);
+ if(sink)iconSinkPullout(context,frame,s,k,face,left,right,sink);
+ else iconKitchenDrawers(frame,k,left,right,1,face,false,2);
  iconKitchenDrawers(frame,k,right,w,2,face,false,3);
  if(sink){
   const [l,b,r,f]=sink.box.map((n,i)=>n-item.box[i%2]);
@@ -2185,7 +2220,7 @@ function iconKitchenBackCounter({THREE,data},frame,s,k,face) {
 
 function iconKitchenSink({THREE},frame,s,p) {
  const {width:w,depth:d}=frame,x=w/2,drainY=.204,z=-.198;
- const basin=new THREE.MeshStandardMaterial({name:'Matte black composite sink',color:'#252628',roughness:.65});
+ const basin=new THREE.MeshStandardMaterial({name:'Matte black composite sink',color:'#252628',roughness:.65,side:THREE.DoubleSide});
  const steel=new THREE.MeshStandardMaterial({name:'Brushed silver stainless steel',color:'#d1d3d5',metalness:.56,roughness:.29});
  const vertices=[],indices=[],steps=128;
  const ring=(outline,h)=>outline.getSpacedPoints(steps).slice(0,-1).map(q=>[q.x,q.y,h]);
@@ -2525,40 +2560,68 @@ function iconVisiblePick({THREE,scene},roots) {
  };
 }
 
+function iconMountSinkPullout(context,{moving,runners,box}) {
+ const {THREE,group,world,navigation,obstacle}=context,travel=.45,bodyRadius=.28;
+ const drawer=new THREE.Group(),slides=new THREE.Group();
+ drawer.name='kitchen-sink-pullout';slides.name='kitchen-sink-telescoping-slides';
+ group.add(drawer,slides);drawer.add(...moving);slides.add(...runners);
+ obstacle(drawer.name,box,.122,.895);
+ const ring=navigation.obstacles.at(-1).ring,closed=ring.map(p=>p.slice());
+ const a=world([0,0]),b=world([0,travel]),dx=b[0]-a[0],dy=b[1]-a[1],eye=new THREE.Vector3();
+ return {roots:[drawer,slides],
+  canOpen(camera){
+   if(!camera.isPerspectiveCamera)return true;
+   group.worldToLocal(camera.getWorldPosition(eye));
+   const x=THREE.MathUtils.clamp(eye.x,box[0],box[2]),y=THREE.MathUtils.clamp(eye.y,box[1],box[3]+travel);
+   return eye.z<0||eye.z>2.6||Math.hypot(eye.x-x,eye.y-y)>bodyRadius;
+  },
+  pose(fraction,opening){
+   drawer.position.y=travel*fraction;slides.position.y=drawer.position.y/2;
+   // Reserve the remaining opening stroke so a walker cannot enter it during the animation.
+   const reach=opening?1:fraction;
+   for(const i of [2,3]){ring[i][0]=closed[i][0]+dx*reach;ring[i][1]=closed[i][1]+dy*reach;}
+  }};
+}
+
 function iconApplianceControls(context) {
- const parts=new Map(),doors=[];
+ const parts=new Map(),motions=[];
+ function add(mechanism){
+  const state={...mechanism,open:false,start:0,from:0,fraction:0,moving:false};
+  motions.push(state);
+  for(const root of state.roots)parts.set(root,state);
+ }
+ if(context.sinkPullout)add(context.sinkPullout);
  for(const id of ['fridge','freezer']){
   const pivot=context.group.getObjectByName('kitchen-'+id+'-door');
   if(!pivot)continue;
   const body=context.group.getObjectByName('kitchen-'+id+'-body');
   body.visible=false;
-  const state={pivot,body,open:false,start:0,from:0,target:0,moving:false};
-  doors.push(state);
-  parts.set(pivot,state);
-  parts.set(body,state);
+  add({roots:[pivot,body],canOpen:(_camera,part)=>part===pivot,pose(fraction,opening){
+   pivot.rotation.z=pivot.userData.openYaw*fraction;
+   body.visible=opening||fraction>0;
+  }});
  }
  const pick=iconVisiblePick(context,[...parts.keys()]);
  function update(now){
   let moving=false;
-  for(const state of doors){
+  for(const state of motions){
    if(!state.moving)continue;
    const t=Math.min(1,(now-state.start)/340);
-   state.pivot.rotation.z=state.from+(state.target-state.from)*t*t*(3-2*t);
+   state.fraction=state.from+(Number(state.open)-state.from)*t*t*(3-2*t);
+   state.pose(state.fraction,state.open);
    state.moving=t<1;
-   state.body.visible=state.open||state.moving;
    moving||=state.moving;
   }
   return moving;
  }
  function toggleAt(ndc,camera){
   const part=pick(ndc,camera),state=parts.get(part);
-  if(!state||(!state.open&&part!==state.pivot))return false;
+  if(!state||(!state.open&&!state.canOpen(camera,part)))return false;
   const now=performance.now();
   update(now);
   state.open=!state.open;
-  state.body.visible=true;
-  state.from=state.pivot.rotation.z;
-  state.target=state.open?state.pivot.userData.openYaw:state.pivot.userData.closedYaw;
+  state.from=state.fraction;
+  state.pose(state.fraction,state.open);
   state.start=now;state.moving=true;
   return true;
  }
@@ -2962,6 +3025,7 @@ function iconInteriorFurnishings(context) {
   const bounds=objects.reduce((max,object)=>{object.updateMatrix();object.geometry.computeBoundingBox();return Math.max(max,object.geometry.boundingBox.clone().applyMatrix4(object.matrix).max.z);},frame.z);
   obstacle('furniture-'+item.id,frame.walkBox??item.box,frame.z,bounds);
   for(const appliance of frame.appliances??[])iconMountSamsung(context,appliance);
+  if(frame.sinkPullout)context.sinkPullout=iconMountSinkPullout(context,frame.sinkPullout);
  }
 }
 
@@ -3172,6 +3236,125 @@ function iconIndoorOlive({THREE,mesh,obstacle},cx,cy,scale) {
  }
  const r=.205*scale;
  obstacle('olive-pot-'+scale,[cx-r,cy-r,cx+r,cy+r],0,potHeight*scale);
+}
+
+function iconStillLifePrint({shape,stroke,oval}) {
+ shape('#acb5a5','M0 0H300V380H0Z');
+ shape('#698b84','M25 0H167L134 224 20 249Z');
+ shape('#d69374','M0 259L300 211V380H0Z');
+ for(let x=-90;x<340;x+=28)stroke('#b86756',2.4,`M${x} 381l88 -147`);
+ oval('#86645b',141,279,96,9,-.09);
+ shape('#233f57','M116 128C106 120 93 122 80 117L86 143Q76 164 66 191C52 231 61 268 77 274Q112 286 142 268C154 245 152 211 140 179C197 185 204 110 161 119Q149 120 139 135L140 114Z');
+ shape('#aeb4a2','M144 148C179 108 194 153 157 166L143 166Z');
+ stroke('#91a39b',2.7,'M80 250Q64 229 83 190M82 134Q105 140 129 127');
+ shape('#d3ad46','M192 229C192 220 197 210 203 209C210 209 210 220 216 227C223 236 237 241 238 255C238 271 221 278 204 278C183 279 173 269 174 256C175 241 186 240 192 229Z');
+ stroke('#504c38',3.5,'M204 214Q203 204 212 196');
+ shape('#425e4b','M208 203Q223 185 238 199Q226 209 208 203Z');
+}
+
+function iconHarePrint({shape,stroke,oval}) {
+ shape('#e2c388','M0 0H420V300H0Z');
+ oval('#c66b45',327,64,32,31,-.14);
+ shape('#99aaa0','M0 196Q83 120 184 162T420 139V300H0Z');
+ shape('#537a74','M0 233Q94 255 173 209T420 200V300H0Z');
+ for(let x=-12;x<420;x+=20)stroke('#96a99a',2.4,`M${x} 264q18 -10 26 -10`);
+ shape('#394755','M57 217Q86 196 120 172L145 143Q161 136 173 143Q156 165 131 185Q100 209 67 222Z');
+ shape('#af593a','M79 209L120 165C131 141 146 115 175 114Q209 111 238 129L260 118C252 100 244 62 251 42C261 43 280 94 280 111C282 87 298 54 310 47C316 63 300 102 292 118Q311 121 319 137L335 144Q333 156 314 159L284 164Q271 184 243 186L269 209 303 215Q306 222 290 223L258 220 218 197Q197 202 171 188L135 183 87 216Q72 221 79 209Z');
+ oval('#eee2c6',132,141,16,12,-.5);
+ shape('#e0a07a','M253 54Q269 74 276 105Q261 92 253 54ZM305 59Q300 85 287 104Q289 85 305 59Z');
+ stroke('#784937',2.4,'M147 171Q187 180 187 146M285 144Q284 152 277 155');
+ oval('#293b3b',301,136,3.2,3.2,0);oval('#f4e9cf',302,135,1,1,0);
+ stroke('#263c3c',2.2,'M327 145l6 0M56 160l34 -10M67 172l23 -8');
+ const grasses=[[21,246],[46,249],[351,251],[387,237]];
+ for(const [x,y] of grasses)stroke('#34594e',2,`M${x} ${y}q-1 -18 -6 -27m6 27q3 -18 14 -26m-14 26q10 -7 19 -9`);
+}
+
+function iconReedbedPrint({shape,stroke,oval}) {
+ shape('#d5c4a9','M0 0H500V272H0Z');
+ oval('#c48658',343,78,30,30,0);
+ shape('#a5aba3','M0 107Q68 91 127 108T269 101Q328 84 400 108T500 96V182H0Z');
+ shape('#84938c','M0 143Q84 135 135 127Q210 113 271 127T410 123L500 113V176H0Z');
+ shape('#afbcb0','M0 155Q160 147 258 152T500 140V272H0Z');
+ shape('#506563','M0 115Q67 130 113 130L128 135 183 138 197 144 245 147 276 151 226 155 70 160 0 166Z');
+ shape('#516f6b','M500 190Q419 175 376 177Q356 170 309 166Q385 171 406 164Q440 159 500 160Z');
+ for(const [x,y,len] of [[301,155,59],[273,162,54],[308,168,42],[126,179,76],[45,185,39],[189,196,45],[287,188,90],[357,203,38],[220,213,55]])
+  stroke('#e1c9a1',1.6,`M${x} ${y}q${len*.52} -1 ${len} -1`);
+ shape('#697965','M0 191Q75 183 111 205T231 226Q305 229 354 244T500 251V272H0Z');
+ shape('#3e5750','M0 203Q65 199 134 229T239 252Q185 253 152 272H0Z');
+ for(const [x,y,h] of [[14,235,40],[32,226,28],[59,234,22],[83,240,29],[104,250,16],[124,253,27],[150,261,22],[184,266,12]]){
+  stroke('#c3ab7e',1.4,`M${x} ${y}q0 -8 ${h*.2} ${-h}`);
+  oval('#c3ab7e',x+h*.20,y-h,1.3,4.7,.23);
+ }
+}
+
+function iconLunariaPrint({shape,stroke,oval}) {
+ shape('#435963','M0 0H300V400H0Z');
+ stroke('#b0aa83',2.6,'M89 400C113 332 110 256 148 195S171 88 198 37M114 293Q82 246 68 179M120 269Q163 250 195 195M151 187Q126 157 114 107M166 148Q201 133 223 91');
+ const pods=[[70,170,-.48],[58,207,-.88],[82,221,-.45],[105,248,.61],[118,109,-.38],[122,143,-.56],[150,159,.65],[161,110,-.30],
+  [179,84,-.28],[198,49,.37],[201,91,.73],[219,106,.65],[174,218,-.55],[195,185,.39],[195,222,.86],[148,256,.82]];
+ for(const [i,[x,y,a]] of pods.entries()){
+  const colors=['#d2c6aa','#a5b2a3','#c0b79c','#dbceb1'];
+  oval(colors[i%4],x,y,11+(i%3),21+(i%4),a);
+  const dx=Math.sin(a),dy=Math.cos(a);
+  stroke('#818876',.95,`M${x+dx*19} ${y-dy*19}Q${x-3} ${y} ${x-dx*19} ${y+dy*19}`);
+  oval('#8f9680',x+2,y-1,2.2,3.3,a);
+ }
+}
+
+function iconPrintPaper(THREE,title,width,height,draw) {
+ const paper=new THREE.MeshStandardMaterial({name:title,color:'#ede6d7',roughness:.97});
+ if(typeof document==='undefined')return paper;
+ const canvas=document.createElement('canvas');canvas.width=Math.ceil(width*2.4);canvas.height=Math.ceil(height*2.4);
+ const ink=canvas.getContext('2d');
+ ink.scale(canvas.width/width,canvas.height/height);
+ ink.fillStyle='#ede6d7';ink.fillRect(0,0,width,height);
+ ink.save();ink.translate(width*.08,height*.075);ink.scale(.84,.835);
+ ink.beginPath();ink.rect(0,0,width,height);ink.clip();
+ draw({
+  shape:(color,path)=>{ink.fillStyle=color;ink.fill(new Path2D(path));},
+  stroke:(color,weight,path)=>{ink.strokeStyle=color;ink.lineWidth=weight;ink.lineCap='round';ink.stroke(new Path2D(path));},
+  oval:(color,x,y,rx,ry,angle)=>{ink.fillStyle=color;ink.beginPath();ink.ellipse(x,y,rx,ry,angle,0,2*Math.PI);ink.fill();}
+ });
+ ink.restore();
+ // A repeating dry-ink grain softens the flat pigments without adding geometry.
+ const grain=document.createElement('canvas');grain.width=grain.height=64;
+ const grainInk=grain.getContext('2d'),tile=grainInk.createImageData(64,64);
+ let seed=1729;
+ for(let i=0;i<tile.data.length;i+=4){
+  seed=(Math.imul(seed,1664525)+1013904223)>>>0;
+  tile.data[i]=tile.data[i+1]=tile.data[i+2]=seed&128?255:0;tile.data[i+3]=seed>>>28;
+ }
+ grainInk.putImageData(tile,0,0);
+ ink.fillStyle=ink.createPattern(grain,'repeat');ink.fillRect(0,0,width,height);
+ paper.map=new THREE.CanvasTexture(canvas);paper.map.colorSpace=THREE.SRGBColorSpace;paper.map.anisotropy=4;
+ paper.color.set(0xffffff);return paper;
+}
+
+function iconFramedArt(context) {
+ const {THREE,data,mesh}=context,{ash,walnut}=iconLivingPalette(context);
+ const pieces=[
+  {id:'hall-still-life',title:'Dzbanek i gruszka',support:'hall-front',along:8.90,normal:[0,1],z:1.65,w:.54,h:.68,wood:walnut,sheet:[300,380],draw:iconStillLifePrint},
+  {id:'playroom-hare',title:'Zając w biegu',support:'facade-wing-end',along:6.12,normal:[-1,0],z:1.57,w:.94,h:.68,wood:ash,sheet:[420,300],draw:iconHarePrint},
+  {id:'bedroom-lake',title:'Cisza nad jeziorem',support:'u-room1',along:3.45,normal:[0,-1],z:4.74,w:1.14,h:.64,wood:walnut,sheet:[500,272],draw:iconReedbedPrint},
+  {id:'suite-lunaria',title:'Miesiącznica',support:'u-suite-hall',along:10.67,normal:[1,0],z:4.76,w:.69,h:.91,wood:ash,sheet:[300,400],draw:iconLunariaPrint}
+ ];
+ for(const {id,title,support,along,normal:[nx,ny],z,w,h,wood,sheet,draw} of pieces){
+  const facade=data.facades.find(f=>f.id===support),wall=facade??data.walls.find(p=>p.id===support);
+  const offset=facade?iconGroundFacadeDepth(facade):wall.thickness/2;
+  const x=nx?wall.a[0]+nx*offset:along,y=ny?wall.a[1]+ny*offset:along;
+  const rim=.014,depth=.030;
+  const corners=inset=>[[-w/2+inset,-h/2+inset],[w/2-inset,-h/2+inset],[w/2-inset,h/2-inset],[-w/2+inset,h/2-inset]].map(([u,v])=>new THREE.Vector2(u,v));
+  const profile=new THREE.Shape(corners(0));profile.holes.push(new THREE.Path(corners(rim)));
+  const frame=new THREE.ExtrudeGeometry(profile,{depth,bevelEnabled:false});
+  const mount=(geometry,material,suffix,distance)=>{
+   geometry.rotateX(Math.PI/2);geometry.rotateZ(Math.atan2(nx,-ny));
+   const piece=mesh(geometry,material,'wall-art-'+id+'-'+suffix);
+   piece.position.set(x+nx*distance,y+ny*distance,z);return piece;
+  };
+  mount(frame,wood,'frame',.001);
+  const print=mount(new THREE.PlaneGeometry(w-rim*2,h-rim*2),iconPrintPaper(THREE,title,...sheet,draw),'print',depth-.006);
+  print.castShadow=false;
+ }
 }
 
 function iconMezzaninePrint({THREE,box,mats}) {
@@ -3539,8 +3722,8 @@ function iconKitchenBlind(context) {
  const {start,end,sill}=opening,mid=(start+end)/2,head=opening.top(mid),foot=sill+.18;
  const x=opening.at(mid,.095,head)[0],rows=Math.round((head-foot-.07)/.044);
  const width=(end-start)/2-.024,tilt=THREE.MathUtils.degToRad(24);
- const finish=new THREE.MeshStandardMaterial({name:'Sage grey satin aluminium',color:'#a9b09b',metalness:.28,roughness:.48});
- const tape=new THREE.MeshStandardMaterial({name:'Flax ladder tapes',color:'#bcb39f',roughness:.94});
+ const finish=new THREE.MeshStandardMaterial({name:'Matte black powder-coated aluminium',color:'#202020',metalness:.18,roughness:.64});
+ const tape=new THREE.MeshStandardMaterial({name:'Black woven ladder tapes',color:'#191919',roughness:.94});
  function instances(name,geometry,material,placements){
   const parts=new THREE.InstancedMesh(geometry,material,placements.length);
   const pose=new THREE.Object3D();

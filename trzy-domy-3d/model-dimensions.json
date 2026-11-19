@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-19.16",
+  "modelVersion": "2026-11-19.17",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1749,7 +1749,7 @@
     "proceduralCodeSha256": "69e6fdebc6c17d20de8f41e46f082eec1cc7e31d6e2035b7fa5bdf9615ac44ac",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "f6f27de0208ddacc1880061ce21577c8aa17d9cf9595e32efb76d2759fffda44",
-    "runtimeSha256": "73386604c269bd0f1a03baf1e6dacd8d717d3567217627d779f48d693422340e"
+    "runtimeSha256": "d782e49c8fb257c5d206b24c3514bc21bbb4bb448855b51102e26cd110da2a2c"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1795,7 +1795,8 @@
     "Dom /193: gładkie ściany, jasny wiatrołap, eukaliptusowy hol i sufit kuchni, blaty dębowe na podstawie próbki. Biała Astra K hatchback w garażu, zamykana wnęka robota. Wokół elewacji czarny cokół gresowy 30 cm, opaska 60 cm z płukanego otoczaka bazaltowego 16–30 mm, dziewięć kinkietów z jednym obwodem nocnym. Przyciski dopasowują się do widocznego obszaru przeglądarki.",
     "Dom /193: taras do progu dużego przeszklenia salonu, opaska z bazaltu zakończona obrzeżem antracytowym przy zieleni, dziewięć wpuszczanych opraw oświetla elewację od dołu. Zabudowa robota dopasowana do obu ścian pod spocznikiem. Korytarz parteru ponownie ceglasty, wiatrołap jasnozielony.",
     "Dom /193: niska szafka pod schodami dopasowana szerokością do stacji robota, z dostępem do stacji i Apple TV.",
-    "Dom /193: zlew centralnie nad jedną szafką, usunięte gniazdko przy zlewie, ceglasty narożnik przy wiatrołapie i żaluzja we wnęce okna kuchennego. Tryb Spacer: C przełącza kucanie, X przełącza czołganie."
+    "Dom /193: zlew centralnie nad jedną szafką, usunięte gniazdko przy zlewie, ceglasty narożnik przy wiatrołapie i żaluzja we wnęce okna kuchennego. Tryb Spacer: C przełącza kucanie, X przełącza czołganie.",
+    "Dom /193: czarne żaluzje w kuchni, jedna wysuwana szuflada pod zlewem i obrazy na wybranych ścianach."
   ],
   "contextParcels": [
     {

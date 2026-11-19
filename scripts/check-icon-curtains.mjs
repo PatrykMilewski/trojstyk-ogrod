@@ -71,6 +71,7 @@ test('two tilted Venetian blinds fit inside the kitchen reveal and admit light b
  const boxes={};
  for(const mesh of parts){
   assert(mesh.isInstancedMesh);
+  assert.equal(mesh.material.color.getHex(),mesh.name.endsWith('-tapes')?0x191919:0x202020);
   mesh.geometry.computeBoundingBox();
   boxes[mesh.name]=Array.from({length:mesh.count},(_,i)=>{
    const matrix=new THREE.Matrix4();mesh.getMatrixAt(i,matrix);
