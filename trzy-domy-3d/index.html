@@ -3233,7 +3233,7 @@ function iconInteriorSetup({THREE,scene,house,data,cutRoof=geometry=>geometry}) 
  const navigation = {obstacles:[],floors:[],ramps:[],entry:world([data.entry.position[0],data.entry.position[1]+.59,0]),entryDirection:[M[0][1],M[1][1]]};
  const material = (color,extra={}) => new THREE.MeshStandardMaterial({color,roughness:.78,side:THREE.DoubleSide,...extra});
  const mats = {wall:material('#e9e3d7'),ceiling:material('#ede8de'),oak:material('#b4936e'),tile:material('#bfb9ac'),dark:material('#343b35'),wood:material('#8a684b'),linen:material('#d9d0bd'),sofa:material('#c2bda9'),counter:material('#d1c8b7'),white:material('#f1ede5'),metal:material('#2f3534',{metalness:.45,roughness:.35}),glass:material('#b9d1ce',{transparent:true,opacity:.16,depthWrite:false,roughness:.08}),rug:material('#a99e86'),lamp:material('#fff0cd',{emissive:'#ffdf99',emissiveIntensity:.7})};
- mats.hall=material('#9ea995',{name:'Hall eucalyptus eggshell paint',roughness:.92});
+ mats.hall=material('#c77d59',{name:'Hall smooth terracotta paint',roughness:.92});
  mats.pantry=material('#e7d4a8',{name:'Pantry pale straw mineral paint',roughness:.92});
  mats.garage=material('#abb8a6',{name:'Garage sage mineral paint',roughness:.92});
  mats.garageCeiling=material('#d3dbcd',{name:'Garage pale sage ceiling',roughness:.92});
@@ -4094,20 +4094,23 @@ function iconLandingServiceDoor(context,{front,left,right,top,slot,paint,cover})
 
 function iconLandingServiceBay(context) {
  const {data,box,obstacle,navigation,group,mats}=context,stairs=data.stairs;
- const [side,,,rear]=stairs.box,turn=rear-stairs.landingDepth;
- const front=side+.012,back=front+.486,left=turn+.074,right=left+.654,top=.922,t=.018;
- const center=left+.267,slot={left:center-.20,right:center+.20,height:.116};
+ const [front,firstTread]=stairs.box,t=.018;
+ const rearWall=data.facades.find(f=>f.id==='facade-wing-rear');
+ const left=firstTread+(stairs.rises/2-1)*stairs.tread,right=rearWall.a[1]-iconGroundFacadeDepth(rearWall);
+ const backing=front+stairs.width,top=stairs.floorHeight/2-iconLandingPlate-t;
+ const back=front+.486,center=left+.34,slot={left:center-.20,right:center+.20,height:.116};
  const cover={ramp:navigation.ramps.find(r=>r.id==='stair-lower'),landing:navigation.floors.find(f=>f.id==='stair-landing')};
  const first=group.children.length,paint=mats.wall;
  const joinery=(id,bounds,z,height,finish=paint)=>{
   box('landing-service-'+id,bounds,z,height,finish);obstacle('landing-service-'+id,bounds,z,z+height,cover);
  };
- joinery('back',[back,left,back+t,right],0,top+t);
- joinery('cheek-left',[front,left,back,left+t],0,top);
- joinery('cheek-right',[front,right-t,back,right],0,top);
- joinery('cap',[front,left,back,right],top,t);
+ // A false back carries the sockets and keeps the dock and AV shelf within reach of the door.
+ joinery('back',[back,left+t,back+t,right-t],0,top);
+ joinery('cheek-left',[front,left,backing,left+t],0,top);
+ joinery('cheek-right',[front,right-t,backing,right],0,top);
+ joinery('cap',[front,left,backing,right],top,t);
  joinery('av-shelf',[front+.060,center+.243,back,right-t],.478,.018,mats.oak);
- box('landing-service-push-latch',[front+t+.001,right-.066,front+.081,right-.047],top-.043,.024,mats.dark);
+ box('landing-service-push-latch',[front+t+.001,right-.066,front+.081,right-.047],top-.024,.024,mats.dark);
  const frameAt=(id,y)=>iconInteriorFurnitureFrame(context,{id,room:'0.4',facing:'-x',box:[back-.45,y,back,y+.45]});
  iconCurvDock(context,frameAt('landing-service',center));
  obstacle('landing-service-dock',[back-.45,center-.225,back,center+.225],0,.45,cover);
@@ -8236,16 +8239,6 @@ function iconBasaltMaterial(THREE){
  return mat;
 }
 
-function iconClipApronCell(points,axis,edge,sign){
- const out=[];
- for(let i=0;i<points.length;i++){
-  const a=points[i],b=points[(i+1)%points.length],da=(a[axis]-edge)*sign,db=(b[axis]-edge)*sign;
-  if(da>=0)out.push(a);
-  if((da<0)!==(db<0))out.push(a.map((v,k)=>v+(b[k]-v)*da/(da-db)));
- }
- return out;
-}
-
 function iconGardenFootprint(ring,house){
  const span=(i)=>{
   const [a,b]=house.meshes.find(m=>m.id==='garden-pier-0-wall-'+i).vertices;
@@ -8275,91 +8268,127 @@ function iconGardenPierPlinth({THREE,scene,mats}){
  }
 }
 
-function iconApronOuterRing(ring){
+function iconApronOuterRing(ring,width=.655){
  const area=ring.reduce((sum,a,i)=>{const b=ring[(i+1)%ring.length];return sum+a[0]*b[1]-b[0]*a[1];},0);
- return iconInteriorInsetSlab(ring,ring,area>0?-.60:.60);
+ return iconInteriorInsetSlab(ring,ring,area>0?-width:width);
 }
 
-function iconBasaltApron({THREE,group,data,mesh,house},paving=[]){
- const ring=iconGardenFootprint(data.exterior.ground,house),outer=iconApronOuterRing(ring);
- const inv=group.matrix.clone().invert(),local=new THREE.Vector3();
- const zones=paving.map(({ring,z})=>({z,ring:ring.map(([x,y])=>{
-  local.set(x,y,0).applyMatrix4(inv);
-  return [local.x,local.y].map(v=>Math.round(v*1e5)/1e5);
- })}));
- const vertices=[],uv=[];
- for(let i=0;i<ring.length;i++){
-  const j=(i+1)%ring.length,a=ring[i],b=ring[j],strip=[a,b,outer[j],outer[i]];
-  const cuts=[0,1].map(k=>{
-   const vals=strip.map(p=>p[k]),lo=Math.min(...vals),hi=Math.max(...vals);
-   return [...new Set([lo,hi,...zones.flatMap(z=>z.ring.map(p=>p[k])).filter(v=>v>lo&&v<hi)])].sort((a,b)=>a-b);
-  });
-  for(let x=1;x<cuts[0].length;x++)for(let y=1;y<cuts[1].length;y++){
-   let poly=strip;
-   for(const [k,id] of [[0,x],[1,y]]){
-    poly=iconClipApronCell(poly,k,cuts[k][id-1],1);
-    poly=iconClipApronCell(poly,k,cuts[k][id],-1);
-   }
-   if(poly.length<3)continue;
-   const center=[0,1].map(k=>poly.reduce((sum,p)=>sum+p[k],0)/poly.length);
-   const crossings=zones.filter(zone=>iconInteriorContains(center,zone.ring));
-   // Existing bed surfaces reach 68 mm. At the entry, drive and deck the stones meet their own finished level.
-   const z=crossings.length?Math.max(...crossings.map(zone=>zone.z))+.002:.071;
-   for(let t=2;t<poly.length;t++)for(const p of [poly[0],poly[t],poly[t-1]]){
-    vertices.push(...p,z);uv.push(p[0]/.48,p[1]/.48);
-   }
+function iconGardenTerraceReturn({THREE,scene,group,data,world},ring){
+ const wall=data.facades.find(f=>f.id==='facade-garden'),opening=wall.openings[0];
+ const facade=wall.a[1],glass=facade-iconGroundFacadeDepth(wall)/2;
+ const [right,front]=ring[7],[left]=ring[10];
+ const x0=wall.a[0]+opening.start,x1=wall.a[0]+opening.end,panel=(x1-x0)/opening.panels;
+ const leaf=group.getObjectByName('living-garden-slider');
+ const shoe=leaf.children.find(part=>part.name==='living-slider-shoe');
+ const slidingThreshold=leaf.position.y+shoe.position.y+shoe.geometry.parameters.height/2;
+ const deck=[],drain=[],sill=[],zones=[];
+ const quad=(vertices,a,b,c,d,near,far)=>{
+  const points=[[a,b,near],[c,b,near],[c,d,far],[a,d,far]].map(world);
+  for(const i of [0,2,1,0,3,2])vertices.push(...points[i]);
+  if(d>b)zones.push([[a,b],[c,b],[c,d],[a,d]]);
+ };
+ const lip=.014,bottom=.003,slot=glass+.030,slotEnd=slot+.012,edge=.006;
+ quad(deck,left,facade,right,front,.080,.080);
+ // Only the 24 cm frame reveal changes level. The boards between the piers stay horizontal.
+ quad(deck,x0,slotEnd+edge,x1,facade,lip,.080);
+ quad(sill,x0,glass,x1,slot-edge,.018,lip);
+ quad(sill,x0+panel,slidingThreshold,x1-panel,glass,.018,.018);
+ quad(drain,x0,slot-edge,x1,slot,lip,lip);
+ quad(drain,x0,slot,x1,slot,lip,bottom);
+ quad(drain,x0,slot,x1,slotEnd,bottom,bottom);
+ quad(drain,x0,slotEnd,x1,slotEnd,bottom,lip);
+ quad(drain,x0,slotEnd,x1,slotEnd+edge,lip,lip);
+ const surface=(vertices,name,kind,properties)=>{
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.computeVertexNormals();
+  const part=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({...properties,side:THREE.DoubleSide}));
+  part.name=name;part.userData.kind=kind;part.receiveShadow=true;scene.add(part);
+ };
+ // World coordinates keep board grain and seams aligned across the original deck edge.
+ surface(deck,'surface-terrace','icon-garden-threshold',{color:'#b5a38d',roughness:.84});
+ surface(sill,'icon-garden-sill','threshold-flashing',{color:'#686967',metalness:.55,roughness:.59});
+ surface(drain,'icon-garden-slot-drain','threshold-drain',{color:'#393b39',metalness:.48,roughness:.68});
+ return zones;
+}
+
+function iconBasaltApron(context,paving=[]){
+ const {THREE,group,data,mesh,house}=context;
+ const ring=iconGardenFootprint(data.exterior.ground,house);
+ const basaltEdge=iconApronOuterRing(ring,.60),curbEdge=iconApronOuterRing(ring);
+ const inverse=group.matrix.clone().invert(),point=new THREE.Vector3();
+ const zones=paving.map(({ring})=>ring.map(([x,y])=>{
+  point.set(x,y,0).applyMatrix4(inverse);
+  return [point.x,point.y].map(v=>Math.round(v*1e5)/1e5);
+ }));
+ zones.push(...iconGardenTerraceReturn(context,ring));
+ // The apron, terrace, entry and driveway all have orthogonal edges in the house frame.
+ const corners=[ring,basaltEdge,curbEdge,...zones].flat();
+ const cuts=[0,1].map(k=>[...new Set(corners.map(p=>Number(p[k].toFixed(5))))].sort((a,b)=>a-b));
+ const [xs,ys]=cuts,basalt=[],curb=[],curbCells=new Set();
+ const quad=(positions,a,b,c,d)=>positions.push(...a,...b,...c,...a,...c,...d);
+ for(let i=1;i<xs.length;i++)for(let j=1;j<ys.length;j++){
+  const a=xs[i-1],b=ys[j-1],c=xs[i],d=ys[j],center=[(a+c)/2,(b+d)/2];
+  if(!iconInteriorContains(center,curbEdge)||iconInteriorContains(center,ring)||zones.some(zone=>iconInteriorContains(center,zone)))continue;
+  const isStone=iconInteriorContains(center,basaltEdge),z=isStone?.071:.08;
+  quad(isStone?basalt:curb,[a,b,z],[c,b,z],[c,d,z],[a,d,z]);
+  if(!isStone)curbCells.add(i+','+j);
+ }
+ for(const key of curbCells){
+  const [i,j]=key.split(',').map(Number),a=xs[i-1],b=ys[j-1],c=xs[i],d=ys[j];
+  for(const [di,dj,p,q] of [[0,-1,[a,b],[c,b]],[1,0,[c,b],[c,d]],[0,1,[c,d],[a,d]],[-1,0,[a,d],[a,b]]]){
+   if(!curbCells.has((i+di)+','+(j+dj)))quad(curb,[...p,.016],[...q,.016],[...q,.08],[...p,.08]);
   }
  }
- const geometry=new THREE.BufferGeometry();
- geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
- geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.computeVertexNormals();
- const apron=mesh(geometry,iconBasaltMaterial(THREE),'icon-basalt-apron');
- apron.castShadow=false;apron.userData.widthM=.60;
+ const surface=(name,vertices,mat,width)=>{
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+  const uv=[];for(let i=0;i<vertices.length;i+=3)uv.push(vertices[i]/.48,vertices[i+1]/.48);
+  geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.computeVertexNormals();
+  const part=mesh(geometry,mat,name);part.castShadow=false;part.userData.widthM=width;
+ };
+ surface('icon-basalt-apron',basalt,iconBasaltMaterial(THREE),.60);
+ const edging=new THREE.MeshStandardMaterial({name:'Anthracite concrete garden edging',color:'#484947',roughness:.93,side:THREE.DoubleSide});
+ surface('icon-basalt-curb',curb,edging,.055);
 }
 
-function iconExteriorFittings({THREE,group,data}){
- const metal=new THREE.MeshStandardMaterial({name:'Anthracite powder coated aluminium',color:'#393a38',roughness:.45,metalness:.42});
- const brass=new THREE.MeshStandardMaterial({name:'Recessed dark bronze reflector',color:'#76684c',roughness:.42,metalness:.54});
- const opal=new THREE.MeshStandardMaterial({name:'Exterior 2700 K LED optics',color:'#ddd6bd',emissive:'#ffca8b',emissiveIntensity:0,roughness:.35});
- const cylinder=(top,bottom,height)=>new THREE.CylinderGeometry(top,bottom,height,24,1,false).rotateX(Math.PI/2);
- const body=cylinder(.071,.071,.196),bezel=cylinder(.065,.062,.008),lens=cylinder(.052,.052,.003);
- const bracket=new THREE.BoxGeometry(.078,.063,.076),plate=new THREE.BoxGeometry(.083,.015,.128);
- const add=(parent,g,mat,x,y,z)=>{
-  const m=new THREE.Mesh(g,mat);m.position.set(x,y,z);parent.add(m);m.castShadow=true;m.receiveShadow=true;
- };
+function iconExteriorFittings({THREE,scene,group,data}){
+ const bezel=new THREE.MeshStandardMaterial({name:'Brushed anthracite uplight bezel',color:'#696b65',roughness:.42,metalness:.72});
+ const opal=new THREE.MeshStandardMaterial({name:'Exterior 2700 K recessed optic',color:'#c3bda6',emissive:'#ffca8b',emissiveIntensity:0,roughness:.22});
+ const rim=new THREE.CylinderGeometry(.069,.064,.018,32).rotateX(Math.PI/2);
+ const lens=new THREE.CircleGeometry(.045,32);
  const locations=[['garage',.51],['garage',6.51],['front-wing',1.30],['front-wing',4.21],
   ['wing-end',2.25],['wing-rear',4.24],['terrace',.61],['main-side',2.75],['main-side',14.68]];
+ const ground=[group.getObjectByName('icon-basalt-apron'),...scene.children.filter(o=>
+  o.isMesh&&/^(?:parcel-grass-193|surface-(?:entry|driveway|terrace|paving|gravel|path|planting|lawn))$/.test(o.name))];
+ scene.updateMatrixWorld(true);
+ const down=new THREE.Vector3(0,0,-1),ray=new THREE.Raycaster();
  const fittings=locations.map(([id,u])=>{
-  const facade=data.facades.find(f=>f.id==='facade-'+id);
-  const vertical=facade.a[0]===facade.b[0];
+  const facade=data.facades.find(f=>f.id==='facade-'+id),vertical=facade.a[0]===facade.b[0];
   const nx=vertical?(facade.a[0]===0?-1:1):0,ny=vertical?0:(facade.a[1]<5?-1:1);
-  const x=facade.a[0]+(vertical?0:u),y=facade.a[1]+(vertical?u:0),z=1.89;
-  const root=new THREE.Group();root.name='icon-exterior-sconce-'+id+'-'+u;
-  root.position.set(x,y,z);root.rotation.z=Math.atan2(-nx,ny);group.add(root);
-  add(root,plate,metal,0,.008,0);add(root,bracket,metal,0,.044,0);add(root,body,metal,0,.115,0);
-  for(const side of [-1,1]){
-   add(root,bezel,brass,0,.115,side*.101);add(root,lens,opal,0,.115,side*.106);
-  }
-  return {root,id:facade.id,x:x+nx*.115,y:y+ny*.115,z,nx,ny};
+  const x=facade.a[0]+(vertical?0:u)+.34*nx,y=facade.a[1]+(vertical?u:0)+.34*ny;
+  ray.set(group.localToWorld(new THREE.Vector3(x,y,1)),down);
+  const grade=ray.intersectObjects(ground,false)[0]?.point.z??0;
+  const root=new THREE.Group();root.name='icon-exterior-uplight-'+id+'-'+u;
+  root.position.set(x,y,grade);group.add(root);
+  const trim=new THREE.Mesh(rim,bezel);trim.position.z=-.006;trim.receiveShadow=true;root.add(trim);
+  const aperture=new THREE.Mesh(lens,opal);aperture.name='uplight-aperture';aperture.position.z=.004;root.add(aperture);
+  return {root,aperture,id:facade.id,x,y,z:grade+aperture.position.z,nx,ny};
  });
  return {fittings,opal};
 }
 
-function iconExteriorIrradiance(lamps,x,y,z,ground){
+function iconExteriorIrradiance(lamps,x,y,z){
  let sum=0;
  for(const lamp of lamps){
-  const dx=x-lamp.x,dy=y-lamp.y,dz=z-lamp.z,r2=dx*dx+dy*dy+dz*dz;
-  if(r2>24||r2<.001)continue;
-  const forward=dx*lamp.nx+dy*lamp.ny,tangent=dx*lamp.ny-dy*lamp.nx;
-  if(ground&&forward<-.116)continue;
-  const reach=Math.abs(dz);
-  if(reach<.085)continue;
-  const spread=dz<0?.61:.40;
-  const across=tangent/(.065+reach*spread);
-  const depth=ground?(forward-reach*.30)/(.29+reach*.52):0;
-  const beam=Math.exp(-2.25*(across*across+depth*depth));
-  const incidence=(ground?reach:Math.abs(forward))/Math.sqrt(r2);
-  sum+=beam*incidence*(dz<0?19:9)/(.29+r2);
+  const dx=x-lamp.x,dy=y-lamp.y,dz=z-lamp.z;
+  if(dz<=0)continue;
+  const inward=-(dx*lamp.nx+dy*lamp.ny),tangent=dx*lamp.ny-dy*lamp.nx;
+  const r2=dx*dx+dy*dy+dz*dz;
+  // An asymmetric optic aims 18 degrees towards the wall and spreads more in the vertical plane.
+  const axis=.309*inward+.951*dz,radial=.951*inward-.309*dz;
+  const across=tangent/(.035+.35*axis),depth=radial/(.035+.58*axis);
+  const beam=Math.exp(-2*(across*across+depth*depth));
+  sum+=beam*inward/Math.sqrt(r2)*128/(.30+r2);
  }
  return sum;
 }
@@ -8367,7 +8396,7 @@ function iconExteriorIrradiance(lamps,x,y,z,ground){
 function iconBakedExteriorMap(THREE,width,height,name,sample){
  const pixels=new Uint8Array(width*height*4);
  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
-  const flux=Math.min(1,sample((x+.5)/width,(y+.5)/height)/24),p=4*(y*width+x);
+  const flux=1-Math.exp(-sample((x+.5)/width,(y+.5)/height)/24),p=4*(y*width+x);
   pixels[p]=255*flux;pixels[p+1]=153*flux;pixels[p+2]=78*flux;pixels[p+3]=255;
  }
  const map=iconExteriorTexture(THREE,width,height,pixels,name);
@@ -8375,11 +8404,8 @@ function iconBakedExteriorMap(THREE,width,height,name,sample){
  return map;
 }
 
-function iconExteriorLightmaps({THREE,scene,group,data},fittings){
- const mixes=[],replacements=new Map(),facades=data.facades;
- const width=22,height=25,minX=-3.5,minY=-3.5;
- const groundMap=iconBakedExteriorMap(THREE,384,432,'Exterior light on paving and lawn',(u,v)=>
-  iconExteriorIrradiance(fittings,minX+width*u,minY+height*v,.04,true));
+function iconExteriorLightmaps({THREE,group,data},fittings){
+ const replacements=new Map(),facades=data.facades;
  const upperByFacade={'facade-garage':'front-gable','facade-wing-end':'wing-gable',
   'facade-main-side':'upper-main-side','facade-front-wing':'upper-front-wing',
   'facade-wing-rear':'upper-rear-wing','facade-terrace':'upper-terrace-side'};
@@ -8395,19 +8421,17 @@ function iconExteriorLightmaps({THREE,scene,group,data},fittings){
  const wallMap=iconBakedExteriorMap(THREE,512,faces.length*128,'Exterior facade grazing light',(u,v)=>{
   const band=v*faces.length,i=Math.floor(band),f=faces[i],z=base+(band-i)*wallHeight;
   const along=f.start+u*f.length;
-  return iconExteriorIrradiance(f.lights,f.axis?f.plane:along,f.axis?along:f.plane,z,false);
+  return iconExteriorIrradiance(f.lights,f.axis?f.plane:along,f.axis?along:f.plane,z);
  });
- function lightmapped(original,map){
-  const key=map.uuid+original.uuid;
-  if(!replacements.has(key)){
-   const mat=original.clone();mat.lightMap=map;mat.lightMapIntensity=0;
-   replacements.set(key,mat);mixes.push(mat);
+ function lightmapped(original){
+  if(!replacements.has(original)){
+   const mat=original.clone();mat.lightMap=wallMap;mat.lightMapIntensity=0;
+   replacements.set(original,mat);
   }
-  return replacements.get(key);
+  return replacements.get(original);
  }
- group.updateWorldMatrix(true,true);scene.updateMatrixWorld();
+ group.updateWorldMatrix(true,true);
  const inverse=group.matrixWorld.clone().invert(),matrix=new THREE.Matrix4(),p=new THREE.Vector3();
- const near=new THREE.Box3(new THREE.Vector3(minX,minY,-.5),new THREE.Vector3(minX+width,minY+height,.3));
  function writeUvs(mesh,project){
   const pos=mesh.geometry.attributes.position,uv=new Float32Array(pos.count*2);
   matrix.multiplyMatrices(inverse,mesh.matrixWorld);
@@ -8419,22 +8443,25 @@ function iconExteriorLightmaps({THREE,scene,group,data},fittings){
  }
  for(const [i,f] of faces.entries())for(const wall of f.aligned){
   writeUvs(wall,p=>[((f.axis?p.y:p.x)-f.start)/f.length,(i+(p.z-base)/wallHeight)/faces.length]);
-  wall.material=wall.material.map((m,index)=>index===1||m.name==='Black porcelain plinth'?lightmapped(m,wallMap):m);
+  wall.material=wall.material.map((m,index)=>index===1||m.name==='Black porcelain plinth'?lightmapped(m):m);
  }
- scene.traverse(mesh=>{
-  if(!mesh.isMesh||!/^icon-basalt-apron$|^parcel-grass-193$|^surface-(?:entry|driveway|terrace|paving|gravel|path|planting|lawn)$/.test(mesh.name))return;
-  if(!mesh.geometry.boundingBox)mesh.geometry.computeBoundingBox();
-  matrix.multiplyMatrices(inverse,mesh.matrixWorld);
-  if(!mesh.geometry.boundingBox.clone().applyMatrix4(matrix).intersectsBox(near))return;
-  writeUvs(mesh,p=>[(p.x-minX)/width,(p.y-minY)/height]);
-  mesh.material=lightmapped(mesh.material,groundMap);
- });
- return mixes;
+ return [...replacements.values()];
 }
 
 function iconExteriorLighting(context){
  const {fittings,opal}=iconExteriorFittings(context);
- const pick=iconVisiblePick(context,fittings.map(f=>f.root));
+ const pick=iconVisiblePick(context,fittings.map(f=>f.root)),center=new context.THREE.Vector3();
+ function pickNearAperture(ndc,camera,viewport){
+  if(pick(ndc,camera))return true;
+  if(!viewport)return false;
+  for(const {root,aperture} of fittings){
+   aperture.getWorldPosition(center).project(camera);
+   if(Math.abs(center.z)>1)continue;
+   const dx=(ndc.x-center.x)*viewport.clientWidth/2,dy=(ndc.y-center.y)*viewport.clientHeight/2;
+   if(dx*dx+dy*dy<=14*14&&pick(center,camera)===root)return true;
+  }
+  return false;
+ }
  let materials=[],night=null,on=false;
  function set(value){
   on=value;opal.emissiveIntensity=on?3.8:0;
@@ -8443,7 +8470,7 @@ function iconExteriorLighting(context){
  return {
   prepare(){materials=iconExteriorLightmaps(context,fittings);set(on);},
   update(elevation){const next=elevation<=-3;if(next!==night){night=next;set(night);}},
-  toggleAt(ndc,camera){if(!night||!pick(ndc,camera))return false;set(!on);return true;},
+  toggleAt(ndc,camera,viewport){if(!night||!pickNearAperture(ndc,camera,viewport))return false;set(!on);return true;},
   get isOn(){return on;}
  };
 }
@@ -9967,7 +9994,7 @@ const surfaceRealism=await applyRealisticSurfaces({scans:{"grass": ["data:image/
 interior.exteriorLights.prepare();
 batchStaticInteriorDetails(THREE,interior.group);
 batchStaticInteriorDetails(THREE,florydaInterior.group,florydaData.furniture);
-const facadeAndGarageDetails=interior.group.children.filter(o=>o.userData.kind==='garage-vehicle'||o.name.startsWith('icon-exterior-sconce-'));
+const facadeAndGarageDetails=interior.group.children.filter(o=>o.userData.kind==='garage-vehicle'||o.name.startsWith('icon-exterior-uplight-'));
 batchStaticDetails(THREE,[...facadeAndGarageDetails,...outdoorDetailGroups,dining,...scene.children.filter(o=>['car','dog','person'].includes(o.userData.kind))]);
 const mapLayers = await setupMapLayers({THREE,scene,renderer,requestDraw,camera,controls,data:mapData,groundExclusions:interiorGroundExclusions.map(item=>item.ring),container:document.querySelector('#map-panel'),onChange:state=>surroundings.setCropsVisible(state.background!=='height')});
 scene.environment=outdoorReflection(THREE);
@@ -9990,7 +10017,7 @@ document.getElementById('enter-interior-190').onclick=()=>{walk.exit();walk.ente
 viewUI=setupViewUI({solar,requestDraw,canvas:renderer.domElement});
 bindModelTap(renderer.domElement, ndc=>{
  if(interior.serviceBay.toggleAt(ndc, activeCamera)){renderer.shadowMap.needsUpdate=true;requestDraw();return;}
- if(interior.exteriorLights.toggleAt(ndc, activeCamera)||interior.officeWindow.toggleAt(ndc, activeCamera)||interior.appliances.toggleAt(ndc, activeCamera)||interior.projector.toggleAt(ndc, activeCamera)) requestDraw();
+ if(interior.exteriorLights.toggleAt(ndc, activeCamera, renderer.domElement)||interior.officeWindow.toggleAt(ndc, activeCamera)||interior.appliances.toggleAt(ndc, activeCamera)||interior.projector.toggleAt(ndc, activeCamera)) requestDraw();
 });
 const mapFocus=mapLayers.focus;
 mapLayers.focus=()=>{walk.exit();mapFocus();};

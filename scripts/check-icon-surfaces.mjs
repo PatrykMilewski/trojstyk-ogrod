@@ -362,7 +362,7 @@ test('folded indigo steel follows all 18 rises, with thin treads and risers clos
   assert(!interior.group.children.some(mesh=>mesh.name.startsWith('stair-stringer-')));
 });
 
-test('the kitchen and hall share eucalyptus paint on the real kitchen soffit', () => {
+test('the kitchen and hall share terracotta paint on the real kitchen soffit', () => {
   const ceiling=object('kitchen-painted-ceiling');
   assert.equal(ceiling.material,object('hall-painted-ceiling').material);
   for(const [x,y] of [[.55,8.70],[4,9.65],[6.48,10.25],[6.73,9.24],[7.4,9.8],[7.91,10.27]]){
@@ -374,8 +374,9 @@ test('the kitchen and hall share eucalyptus paint on the real kitchen soffit', (
     assert.equal(hits(ceiling,[x,y,2.72],[0,0,1],.11).length,0);
 });
 
-test('eucalyptus faces and ceiling stay within the ground hall and both concealed doors swing clear', () => {
+test('terracotta faces and ceiling stay within the ground hall and both concealed doors swing clear', () => {
   const paint=object('hall-painted-ceiling').material;
+  assert.equal(paint.color.getHex(),0xc77d59);
   for(const wall of ['guest-inner','guest-office','hall-front','garage-hall']){
     const mesh=object(wall);
     assert.deepEqual(mesh.geometry.groups.map(g=>g.materialIndex),wall==='hall-front'?[0,1]:[0,1,2,3],'One draw group per paint color');
@@ -429,7 +430,7 @@ test('all thirteen panel doors use their plan handing, room finishes and usable 
   ];
   const items=data.walls.flatMap(wall=>(wall.doorLeaves??[]).map((spec,i)=>({wall,spec,opening:wall.doors[i]})));
   assert.deepEqual(items.map(i=>i.spec.id).sort(),expected.map(([id])=>id).sort());
-  const paints={wall:0xe9e3d7,coral:0x9ea995,garage:0x505b57,oat:0xddd4c5,linen:0xc8c2b5,
+  const paints={wall:0xe9e3d7,coral:0xc77d59,garage:0x505b57,oat:0xddd4c5,linen:0xc8c2b5,
     vestibule:0xd7dbcb,playroom:0xb7ccaf,office:0xaec4cd,
     familyBath:0xc8bca9,privateBath:0xb59e87,groundBath:0x81462f};
   for(const [id,hand,openX,openY] of expected){

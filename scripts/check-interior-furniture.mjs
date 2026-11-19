@@ -415,6 +415,7 @@ test('flush push front conceals the Qrevo Curv 2 Pro and AV bay, leaves only the
   for(const [box,dims] of [[shell,[.45,.45,.45]],[robot,[.352,.35,.0798]],[av,[.093,.093,.031]]])
     box.getSize(new THREE.Vector3()).toArray().forEach((v,i)=>close(v,dims[i],'Appliance envelope'));
   close(av.min.z,shelf.max.z,'TV on dry shelf');
+  close(part('landing-service-push-latch').max.z,cap.min.z,'Concealed push latch mounts under the cap');
   assert(shelf.min.y>shell.max.y && cap.min.z-shell.max.z>.45,'Unobstructed height above the tanks');
   const front=cap.min.x,mid=shell.getCenter(new THREE.Vector3()).y;
   interior.group.parent.updateMatrixWorld(true);
@@ -426,9 +427,29 @@ test('flush push front conceals the Qrevo Curv 2 Pro and AV bay, leaves only the
     const vector=new THREE.Vector3(...dir).transformDirection(group.matrixWorld);
     return new THREE.Raycaster(point,vector,.00001,length).intersectObjects(group.children,true);
   }
+  function contact(from,dir,name,axis,edge) {
+    const hit=rays(from,dir,.08).find(hit=>hit.object.name===name);
+    assert(hit,'Expected physical face of '+name);
+    close(group.worldToLocal(hit.point.clone())[axis],edge,'Casework touches '+name);
+  }
+  const side=part('landing-service-cheek-left'),end=part('landing-service-cheek-right');
+  for(const x of [front+.001,front+.45,cap.max.x-.001])for(const z of [.005,.75,cap.min.z-.005])
+    contact([x,end.max.y-.04,z],[0,1,0],'facade-wing-rear','y',end.max.y);
+  for(const y of [side.min.y+.03,mid,end.max.y-.001])for(const z of [.005,.75,cap.min.z-.005])
+    contact([cap.max.x-.04,y,z],[1,0,0],'office-backing-landing','x',cap.max.x);
+  for(const cheek of [side,end]){
+    close(cheek.max.x,cap.max.x,'Side reaches the office wall');
+    close(cheek.max.z,cap.min.z,'Side closes against the cap');
+    contact([front+.01,cheek.getCenter(new THREE.Vector3()).y,cap.max.z-.04],[0,0,1],'stair-landing','z',cap.max.z);
+  }
+  const landing=part('stair-landing');
+  close(side.min.x,landing.min.x,'Front follows the exposed stair edge');
+  close(side.min.y,landing.min.y,'Flight end is closed all the way up to the landing');
+  close(side.min.x,part('facade-terrace').min.x,'Front is flush with the terrace wall');
   const through=(y,z)=>rays([front-.005,y,z],[1,0,0],.028);
   for(const y of [mid-.199,mid,mid+.199])for(const z of [.010,.112])assert.equal(through(y,z).length,0,'Robot can leave front first');
-  for(const [dy,z] of [[-.203,.05],[.203,.05],[0,.117],[0,.44],[.29,.51]])assert.equal(through(mid+dy,z)[0]?.object,door);
+  for(const [dy,z] of [[-.203,.05],[.203,.05],[0,.117],[0,.44],[.29,.51],[0,cap.min.z-.01]])
+    assert.equal(through(mid+dy,z)[0]?.object,door);
   const fromLocal=p=>new THREE.Vector3(...p).applyMatrix4(group.matrixWorld);
   const camera=new THREE.PerspectiveCamera(52,1,.02,10);camera.up.set(0,0,1);
   function aim(eye,target){
@@ -437,10 +458,19 @@ test('flush push front conceals the Qrevo Curv 2 Pro and AV bay, leaves only the
   }
   const barrier=interior.navigation.obstacles.find(o=>o.id==='landing-service-push-door');
   const before=structuredClone(barrier.ring);
+  const serviceView=[front-1.35,mid+.27,1.5];
+  const visible=target=>{
+    const direction=target.clone().sub(new THREE.Vector3(...serviceView));
+    return rays(serviceView,direction.clone().normalize().toArray(),direction.length())[0]?.object.name;
+  };
+  const dockTarget=shell.getCenter(new THREE.Vector3()),avTarget=av.getCenter(new THREE.Vector3());
+  for(const target of [dockTarget,avTarget])assert.equal(visible(target),door.name,'Closed front hides appliances at eye level');
   assert(!aim([front+.60,mid,.48],[front,mid,.48]),'Opaque back prevents clicking through');
   assert(!aim([front-.18,mid,1.48],[front,mid,.48]),'Door does not swing through the viewer');
   assert(aim([front-1.3,mid,1.35],[front,mid,.48]) && serviceBay.isOpen,'Standing viewer can open the real mesh');
   assert.notDeepEqual(barrier.ring,before);
+  assert.equal(visible(dockTarget),'landing-service-curv-dock-shell','Open door reveals the tank housing');
+  assert.equal(visible(avTarget),'landing-av-apple-tv-4k','Open door reveals the AV device from the same viewpoint');
   for(const z of [.15,.506,.89])assert.equal(through(mid,z).length,0,'Open front clears the service opening');
   for(const x of [shell.min.x+.02,shell.max.x-.02])for(const y of [shell.min.y+.02,shell.max.y-.02])
     assert.equal(rays([x,y,shell.max.z+.002],[0,0,1],.458).length,0,'Tanks lift vertically');

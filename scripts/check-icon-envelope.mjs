@@ -13,8 +13,12 @@ const { addIconInterior } = await load(await readFile(new URL('../src/model/inte
 const { joinIconStorySurfaces } = await load(await readFile(new URL('../src/model/story-joints.js', import.meta.url), 'utf8'));
 const data = JSON.parse(await readFile(new URL('../trzy-domy-3d/interior-data.json', import.meta.url), 'utf8'));
 const paving = [['driveway',.045],['entry',.08],['terrace',.08]]
- .map(([id,z])=>({ring:source.variants[0][id].coordinates[0],z}));
+ .map(([id,z])=>({id,ring:source.variants[0][id].coordinates[0],z}));
 const scene=new THREE.Scene();
+for(const {id,ring,z} of paving){
+ const deck=new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape(ring.map(p=>new THREE.Vector2(...p)))),new THREE.MeshStandardMaterial({side:THREE.DoubleSide}));
+ deck.name='surface-'+id;deck.position.z=z;scene.add(deck);
+}
 for(const spec of house.meshes.filter(m=>/^garden-pier-\d+-wall-\d+$/.test(m.id))){
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(spec.vertices.flat(),3));
  const wall=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:'#343b35',side:THREE.DoubleSide}));wall.name=spec.id;scene.add(wall);
@@ -113,21 +117,26 @@ test('the exterior wall changes finish at exactly 300 mm and preserves every ful
  }
 });
 
-test('a single metric basalt bed wraps both re-entrant corners and meets the existing hard surfaces',()=>{
- const apron=object('icon-basalt-apron');
+test('the 60 cm basalt bed has a 55 mm charcoal curb only along exposed garden edges',()=>{
+ const apron=object('icon-basalt-apron'),curb=object('icon-basalt-curb');
  assert.deepEqual(apron.material.userData.gradingMm,[16,30]);
  assert.equal(apron.material.userData.textureExtentM,.48);
- const sample=(x,y)=>hits(apron,[x,y,1],[0,0,-1],1);
- for(const [x,y,dx,dy] of [[2,0,0,-1],[6.9,2,1,0],[11,4.21,0,-1],[14.64,10,1,0],[11,12.71,0,1],[8.5,14.5,1,0],[5,17.09,0,1],[0,3,-1,0]]){
-  assert.equal(sample(x-dx*.001,y-dy*.001).length,0);
-  assert(sample(x+dx*.599,y+dy*.599).length);
-  assert.equal(sample(x+dx*.601,y+dy*.601).length,0);
+ close(curb.userData.widthM,.055,'edging width');
+ const sample=(mesh,x,y)=>hits(mesh,[x,y,1],[0,0,-1],1);
+ for(const [x,y,dx,dy] of [[0,3,-1,0],[.1,0,0,-1],[11,4.21,0,-1],[14.64,6,1,0],[0,17.9,-1,0]]){
+  const at=(mesh,r)=>sample(mesh,x+dx*r,y+dy*r);
+  assert.equal(at(apron,-.001).length,0);
+  close(at(apron,.599)[0]?.point.z,.071,'pebble edge');
+  assert.equal(at(apron,.601).length,0);assert.equal(at(curb,.599).length,0);
+  for(const d of [.601,.654])close(at(curb,d)[0]?.point.z,.080,'curb cap');
+  assert.equal(at(curb,.656).length,0);
  }
- for(const [x,y,z] of [[3,-.26,.047],[7.20,4.02,.082],[10.7,13,.082],[-.25,8,.071],[8.85,13.04,.082]]){
-  const hit=sample(x,y)[0];assert(hit);close(hit.point.z,z,'apron surface');
- }
- for(const [x,y] of [[.32,18.729],[8.08,18.729],[1.339,17.96],[7.161,17.96]])assert(sample(x,y).length,`rear pier at ${x},${y}`);
- for(const [x,y] of [[.32,18.731],[8.08,18.731],[.32,17.55],[8.08,17.55],[1.341,17.96],[7.159,17.96]])assert.equal(sample(x,y).length,0);
+ const crossed=[[3,0,0,-1],[6.9,2,1,0],[7.4,4.21,0,-1],[14.64,9,1,0],
+  [11,12.71,0,1],[8.5,15.4,1,0],[5,17.09,0,1],[.32,18.13,0,1],[8.08,18.13,0,1]];
+ for(const [x,y,dx,dy] of crossed)for(const r of [.001,.26,.599,.601,.654])
+  for(const mesh of [apron,curb])assert.equal(sample(mesh,x+dx*r,y+dy*r).length,0,`${mesh.name} at ${x},${y} + ${r}`);
+ for(const [x,y] of [[8.85,13.04],[1.3,17.96],[7.2,17.96],[.75,17.11],[7.75,17.11]])
+  for(const mesh of [apron,curb])assert.equal(sample(mesh,x,y).length,0,'clear terrace corner');
  for(const id of [0,1]){
   const wall=scene.getObjectByName('garden-pier-'+id+'-wall-1'),x=id===0?.32:8.08;
   for(const [z,expected] of [[.299,0],[.301,1]]){
@@ -139,20 +148,43 @@ test('a single metric basalt bed wraps both re-entrant corners and meets the exi
  assert(!interior.navigation.obstacles.some(o=>o.id.includes('apron')));
 });
 
-test('every installed exterior sconce can switch the same lightmaps after batching, with automatic dusk and dawn',async()=>{
- const {batchStaticInteriorDetails}=await load(await readFile(new URL('../src/model/static-detail-batches.js',import.meta.url),'utf8'));
+test('the rear deck stays level between the piers and its threshold discharges into a continuous slot',()=>{
+ const deck=scene.children.find(mesh=>mesh.userData.kind==='icon-garden-threshold');
+ const drain=scene.getObjectByName('icon-garden-slot-drain'),sill=scene.getObjectByName('icon-garden-sill');
+ const at=(mesh,x,y)=>hits(mesh,[x,y,1],[0,0,-1],1);
+ for(const x of [.742,1.01,3.7,7.49,7.758])for(const y of [17.091,17.45,17.99,18.129])
+  close(at(deck,x,y)[0]?.point.z,.080,`level pier-to-pier deck ${x},${y}`);
+ for(const x of [1.0002,1.8,4.25,7.4998]){
+  const line=(mesh,y)=>at(mesh,x,y)[0]?.point.z;
+  close(line(deck,17.089),.080-.066*.001/.192,'outer end of reveal');
+  close(line(deck,16.899),.014+.066*.001/.192,'deck drains to slot');
+  close(line(drain,16.896),.014,'outer lip');
+  close(line(drain,16.886),.003,'open slot floor');
+  close(line(drain,16.877),.014,'inner lip');
+  close(line(sill,16.851),.018-.004*.001/.024,'sill falls outward to drain');
+  for(const y of [16.876,16.886,16.894])assert.equal(at(deck,x,y).length,0,'boards leave the drain unobstructed');
+ }
+ for(const x of [3.22,4.25,5.27])close(at(sill,x,16.804)[0]?.point.z,.018,'sill clears the sliding shoe');
+ for(const [x,y] of [[4.25,16.78],[1.4,16.84],[4.25,18.132],[.738,17.6],[7.762,17.6],[.95,16.99]])
+  for(const mesh of [deck,sill,drain])assert.equal(at(mesh,x,y).length,0,`clear frame, pier, wall and adjoining deck at ${x},${y}`);
+});
+
+test('all nine flush uplights follow the finished grade and share dusk, dawn and tap controls after batching',async()=>{
+ const {batchStaticInteriorDetails,batchStaticDetails}=await load(await readFile(new URL('../src/model/static-detail-batches.js',import.meta.url),'utf8'));
  const circuit=interior.exteriorLights,apron=object('icon-basalt-apron');
  circuit.prepare();batchStaticInteriorDetails(THREE,interior.group);
- const fixtures=interior.group.children.filter(o=>o.name.startsWith('icon-exterior-sconce-'));
+ const fixtures=interior.group.children.filter(o=>o.name.startsWith('icon-exterior-uplight-'));
  assert.equal(fixtures.length,9);
- const mats=fixtures.map(root=>root.children.at(-1).material);
- const receivers=[apron.material,...object('facade-garage').material.filter(m=>m.lightMap)];
- assert.equal(receivers.length,3);
- for(const material of receivers){
-  const map=material.lightMap;assert.equal(map.channel,1);
-  assert(map.image.data.some((v,i)=>i%4===0&&v>35),'irradiance reaches the surface');
- }
+ assert(!interior.group.children.some(o=>o.name.includes('exterior-sconce')));
+ batchStaticDetails(THREE,fixtures);
+ const mats=fixtures.map(root=>root.getObjectByName('uplight-aperture').material);
+ const receivers=object('facade-garage').material.filter(m=>m.lightMap);
+ assert.equal(receivers.length,2);
+ for(const ground of [apron,...scene.children.filter(o=>o.name.startsWith('surface-'))])
+  assert.equal(ground.material.lightMap,null,ground.name+' receives no downward beam');
+ assert(receivers.every(m=>m.lightMap.channel===1));
  const camera=new THREE.PerspectiveCamera(48,1,.04,80);camera.up.set(0,0,1);
+ const viewport={clientWidth:400,clientHeight:400};
  const verify=on=>{
   assert.equal(circuit.isOn,on);
   for(const surface of receivers)assert.equal(surface.lightMapIntensity,on?24:0);
@@ -160,26 +192,37 @@ test('every installed exterior sconce can switch the same lightmaps after batchi
  };
  circuit.update(32);verify(false);circuit.update(-8);verify(true);
  for(const root of fixtures){
-  camera.position.copy(root.localToWorld(new THREE.Vector3(0,.82,0)));
-  camera.lookAt(root.localToWorld(new THREE.Vector3(0,.115,0)));camera.updateProjectionMatrix();
+  const {x,y,z}=root.position;
+  const surfaceHits=[apron,...scene.children.filter(o=>o.name.startsWith('surface-'))]
+   .flatMap(m=>hits(m,[x,y,1],[0,0,-1],1)).sort((a,b)=>a.distance-b.distance);
+  close(z,surfaceHits[0]?.point.z,root.name+' installed at finish');
+  const shell=root.children.find(m=>m.name!=='uplight-aperture'),shellBounds=bounds(shell);
+  assert(shellBounds.min.z<0&&shellBounds.max.z<=.004,root.name+' embedded trim');
+  const aperture=root.getObjectByName('uplight-aperture');
+  assert(aperture.position.z>shellBounds.max.z&&aperture.position.z<=.006);
+  const outward=root.name.includes('main-side')?[-1,0]:root.name.includes('wing-end')||root.name.includes('terrace')?[1,0]:
+   root.name.includes('wing-rear')?[0,1]:[0,-1];
+  camera.position.copy(root.localToWorld(new THREE.Vector3(outward[0]*1.8,outward[1]*1.8,1.55)));
+  camera.lookAt(aperture.getWorldPosition(new THREE.Vector3()));camera.updateProjectionMatrix();
   const wasOn=circuit.isOn;
   assert(circuit.toggleAt(new THREE.Vector2(0,0),camera),root.name);verify(!wasOn);
   circuit.update(-12);verify(!wasOn);
+  assert(circuit.toggleAt(new THREE.Vector2(.06,0),camera,viewport),root.name+' near tap at 12 CSS pixels');verify(wasOn);
  }
  circuit.update(14);verify(false);
- assert.equal(circuit.toggleAt(new THREE.Vector2(0,0),camera),false);verify(false);
+ assert.equal(circuit.toggleAt(new THREE.Vector2(0,0),camera,viewport),false);verify(false);
  circuit.update(16);verify(false);circuit.update(-11);verify(true);
- camera.position.copy(interior.group.localToWorld(new THREE.Vector3(1,.85,1.89)));
- camera.lookAt(object('icon-exterior-sconce-garage-0.51').localToWorld(new THREE.Vector3(0,.115,0)));
- assert.equal(circuit.toggleAt(new THREE.Vector2(0,0),camera),false,'opaque wall occludes the exterior control');verify(true);
+ camera.position.copy(interior.group.localToWorld(new THREE.Vector3(.51,1,1.6)));
+ camera.lookAt(object('icon-exterior-uplight-garage-0.51').getObjectByName('uplight-aperture').getWorldPosition(new THREE.Vector3()));
+ assert.equal(circuit.toggleAt(new THREE.Vector2(.05,0),camera,viewport),false,'wall occludes both exact and expanded pick target');verify(true);
 });
 
 test('grazing light crosses the storey joint on each aligned timber plane and fades above the lamps',()=>{
- if(!object('icon-basalt-apron').material.lightMap)interior.exteriorLights.prepare();
+ if(!object('facade-garage').material[1].lightMap)interior.exteriorLights.prepare();
  function irradianceAt(name,x,y,z,nx,ny){
   const wall=object(name),hit=hits(wall,[x+.12*nx,y+.12*ny,z],[-nx,-ny,0],.125)[0];
-  assert(hit,name);assert.equal(hit.face.materialIndex,1);
-  const map=wall.material[1].lightMap,{width,height,data}=map.image;
+  assert(hit,name);
+  const map=wall.material[hit.face.materialIndex].lightMap,{width,height,data}=map.image;
   const tx=hit.uv1.x*width-.5,ty=hit.uv1.y*height-.5,i=Math.floor(tx),j=Math.floor(ty);
   const sample=(dx,dy)=>data[4*((j+dy)*width+i+dx)];
   const lerp=(a,b,t)=>a+(b-a)*t;
@@ -190,6 +233,8 @@ test('grazing light crosses the storey joint on each aligned timber plane and fa
   ['facade-wing-end','wing-gable',14.64,6.46,1,0],['facade-main-side','upper-main-side',0,2.75,-1,0],
   ['facade-wing-rear','upper-rear-wing',12.74,12.71,0,1],['facade-terrace','upper-terrace-side',8.5,13.32,1,0]
  ]){
+  const at=z=>irradianceAt(lower,x,y,z,nx,ny);
+  assert(at(.09)<3&&at(.72)>at(1.89)&&at(1.89)>at(2.4),lower+' has a single ground-originating beam');
   const below=irradianceAt(lower,x,y,2.799,nx,ny),above=irradianceAt(upper,x,y,2.801,nx,ny);
   const shoulder=irradianceAt(upper,x,y,3.08,nx,ny),tail=irradianceAt(upper,x,y,3.56,nx,ny);
   assert(below>7&&Math.abs(below-above)<.2,upper+' must continue its ground-floor light field');
