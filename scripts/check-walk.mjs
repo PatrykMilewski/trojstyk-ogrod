@@ -7,7 +7,7 @@ const core = Buffer.from(imports.three.split(',')[1], 'base64').toString('utf8')
 const THREE = await import(`data:text/javascript;base64,${Buffer.from(core).toString('base64')}`);
 const source = await readFile(new URL('../src/model/walk.js', import.meta.url), 'utf8');
 assert(html.includes(source.replaceAll('export ', '')), 'Walking source must match the published runtime');
-const { createWalkGyroscope, createOrbitDepthGuard, createWalkCollision, createWalkMotion, walkHouseFootprints } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+const { createWalkGyroscope, createOrbitDepthGuard, createWalkCollision, createWalkMotion, walkHouseFootprints, setupWalk } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
 const marker = 'const [source,garden,house,neighbors]=';
 const start = html.indexOf(marker) + marker.length;
 const [, , house, neighbors] = JSON.parse(html.slice(start, html.indexOf(';\nconst landscaping=', start)));
@@ -170,6 +170,82 @@ function gyroHarness(requestPermission, touch = true) {
 
 const nearAngle = (actual, expected) => assert(Math.abs(actual-expected)<1e-5, `${actual} vs ${expected}`);
 
+function joystickHarness(t) {
+  class Control extends EventTarget {
+    style = {};
+    captures = new Set();
+    setAttribute() {}
+    focus() {}
+    setPointerCapture(id) { this.captures.add(id); }
+    hasPointerCapture(id) { return this.captures.has(id); }
+    releasePointerCapture(id) { this.captures.delete(id); }
+  }
+  const canvas = new Control(), panel = new Control(), pad = new Control(), thumb = new Control(), gyro = new Control();
+  thumb.offsetWidth = 32;
+  pad.querySelector = () => thumb;
+  pad.getBoundingClientRect = () => ({ width: 112, height: 112, left: 44, top: 44 });
+  panel.querySelector = selector => selector === '#walk-joystick' ? pad : gyro;
+  const doc = Object.assign(new EventTarget(), { createElement: () => panel,
+    body: { append() {}, classList: { add() {}, remove() {} } } });
+  const host = new EventTarget();
+  let frame, time = performance.now() + 100;
+  const globals = { document: doc, window: host, innerWidth: 390, innerHeight: 844,
+    requestAnimationFrame(callback) { frame = callback; return 1; }, cancelAnimationFrame() {} };
+  for (const [name, value] of Object.entries(globals)) {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, name);
+    globalThis[name] = value;
+    t.after(() => { if (descriptor) Object.defineProperty(globalThis, name, descriptor); else delete globalThis[name]; });
+  }
+  const walk = setupWalk({ THREE, house: { meshes: [] }, neighbors: { houses: [], context: { buildings: [] } },
+    camera: new THREE.PerspectiveCamera(), controls: { target: new THREE.Vector3(), update() {} },
+    renderer: { domElement: canvas }, requestDraw() {}, onCameraChange() {}, button: new Control() });
+  assert.equal((panel.innerHTML.match(/<button\b/g) ?? []).length, 1);
+  assert.match(panel.innerHTML, /id="walk-gyro"[^>]*>rozglądanie się<\/button>/);
+  const enter = () => walk.enter([0, 0], [0, 1]);
+  enter();
+  function tick() { frame(time += 110); return walk.getState().position.slice(0, 2); }
+  function touch(target, type, id, x, y) {
+    target.dispatchEvent(Object.assign(new Event(type, { cancelable: true }), { button: 0, pointerId: id, clientX: x, clientY: y }));
+  }
+  return { walk, pad, thumb, canvas, doc, host, enter, tick, touch };
+}
+
+test('joystick moves at proportional speed through all headings in the camera frame', t => {
+  const { walk, pad, enter, tick, touch } = joystickHarness(t);
+  for (let i = 0; i < 8; i++) {
+    const angle = i * Math.PI / 4;
+    for (const [radius, speed] of [[2, 0], [22, .5], [40, 1], [100, 1]]) {
+      enter(); walk.look(Math.PI / 2, .3);
+      touch(pad, 'pointerdown', 1, 100, 100);
+      touch(pad, 'pointermove', 1, 100 + radius * Math.sin(angle), 100 - radius * Math.cos(angle));
+      const [x, y] = tick();
+      nearAngle(x, .22 * speed * Math.cos(angle)); nearAngle(y, -.22 * speed * Math.sin(angle));
+      touch(pad, 'pointerup', 1);
+    }
+  }
+});
+
+test('joystick and camera use independent fingers and release stale input on interruptions', t => {
+  const { walk, pad, thumb, canvas, doc, host, enter, tick, touch } = joystickHarness(t);
+  for (const interruption of ['pointerup', 'pointercancel', 'lostpointercapture', 'blur', 'visibilitychange', 'exit']) {
+    enter(); touch(pad, 'pointerdown', 1, 100, 60);
+    touch(pad, 'pointerdown', 3, 100, 140); touch(pad, 'pointerup', 3);
+    touch(canvas, 'pointerdown', 2, 160, 260); touch(canvas, 'pointermove', 2, 185, 240);
+    nearAngle(walk.getState().yaw, .1); nearAngle(walk.getState().pitch, .08);
+    touch(canvas, 'pointerup', 2);
+    assert(pad.hasPointerCapture(1));
+    const moved = tick(); nearAngle(moved[0], Math.sin(.1) * .22); nearAngle(moved[1], Math.cos(.1) * .22);
+    if (interruption === 'blur') host.dispatchEvent(new Event('blur'));
+    else if (interruption === 'visibilitychange') {
+      doc.hidden = true; doc.dispatchEvent(new Event('visibilitychange')); doc.hidden = false;
+    } else if (interruption === 'exit') { walk.exit(); enter(); }
+    else touch(pad, interruption, 1);
+    assert.equal(thumb.style.transform, ''); assert.equal(pad.hasPointerCapture(1), false);
+    touch(pad, 'pointermove', 1, 120, 100);
+    assert.deepEqual(tick(), interruption === 'exit' ? [0, 0] : moved);
+  }
+});
+
 test('walk gyro calibrates in portrait, both landscapes, and flat, then composes with drag and heading wrap', () => {
   for (const angle of [0,90,270]) for (const tilt of [0,55,90]) {
     const {gyro, view, pose, screen} = gyroHarness(); screen.orientation.angle = angle; gyro.enter();
@@ -187,7 +263,8 @@ test('walk gyro rebases after screen rotation, hidden tabs and re-entry and reta
   doc.hidden=true;doc.dispatchEvent(new Event('visibilitychange'));pose(82,42);
   doc.hidden=false;doc.dispatchEvent(new Event('visibilitychange'));pose(221,18);assert.deepEqual(view,before);
   host.dispatchEvent(new Event('pageshow'));pose(66,22);assert.deepEqual(view,before);
-  button.dispatchEvent(new Event('click'));assert.equal(button['aria-pressed'],'false');
+  assert.equal(button['data-state'],'on');
+  button.dispatchEvent(new Event('click'));assert.equal(button['aria-pressed'],'false');assert.equal(button['data-state'],'off');
   gyro.exit();gyro.enter();pose(66,25);pose(77,49);assert.deepEqual(view,before);
   button.dispatchEvent(new Event('click'));pose(88,52);assert.deepEqual(view,before);
   pose(98,52);nearAngle(view.yaw,before.yaw+10*Math.PI/180);
@@ -200,8 +277,13 @@ test('iOS requests permission within entry gesture and discards responses after 
   pose(0,80);pose(50,100);nearAngle(view.yaw,.31);
   gyro.enter();await Promise.resolve();assert.equal(calls,1);
   host.dispatchEvent(Object.assign(new Event('deviceorientation'),{alpha:null,beta:null,gamma:null}));
-  assert.equal(button.textContent,'Żyroskop · oczekiwanie');pose(87,66);pose(97,66);nearAngle(view.yaw,.31+10*Math.PI/180);
+  assert.equal(button['data-state'],'waiting');assert.equal(button['aria-pressed'],'true');
+  assert.match(button['aria-description'], /Oczekiwanie/);
+  pose(87,66);pose(97,66);nearAngle(view.yaw,.31+10*Math.PI/180);
+  assert.equal(button['data-state'],'on');assert.equal(button['aria-pressed'],'true');
   const denied=gyroHarness(()=>Promise.resolve('denied'));denied.gyro.enter();await Promise.resolve();
-  assert.equal(denied.button['aria-pressed'],'false');denied.pose(90,75);denied.pose(0,32);nearAngle(denied.view.yaw,.31);
+  assert.equal(denied.button['aria-pressed'],'false');assert.equal(denied.button['data-state'],'denied');
+  assert.match(denied.button.title, /Przeciągnij widok palcem/);
+  denied.pose(90,75);denied.pose(0,32);nearAngle(denied.view.yaw,.31);
   const desktop=gyroHarness(()=>{throw new Error('unexpected');},false);desktop.gyro.enter();assert(desktop.button.hidden);
 });

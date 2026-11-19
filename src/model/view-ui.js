@@ -1,3 +1,32 @@
+export function bindModelTap(canvas, onTap) {
+  const contacts = new Set();
+  let start;
+  canvas.addEventListener('pointerdown', event => {
+    contacts.add(event.pointerId);
+    start = contacts.size === 1 && event.button === 0
+      ? { id: event.pointerId, x: event.clientX, y: event.clientY } : null;
+  });
+  function moved(event) {
+    return Math.hypot(event.clientX - start.x, event.clientY - start.y) > 6;
+  }
+  canvas.addEventListener('pointermove', event => {
+    if (start?.id === event.pointerId && moved(event)) start = null;
+  });
+  function release(event) {
+    contacts.delete(event.pointerId);
+    if (start?.id === event.pointerId) start = null;
+  }
+  canvas.addEventListener('pointerup', event => {
+    const tap = start?.id === event.pointerId && !moved(event);
+    release(event);
+    if (!tap) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width, y = (event.clientY - rect.top) / rect.height;
+    if (x >= 0 && x <= 1 && y >= 0 && y <= 1) onTap({ x: 2*x - 1, y: 1 - 2*y });
+  });
+  for (const name of ['pointercancel', 'lostpointercapture', 'pointerleave']) canvas.addEventListener(name, release);
+}
+
 function bindViewMenu({ menu, toggle, tools, toolsToggle, solar, requestDraw, canvas, positionPanels }) {
   const closeMenu = () => { menu.hidden = true; toggle.setAttribute('aria-expanded', 'false'); };
   const closeTools = () => { tools.hidden = true; toolsToggle.setAttribute('aria-expanded', 'false'); };

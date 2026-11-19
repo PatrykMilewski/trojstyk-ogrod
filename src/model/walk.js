@@ -242,40 +242,68 @@ function walkMarkup(button) {
   const panel = document.createElement('section'); panel.id = 'walk-controls'; panel.hidden = true;
   panel.setAttribute('aria-label', 'Sterowanie spacerem');
   panel.innerHTML = `<p id="walk-help">Wysokość oczu 1,70 m · WASD / strzałki: ruch · Shift: sprint · Spacja: skok · przeciągnij widok: rozglądanie · Esc: wyjście</p>
-    <div class="walk-touch" style="flex-wrap:wrap" aria-label="Ruch na ekranie dotykowym"><button type="button" data-walk="forward" aria-label="Przytrzymaj, aby iść do przodu">↑ Przód</button><button type="button" data-walk="back" aria-label="Przytrzymaj, aby iść do tyłu">↓ Tył</button><button type="button" id="walk-gyro" aria-pressed="false" hidden>Żyroskop</button></div>`;
+    <div class="walk-touch"><div id="walk-joystick" class="walk-stick" tabindex="0" role="group" aria-label="Drążek ruchu" aria-description="Przesuń drążek lub użyj klawiszy WASD albo strzałek.">
+      <span class="walk-stick-thumb" aria-hidden="true"></span>
+    </div><button type="button" id="walk-gyro" aria-pressed="false" data-state="off" hidden>rozglądanie się</button></div>`;
   document.body.append(panel);
   return panel;
 }
 
 function walkKeyboard({ held, isActive, jump, exit, clear }) {
   const actions = { KeyW: 'forward', ArrowUp: 'forward', KeyS: 'back', ArrowDown: 'back',
-    KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right', ShiftLeft: 'sprint', ShiftRight: 'sprint',
-    SprintSpace: 'sprint', SprintEnter: 'sprint' };
+    KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right', ShiftLeft: 'sprint', ShiftRight: 'sprint' };
   const formControl = target => target instanceof Element && !!target.closest('input,select,textarea,button,a,summary,[contenteditable="true"]');
   window.addEventListener('keydown', event => {
     if (!isActive()) return;
     if (event.code === 'Escape') { event.preventDefault(); exit(); return; }
     if (event.ctrlKey || event.metaKey || event.altKey) return;
-    const control = event.target instanceof Element ? event.target.closest('[data-walk]')?.dataset.walk : null;
-    if (['sprint', 'jump'].includes(control) && ['Space', 'Enter'].includes(event.code)) {
-      event.preventDefault();
-      if (control === 'sprint') held.add(`Sprint${event.code}`);
-      else if (!event.repeat && !held.has(event.code)) jump();
-      held.add(event.code); return;
-    }
-    if ((!actions[event.code] && event.code !== 'Space') || (formControl(event.target) && !(control && actions[event.code]))) return;
+    if ((!actions[event.code] && event.code !== 'Space') || formControl(event.target)) return;
     event.preventDefault();
     if (event.code === 'Space' && !event.repeat && !held.has('Space')) jump();
     held.add(event.code);
   });
-  window.addEventListener('keyup', event => { held.delete(event.code); held.delete(`Sprint${event.code}`); });
+  window.addEventListener('keyup', event => { held.delete(event.code); });
   window.addEventListener('blur', clear);
   document.addEventListener('visibilitychange', () => { if (document.hidden) clear(); });
   document.addEventListener('focusin', event => { if (formControl(event.target)) clear(); });
   return actions;
 }
 
-function walkPointers({ canvas, panel, pointers, isActive, look, jump }) {
+function walkJoystick({ pad, isActive }) {
+  const thumb = pad.querySelector('.walk-stick-thumb');
+  let pointer = null, right = 0, forward = 0;
+  function update(event) {
+    const dx = event.clientX - pointer.x, dy = event.clientY - pointer.y;
+    const distance = Math.hypot(dx, dy), fraction = Math.min(1, distance / pointer.radius);
+    const unitX = distance ? dx / distance : 0, unitY = distance ? dy / distance : 0;
+    const speed = Math.max(0, (fraction - .1) / .9);
+    right = unitX * speed; forward = -unitY * speed;
+    thumb.style.transform = `translate(${unitX * fraction * pointer.radius}px, ${unitY * fraction * pointer.radius}px)`;
+  }
+  function clear() {
+    if (!pointer) return;
+    const id = pointer.id;
+    pointer = null; right = 0; forward = 0; thumb.style.transform = '';
+    if (pad.hasPointerCapture(id)) pad.releasePointerCapture(id);
+  }
+  pad.addEventListener('pointerdown', event => {
+    if (!isActive() || pointer || event.button !== 0) return;
+    event.preventDefault();
+    const bounds = pad.getBoundingClientRect();
+    pointer = { id: event.pointerId, x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2,
+      radius: Math.max(1, (Math.min(bounds.width, bounds.height) - thumb.offsetWidth) / 2) };
+    pad.setPointerCapture(event.pointerId); update(event);
+  });
+  pad.addEventListener('pointermove', event => { if (pointer?.id === event.pointerId) update(event); });
+  for (const type of ['pointerup', 'pointercancel']) {
+    pad.addEventListener(type, event => { if (pointer?.id === event.pointerId) clear(); });
+  }
+  pad.addEventListener('lostpointercapture', event => { if (event.target === pad && pointer?.id === event.pointerId) clear(); });
+  pad.addEventListener('contextmenu', event => event.preventDefault());
+  return { clear, get right() { return right; }, get forward() { return forward; } };
+}
+
+function walkPointers({ canvas, isActive, look }) {
   let drag = null;
   canvas.addEventListener('pointerdown', event => {
     if (!isActive() || event.button !== 0 || drag) return;
@@ -289,29 +317,20 @@ function walkPointers({ canvas, panel, pointers, isActive, look, jump }) {
   });
   for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
     canvas.addEventListener(type, event => { if (drag?.id === event.pointerId) drag = null; });
-    panel.addEventListener(type, event => pointers.delete(event.pointerId));
   }
-  panel.addEventListener('contextmenu', event => { if (event.target.closest('[data-walk]')) event.preventDefault(); });
-  panel.addEventListener('pointerdown', event => {
-    const button = event.target.closest('[data-walk]');
-    if (!isActive() || !button) return;
-    event.preventDefault(); button.setPointerCapture(event.pointerId);
-    if (button.dataset.walk === 'jump') jump(); else pointers.set(event.pointerId, button.dataset.walk);
-  });
-  panel.addEventListener('click', event => {
-    if (isActive() && event.detail === 0 && event.target.closest('[data-walk="jump"]')) jump();
-  });
   return () => { drag = null; };
 }
 
 function walkInput({ canvas, panel, isActive, move, look, jump, exit, clearSprint }) {
-  const held = new Set(), pointers = new Map();
-  function clear() { held.clear(); pointers.clear(); clearDrag(); clearSprint(); }
+  const held = new Set();
+  const joystick = walkJoystick({ pad: panel.querySelector('#walk-joystick'), isActive });
+  function clear() { held.clear(); clearDrag(); joystick.clear(); clearSprint(); }
   const actions = walkKeyboard({ held, isActive, jump, exit, clear });
-  const clearDrag = walkPointers({ canvas, panel, pointers, isActive, look, jump });
+  const clearDrag = walkPointers({ canvas, isActive, look });
   return { clear, tick(dt) {
-    const active = new Set([...held].map(code => actions[code]).concat([...pointers.values()]));
-    move(Number(active.has('forward')) - Number(active.has('back')), Number(active.has('right')) - Number(active.has('left')), dt, active.has('sprint'));
+    const active = new Set([...held].map(code => actions[code]));
+    move(joystick.forward + Number(active.has('forward')) - Number(active.has('back')),
+      joystick.right + Number(active.has('right')) - Number(active.has('left')), dt, active.has('sprint'));
   } };
 }
 
@@ -391,14 +410,16 @@ export function createWalkGyroscope(THREE, button, look, host = window) {
   if (!supported) return { enter() {}, exit() {} };
   const tracker = walkOrientationDelta(THREE, look);
   let wanted = true, active = false, attached = false, samples = false, generation = 0, permission;
-  function label(enabled, text) {
-    button.setAttribute('aria-pressed', String(enabled)); button.textContent = text;
+  function label(state, description) {
+    button.setAttribute('data-state', state);
+    button.setAttribute('aria-pressed', String(state === 'on' || state === 'waiting'));
+    button.setAttribute('aria-description', description); button.title = description;
   }
   function sample(event) {
     if (doc.hidden) return;
     const angle = host.screen.orientation?.angle ?? host.orientation ?? 0;
     if (tracker.sample(event, angle) && !samples) {
-      samples = true; label(true, 'Żyroskop wł.');
+      samples = true; label('on', 'Rozglądanie ruchem telefonu jest włączone.');
     }
   }
   function stop() {
@@ -411,7 +432,7 @@ export function createWalkGyroscope(THREE, button, look, host = window) {
   }
   async function start() {
     stop(); const current = generation;
-    label(true, 'Żyroskop · oczekiwanie');
+    label('waiting', 'Oczekiwanie na odczyt z czujnika ruchu telefonu.');
     try {
       if (sensor.requestPermission) {
         // Calling this before the first await preserves the walk button's transient activation on iOS.
@@ -421,7 +442,7 @@ export function createWalkGyroscope(THREE, button, look, host = window) {
     } catch {
       permission = undefined;
       if (current !== generation) return;
-      wanted = false; label(false, 'Żyroskop · brak zgody'); return;
+      wanted = false; label('denied', 'Brak dostępu do czujnika. Przeciągnij widok palcem, aby się rozejrzeć.'); return;
     }
     if (current !== generation) return;
     host.addEventListener('deviceorientation', sample);
@@ -431,7 +452,7 @@ export function createWalkGyroscope(THREE, button, look, host = window) {
   button.addEventListener('click', () => {
     if (!active) return;
     wanted = !wanted;
-    if (wanted) start(); else { stop(); label(false, 'Żyroskop wył.'); }
+    if (wanted) start(); else { stop(); label('off', 'Rozglądanie ruchem telefonu jest wyłączone.'); }
   });
   return {
     enter() { active = true; if (wanted) start(); },

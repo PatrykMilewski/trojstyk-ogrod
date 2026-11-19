@@ -461,6 +461,47 @@ test('wall-mounted projector aims at a matte white 16:9 surface with the entire 
   assert.deepEqual(blockers.map(o=>o.name),[],'No interior mesh intersects the optical volume between lens and screen');
 });
 
+test('the visible projector toggles the painted wall in walk and orbit cameras after batching', async () => {
+  const scene=new THREE.Scene(),model=addIconInterior({THREE,scene,house,data});
+  const {batchStaticInteriorDetails}=await load(await readFile(new URL('../src/model/static-detail-batches.js',import.meta.url),'utf8'));
+  batchStaticInteriorDetails(THREE,model.group);
+  scene.updateMatrixWorld(true);
+  const lens=model.group.getObjectByName('projector-lens-glass'),center=lens.getWorldPosition(new THREE.Vector3());
+  const wall=model.group.getObjectByName(data.projection.wall),paint=wall.material[2];
+  const camera=new THREE.PerspectiveCamera(60,1,.1,100),orbit=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);
+  const at=(x,y,z)=>model.group.localToWorld(new THREE.Vector3(x,y,z));
+  function aim(camera,from){
+    camera.position.copy(from);camera.up.set(0,0,1);camera.lookAt(center);camera.updateMatrixWorld();
+  }
+  aim(camera,at(6.1,14.4,1.8));aim(orbit,at(6.5,14.3,2.1));
+  const click=camera=>model.projector.toggleAt({x:0,y:0},camera);
+  assert.equal(model.projector.isOn,false);
+  assert.equal(click(camera),true);
+  assert.equal(model.projector.isOn,true);
+  assert.notEqual(wall.material[2],paint);
+  const shader={uniforms:{},vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader};
+  wall.material[2].onBeforeCompile(shader);
+  const texture=shader.uniforms.lakePrint.value;
+  assert.equal(texture.image.width/texture.image.height,16/9);
+  assert(texture.isDataTexture && !texture.isVideoTexture && texture.colorSpace===THREE.SRGBColorSpace);
+  assert.deepEqual(shader.uniforms.projectionCenter.value.toArray(),[data.projection.centerY,data.projection.centerHeightM]);
+  assert.deepEqual(shader.uniforms.projectionScale.value.toArray(),[Math.sign(model.group.matrix.determinant())/data.projection.widthM,1/data.projection.heightM]);
+  assert(lens.material.emissive.getHex()>0);
+  assert.equal(click(orbit),true);assert.equal(wall.material[2],paint);assert.equal(lens.material.emissive.getHex(),0);
+
+  const obstacle=new THREE.Mesh(new THREE.BoxGeometry(.3,.3,.3),new THREE.MeshBasicMaterial());
+  obstacle.position.copy(camera.position).lerp(center,.5);scene.add(obstacle);
+  assert.equal(click(camera),false,'An object outside the interior group can conceal the projector');
+  obstacle.visible=false;
+  assert.equal(click(camera),true,'A hidden obstruction cannot consume the click');
+  assert.equal(model.projector.toggleAt({x:.9,y:.9},camera),false);
+  aim(camera,at(-1,14.48,2.52));
+  assert.equal(click(camera),false,'The real exterior wall occludes the projector');
+  model.group.visible=false;
+  assert.equal(click(orbit),false,'A hidden house cannot receive projector clicks');
+  assert.equal(model.projector.isOn,true);
+});
+
 test('upper rooms have layered beds, usable workstations and fitted dressing-room storage', () => {
   const get = name => interior.group.getObjectByName(name);
   for (const id of ['bedroom-one','bedroom-two','master-bed']) {

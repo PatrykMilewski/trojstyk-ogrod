@@ -7,7 +7,7 @@ export function addIconInterior(options) {
  iconInteriorOfficeBacking(context);
  iconInteriorFurnishings(context);
  options.fitGarage?.(context);
- iconLivingProjector(context);
+ const projector=iconLivingProjector(context);
  iconLivingWallSconce(context);
  iconInteriorLightingAndRoof(context);
  iconMoodEntryBathFinishes(context);
@@ -15,7 +15,7 @@ export function addIconInterior(options) {
  options.joinStory?.(options.THREE,context.group);
  const updateHallDoors=iconHallDoorMotion(context);
  const {group,navigation,data,world} = context;
- return {group,navigation,rooms:data.rooms,metadata:data.metadata,localToWorld:world,updateHallDoors};
+ return {group,navigation,rooms:data.rooms,metadata:data.metadata,localToWorld:world,updateHallDoors,projector};
 }
 
 const iconInteriorContains = (p,r)=>{let yes=false;for(let i=0,j=r.length-1;i<r.length;j=i++){const a=r[i],b=r[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;};
@@ -1303,7 +1303,7 @@ function iconLivingWallSconce(context) {
 
 function iconLivingProjector(context) {
  const {THREE,mesh,box,beam,obstacle,data,group}=context,p=iconLivingPalette(context);
- const projection=data.projection;
+ const projection=data.projection,firstPart=group.children.length;
  const wall=group.getObjectByName(projection.wall);
  wall.geometry.computeBoundingBox();
  const target=new THREE.Vector3(wall.geometry.boundingBox.max.x,projection.centerY,projection.centerHeightM);
@@ -1335,6 +1335,122 @@ function iconLivingProjector(context) {
  beam('projector-mount-brace',[wallX-.021,hub.y,2.593],[hub.x+.066,hub.y,2.736],.016,p.black);
  beam('projector-tilt-pivot',hub.toArray(),[hub.x,hub.y,2.739],.030,p.black);
  obstacle('projector-overhead',[lens.x-.01,hub.y-.232,wallX,hub.y+.232],2.48,2.792);
+ const assembly=new THREE.Group();assembly.name='living-room-projector';
+ assembly.add(...group.children.slice(firstPart));group.add(assembly);
+ return iconProjectorControl(context,assembly,wall);
+}
+
+function iconLakePrint(THREE) {
+ const width=640,height=360,pixels=new Uint8Array(width*height*4);
+ const skyTop=[102,143,166],horizon=[248,192,141],water=[64,119,131];
+ const sun=[255,225,161],farHills=[167,154,156],nearHills=[104,133,143],cape=[53,92,98],pines=[35,66,73];
+ const mix=(a,b,t)=>a.map((value,i)=>value+(b[i]-value)*t);
+ let seed=18421;
+ const random=()=>((seed=(Math.imul(1664525,seed)+1013904223)>>>0)/4294967296);
+ const ink=(x,y,color,grain=0)=>{
+  const index=4*(y*width+x);
+  for(let i=0;i<3;i++)pixels[index+i]=Math.min(255,Math.max(0,color[i]+grain));
+  pixels[index+3]=255;
+ };
+ const shore=u=>Math.max(.27-.67*u+.021*Math.sin(15*u),.72*(u-.84)+.010*Math.sin(29*u));
+ for(let y=0;y<height;y++){
+  const v=(y+.5)/height,sky=mix(horizon,skyTop,Math.max(0,(v-.44)/.56)),lake=mix(water,horizon,v*.85);
+  const ripplePhase=random()*6.28;
+  for(let x=0;x<width;x++){
+   const u=(x+.5)/width,grain=(random()-.5)*6;
+   let color=sky;
+   if(Math.hypot((u-.68)*16/9,v-.66)<.105)color=sun;
+   if(v<.51+.033*Math.sin(u*12+.4)+.022*Math.sin(u*22+1))color=farHills;
+   if(v<.445+.04*Math.cos(u*10)+.013*Math.cos(u*23))color=nearHills;
+   if(v<.39){
+    color=lake;
+    const spread=.015+.11*(.39-v),distance=Math.abs(u-.68+.009*Math.sin(y*1.9));
+    if(distance<spread && Math.sin(1.61*y+.6*Math.sin(x*.14))>.35+distance/spread*.51)color=mix(lake,sun,.72);
+    else if(Math.sin(y*2.16+.8*Math.sin(x*.041+ripplePhase))>.974)color=mix(lake,horizon,.14);
+   }
+   const mast=u-.54,sail=v-.308;
+   if(sail>0&&sail<.063&&mast<0&&mast>(sail-.063)*.45)color=sun;
+   if(sail>0&&sail<.05&&mast>.0015&&mast<(.05-sail)*.38)color=[189,109,82];
+   if(sail<0&&sail>-.008&&Math.abs(mast+.002)<.026+sail*.8)color=pines;
+   if(v<shore(u))color=cape;
+   ink(x,y,color,grain);
+  }
+ }
+ for(let tree=0;tree<86;tree++){
+  const u=tree===0?.085:tree===1?.11:random(),x=Math.floor(u*width);
+  const base=shore(u)*height-2,h=tree<2?77-tree*23:(8+random()*31)*(.4+.8*Math.abs(2*u-1));
+  if(base<0)continue;
+  for(let iy=0;iy<h;iy++){
+   const taper=1-iy/h,half=Math.max(.65,h*.19*taper*(.62+.38*((iy%4)/3)));
+   for(let ix=Math.max(0,Math.ceil(x-half));ix<=Math.min(width-1,x+half);ix++)ink(ix,Math.floor(base+iy),pines);
+  }
+ }
+ const texture=new THREE.DataTexture(pixels,width,height);
+ texture.name='Jezioro o zachodzie';texture.colorSpace=THREE.SRGBColorSpace;
+ texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearMipmapLinearFilter;
+ texture.generateMipmaps=true;texture.needsUpdate=true;
+ return texture;
+}
+
+function iconProjectedPaint(THREE,paint,zone,handedness) {
+ const finish=paint.clone(),image=iconLakePrint(THREE);
+ finish.name='Projected lake landscape on white plaster';
+ finish.onBeforeCompile=shader=>{
+  shader.uniforms.lakePrint={value:image};
+  shader.uniforms.projectionCenter={value:new THREE.Vector2(zone.centerY,zone.centerHeightM)};
+  shader.uniforms.projectionScale={value:new THREE.Vector2(handedness/zone.widthM,1/zone.heightM)};
+  shader.vertexShader='varying vec2 vWallYZ;\n'+shader.vertexShader.replace('#include <begin_vertex>',
+   '#include <begin_vertex>\n vWallYZ = position.yz;');
+  shader.fragmentShader='uniform sampler2D lakePrint; uniform vec2 projectionCenter, projectionScale; varying vec2 vWallYZ;\n'+
+   shader.fragmentShader.replace('#include <opaque_fragment>',`
+    vec2 imageUv = (vWallYZ - projectionCenter) * projectionScale + 0.5;
+    vec2 edge = min(imageUv, 1.0 - imageUv);
+    vec2 feather = smoothstep(vec2(0.0), max(fwidth(imageUv), vec2(0.0015)), edge);
+    vec3 ink = texture2D(lakePrint, imageUv).rgb;
+    outgoingLight = mix(outgoingLight, outgoingLight * 0.10 + ink, feather.x * feather.y);
+    #include <opaque_fragment>`);
+ };
+ return finish;
+}
+
+function iconProjectorControl({THREE,scene,group,data},assembly,wall) {
+ const ray=new THREE.Raycaster(),direction=new THREE.Vector3(),segment=new THREE.Box3(),instanceBounds=new THREE.Box3();
+ const lens=assembly.getObjectByName('projector-lens-glass'),paint=wall.material[2];
+ let projectedPaint,isOn=false;
+ function blocks(object){
+  if(!object.visible||object===assembly)return false;
+  if(object.isMesh&&object.layers.test(ray.layers)){
+   if(object.isInstancedMesh){
+    if(!object.boundingBox)object.computeBoundingBox();
+    if(!instanceBounds.copy(object.boundingBox).applyMatrix4(object.matrixWorld).intersectsBox(segment))return false;
+   }
+   const hits=ray.intersectObject(object,false);
+   if(hits.some(hit=>{
+    const material=Array.isArray(object.material)?object.material[hit.face.materialIndex]:object.material;
+    return material?.visible&&material.colorWrite&&(!material.transparent||material.opacity>=.5);
+   }))return true;
+  }
+  return object.children.some(blocks);
+ }
+ function toggleAt(ndc,camera){
+  for(let ancestor=assembly;ancestor;ancestor=ancestor.parent)if(!ancestor.visible)return false;
+  camera.updateWorldMatrix(true,false);assembly.updateWorldMatrix(true,true);
+  ray.setFromCamera(ndc,camera);ray.layers.mask=camera.layers.mask;
+  const forward=ray.ray.direction.dot(camera.getWorldDirection(direction));
+  ray.near=camera.near/forward;ray.far=camera.far/forward;
+  const hit=ray.intersectObjects(assembly.children,false).find(hit=>hit.object.visible&&hit.object.material.visible);
+  if(!hit)return false;
+  ray.far=hit.distance-.0001;
+  segment.setFromPoints([ray.ray.at(ray.near,direction),hit.point]);
+  scene.updateMatrixWorld();
+  if(blocks(scene))return false;
+  projectedPaint??=iconProjectedPaint(THREE,paint,data.projection,Math.sign(group.matrix.determinant()));
+  isOn=!isOn;
+  wall.material[2]=isOn?projectedPaint:paint;
+  lens.material.emissive.setHex(isOn?0xa8d8ff:0);
+  return true;
+ }
+ return {toggleAt,get isOn(){return isOn;}};
 }
 
 function iconLivingCoffeeTable(THREE,s,p) {

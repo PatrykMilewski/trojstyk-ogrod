@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-18.10",
+  "modelVersion": "2026-11-19.1",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1732,7 +1732,7 @@
     "proceduralCodeSha256": "f28e65f81bfd542148d9fd4925bc2e84fb2d7a8a449e34f84393ac2a653c99e2",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "f6f27de0208ddacc1880061ce21577c8aa17d9cf9595e32efb76d2759fffda44",
-    "runtimeSha256": "eedd88741df22b906bff1ced2cdfacc9220d81f1d75abf53cb11262a46e49c21"
+    "runtimeSha256": "debd814a07b806f2cad076b1cdd24029fb3d412395b7e2c5d4e5df3cdae45f2e"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1762,7 +1762,8 @@
     "Dom /193. Nowa posadzka i zabudowa wiatrołapu, łazienka w terakocie i szkliwionej ceramice, fronty kuchenne, osprzęt Loft i dwa legowiska.",
     "Dom /193. Narożnik w cętki, dywan anatolijski, ściana z farbą projekcyjną i dwa nowe wystroje łazienek na poddaszu.",
     "Dom /193. Indygowe schody, terakotowy korytarz, biały sufit salonu, zabudowa kuchenna, szafka RTV i nowe meble tapicerowane.",
-    "Dom /193. Dębowa jodełka, drzwi wewnętrzne, żółta kuchnia z wyspą w kaflach, terakotowy sufit kuchni oraz sześć różnych krzeseł przy zaokrąglonym stole. W trybie spaceru na telefonie można rozglądać się ruchem urządzenia."
+    "Dom /193. Dębowa jodełka, drzwi wewnętrzne, żółta kuchnia z wyspą w kaflach, terakotowy sufit kuchni oraz sześć różnych krzeseł przy zaokrąglonym stole. W trybie spaceru na telefonie można rozglądać się ruchem urządzenia.",
+    "Spacer mobilny obsługuje joystick dotykowy, a w domu /193 można włączyć i zgasić projekcję nieruchomego obrazu."
   ],
   "contextParcels": [
     {
