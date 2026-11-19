@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-19.14",
+  "modelVersion": "2026-11-19.15",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -60,7 +60,8 @@
     "De’Longhi Magnifica Evo ECAM290.21.B": "https://www.delonghi.com/pl-pl/p/magnifica-evo-automatyczny-ekspres-magnifica-evo-ecam290.21.b/ECAM290.21.B.html",
     "PVGIS 5.3 · połać południowo-zachodnia": "https://re.jrc.ec.europa.eu/api/v5_3/PVcalc?lat=54.4321&lon=18.4407&peakpower=1&loss=14&angle=44.86&aspect=43.89&raddatabase=PVGIS-SARAH3&outputformat=json",
     "PVGIS 5.3 · połać południowo-wschodnia": "https://re.jrc.ec.europa.eu/api/v5_3/PVcalc?lat=54.4321&lon=18.4407&peakpower=1&loss=14&angle=44.86&aspect=-46.11&raddatabase=PVGIS-SARAH3&outputformat=json",
-    "Opel Astra K hatchback · wymiary nadwozia MY2018": "https://www.vauxhall.co.uk/content/dam/vauxhall/Home/PDFs/Cars/astra/price_guides/GML_10935891_Astra_Spec_PG_1_April_2018-1522319331.pdf"
+    "Opel Astra K hatchback · wymiary nadwozia MY2018": "https://www.vauxhall.co.uk/content/dam/vauxhall/Home/PDFs/Cars/astra/price_guides/GML_10935891_Astra_Spec_PG_1_April_2018-1522319331.pdf",
+    "Roborock Qrevo Curv 2 Pro – ustawienie stacji, sekcja B3": "https://support.roborock.com/hc/en-us/article_attachments/51127863799065"
   },
   "houses": [
     {
@@ -1748,7 +1749,7 @@
     "proceduralCodeSha256": "69e6fdebc6c17d20de8f41e46f082eec1cc7e31d6e2035b7fa5bdf9615ac44ac",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "f6f27de0208ddacc1880061ce21577c8aa17d9cf9595e32efb76d2759fffda44",
-    "runtimeSha256": "f42c789adeac2b4779139e7ac384bc8f8aa5d7b0b0d846a4d557a6b49a6069c9"
+    "runtimeSha256": "e511d358163a841e48caee170a0da0048cc501f11ee0fc4a9021a50a686954c8"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1792,7 +1793,8 @@
     "Dom /193: kolory wiatrołapu, bawialni i gabinetu, otwierane okno biura, blaty z laminatu, rośliny, wyposażenie techniczne i południowo-zachodnia instalacja PV 20 × 500 Wp.",
     "Dom /193: czarna pompa Thermatec przy garażu. Instalacja PV 10 kWp na dwóch połaciach: 12 modułów na SW i 8 na SE (6 + 4 kWp). PVGIS-SARAH3, 2005–2023, 14% strat: ok. 9737 kWh/rok przed lokalnym zacienieniem, poprzednio ok. 9745 kWh/rok. Pełnowysokie otwierane skrzydło gabinetu, zlew 70 cm, ekspres De’Longhi oraz wnęka pod spocznikiem na Roborock Qrevo Curv 2 Pro i Apple TV.",
     "Dom /193: gładkie ściany, jasny wiatrołap, eukaliptusowy hol i sufit kuchni, blaty dębowe na podstawie próbki. Biała Astra K hatchback w garażu, zamykana wnęka robota. Wokół elewacji czarny cokół gresowy 30 cm, opaska 60 cm z płukanego otoczaka bazaltowego 16–30 mm, dziewięć kinkietów z jednym obwodem nocnym. Przyciski dopasowują się do widocznego obszaru przeglądarki.",
-    "Dom /193: taras do progu dużego przeszklenia salonu, opaska z bazaltu zakończona obrzeżem antracytowym przy zieleni, dziewięć wpuszczanych opraw oświetla elewację od dołu. Zabudowa robota dopasowana do obu ścian pod spocznikiem. Korytarz parteru ponownie ceglasty, wiatrołap jasnozielony."
+    "Dom /193: taras do progu dużego przeszklenia salonu, opaska z bazaltu zakończona obrzeżem antracytowym przy zieleni, dziewięć wpuszczanych opraw oświetla elewację od dołu. Zabudowa robota dopasowana do obu ścian pod spocznikiem. Korytarz parteru ponownie ceglasty, wiatrołap jasnozielony.",
+    "Dom /193: niska szafka pod schodami dopasowana szerokością do stacji robota, z dostępem do stacji i Apple TV."
   ],
   "contextParcels": [
     {

@@ -864,23 +864,20 @@ function iconCurvDock(context,frame) {
  s.cushion('rgb-sensor-window',0,.427,.053,.075,.008,.022,.004,p.screen);
  s.cushion('rgb-lens',.014,.431,.055,.013,.002,.010,.001,p.lens);
  frame.part('tank-lid-pull',[-.029,.405,.029,.411],.429,.002,tray);
- s.cushion('socket',.309,.006,.33,.076,.012,.076,.005,p.chalk);
- s.cushion('plug',.309,.024,.33,.032,.027,.031,.006,p.black);
- s.tube('dock-cord',[[.309,.037,.33],[.309,.045,.285],[.298,.036,.225],[.248,.020,.215],[.192,.020,.215]],.003,p.black);
 }
 
 function iconLandingServiceDoor(context,{front,left,right,top,slot,paint,cover}) {
  const {THREE,group,world,obstacle,navigation}=context,depth=.018,gap=.002;
  const pivot=new THREE.Group(),width=right-left-2*gap;
- pivot.name='landing-service-push-door';pivot.position.set(front,left+gap,0);group.add(pivot);
+ pivot.name='landing-service-push-door';pivot.position.set(front,left+gap-depth,0);group.add(pivot);
  const outline=new THREE.Shape(),a=slot.left-pivot.position.y,b=slot.right-pivot.position.y;
- const points=[[0,gap],[a,gap],[a,slot.height],[b,slot.height],[b,gap],[width,gap],[width,top-gap],[0,top-gap]];
+ const points=[[depth,gap],[a,gap],[a,slot.height],[b,slot.height],[b,gap],[width+depth,gap],[width+depth,top-gap],[depth,top-gap]];
  points.forEach(([y,z],i)=>i?outline.lineTo(y,z):outline.moveTo(y,z));outline.closePath();
  const geometry=new THREE.ExtrudeGeometry(outline,{depth,bevelEnabled:false});
  geometry.applyMatrix4(new THREE.Matrix4().makeBasis(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,1),new THREE.Vector3(1,0,0)));
  const door=new THREE.Mesh(geometry,paint);door.name='landing-service-flush-front';door.castShadow=door.receiveShadow=true;pivot.add(door);
- obstacle(pivot.name,[front,pivot.position.y,front+depth,pivot.position.y+width],0,top,cover);
- const ring=navigation.obstacles.at(-1).ring, corners=[[0,0],[depth,0],[depth,width],[0,width]];
+ obstacle(pivot.name,[front,left+gap,front+depth,right-gap],0,top,cover);
+ const ring=navigation.obstacles.at(-1).ring, corners=[[0,depth],[depth,depth],[depth,width+depth],[0,width+depth]];
  const pick=iconVisiblePick(context,[pivot]), eye=new THREE.Vector3();
  let open=false;
  function toggleAt(ndc,camera){
@@ -888,7 +885,7 @@ function iconLandingServiceDoor(context,{front,left,right,top,slot,paint,cover})
   if(camera.isPerspectiveCamera){
    group.worldToLocal(camera.getWorldPosition(eye));eye.sub(pivot.position);
    // Keep a standing viewer out of the swept quadrant.
-   if(eye.z<top+1.7&&eye.z>0&&eye.x<.23&&eye.y>-.23&&Math.hypot(eye.x,eye.y)<width+.23)return false;
+   if(eye.z<top+1.7&&eye.z>0&&eye.x<.23&&eye.y>-.23&&Math.hypot(eye.x,eye.y)<width+depth+.23)return false;
   }
   open=!open;pivot.rotation.z=open?Math.PI/2:0;
   const c=Math.cos(pivot.rotation.z),s=Math.sin(pivot.rotation.z);
@@ -903,32 +900,36 @@ function iconLandingServiceDoor(context,{front,left,right,top,slot,paint,cover})
 
 function iconLandingServiceBay(context) {
  const {data,box,obstacle,navigation,group,mats}=context,stairs=data.stairs;
- const [front,firstTread]=stairs.box,t=.018;
- const rearWall=data.facades.find(f=>f.id==='facade-wing-rear');
- const left=firstTread+(stairs.rises/2-1)*stairs.tread,right=rearWall.a[1]-iconGroundFacadeDepth(rearWall);
- const backing=front+stairs.width,top=stairs.floorHeight/2-iconLandingPlate-t;
- const back=front+.486,center=left+.34,slot={left:center-.20,right:center+.20,height:.116};
+ const t=.018,backing=stairs.box[0]+stairs.width;
+ const rearWall=data.facades.find(f=>f.id==='facade-wing-rear'),right=rearWall.a[1]-iconGroundFacadeDepth(rearWall);
+ const left=right-.510,center=(left+right)/2,front=backing-.560,back=backing-t,dockBack=back-.056,top=.920-t;
+ const slot={left:center-.20,right:center+.20,height:.116};
  const cover={ramp:navigation.ramps.find(r=>r.id==='stair-lower'),landing:navigation.floors.find(f=>f.id==='stair-landing')};
  const first=group.children.length,paint=mats.wall;
  const joinery=(id,bounds,z,height,finish=paint)=>{
   box('landing-service-'+id,bounds,z,height,finish);obstacle('landing-service-'+id,bounds,z,z+height,cover);
  };
- // A false back carries the sockets and keeps the dock and AV shelf within reach of the door.
- joinery('back',[back,left+t,back+t,right-t],0,top);
+ joinery('back',[back,left+t,backing,right-t],0,top);
  joinery('cheek-left',[front,left,backing,left+t],0,top);
  joinery('cheek-right',[front,right-t,backing,right],0,top);
  joinery('cap',[front,left,backing,right],top,t);
- joinery('av-shelf',[front+.060,center+.243,back,right-t],.478,.018,mats.oak);
- box('landing-service-push-latch',[front+t+.001,right-.066,front+.081,right-.047],top-.024,.024,mats.dark);
- const frameAt=(id,y)=>iconInteriorFurnitureFrame(context,{id,room:'0.4',facing:'-x',box:[back-.45,y,back,y+.45]});
- iconCurvDock(context,frameAt('landing-service',center));
- obstacle('landing-service-dock',[back-.45,center-.225,back,center+.225],0,.45,cover);
- const av=frameAt('landing-av',(center+.243+right-t)/2),s=iconLivingShapes(context,av,6),palette=iconLivingPalette(context);
- s.cushion('apple-tv-4k',0,.228,.5115,.093,.093,.031,.010,palette.black);
- s.cushion('status-led',-.019,.2746,.512,.002,.001,.001,.0004,mats.lamp);
- s.cushion('cable-grommet',0,.003,.510,.056,.006,.025,.003,palette.shadow);
- for(const u of [-.017,.016])s.tube('rear-lead-'+(u<0?'power':'hdmi'),
-  [[u,.182,.510],[u,.135,.500],[u*.75,.09,.500],[u*.6,.004,.510]],.0025,palette.black);
+ box('landing-service-push-latch',[front+t+.001,right-t-.005,front+.070,right-t+.010],top-.04,.02,mats.dark);
+ const frameAt=(id,x)=>iconInteriorFurnitureFrame(context,{id,room:'0.4',facing:'-x',box:[x-.45,center,x,center+.45]});
+ iconCurvDock(context,frameAt('landing-service',dockBack));
+ obstacle('landing-service-dock',[dockBack-.45,center-.225,dockBack,center+.225],0,.45,cover);
+ const s=iconLivingShapes(context,frameAt('landing-av',back),6),palette=iconLivingPalette(context);
+ // Stand the Apple TV on a shallow rear ledge, clear of both tank openings.
+ joinery('av-shelf',[back-.050,center-.064,back,center+.064],.456,.012,mats.oak);
+ s.cushion('apple-tv-4k',0,.025,.5145,.093,.093,.031,.010,palette.black,-Math.PI/2);
+ box('landing-service-av-shelf-lip',[back-.050,center-.064,back-.045,center+.064],.468,.010,mats.oak);
+ s.cushion('status-led',-.0466,.028,.502,.001,.002,.001,.0004,mats.lamp);
+ s.cushion('cable-grommet',.105,.003,.501,.035,.006,.028,.003,palette.shadow);
+ for(const z of [.497,.529])s.tube('rear-lead-'+(z<.51?'power':'hdmi'),
+  [[.046,.025,z],[.068,.025,z],[.088,.021,z],[.105,.004,.501]],.0025,palette.black);
+ const outlets=iconLivingShapes(context,frameAt('landing-service',back));
+ outlets.cushion('socket',.150,.006,.33,.076,.012,.076,.005,palette.chalk);
+ outlets.cushion('plug',.150,.024,.33,.032,.027,.031,.006,palette.black);
+ outlets.tube('dock-cord',[[.150,.037,.33],[.150,.043,.285],[.140,.040,.225],[.110,.049,.215],[.090,.077,.215]],.003,palette.black);
  for(const mesh of group.children.slice(first))mesh.userData.furnitureId='landing-service-bay';
  return iconLandingServiceDoor(context,{front,left:left+t,right:right-t,top,slot,paint,cover});
 }
