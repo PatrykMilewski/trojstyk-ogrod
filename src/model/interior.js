@@ -3401,31 +3401,77 @@ function iconMezzaninePrint({THREE,box,mats}) {
  }
 }
 
-function iconRoofLining(context,part,inverse,neutral,white) {
- const {THREE,group,mesh,data,cutRoof}=context;
+function iconBedroomRoofFinish({THREE,data,group}) {
+ const [left,front]=data.rooms.find(room=>room.id==='1.8').box;
+ const innerFace=(name,axis)=>{
+  const geometry=group.getObjectByName(name).geometry;
+  geometry.computeBoundingBox();
+  return geometry.boundingBox.min[axis];
+ };
+ const right=innerFace('wing-gable','x'),back=innerFace('upper-rear-wing','y');
+ const width=right-left,panelCount=4,tau=Math.PI*2;
+ const oak=iconFinishTexture(THREE,'Honey oak bedroom ceiling panels',1536,384,.69,(u,v)=>{
+  const panel=Math.floor(u*panelCount),across=u*panelCount-panel,seed=panel*2.37;
+  const seamM=Math.min(panel>0?across:1,panel<panelCount-1?1-across:1)*width/panelCount;
+  const bend=.019*Math.sin(4.7*v+seed)+.008*Math.sin(11*v+3*across+seed);
+  const cut=across+bend,ring=22*cut+.54*Math.sin(15*cut+seed)+.19*Math.sin(61*cut+seed);
+  const fibre=Math.cos(tau*ring),pores=Math.max(0,Math.cos(tau*(ring*3.3+.18*Math.sin(17*v+seed))))**8;
+  const shade=4*Math.sin(14*cut+seed)+2.9*fibre-4.7*Math.max(0,fibre)**5-3*pores+2*Math.cos(seed);
+  const joint=Math.max(0,1-seamM/.0035);
+  return [188+shade,143+.85*shade,95+.66*shade].map(c=>c*(1-.67*joint));
+ });
+ oak.side=THREE.DoubleSide;
+ return {oak,left,front,right,back};
+}
+
+function iconSplitRoofPolygon(polygon,axis,limit) {
+ const below=[],above=[];
+ for(let i=0;i<polygon.length;i++){
+  const a=polygon[i],b=polygon[(i+1)%polygon.length],da=a[axis]-limit,db=b[axis]-limit;
+  if(da<=0)below.push(a);
+  if(da>=0)above.push(a);
+  if(da*db<0){
+   const cross=a.clone().lerp(b,da/(da-db));
+   below.push(cross);above.push(cross);
+  }
+ }
+ return [below,above];
+}
+
+function iconRoofLining(context,part,inverse,neutral,white,bedroom) {
+ const {THREE,group,mesh,data,cutRoof}=context,{left,front,right,back,oak}=bedroom;
  const points=part.vertices.map(v=>{const p=new THREE.Vector3(...v).applyMatrix4(inverse);p.z-=.045;return p;});
  const [,start,endX]=data.void.box,main=points.every(p=>p.x<=endX+1e-5);
- const clip=(face,living)=>{
-  const polygon=[];
-  for(let i=0;i<face.length;i++){
-   const a=face[i],b=face[(i+1)%face.length];
-   const inside=p=>living?p.y>=start:p.y<=start;
-   if(inside(a))polygon.push(a);
-   if((a.y-start)*(b.y-start)<0)polygon.push(a.clone().lerp(b,(start-a.y)/(b.y-a.y)));
-  }
-  return polygon;
+ const finishes=new Map([[neutral,''],[white,'-living'],[oak,'-bedroom']]);
+ const positions=new Map([...finishes.keys()].map(mat=>[mat,[]]));
+ const add=(face,material)=>{
+  const vertices=positions.get(material);
+  for(let i=1;i<face.length-1;i++)for(const p of [face[0],face[i],face[i+1]])vertices.push(p.x,p.y,p.z);
  };
- for(const living of main?[false,true]:[false]){
-  const vertices=[];
-  for(const indices of part.faces){
-   const face=indices.map(i=>points[i]),polygon=main?clip(face,living):face;
-   for(let i=1;i<polygon.length-1;i++)for(const p of [polygon[0],polygon[i],polygon[i+1]])vertices.push(p.x,p.y,p.z);
+ for(const indices of part.faces){
+  let face=indices.map(i=>points[i]);
+  if(main){
+   const [other,living]=iconSplitRoofPolygon(face,'y',start);
+   add(other,neutral);add(living,white);continue;
   }
+  for(const [axis,limit,keep] of [['x',left,1],['y',front,1],['x',right,0],['y',back,0]]){
+   if(face.length<3)break;
+   const halves=iconSplitRoofPolygon(face,axis,limit);
+   add(halves[1-keep],neutral);face=halves[keep];
+  }
+  add(face,oak);
+ }
+ for(const [material,vertices] of positions){
   if(!vertices.length)continue;
-  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
-  geometry.computeVertexNormals();
-  const lining=mesh(cutRoof(geometry,group.matrix),living?white:neutral,'interior-roof-lining-'+part.id+(living?'-living':''));
-  lining.castShadow=false;
+  const source=new THREE.BufferGeometry();source.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+  source.computeVertexNormals();
+  const geometry=cutRoof(source,group.matrix);
+  if(material===oak){
+   const p=geometry.attributes.position,uv=[];
+   for(let i=0;i<p.count;i++)uv.push((p.getX(i)-left)/(right-left),(p.getY(i)-front)/(back-front));
+   geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+  }
+  mesh(geometry,material,'interior-roof-lining-'+part.id+finishes.get(material)).castShadow=false;
  }
 }
 
@@ -3677,7 +3723,8 @@ function iconInteriorLightingAndRoof(context) {
   if(!contains([p.x,p.y],data.exterior.upper))return Infinity;
   return ceilingAt(p.x,p.y);
  };
- for(const part of house.meshes.filter(m=>m.kind==='roof'))iconRoofLining(context,part,inverse,neutral,white);
+ const bedroom=iconBedroomRoofFinish(context);
+ for(const part of house.meshes.filter(m=>m.kind==='roof'))iconRoofLining(context,part,inverse,neutral,white,bedroom);
  group.userData={kind:'walkable-interior',rooms:data.rooms.length,stairRises:18,source:data.metadata,groundFloor:0,upperFloor:3.2};
 }
 

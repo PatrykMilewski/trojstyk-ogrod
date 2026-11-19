@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-19.19",
+  "modelVersion": "2026-11-19.20",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1746,7 +1746,7 @@
     "proceduralCodeSha256": "023ebb5ef33b0fab0cf7f6069117e4867fdd5efe5a6d8284fb6acd62d8f1cf95",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "dedbf868ca446a18874c8f882848a59920e8d9ab12833f73284c22fd2a100119",
-    "runtimeSha256": "d1000cf033ebd5841202b680a4cfcfbed2d1c359febab0da0fca391f124efd07"
+    "runtimeSha256": "2646441ade7824d0c90ec7c853e7ee8fb6b92f504bc1274f82ac368d49106ae3"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1795,7 +1795,8 @@
     "Dom /193: zlew centralnie nad jedną szafką, usunięte gniazdko przy zlewie, ceglasty narożnik przy wiatrołapie i żaluzja we wnęce okna kuchennego. Tryb Spacer: C przełącza kucanie, X przełącza czołganie.",
     "Dom /193: czarne żaluzje w kuchni, jedna wysuwana szuflada pod zlewem i obrazy na wybranych ścianach.",
     "Dom /193: dwie rozsunięte zasłony na szynie umieszczonej we wnęce okna kuchennego.",
-    "Dom /193: fornir na wyspie i nowa aranżacja prywatnej łazienki na piętrze. Dom /190: odbicie lewo–prawo i dopasowanie podjazdu do garażu przy zachowaniu obu odstępów 5 m od drogi."
+    "Dom /193: fornir na wyspie i nowa aranżacja prywatnej łazienki na piętrze. Dom /190: odbicie lewo–prawo i dopasowanie podjazdu do garażu przy zachowaniu obu odstępów 5 m od drogi.",
+    "Dom /193: szerokie panele o rysunku miodowego dębu na skosie sufitu głównej sypialni 1.8."
   ],
   "contextParcels": [
     {

@@ -74,8 +74,26 @@ test('actual Icon interior lining callback opens every window through both real 
   assert.equal(calls,liningNames.length,'Every finished lining is cut for skylights');
   assert.equal(new Set(liningNames).size,calls,'Each lining has its own finish segment');
   const sourceIds=roofs(models[0]).map(part=>part.id).sort();
-  const linedIds=liningNames.map(name=>name.slice('interior-roof-lining-'.length).replace(/-living$/,''));
+  const linedIds=liningNames.map(name=>name.slice('interior-roof-lining-'.length).replace(/-(living|bedroom)$/,''));
   assert.deepEqual([...new Set(linedIds)].sort(),sourceIds,'Every original roof face has an interior lining');
+  const bedroomHits=(x,y)=>{
+    const [wx,wy]=cut.localToWorld([x,y]);
+    return hits(linings(cut),[wx,wy,3.22],[0,0,1],6);
+  };
+  const oak=bedroomHits(12,11)[0].object.material;
+  assert.equal(oak.name,'Honey oak bedroom ceiling panels');
+  for(const x of [9.945,10.77,12.11,13.54,14.275])for(const y of [8.035,8.37,8.55,10.91,12.345]){
+    const sample=bedroomHits(x,y);
+    assert.equal(sample.length,1,'One finish over the bedroom');
+    assert.equal(sample[0].object.material,oak,'Both slopes reach the four built wall faces');
+    assert(Math.abs(sample[0].uv.x-(x-9.94)/(14.28-9.94))<1e-5,'Grain across the room');
+    assert(Math.abs(sample[0].uv.y-(y-8.03)/(12.35-8.03))<1e-5,'Continuous grain along the slope after clipping');
+  }
+  for(const [x,y] of [[9.93,9],[10.55,8.02],[13.05,7.4],[14.29,11],[12,12.36]]){
+    const sample=bedroomHits(x,y);
+    assert.equal(sample.length,1);
+    assert.equal(sample[0].object.material.color.getHex(),0xede8df,'Neutral lining outside the bedroom');
+  }
   const combined=[...meshes(models[0],true),...linings(cut)];
   for(const opening of own){const p=opening.center;
     assert(hits(linings(original),[p[0],p[1],p[2]+1],[0,0,-1],2).length,`${opening.id}: original actual lining did not block`);
