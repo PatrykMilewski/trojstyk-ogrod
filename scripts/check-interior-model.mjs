@@ -94,7 +94,7 @@ function descendInFrames(route, fps) {
 test('descent stays continuous across both flight widths and around the landing', () => {
   const [sx, sy, ex, ey] = data.stairs.box;
   const turnY = ey - data.stairs.landingDepth, half = data.stairs.floorHeight / 2;
-  for (const [upper, lower, fps] of [[9.2, 8.56, 30], [9.29, 8.5, 60], [9.35, 8.39, 60], [9.50, 8.27, 120]]) {
+  for (const [upper, lower, fps] of [[9.2, 8.56, 30], [9.29, 8.5, 60], [9.35, 8.39, 60], [9.50, sx+.31, 120]]) {
     const upperAtTurn = upper + ((ex - data.stairs.width / 2) - upper) * .3;
     const center = (upperAtTurn + lower) / 2, radius = (upperAtTurn - lower) / 2;
     const turn = Array.from({ length: 13 }, (_, i) => {

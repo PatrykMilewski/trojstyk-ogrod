@@ -102,22 +102,19 @@ test('mirrored lower flight has a right-hand guard and the upper flight protects
         assert(interior.navigation.obstacles.some(o=>o.id===name+'-'+i&&contains(interior.localToWorld([edge,py]),o.ring)));
       }
   }
-  const rearWallStart=data.facades.find(facade=>facade.id==='facade-wing-rear').a[0];
-  for(const [name,p] of [['lower',[sx,(turn+ey)/2]],['back',[(sx+rearWallStart)/2,ey]]]){
-    const across=name==='back'?[0,1,0]:[1,0,0],mesh=object('landing-'+name+'-perforated-infill');
-    for(const h of [.02,.55,1.10])assert(hits(mesh,[p[0]-.05*across[0],p[1]-.05*across[1],half+h],across,.10).length);
-  }
-  const rear=object('landing-back-perforated-infill');
-  close(bounds(rear).max.x,rearWallStart,'Landing mesh ends at the wing wall');
+  const rear=object('facade-wing-rear'),landingSide=object('landing-lower-perforated-infill');
   for(const height of [.02,.55,1.10]){
     const above=half+height;
-    for(const x of [rearWallStart+.05,ex-.05]){
-      assert(hits(object('facade-wing-rear'),[x,ey-.1,above],[0,1,0],.15).length,'The rear wall encloses the landing');
-      assert(!hits(rear,[x,ey-.1,above],[0,1,0],.15).length);
-      assert(!interior.navigation.obstacles.some(o=>o.id==='landing-back'&&contains(interior.localToWorld([x,ey]),o.ring)));
+    assert(hits(landingSide,[sx-.05,(turn+ey)/2,above],[1,0,0],.10).length);
+    for(const x of [sx+.002,sx+.25,(sx+ex)/2,ex-.002]){
+      const hit=hits(rear,[x,ey-.1,above],[0,1,0],.15)[0];
+      assert(hit,'A single rear wall encloses the entire landing');
+      close(hit.distance,.1,'Landing meets plaster at rear edge');
     }
-    assert(hits(object('office-stair-partition'),[ex-.1,(turn+ey)/2,above],[1,0,0],.15).length,'The office wall encloses the side');
+    assert(hits(object('office-stair-partition'),[ex-.1,(turn+ey)/2,above],[1,0,0],.15).length);
   }
+  assert(!interior.group.children.some(m=>m.name.startsWith('landing-back')));
+  assert(!interior.navigation.obstacles.some(o=>o.id==='landing-back'));
   assert(!interior.group.children.some(m=>m.name.startsWith('landing-upper')));
   assert(!interior.navigation.obstacles.some(o=>o.id==='landing-upper'));
   const joint=new THREE.Vector3(sx,turn,half+1.12);
@@ -139,6 +136,46 @@ test('mirrored lower flight has a right-hand guard and the upper flight protects
   assert(!interior.navigation.obstacles.some(o=>oldWing.some(prefix=>o.id.startsWith(prefix))));
   for(const x of [sx-.04,sx+.04])for(const y of [data.void.box[1]+.12,ey-.12]){
     assert(!hits(object('upper-oak-finish'),[x,y,s.floorHeight+.15],[0,0,-1],.25).length,'Former extension lay between two voids');
+  }
+});
+
+test('stair folds meet the partition flush and screen every tread and riser from the backing', () => {
+  const {box:[sx,sy,ex,ey],width,rises,tread,floorHeight}=data.stairs;
+  const edge=sx+width,steps=rises/2-1,turn=sy+steps*tread,half=floorHeight/2,rise=floorHeight/rises;
+  const lower=bounds(object('stair-lower-folded-flight')),upper=object('stair-upper-folded-flight');
+  const backing=interior.group.children.filter(m=>m.name.startsWith('office-backing-'));
+  close(lower.max.x,edge,'Lower tread against wall');close(bounds(upper).min.x,edge,'Return flight flush with wall');
+  for(const wall of backing){
+    const b=bounds(wall),y=(b.min.y+b.max.y)/2;
+    close(b.min.x,edge,'Plaster face continuous along lower flight');
+    assert.equal(hits(wall,[b.max.x+.015,y,b.max.z-.025],[-1,0,0],.02).length,0,'No buried cabinet-side face bleeds through steel at grazing angles');
+  }
+  for(let i=0;i<steps;i++){
+    const y=turn-i*tread;
+    for(const x of [edge+.003,edge+.07,edge+.135,ex-.02]){
+      for(const fraction of [.07,.53,.95]){
+        const origin=[x,y+.04,half+(i+fraction)*rise],direction=[0,-1,0];
+        const hit=hits(upper,origin,direction,.07)[0];
+        assert(hit,'Every upper riser is solid');
+        for(const wall of backing)assert(hits(wall,origin,direction,.07).every(h=>h.distance>=hit.distance+.008),'Backing stays behind the riser');
+      }
+      for(const depth of [.001,.014,.14,tread-(i===steps-1?.011:.001)]){
+        const origin=[x,y-depth,half+(i+1)*rise+.04],direction=[0,0,-1];
+        const hit=hits(upper,origin,direction,.07)[0];
+        assert(hit,'Every upper tread is solid');
+        for(const wall of backing)assert(hits(wall,origin,direction,.07).every(h=>h.distance>=hit.distance+.008),'Backing stays below the tread');
+      }
+    }
+    const py=sy+(i+.5)*tread,z=(i+.5)*rise;
+    assert(backing.some(wall=>hits(wall,[edge-.02,py,z],[1,0,0],.021).length),'No strip of floor beside lower treads');
+  }
+  close(bounds(object('stair-landing')).max.y,ey,'Landing reaches back wall');
+  const steel=object('stair-lower-left-top').material;
+  for(const name of ['upper-void-edge','upper-stair-hall-side','upper-stair-hall-front']){
+    assert.equal(object(name+'-top').material,steel);
+    for(const post of interior.group.children.filter(m=>m.name.startsWith(name+'-post-')))assert.equal(post.material,steel);
+    const pane=object(name+'-glass-0').material;
+    assert(pane.transparent&&pane.opacity<.3&&!pane.alphaMap,'Clear glass retained');
   }
 });
 
@@ -276,7 +313,7 @@ test('the kitchen and hall share terracotta paint on the real kitchen soffit', (
     assert(hits(ceiling,from,up,.11).length);
     assert(hits(object('upper-structure'),from,up,.11).length);
   }
-  for(const [x,y] of [[4,10.35],[4,11.5],[4,14],[1.5,8.20],[7.4,8.6],[7.4,9.18],[7.4,10.33],[7.97,9.8],[8,10.1]])
+  for(const [x,y] of [[4,10.35],[4,11.5],[4,14],[1.5,8.20],[7.4,8.6],[7.4,9.18],[7.4,10.33],[data.stairs.box[0]+.03,9.8],[data.stairs.box[0]+.06,10.1]])
     assert.equal(hits(ceiling,[x,y,2.72],[0,0,1],.11).length,0);
 });
 

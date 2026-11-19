@@ -22,6 +22,8 @@ export function addIconInterior(options) {
 
 const iconInteriorContains = (p,r)=>{let yes=false;for(let i=0,j=r.length-1;i<r.length;j=i++){const a=r[i],b=r[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;};
 
+const iconGroundFacadeDepth=facade=>facade?.thickness??.48;
+
 function iconInteriorSetup({THREE,scene,house,data,cutRoof=geometry=>geometry}) {
  const group = new THREE.Group(); group.name = 'icon-193-interior';
  const md = house.metadata, M = md.matrix, t = md.translation;
@@ -42,32 +44,40 @@ function iconInteriorSetup({THREE,scene,house,data,cutRoof=geometry=>geometry}) 
  const slab = (id,outline,holes,z,depth,mat) => {const shape=new THREE.Shape(outline.map(p=>new THREE.Vector2(...p)));shape.holes=holes.map(path);const m=mesh(new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:false}),mat,id);m.position.z=z;return m;};
  const beamInstances=new Map();
  const beam = (id,a,b,r=.025,mat=mats.metal) => {const key=[a.map(n=>n.toFixed(6)).join(','),b.map(n=>n.toFixed(6)).join(',')].sort().join('|')+'|'+r+'|'+mat.uuid;if(beamInstances.has(key))return beamInstances.get(key);const av=new THREE.Vector3(...a),bv=new THREE.Vector3(...b),d=bv.clone().sub(av);const m=mesh(new THREE.CylinderGeometry(r,r,d.length(),8),mat,id);m.position.copy(av.add(bv).multiplyScalar(.5));m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());beamInstances.set(key,m);return m;};
- const rail = (id,a,b,z,glazed=false) => {
-  beam(id+'-top',[...a,z+1.05],[...b,z+1.05]);
-  const length=Math.hypot(b[0]-a[0],b[1]-a[1]),count=Math.max(1,Math.ceil(length/(glazed?1.15:.55)));
+ const rail = (id,a,b,z,frame,endPost=true) => {
+  beam(id+'-top',[...a,z+1.05],[...b,z+1.05],.025,frame);
+  const length=Math.hypot(b[0]-a[0],b[1]-a[1]),count=Math.max(1,Math.ceil(length/1.15));
   const point=i=>a.map((v,k)=>v+(b[k]-v)*i/count);
   for(let i=0;i<=count;i++){
    const p=point(i);
-   beam(id+'-post-'+i,[...p,z],[...p,z+1.05],.017);
-   if(glazed && i<count){
+   if(i<count||endPost)beam(id+'-post-'+i,[...p,z],[...p,z+1.05],.017,frame);
+   if(i<count){
     const end=point(i+1);
     const bounds=[0,1].map(k=>Math.min(p[k],end[k])+(p[k]===end[k]?-.005:.021))
      .concat([0,1].map(k=>Math.max(p[k],end[k])+(p[k]===end[k]?.005:-.021)));
     box(id+'-glass-'+i,bounds,z+.018,1.005,mats.glass).castShadow=false;
    }
   }
-  obstacle(id,[Math.min(a[0],b[0])-.04,Math.min(a[1],b[1])-.04,Math.max(a[0],b[0])+.04,Math.max(a[1],b[1])+.04],z,z+1.1);
+  const pad=(p,k)=>a[k]===b[k]?.025:p===b&&!endPost?0:.017;
+  const min=a.map((v,k)=>Math.min(v-pad(a,k),b[k]-pad(b,k)));
+  const max=a.map((v,k)=>Math.max(v+pad(a,k),b[k]+pad(b,k)));
+  obstacle(id,[...min,...max],z,z+1.075);
  };
  const ceilingAt = (x,y) => {const slope=(8.3-4.07)/4.25;return Math.max(x<=8.5?8.3-slope*Math.abs(x-4.25):-Infinity,x>=4.25&&y>=4.21&&y<=12.71?8.3-slope*Math.abs(y-8.46):-Infinity)-.045;};
  const wall = (id,a,b,z0,z1,thickness,openings=[],profile=null,hallFace=null) => {
   const external=id.startsWith('facade-')||id.startsWith('upper-')||id.endsWith('-gable');
-  const omitCaps=external?[a,b].map(p=>iconInteriorConvexCorner(p,z0===0?data.exterior.ground:data.exterior.upper)):[false,false];
+  const corners=external?[a,b].map(p=>{
+   const turn=iconInteriorCorner(p,z0===0?data.exterior.ground:data.exterior.upper);
+   if(!turn||z0!==0)return turn;
+   const adjacent=data.facades.find(f=>f.id!==id&&[f.a,f.b].some(q=>q[0]===p[0]&&q[1]===p[1]));
+   return turn*iconGroundFacadeDepth(adjacent)/thickness;
+  }):[0,0];
   let nx=0,ny=0;if(external){if(Math.abs(a[0]-b[0])<.01)nx=a[0]<.1?-1:1;else ny=a[1]<5?-1:1;a=[a[0]-nx*thickness/2,a[1]-ny*thickness/2];b=[b[0]-nx*thickness/2,b[1]-ny*thickness/2];}
   const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L;
   const outer=profile||[[0,z0],[L,z0],[L,z1],[0,z1]],holes=openings.map(o=>o.wallPoly||o.poly||[[o.start,o.bottom],[o.end,o.bottom],[o.end,o.top],[o.start,o.top]]);
   const paintedFrom=id==='facade-main-side'?data.rooms.find(r=>r.id==='0.4').box[1]:
    id==='upper-main-side'?data.void.box[1]:undefined;
-  const geometry=iconInteriorWallGeometry(THREE,{a,ux,uy,L,z0,z1,thickness,outer,holes,ceilingAt,sloped:id.startsWith('u-'),external,nx,ny,omitCaps,paintedFrom,hallFace,flushDoors:openings.filter(o=>o.flush&&hallFace&&o.start>=hallFace.from&&o.end<=hallFace.to)});
+  const geometry=iconInteriorWallGeometry(THREE,{a,ux,uy,L,z0,z1,thickness,outer,holes,ceilingAt,sloped:id.startsWith('u-'),external,nx,ny,corners,paintedFrom,hallFace,flushDoors:openings.filter(o=>o.flush&&hallFace&&o.start>=hallFace.from&&o.end<=hallFace.to)});
   const finishes=external?[mats.wall,mats.dark]:hallFace?[mats.wall,mats.coral]:mats.wall;
   if(paintedFrom!==undefined){
    mats.projectionPaint??=material('#ffffff',{roughness:1,name:'Matte white projection paint'});
@@ -125,11 +135,13 @@ function iconGlassGeometry(THREE,outline,to3) {
  return geometry;
 }
 
-function iconInteriorConvexCorner(point,ring) {
+function iconInteriorCorner(point,ring) {
  const i=ring.findIndex(p=>Math.hypot(p[0]-point[0],p[1]-point[1])<1e-7);
- if(i<0)return false;
+ if(i<0)return 0;
  const a=ring[(i+ring.length-1)%ring.length],b=ring[i],c=ring[(i+1)%ring.length];
- return (b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0])>0;
+ const turn=(b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0]);
+ // The entry has a separate jamb return. The stair-side terrace corner joins both wall faces directly.
+ return turn>0?1:turn<0&&b[0]===8.5&&b[1]===12.71?-1:0;
 }
 
 function iconInteriorWindowReveal({THREE,mesh,mats,id,points,to3,normal,depth}) {
@@ -144,13 +156,14 @@ function iconInteriorWindowReveal({THREE,mesh,mats,id,points,to3,normal,depth}) 
 }
 
 function iconInteriorWallGeometry(THREE,options) {
- const {a,ux,uy,L,z0,z1,thickness,outer,holes,ceilingAt,sloped,external,nx,ny,omitCaps,paintedFrom=Infinity,hallFace,flushDoors=[]}=options;
+ const {a,ux,uy,L,z0,z1,thickness,outer,holes,ceilingAt,sloped,external,nx,ny,corners,paintedFrom=Infinity,hallFace,flushDoors=[]}=options;
  const facesByMaterial=[],cuts=[0,L,...outer.map(p=>p[0]),...holes.flatMap(p=>p.map(v=>v[0]))];
  if(paintedFrom<L)cuts.push(paintedFrom);
  if(hallFace)cuts.push(hallFace.from,hallFace.to);
  const point=(u,d,h)=>{
   const inset=external?thickness/2-(-uy*d*nx+ux*d*ny):0;
-  const along=Math.max(omitCaps[0]?inset:0,Math.min(omitCaps[1]?L-inset:L,u));
+  const along=u<1e-8?corners[0]*inset:u>L-1e-8?L-corners[1]*inset:
+   Math.max(Math.max(0,corners[0])*inset,Math.min(L-Math.max(0,corners[1])*inset,u));
   return [a[0]+ux*along-uy*d,a[1]+uy*along+ux*d,h];
  };
  const height=(u,d,h)=>{const roof=ceilingAt(...point(u,d,0).slice(0,2));if(sloped)return Math.min(h,roof);const inner=external&&z0===2.8&&(-uy*d*nx+ux*d*ny)<0,top=bounds(outer,u,Math.max(1e-7,Math.min(L-1e-7,u)))?.[1];return inner&&Math.abs(h-top)<1e-6?roof:h;};
@@ -174,7 +187,7 @@ function iconInteriorWallGeometry(THREE,options) {
   }
  }
  for(let i=0;i<xs.length;i++){
-  if(i===0&&omitCaps[0]||i===xs.length-1&&omitCaps[1])continue;
+  if(i===0&&corners[0]||i===xs.length-1&&corners[1])continue;
   const u=xs[i],left=i?bands(u,(xs[i-1]+u)/2):[],right=i<xs.length-1?bands(u,(u+xs[i+1])/2):[],heights=[...new Set([...left.flat(),...right.flat()])].sort((x,y)=>x-y);
   for(let j=1;j<heights.length;j++){const bottom=heights[j-1],top=heights[j],mid=(bottom+top)/2,solid=band=>band.some(([lo,hi])=>mid>lo&&mid<hi);if(solid(left)===solid(right))continue;quad(point(u,-thickness/2,height(u,-thickness/2,bottom)),point(u,thickness/2,height(u,thickness/2,bottom)),point(u,thickness/2,height(u,thickness/2,top)),point(u,-thickness/2,height(u,-thickness/2,top)),flushDoors.some(o=>(u===o.start||u===o.end)&&mid<=o.top)?1:0);}
  }
@@ -223,11 +236,12 @@ function iconInteriorFloorsAndPartitions(context) {
   [stairEdge,north],[stairEdge,voidStart],[kitchenWest,voidStart]]);
 
  navigation.floors.push({id:'ground',ring:data.exterior.ground.map(p=>world(p).slice(0,2)),z:0});
- const upperOutline=[[0,0],[8.5,0],[8.5,4.21],[14.64,4.21],[14.64,12.71],[8.5,12.71],[8.5,12.21],[9.8,12.21],[9.8,9.23],[7.94,9.23],[7.94,10.3],[0,10.3]];
+ const [sx,sy,ex,ey]=data.stairs.box;
+ const upperOutline=[[0,0],[8.5,0],[8.5,4.21],[14.64,4.21],[14.64,12.71],[8.5,12.71],[8.5,ey],[ex,ey],[ex,sy],[sx,sy],[sx,voidStart],[0,voidStart]];
  const structureOutline=iconInteriorInsetSlab(upperOutline,data.exterior.upper,.18);
  slab('upper-structure',structureOutline,[],2.8,.4,mats.ceiling);
  slab('upper-oak-finish',structureOutline,[],3.2,.015,mats.oak);
- const xs=[...new Set([0,.5,7.94,8.5,9.8,14.64])].sort((a,b)=>a-b),ys=[0,4.21,9.23,10.3,12.21,12.71,17.63,18.13];
+ const xs=[...new Set([0,.5,sx,8.5,ex,14.64])].sort((a,b)=>a-b),ys=[0,4.21,sy,voidStart,ey,12.71,17.63,18.13];
  for(let i=1;i<xs.length;i++)for(let j=1;j<ys.length;j++){const b=[xs[i-1],ys[j-1],xs[i],ys[j]],p=[(b[0]+b[2])/2,(b[1]+b[3])/2];if(contains(p,data.exterior.upper)&&!contains(p,stairHole)&&!contains(p,livingHole)){floor('upper-'+i+'-'+j,b,3.2);obstacle('upper-slab-'+i+'-'+j,b,2.8,3.2);navigation.obstacles[navigation.obstacles.length-1].kind='slab';}}
  for(const room of data.rooms){const z=room.id.startsWith('1.')?3.215:0;if(room.finish==='tile')slab('finish-'+room.id,room.outline||ring(room.box),[],z,.008,mats.tile);}
  for(const w of data.walls){
@@ -429,7 +443,7 @@ function iconEntryReturn(context) {
 function iconTerraceSlider(context) {
  const {box,mats,data}=context,wall=data.facades.find(f=>f.id==='facade-terrace');
  const opening=wall.openings.find(o=>!o.glass),left=wall.a[1]+opening.start,right=wall.a[1]+opening.end;
- const x=wall.a[0]-.24-.055,stile=.033,top=opening.top-.015,bottom=.021;
+ const x=wall.a[0]-iconGroundFacadeDepth(wall)/2-.055,stile=.033,top=opening.top-.015,bottom=.021;
  const parts=[];
  for(const [id,y] of [['leading',right-stile],['trailing',left]])
   parts.push(box('terrace-slider-'+id,[x-.017,y,x+.017,y+stile],bottom,top-bottom,mats.metal));
@@ -445,8 +459,11 @@ function iconInteriorFacades(context) {
  const {data, wall, box, obstacle, mats, beam, opening} = context;
  for(const facade of data.facades){
   const openings=facade.id==='facade-garden'?facade.openings.map(o=>({...o,wallPoly:[[o.start,0],[o.end,0],[o.end,o.top],[7.76,o.top],[7.76,2.8],[.74,2.8],[.74,o.top],[o.start,o.top]]})):facade.openings;
-  wall(facade.id,facade.a,facade.b,0,2.8,.48,openings);
+  wall(facade.id,facade.a,facade.b,0,2.8,iconGroundFacadeDepth(facade),openings);
  }
+ const rear=data.facades.find(f=>f.id==='facade-wing-rear'),[cx,cy]=rear.a;
+ for(const [id,depth,base,top] of [['ground',iconGroundFacadeDepth(rear),0,2.8],['upper',.36,2.8,4.07]])
+  obstacle('terrace-inner-corner-'+id,[cx-depth,cy-depth,cx,cy],base,top);
  iconEntryReturn(context);
  iconTerraceSlider(context);
  box('garage-sectional-door',[1.08,-.05,6.04,.05],0,2.32,mats.dark);obstacle('garage-door',[1.06,-.1,6.06,.1],0,2.35);
@@ -526,7 +543,7 @@ function iconInteriorStairs(context) {
  for(const [flight,x,y,dir,base] of [['lower',sx,sy,1,0],['upper',ex-s.width,turn,-1,half]]){
   const profile=iconFoldedStairFlight(context,flight,x,s.width,y,dir,base,steps,s.tread,rise,steel);
   // In the mirrored house the minimum-x edge is the lower flight's right side and the upper flight's open side.
-  const id='stair-'+flight+'-left',lower=flight==='lower',approach=lower?s.tread/2:0;
+  const id='stair-'+flight+'-left',lower=flight==='lower',approach=lower?s.tread*.65:0;
   const guardBase=profile.slice(1,-1).concat([[run,base+half]]);
   const infill=lower?[[0,base+rise],...guardBase.filter(([u])=>u>approach).map(([u,z])=>[u-approach,z])]:guardBase;
   iconStairGuard(context,id,[x,y+dir*approach],[x,y+dir*run],infill,base+guardHeight+half*approach/run,
@@ -539,39 +556,38 @@ function iconInteriorStairs(context) {
    end:world([x+s.width/2,y+dir*run]).slice(0,2),width:s.width,z0:base,z1:base+half});
  }
  box('stair-landing',[sx,turn,ex,ey],half-iconLandingPlate,iconLandingPlate,steel);floor('stair-landing',[sx,turn,ex,ey],half);
- const rearWallStart=data.facades.find(facade=>facade.id==='facade-wing-rear').a[0];
- for(const [id,a,b] of [['lower',[sx,turn],[sx,ey]],['back',[sx,ey],[rearWallStart,ey]]]){
-  const length=Math.hypot(b[0]-a[0],b[1]-a[1]);
-  iconStairGuard(context,'landing-'+id,a,b,[[0,half],[length,half]],half+guardHeight,half+guardHeight,steel,screen,id==='lower');
-  obstacle('landing-'+id,[Math.min(a[0],b[0])-.025,Math.min(a[1],b[1])-.025,
-   Math.max(a[0],b[0])+.025,Math.max(a[1],b[1])+.025],half,half+guardHeight);
- }
+ iconStairGuard(context,'landing-lower',[sx,turn],[sx,ey],[[0,half],[ey-turn,half]],half+guardHeight,half+guardHeight,steel,screen);
+ obstacle('landing-lower',[sx-.025,turn,sx+.025,ey],half,half+guardHeight);
  box('upper-void-rim',[4.84,10.23,sx,10.37],3.02,.18,mats.wood);
- for(const guard of data.rails)rail(guard.id,guard.a,guard.b,guard.level?3.2:0,true);
- rail('upper-stair-hall-side',[sx,data.void.box[1]],[sx,sy],s.floorHeight,true);
- rail('upper-stair-hall-front',[sx,sy],[sx+s.width+s.gap/2,sy],s.floorHeight,true);
+ for(const guard of data.rails)rail(guard.id,guard.a,guard.b,guard.level?s.floorHeight:0,steel);
+ rail('upper-stair-hall-side',[sx,data.void.box[1]],[sx,sy],s.floorHeight,steel);
+ rail('upper-stair-hall-front',[sx,sy],[sx+s.width,sy],s.floorHeight,steel,false);
 }
 
 function iconInteriorOfficeBacking(context) {
  const {data,box,obstacle,mats,navigation}=context;
  const cabinets=data.furniture.filter(item=>item.id.startsWith('office-under-stair-'));
  if(!cabinets.length)return;
- const [backX,startY]=cabinets[0].box,endY=cabinets.at(-1).box[3];
- const stairs=data.stairs,[,frontY,,rearY]=stairs.box,half=stairs.floorHeight/2;
+ const backX=cabinets[0].box[0];
+ const stairs=data.stairs,[sx,frontY,,rearY]=stairs.box,half=stairs.floorHeight/2;
  const cover={ramp:navigation.ramps.find(r=>r.id==='stair-upper'),landing:navigation.floors.find(f=>f.id==='stair-landing')};
  const segment=(name,from,to,height,above)=>{
-  const bounds=[backX-.04,Math.max(from,startY),backX,Math.min(to,endY)];
+  const bounds=[sx+stairs.width,Math.max(from,frontY),backX,Math.min(to,rearY)];
   if(bounds[3]<=bounds[1])return;
-  box(name,bounds,0,height,mats.wall);
+  const backing=box(name,bounds,0,height,mats.wall);
+  // The +X face is buried inside the fitted enclosure and meets the folds edge-on.
+  const buriedFace=backing.geometry.groups[0];
+  backing.geometry.setDrawRange(buriedFace.count,backing.geometry.index.count-buriedFace.count);
   obstacle(name,bounds,0,height,above);
  };
- const steps=stairs.rises/2-1;
+ const steps=stairs.rises/2-1,turn=frontY+steps*stairs.tread;
+ // Set the plaster 2 mm behind the steel underside on horizontal and vertical folds.
+ const setback=iconStairSheet+.002;
  for(let i=0;i<steps;i++){
-  const y=frontY+i*stairs.tread,underside=half+(steps-i)*stairs.floorHeight/stairs.rises-iconStairSheet;
-  segment('office-backing-flight-'+i,y,y+stairs.tread,underside,cover);
+  const y=turn-i*stairs.tread-setback,height=half+(i+1)*stairs.floorHeight/stairs.rises-setback;
+  segment('office-backing-flight-'+i,y-stairs.tread,y,height,cover);
  }
- segment('office-backing-landing',frontY+steps*stairs.tread,rearY,half-iconLandingPlate);
- segment('office-backing-rear',rearY,endY,data.levels.groundCeiling);
+ segment('office-backing-landing',turn-setback,rearY,half-iconLandingPlate,cover);
  iconInteriorOfficePartition(context,cabinets,frontY,steps*stairs.tread);
 }
 
@@ -1016,14 +1032,34 @@ function iconDiningChair(THREE,frame,s,p) {
  iconDiningChairBack(THREE,frame,s,p,wood);
 }
 
-function iconDiningTop(THREE,s,w,d,material) {
- const radius=.145,edge=.0086,shape=new THREE.Shape(),r=radius-edge;
+function iconMadoxTable(THREE,frame,s,p) {
+ const {width:w,depth:d,item,part}=frame,top=item.height,wood=iconLongGrainOak(THREE,'Beliani MADOX lacquered dark walnut',[100,65,48]);
+ const radius=.044,edge=.004,shape=new THREE.Shape(),r=radius-edge;
  shape.absarc(radius,radius,r,Math.PI,1.5*Math.PI,false);
  shape.absarc(w-radius,radius,r,1.5*Math.PI,2*Math.PI,false);
  shape.absarc(w-radius,d-radius,r,0,.5*Math.PI,false);
  shape.absarc(radius,d-radius,r,.5*Math.PI,Math.PI,false);shape.closePath();
- const g=new THREE.ExtrudeGeometry(shape,{depth:.077-2*edge,curveSegments:12,bevelEnabled:true,bevelSegments:4,bevelSize:edge,bevelThickness:edge});
- return s.add('solid-top',g,material,0,0,.7045+edge);
+ const slab=new THREE.ExtrudeGeometry(shape,{depth:.020-2*edge,curveSegments:12,bevelSegments:3,bevelSize:edge,bevelThickness:edge});
+ s.add('solid-top',slab,wood,0,0,top-.020+edge);
+ part('butterfly-joint',[edge,d/2-.0007,w-edge,d/2+.0007],top,.00025,p.espresso);
+ const apronBase=.64,apronHeight=top-.020-apronBase;
+ const cornerX=w/2-.315,cornerY=d/2-.48,halfJoint=.025;
+ for(const u of [cornerX,w-cornerX])part('long-apron-'+u,[u-.012,cornerY+halfJoint,u+.012,d-cornerY-halfJoint],apronBase,apronHeight,wood);
+ for(const v of [cornerY,d-cornerY])part('end-apron-'+v,[cornerX+halfJoint,v-.012,w-cornerX-halfJoint,v+.012],apronBase,apronHeight,wood);
+ for(const sx of [-1,1])for(const sy of [-1,1]){
+  const shoulderX=w/2+sx*.315,shoulderY=d/2+sy*.48;
+  part('corner-joint-'+sx+'-'+sy,[shoulderX-halfJoint,shoulderY-halfJoint,shoulderX+halfJoint,shoulderY+halfJoint],apronBase,apronHeight,wood);
+  const leg=new THREE.BoxGeometry(1,1,1),pos=leg.attributes.position;
+  for(let i=0;i<pos.count;i++){
+   const t=pos.getZ(i)+.5,thickness=.032+.018*t;
+   const x=w/2+sx*.344+(shoulderX-w/2-sx*.344)*t;
+   const y=d/2+sy*.529+(shoulderY-d/2-sy*.529)*t;
+   pos.setXYZ(i,x+thickness*pos.getX(i),y+thickness*pos.getY(i),apronBase*t);
+  }
+  leg.computeVertexNormals();s.add('splayed-leg-'+sx+'-'+sy,leg,wood,0,0,0);
+ }
+ const profile=[[0,0],[.055,0],[.059,.009],[.121,.038],[.125,.044],[.119,.046],[.091,.032],[.047,.014],[0,.012]];
+ s.add('pottery-bowl',new THREE.LatheGeometry(profile.map(([r,z])=>new THREE.Vector2(r,z)),40).rotateX(Math.PI/2),p.stone,w/2,d/2,top+.00025);
 }
 
 function iconLongGrainOak(THREE,name,base) {
@@ -1151,6 +1187,16 @@ function iconSamsungFinishes({THREE}) {
   rim:finish('Smoked polycarbonate rim','#80909a',.24),lamp:finish('Ceiling LED diffuser','#f6ffff',.35,{emissive:'#e1f5ff',emissiveIntensity:.6})};
 }
 
+function iconLabelPlane({THREE,group},width,height) {
+ const face=new THREE.PlaneGeometry(width,height).rotateX(Math.PI/2).rotateZ(Math.PI);
+ // The mirrored floor plan reverses printed artwork when viewed from the aisle.
+ if(group.matrix.determinant()<0){
+  const uv=face.attributes.uv;
+  for(let i=0;i<uv.count;i++)uv.setX(i,1-uv.getX(i));
+ }
+ return face;
+}
+
 function iconSamsungMark(context,frame,tag,label,x,y,z,width,height) {
  const {THREE}=context;
  if(typeof document==='undefined')return;
@@ -1168,9 +1214,7 @@ function iconSamsungMark(context,frame,tag,label,x,y,z,width,height) {
  }
  const map=new THREE.CanvasTexture(canvas);map.colorSpace=THREE.SRGBColorSpace;
  const mat=new THREE.MeshBasicMaterial({map,transparent:true,depthWrite:false,toneMapped:false});
- const geometry=new THREE.PlaneGeometry(width,height);
- if(context.group.matrix.determinant()<0){const uv=geometry.attributes.uv;for(let i=0;i<uv.count;i++)uv.setX(i,1-uv.getX(i));}
- geometry.rotateX(Math.PI/2);geometry.rotateZ(Math.PI);
+ const geometry=iconLabelPlane(context,width,height);
  const mesh=iconLivingShapes(context,frame).add(tag+'-print',geometry,mat,x,y,z);
  mesh.castShadow=mesh.receiveShadow=false;mesh.renderOrder=2;
 }
@@ -1221,10 +1265,10 @@ function iconSamsungCavity(context,frame,id,x,face,base,m) {
  iconSamsungDrawers(context,frame,id,x,nose-.024,base,fridge?[.396,.174,.189]:[.254,.251,.252,.174,.170],m);
 }
 
-function iconSamsungDoor(context,frame,id,x,face,base,left,right,m,k) {
+function iconSamsungDoor(context,frame,id,x,face,base,left,right,head,m,k) {
  const top=base+1.775,nose=face-.021,inner=nose-.040,swing=id==='fridge'?1:-1;
  const plate=(tag,l,r,a,b,z0,z1,mat)=>frame.part(id+'-door-'+tag,[x+l,a,x+r,b],z0,z1-z0,mat);
- iconKitchenPanel(frame,id,left+.003,right-.003,base-.012,top+.009,face,k.yellow);
+ iconKitchenPanel(frame,id,left+.003,right-.003,base-.012,head-.003,face,k.yellow);
  const pullX=swing>0?right-.026:left+.018;
  iconKitchenGrip(frame,id+'-pull',pullX,face,1.03,.275,true,k.bronze);
  plate('white-skin',-.27,.27,inner+.006,nose,base,top,m.white);
@@ -1243,25 +1287,30 @@ function iconSamsungDoor(context,frame,id,x,face,base,left,right,m,k) {
 }
 
 function iconSamsungTower(context,frame,k,face) {
- const {width:w,part,item}=frame,base=.133,top=base+1.775,m=iconSamsungFinishes(context);
+ const {width:w,part,item}=frame,base=.133,top=base+1.775,head=2.1,m=iconSamsungFinishes(context);
+ const shelfFinish=iconLivingPalette(context).ash;
  // The right end cheek also carries the existing kitchen/hall light switch.
  part('body',[w-.018,0,w,face-.021],.118,item.height-.118,k.yellow);
  part('left-cheek',[0,0,.018,face-.021],.118,item.height-.118,k.yellow);
- part('centre-divider',[w/2-.009,0,w/2+.009,face-.021],base,top+.012-base,k.recess);
+ part('centre-divider',[w/2-.009,0,w/2+.009,face-.021],base,head-base,k.recess);
  part('support-shelf',[.018,0,w-.018,face-.022],.115,base-.115,k.recess);
- part('bridge',[.018,0,w-.018,face-.022],top+.012,item.height-top-.012,k.recess);
+ part('bridge',[.018,0,w-.018,face-.022],head,item.height-head,k.recess);
  for(const [i,id] of ['fridge','freezer'].entries()){
   const left=w*i/2,right=w*(i+1)/2,x=(left+right)/2;
   part(id+'-toe-vent',[x-.206,face-.064,x+.206,face-.062],.037,.064,m.slot);
   for(let rib=0;rib<4;rib++)part(id+'-grille-'+rib,[x-.203,face-.062,x+.203,face-.060],.043+rib*.016,.004,m.rim);
-  iconKitchenPanel(frame,'crown-'+i,left+.003,right-.003,top+.014,item.height,face,k.yellow);
+  iconKitchenPanel(frame,'crown-'+i,left+.003,right-.003,head+.002,item.height,face,k.yellow);
   // Fill the strips outside the 540 mm appliance; the food compartment itself is hollow.
   for(const [j,a,b] of [[0,left+.018,x-.270],[1,x+.270,right-.018]])
    part(id+'-filler-'+j,[a,0,b,face-.023],base,1.775,m.white);
   const bodyStart=context.group.children.length;
+  const l=left+(i?.009:.018),r=right-(i?.018:.009),floor=top+.012,back=.052,edge=face-.025;
+  part(id+'-dry-shelf',[l,back,r,edge],floor,.018,shelfFinish);
+  part(id+'-dry-back',[l,back,r,back+.009],floor+.018,head-floor-.027,shelfFinish);
+  part(id+'-dry-ceiling',[l,back,r,edge],head-.009,.009,shelfFinish);
   iconSamsungCavity(context,frame,id,x,face,base,m);
   const doorStart=context.group.children.length;
-  iconSamsungDoor(context,frame,id,x,face,base,left,right,m,k);
+  iconSamsungDoor(context,frame,id,x,face,base,left,right,head,m,k);
   const hinge=frame.point(i?right-.003:left+.003,face);
   (frame.appliances??=[]).push({id,hinge,body:context.group.children.slice(bodyStart,doorStart),door:context.group.children.slice(doorStart)});
  }
@@ -1315,6 +1364,32 @@ function iconPaletRain(THREE) {
  return material;
 }
 
+function iconIslandWorktop({THREE},frame,s,p) {
+ const {width:w,depth:d,item}=frame,{height,socket}=item;
+ const [cx,cy]=socket.center,[sw,sd]=socket.size;
+ const rectangle=(shape,x,y,width,depth)=>{
+  shape.moveTo(x,y);shape.lineTo(x+width,y);shape.lineTo(x+width,y+depth);shape.lineTo(x,y+depth);shape.closePath();return shape;
+ };
+ const plate=(name,outline,hole,z,thickness,material)=>{
+  const shape=rectangle(new THREE.Shape(),...outline);
+  if(hole)shape.holes.push(rectangle(new THREE.Path(),...hole));
+  const geometry=new THREE.ExtrudeGeometry(shape,{depth:thickness,bevelEnabled:false});
+  return s.add(name,geometry,material,0,0,z);
+ };
+ const opening=[cx-sw/2,cy-sd/2,sw,sd],reveal=[opening[0]+.019,opening[1]+.010,sw-.038,sd-.020];
+ const lid=[reveal[0]+.0017,reveal[1]+.0017,reveal[2]-.0034,reveal[3]-.0034];
+ const aluminium=iconFinishTexture(THREE,'White brushed aluminium socket cover',32,256,.41,(_u,v)=>{
+  const hairline=1.7*Math.sin(2*Math.PI*93*v)+1.2*Math.cos(2*Math.PI*47*v);
+  return [235+hairline,235+hairline,232+hairline];
+ },[1,6]);aluminium.metalness=.27;
+ const slab=plate('top',[0,0,w,d],opening,height-.05,.05,p.stone);
+ const uv=slab.geometry.attributes.uv,normal=slab.geometry.attributes.normal;
+ for(let i=0;i<uv.count;i++)if(Math.abs(normal.getZ(i))>.9)uv.setXY(i,uv.getX(i)/w,uv.getY(i)/d);
+ plate('socket-housing',opening,null,height-.060,.057,p.black);
+ plate('socket-bezel',opening,reveal,height-.003,.003,aluminium);
+ plate('socket-lid',lid,null,height-.0029,.0026,aluminium);
+}
+
 function iconKitchenIslandTiles({THREE,mesh},frame,back) {
  const {width:w,depth:d,item,point,part}=frame;
  const inset=.018,y0=back,y1=d-inset,x0=inset,x1=w-inset;
@@ -1358,11 +1433,12 @@ function iconLivingKitchen(context,frame,s,p) {
  if(tall){iconSamsungTower(context,frame,k,d-.035);return;}
  const run=island?w:w-.62;
  part('body',[end,back+(island?.021:0),run-end,face-.021],.118,height-.168,k.yellow);
- part('top',[0,0,run,d],height-.05,.05,p.stone);
  if(island){
+  iconIslandWorktop(context,frame,s,p);
   iconKitchenIslandTiles(context,frame,back);
   iconKitchenDrawers(frame,k,end,w-end,5,back,true);
  }else{
+  part('top',[0,0,run,d],height-.05,.05,p.stone);
   iconKitchenDrawers(frame,k,0,run,4,face);
   iconKitchenNiche(context,{...frame,width:run},s,p,k);
   iconKitchenOvens(frame,p,k,d-.035,run,w,context.data.levels.groundCeiling);
@@ -1504,7 +1580,8 @@ function iconLivingProjector(context) {
  optic('lens-barrel',.034,.067,.064,p.black);
  optic('lens-ring',.012,.058,.022,p.espresso);
  optic('lens-glass',.003,.048,.006,p.lens);
- const hub=at(.24,-.072,.084),wallX=context.data.facades.find(w=>w.id==='facade-terrace').a[0]-.48;
+ const terrace=context.data.facades.find(w=>w.id==='facade-terrace');
+ const hub=at(.24,-.072,.084),wallX=terrace.a[0]-iconGroundFacadeDepth(terrace);
  box('projector-anchor-plate',[wallX-.022,hub.y-.093,wallX,hub.y+.093],2.55,.242,p.black);
  for(const dy of [-.066,.066])for(const z of [2.584,2.76])
   beam('projector-bolt-'+dy+'-'+z,[wallX-.029,hub.y+dy,z],[wallX-.019,hub.y+dy,z],.009,p.espresso);
@@ -1713,12 +1790,8 @@ function iconLivingFurniture(context,frame) {
  else if(item.id.startsWith('kitchen-')||item.id==='hob')iconLivingKitchen(context,frame,s,p);
  else if(item.id==='media-console')iconLivingYoffers(context,frame,s);
  else if(item.id==='living-rug')iconLivingRug(context.THREE,frame,s,p);
- else if(item.id==='dining-table'){
-  iconDiningTop(context.THREE,s,w,d,p.cocoa);
-  for(const y of [.48,d-.48])part('trestle-'+y,[.13,y-.082,w-.13,y+.082],.012,.695,p.cocoa);
-  s.disc('pottery-foot',w/2,d*.50,.782,.12,.12,.024,p.ivory);
-  s.disc('pottery-bowl',w/2,d*.50,.806,.19,.19,.055,p.stone);
- }else if(item.id==='coffee-table'){
+ else if(item.id==='dining-table')iconMadoxTable(context.THREE,frame,s,p);
+ else if(item.id==='coffee-table'){
   iconLivingCoffeeTable(context.THREE,s,p);
  }else return false;
  return true;
@@ -2204,9 +2277,9 @@ function iconLivingLighting(context) {
  };
  const table=data.furniture.find(item=>item.id==='dining-table').box;
  const x=(table[0]+table[2])/2,y=(table[1]+table[3])/2;
- iconDiningLantern(context,paper,'dining-lantern-1',x-.24,y-.57,2.58,.36,.24);
- iconDiningLantern(context,paper,'dining-lantern-2',x+.21,y+.08,3.39,.25,.46);
- iconDiningLantern(context,paper,'dining-lantern-3',x-.06,y+.61,2.85,.42,.22);
+ iconDiningLantern(context,paper,'dining-lantern-1',x-.09,y-.32,2.58,.24,.17);
+ iconDiningLantern(context,paper,'dining-lantern-2',x+.15,y+.02,3.16,.19,.30);
+ iconDiningLantern(context,paper,'dining-lantern-3',x-.06,y+.30,2.79,.25,.14);
  for(const [id,px,py,bottom,radius,height] of [
   ['island-1',3.05,10.94,2.04,.23,.14],['island-2',5.44,10.94,2.13,.23,.14],
   ['lounge-1',1.2,13.71,2.62,.13,.035],['lounge-2',1.2,14.59,2.62,.13,.035],['lounge-3',1.2,15.47,2.62,.13,.035]
@@ -2822,7 +2895,7 @@ function iconPantryLabel(context,shapes,key,text,u,v,z,width,height) {
   }
   labels.set(text,paper);
  }
- const face=new THREE.PlaneGeometry(width,height).rotateX(Math.PI/2).rotateZ(Math.PI);
+ const face=iconLabelPlane(context,width,height);
  shapes.add(key+'-label',face,labels.get(text),u,v,z);
 }
 
@@ -2850,8 +2923,68 @@ function iconPantryShelves(frame,levels,board,steel) {
  for(const [i,[z,d]] of levels.entries())part('shelf-'+i,[0,.017,w,d],z-.018,.018,board);
 }
 
+function iconPantryCupboard(context,frame,key,start,end,bottom,top,depth,leaves) {
+ const {part}=frame,finish=iconBedroomOfficePalette(context),t=.018,face=depth-.035;
+ const enamel=context.pantryEnamel??=context.material('#777f68',{name:'Sage painted pantry fronts',roughness:.69});
+ part(key+'-back',[start,.003,end,.009],bottom,top-bottom,finish.laminate);
+ for(const [i,u] of [start,end-t].entries()){
+  part(key+'-end-'+i,[u,.009,u+t,face],bottom,top-bottom,finish.laminate);
+ }
+ for(const [i,z] of [bottom,(bottom+top)/2,top-t].entries()){
+  part(key+'-deck-'+i,[start+t,.009,end-t,face],z,t,finish.lacquer);
+ }
+ const bay=(end-start)/leaves;
+ for(let i=0;i<leaves;i++){
+  const u=start+i*bay,x=u+bay*.5,z=bottom>1?bottom+.064:top-.064;
+  part(key+'-front-'+i,[u+.002,face+.002,u+bay-.002,face+.020],bottom+.003,top-bottom-.006,enamel);
+  for(const [j,dx] of [-.045,.045].entries()){
+   part(key+'-anchor-'+i+'-'+j,[x+dx-.005,face+.020,x+dx+.005,depth-.005],z-.005,.010,finish.graphite);
+  }
+  part(key+'-pull-'+i,[x-.059,depth-.005,x+.059,depth],z-.007,.014,finish.graphite);
+ }
+}
+
+function iconPantryJambRack(context,frame,shapes,paint) {
+ const {width:w,depth:d,part}=frame,p=iconBedroomOfficePalette(context);
+ iconPantryCupboard(context,frame,'low-cupboard',.004,w-.004,.073,.76,d,1);
+ part('recessed-plinth',[.022,.024,w-.022,d-.064],.008,.065,p.graphite);
+ const levels=[.905,1.15,1.40,1.68,1.97,2.26,2.55];
+ iconPantryShelves(frame,levels.map(z=>[z,d-.017]),p.lacquer,p.graphite);
+ const preserves=[['DŻEM',paint.clay],['MIÓD',p.beech],['PESTKI',paint.olive],['KAKAO',paint.cocoa]];
+ for(const [row,[label,fill]] of preserves.entries()){
+  for(let i=0;i<3;i++){
+   iconPantryJar(context,shapes,'jar-'+row+'-'+i,.098+i*.18,.148,levels[row],.055,.172,fill,p.graphite,label);
+  }
+ }
+ for(const [row,label] of ['KAWA','HERBATA','FILTRY'].entries()){
+  for(let i=0;i<2;i++){
+   const u=.145+i*.25,z=levels[row+4];
+   part('carton-'+row+'-'+i,[u-.089,.037,u+.089,.193],z,.17,i?p.beech:paint.putty);
+   iconPantryLabel(context,shapes,'carton-'+row+'-'+i,label,u,.194,z+.085,.135,.051);
+  }
+ }
+}
+
+function iconPantrySpices(context,frame,shapes,paint) {
+ const {depth:d,part}=frame,p=iconBedroomOfficePalette(context);
+ const levels=[.18,.415,.65,.885,1.12];
+ iconPantryShelves(frame,levels.map(z=>[z,d]),p.lacquer,p.graphite);
+ const spices=[['PAPRYKA',paint.clay],['KURKUMA',p.beech],['ZIOŁA',paint.olive],['PIEPRZ',paint.cocoa]];
+ for(const [row,[label,fill]] of spices.entries()){
+  for(let i=0;i<5;i++){
+   iconPantryJar(context,shapes,'spice-'+row+'-'+i,.085+i*.137,.102,levels[row],.039,.115,fill,p.graphite,label);
+  }
+ }
+ for(let i=0;i<3;i++){
+  const u=.117+i*.218;
+  part('light-carton-'+i,[u-.084,.027,u+.084,.157],levels[4],.16,paint.chalk);
+  iconPantryLabel(context,shapes,'light-carton-'+i,'TOREBKI',u,.158,levels[4]+.08,.135,.046);
+ }
+}
+
 function iconPantryRack(context,frame,shapes,paint) {
- const {depth:d,part}=frame,finish=iconBedroomOfficePalette(context);
+ const {width:w,depth:d,part}=frame,finish=iconBedroomOfficePalette(context);
+ iconPantryCupboard(context,frame,'overhead',0,w,2.185,2.71,d,3);
  iconPantryShelves(frame,[[.21,d],[.59,d],[.94,.27],[1.29,.27],[1.64,.25],[1.98,.25]],finish.lacquer,finish.graphite);
  const foods=[['RYŻ',paint.chalk],['KASZA',paint.putty],['SOCZEWICA',paint.clay]];
  for(const [row,z] of [.94,1.29].entries()){
@@ -2860,15 +2993,15 @@ function iconPantryRack(context,frame,shapes,paint) {
    iconPantryJar(context,shapes,'dry-'+row+'-'+i,.19+i*.206,.156,z,.060,h,food,paint.cocoa,name);
   }
  }
- for(let i=0;i<5;i++){
-  const u=.18+i*.208,body=i<3?paint.clay:paint.olive,h=i<3?.118:.157;
+ for(let i=0;i<8;i++){
+  const u=.105+i*.188,body=i<3?paint.clay:paint.olive,h=i<3?.118:.157;
   shapes.disc('tin-'+i,u,.157,.59,.055,.055,h,body);
   shapes.disc('tin-base-'+i,u,.157,.59,.056,.056,.004,paint.silver);
   shapes.disc('tin-lid-'+i,u,.157,.59+h-.006,.056,.056,.006,paint.silver);
   iconPantryLabel(context,shapes,'tin-'+i,i<3?'POMIDORY':'GROSZEK',u,.213,.59+h*.48,.091,.042);
  }
- for(let i=0;i<3;i++){
-  const u=.25+i*.295;
+ for(let i=0;i<5;i++){
+  const u=.150+i*.295;
   part('flour-bag-'+i,[u-.09,.051,u+.09,.198],1.64,.246,finish.beech);
   part('folded-seam-'+i,[u-.083,.106,u+.083,.135],1.886,.023,paint.chalk);
   iconPantryLabel(context,shapes,'flour-'+i,'MĄKA',u,.199,1.76,.128,.061);
@@ -2878,7 +3011,7 @@ function iconPantryRack(context,frame,shapes,paint) {
   part('reserve-box-lid-'+i,[u-.171,.036,u+.171,.278],.45,.018,paint.ivory);
   iconPantryLabel(context,shapes,'reserve-'+i,['ZAPASY','HERBATA','KAWA'][i],u,.276,.338,.15,.055);
  }
- for(const [i,u] of [.29,.75].entries()){
+ for(const [i,u] of [.25,.75,1.25].entries()){
   part('light-box-'+i,[u-.168,.028,u+.168,.23],1.98,.16,finish.beech);
   part('paper-tape-'+i,[u-.019,.028,u+.019,.23],2.14,.001,paint.chalk);
  }
@@ -2912,19 +3045,25 @@ function iconPantryBench(context,frame,shapes,paint) {
   part('reserve-shelf-far-'+i,[w/2+.009,.024,w-.028,d-.028],z-.022,.022,p.laminate);
  }
  part('landing-top',[0,0,w,d],.862,.038,p.laminate);
- iconPantryShelves(frame,[[1.48,.245],[1.89,.245]],p.lacquer,p.graphite);
+ iconPantryShelves(frame,[[1.48,.245],[1.69,.245],[1.89,.245]],p.lacquer,p.graphite);
+ iconPantryCupboard(context,frame,'wall-cupboard',0,w,2.105,2.71,.333,3);
+ iconPantryCupboard(context,frame,'base-cupboard',w/2+.010,w-.029,.468,.861,d-.004,2);
+ for(let i=0;i<7;i++){
+  const x=.131+i*.201;
+  iconPantryJar(context,shapes,'compote-'+i,x,.149,1.69,.054,.139,i<4?paint.clay:paint.olive,p.graphite,i<4?'KOMPOT':'PESTO');
+ }
  iconPantryCrate(context,frame,shapes,'potato-crate',.116,.105,paint.putty,true);
  iconPantryCrate(context,frame,shapes,'onion-crate',w/2+.119,.105,p.beech,false);
- for(const [i,u] of [.235,.534,1.00,1.30].entries()){
+ for(const [i,u] of [.235,.534].entries()){
   shapes.cushion('bulk-tub-'+i,u,.284,.579,.234,.334,.222,.023,i<2?p.lacquer:paint.putty);
   part('bulk-tub-lid-'+i,[u-.120,.113,u+.120,.455],.69,.021,p.graphite);
   iconPantryLabel(context,shapes,'bulk-'+i,i<2?'MĄKA':'RYŻ',u,.452,.59,.15,.053);
  }
- for(let i=0;i<4;i++){
+ for(let i=0;i<7;i++){
   iconPantryJar(context,shapes,'preserve-'+i,.18+i*.208,.148,1.48,.057,.147,i<2?paint.clay:paint.olive,p.graphite,i<2?'PASSATA':'OGÓRKI');
  }
- for(let i=0;i<3;i++){
-  const u=.255+i*.36;
+ for(let i=0;i<4;i++){
+  const u=.160+i*.36;
   part('tea-carton-'+i,[u-.105,.045,u+.105,.194],1.89,.15,i===1?paint.olive:paint.clay);
   iconPantryLabel(context,shapes,'tea-'+i,'HERBATA',u,.195,1.962,.148,.052);
  }
@@ -2948,6 +3087,8 @@ function iconGroundRoomFurniture(context,frame) {
 const iconGroundRoomBuilders={
  'pantry-left':iconPantryRack,
  'pantry-right':iconPantryBench,
+ 'pantry-kitchen-jamb':iconPantryJambRack,
+ 'pantry-spices':iconPantrySpices,
  'entry-wardrobe-rear':iconEntryWardrobe,
  'entry-wardrobe-side':iconEntryWardrobe,
  'entry-console':iconEntryConsole,

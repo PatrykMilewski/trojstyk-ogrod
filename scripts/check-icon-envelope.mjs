@@ -62,17 +62,24 @@ test('living-room transom is flush with both windows with no shelf or front wall
  assert(!interior.group.getObjectByName('garden-window-sill-recess'));
 });
 
-test('reentrant wall junctions retain exposed inner end caps without opening wall cavities',()=>{
+test('entry wall junctions retain their exposed inner end caps',()=>{
  for(const [name,p,d] of [
   ['facade-garage-side',[6.65,4.4,1],[0,-1,0]],
   ['facade-front-wing',[6.7,4.46,2.6],[1,0,0]],
-  ['facade-wing-rear',[8.3,12.45,1],[1,0,0]],
-  ['facade-terrace',[8.25,12.5,1],[0,1,0]],
   ['upper-garage-side',[8.3,4.4,3.6],[0,-1,0]],
   ['upper-front-wing',[8.3,4.4,3.6],[1,0,0]],
-  ['upper-rear-wing',[8.3,12.5,3.6],[1,0,0]],
-  ['upper-terrace-side',[8.25,12.5,3.6],[0,1,0]]
  ])assert(hits(object(name),p,d,.3).length,`${name}: exposed inner corner must remain closed`);
+});
+
+test('terrace and wing walls meet at a single right angle behind the staircase on both levels',()=>{
+ for(const [rear,side,x,y,z] of [['facade-wing-rear','facade-terrace',8,12.21,1],['upper-rear-wing','upper-terrace-side',8.14,12.35,3.5]]){
+  for(const offset of [.005,.12,.28,.51,.78]){
+   close(hits(object(rear),[x+offset,y-.08,z],[0,1,0],.2)[0]?.distance,.08,'Continuous rear face');
+   close(hits(object(side),[x-.08,y+offset,z],[1,0,0],.2)[0]?.distance,.08,'Continuous terrace face');
+  }
+  const inside=interior.localToWorld([x+.08,y+.08]);
+  assert(interior.navigation.obstacles.some(o=>o.minZ<z&&o.maxZ>z&&contains(inside,o.ring)));
+ }
 });
 
 test('inner wall faces end at their inner corner rather than crossing the outer cladding',()=>{
