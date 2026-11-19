@@ -138,9 +138,207 @@ function iconGarageToolPanel(context,spec,{steel,light},block) {
  iconGarageTubeInstances(THREE,context.group,hooks,steel);
 }
 
+function iconAstraModel(THREE) {
+ const car=new THREE.Group(),material=(name,color,metalness,roughness)=>new THREE.MeshStandardMaterial({name,color,metalness,roughness,side:THREE.DoubleSide});
+ const paint=material('Astra Olympic White','#f3f3ed',.23,.25),glass=material('Solar control glazing','#354b58',.38,.15);
+ const black=material('Gloss black glazing surround','#151c20',.19,.26),grille=material('Grille and wheel wells','#202327',.10,.63);
+ const alloy=material('Machined alloy','#aeb5b7',.72,.28),chrome=material('Chrome brightwork','#d6dcdc',.78,.19);
+ const lamp=material('Headlamp light guide','#dfedf0',.29,.17),red=material('Rear lamp lens','#982723',.28,.23);
+ lamp.emissive.setHex(0x73868a);lamp.emissiveIntensity=.24;
+ const tyre=material('Tyre rubber','#25272a',.02,.94);
+ function mesh(geometry,finish,name) {
+  const m=new THREE.Mesh(geometry,finish);m.castShadow=m.receiveShadow=true;if(name)m.name=name;car.add(m);return m;
+ }
+ function surface(rows,finish,name) {
+  const positions=rows.flat(2),indices=[],n=rows[0].length;
+  for(let i=0;i<rows.length-1;i++)for(let j=0;j<n-1;j++){
+   const k=i*n+j;indices.push(k,k+n,k+n+1,k,k+n+1,k+1);
+  }
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  g.setIndex(indices);g.computeVertexNormals();return mesh(g,finish,name);
+ }
+ function line(points,r,finish) {
+  const path=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)),false,'centripetal');
+  return mesh(new THREE.TubeGeometry(path,Math.max(4,points.length*3),r,6,false),finish);
+ }
+ function ellipse(pos,scale,finish,name) {
+  const m=mesh(new THREE.SphereGeometry(1,24,14),finish,name);m.position.set(...pos);m.scale.set(...scale);return m;
+ }
+ const ctx={THREE,mesh,surface,line,ellipse,paint,glass,black,grille,alloy,chrome,lamp,red,tyre};
+ iconAstraBody(ctx);iconAstraGlazing(ctx);iconAstraFascias(ctx);iconAstraAlloys(ctx);
+ car.name='garage-opel-astra-k-2018';
+ car.userData={kind:'garage-vehicle',model:'Opel Astra K 2018, pięciodrzwiowy hatchback przed liftingiem',
+  length:4.370,bodyWidth:1.809,mirrorWidth:2.042,height:1.485,wheelbase:2.662,
+  source:'https://www.vauxhall.co.uk/content/dam/vauxhall/Home/PDFs/Cars/astra/price_guides/GML_10935891_Astra_Spec_PG_1_April_2018-1522319331.pdf'};
+ return car;
+}
+
+function iconAstraBody({surface,line,paint,grille,black}) {
+ const stations=[[-2.185,.828,.29,.735],[-1.86,.860,.26,.784]],rad=.347;
+ for(const [axle,belt] of [[-1.225,.864],[1.437,.976]]){
+  for(let i=0;i<=18;i++){
+   const a=Math.PI-i*Math.PI/18;
+   stations.push([axle+rad*Math.cos(a),.9045,.313+rad*Math.sin(a),belt+.015*Math.cos(a)]);
+  }
+  if(axle<0)stations.push([-.51,.895,.201,.905],[.25,.893,.196,.932],[.92,.891,.204,.958]);
+ }
+ stations.push([1.94,.881,.257,.988],[2.185,.824,.32,.995]);
+ const rings=stations.map(([y,w,floor,belt],i)=>{
+  const bend=i===0?1:i===stations.length-1?-1:0, hood=y<-.72;
+  const shoulder=hood?.034:.020;
+  const half=[[0,floor],[w*.89,floor],[w*.98,floor+.015],[w,(belt+floor)/2],[w*.985,belt-shoulder-.045],[w*.95,belt-shoulder],[w*.83,belt],[0,belt+.014]];
+  return [...half,...half.slice(1,-1).reverse().map(([x,z])=>[-x,z]),half[0]]
+   .map(([x,z])=>[x,y+bend*(.010+.195*(x/.828)**2),z]);
+ });
+ surface(rings,paint,'astra-sculpted-body');
+ for(const i of [0,rings.length-1]){
+  const cap=rings[i],half=(cap.length-1)/2;
+  const end=i===0?-1:1;
+  surface(Array.from({length:half+1},(_,j)=>Array.from({length:25},(_,k)=>{
+   const [w,,z]=cap[j],x=w*(k/12-1);return [x,end*(2.175-.195*(x/.828)**2),z];
+  })),paint);
+ }
+ surface([[[-.68,-1.87,.26],[.68,-1.87,.26]],[[-.68,1.92,.26],[.68,1.92,.26]]],grille);
+ function bodySurfaceX(y,z) {
+  const n=stations.findIndex(row=>row[0]>y);
+  function at(i){
+   const ring=rings[i].slice(1,8),k=ring.findIndex(p=>p[2]>=z);
+   if(k<=0)return ring[k===0?0:ring.length-1][0];
+   const [x0,,z0]=ring[k-1],[x1,,z1]=ring[k];
+   return x0+(x1-x0)*(z-z0)/(z1-z0);
+  }
+  const t=(y-stations[n-1][0])/(stations[n][0]-stations[n-1][0]);
+  return at(n-1)*(1-t)+at(n)*t+.0035;
+ }
+ for(const side of [-1,1]){
+  const p=(x,y,z)=>[side*x,y,z];
+  line([p(.872,-.84,.247),p(.893,-.56,.239),p(.895,.55,.294),p(.888,1.09,.454)],.009,paint);
+  for(const [y,z] of [[-.08,.872],[1.02,.927]]){
+   line([p(.878,y-.055,z),p(.888,y-.03,z+.009),p(.888,y+.045,z+.009),p(.878,y+.069,z)],.012,paint);
+  }
+  for(const pts of [[[-.78,.81],[-.8,.64],[-.77,.38],[-.75,.245]],[[.15,.889],[.113,.67],[.096,.45],[.105,.236]],[[1.29,.918],[1.19,.757],[1.08,.59],[.99,.46]]]){
+   const curve=[];
+   for(let i=1;i<pts.length;i++)for(let k=0;k<6;k++){
+    const t=k/6, y=pts[i-1][0]*(1-t)+pts[i][0]*t,z=pts[i-1][1]*(1-t)+pts[i][1]*t;
+    curve.push(p(bodySurfaceX(y,z),y,z));
+   }
+   const [y,z]=pts.at(-1);curve.push(p(bodySurfaceX(y,z),y,z));line(curve,.0022,black);
+  }
+ }
+}
+
+function iconAstraGlazing({surface,line,ellipse,paint,glass,black,chrome}) {
+ // Stations follow the windscreen, roof crown, floating rear pillar, and tailgate glass.
+ const stations=[[-.965,.922,.826,.922,.772,.925],[-.63,.928,.827,1.17,.723,1.184],
+  [-.245,.934,.829,1.413,.664,1.444],[.00,.939,.83,1.445,.660,1.478],[.46,.952,.829,1.451,.654,1.485],
+  [1.04,.973,.824,1.426,.641,1.460],[1.39,.992,.808,1.380,.620,1.413],
+  [1.70,1.006,.786,1.313,.608,1.351],[1.99,1.012,.735,1.046,.632,1.068]];
+ function section(y) {
+  const hi=stations.findIndex(row=>row[0]>=y);
+  if(hi<1)return stations[hi===0?0:stations.length-1];
+  const a=stations[hi-1],b=stations[hi],t=(y-a[0])/(b[0]-a[0]);
+  return a.map((v,i)=>v+(b[i]-v)*t);
+ }
+ const sidePoint=(side,y,t,offset=.002)=>{
+  const [,base,w,top,r]=section(y);return [side*(w+(r-w)*t+offset),y,base+(top-base)*t];
+ };
+ const roof=stations.map(([y,base,w,top,r,crown])=>[[-r,y,top],[-r*.72,y,crown-.006],[0,y,crown],[r*.72,y,crown-.006],[r,y,top]]);
+ surface(roof.slice(0,3),glass,'astra-windscreen');surface(roof.slice(2,8),paint,'astra-roof');surface(roof.slice(7),glass,'astra-tailgate-glass');
+ for(const sign of [-1,1]){
+  surface(stations.map(([y])=>[sidePoint(sign,y,0),sidePoint(sign,y,1)]),glass);
+  for(const [bottomStart,bottomEnd,topStart,topEnd,finish] of [
+   [-.965,-.865,-.26,-.19,paint],[.079,.191,.184,.299,black],
+   [1.185,1.335,1.029,1.119,black],[1.45,1.89,1.346,1.563,paint],[1.77,1.99,1.563,1.7,black]
+  ]){
+   surface([[sidePoint(sign,bottomStart,0,.008),sidePoint(sign,bottomEnd,0,.008)],
+    [sidePoint(sign,topStart,1,.008),sidePoint(sign,topEnd,1,.008)]],finish);
+  }
+  line(stations.slice(0,8).map(([y])=>sidePoint(sign,y,.985,.008)),.009,chrome);
+  line(stations.map(([y])=>sidePoint(sign,y,0,.006)),.010,black);
+  line([[sign*.829,-.725,.95],[sign*.883,-.708,.971],[sign*.916,-.698,1.004]],.021,black);
+  ellipse([sign*.944,-.693,1.014],[.077,.113,.049],paint,'astra-mirror-cap');
+  ellipse([sign*.944,-.606,1.011],[.061,.026,.034],glass);
+ }
+ surface([[[-.63,1.649,1.342],[0,1.649,1.356],[.63,1.649,1.342]],
+  [[-.640,1.785,1.329],[0,1.797,1.346],[.640,1.785,1.329]]],paint);
+}
+
+function iconAstraFascias({THREE,surface,line,mesh,grille,chrome,black,lamp,red,paint}) {
+ const face=(end,x,z,offset=.004)=>[x,end*(2.175-.195*(x/.828)**2+offset),z];
+ const band=(end,rows,mat,name)=>{
+  const profile=[];
+  for(let i=1;i<rows.length;i++){
+   const a=rows[i-1],b=rows[i],steps=Math.max(1,Math.ceil(Math.abs(b[0]-a[0])/.037));
+   for(let n=0;n<steps;n++)profile.push(a.map((v,k)=>v+(b[k]-v)*n/steps));
+  }
+  return surface([...profile,rows.at(-1)].map(([x,z,top])=>[face(end,x,z),face(end,x,top)]),mat,name);
+ };
+ const symmetric=rows=>[...rows.slice(1).reverse().map(([x,a,b])=>[-x,a,b]),...rows];
+ band(-1,symmetric([[0,.544,.698],[.24,.552,.687],[.46,.59,.691],[.56,.651,.685]]),grille,'astra-wing-grille');
+ band(-1,symmetric([[0,.32,.445],[.39,.332,.44],[.56,.371,.43]]),black);
+ for(const x of [-.32,-.22,-.12,0,.12,.22,.32])line([face(-1,x,.345,.002),face(-1,x+.015,.428,.002)],.003,grille);
+ for(const sign of [-1,1]){
+  const m=(x,z,depth)=>face(-1,sign*x,z,depth);
+  line([m(.059,.637,.003),m(.22,.64,.005),m(.41,.669,.005),m(.57,.67,.004)],.0038,chrome);
+  band(-1,[[sign*.55,.37,.432],[sign*.66,.383,.457],[sign*.75,.416,.478]],grille);
+  line([m(.605,.411,.008),m(.655,.427,.008),m(.713,.449,.008)],.007,lamp);
+  const lights=[[.45,.642,.702],[.58,.637,.725],[.697,.646,.730],[.786,.686,.718]].map(([x,a,b])=>[sign*x,a,b]);
+  band(-1,lights,black);
+  surface([[m(.481,.663,.011),m(.51,.699,.011)],[m(.642,.656,.011),m(.644,.718,.011)],
+   [m(.744,.687,.009),m(.762,.71,.009)]],lamp);
+  line([m(.535,.697,.012),m(.64,.713,.012),m(.747,.706,.012)],.006,lamp);
+  const wrapped=(x,y,z)=>[sign*x,y,z];
+  surface([[wrapped(.747,-2.015,.685),wrapped(.747,-2.015,.720)],
+   [wrapped(.846,-1.88,.704),wrapped(.846,-1.88,.765)],[wrapped(.853,-1.75,.759),wrapped(.853,-1.75,.779)]],lamp);
+  band(1,[[sign*.45,.829,.912],[sign*.62,.828,.928],[sign*.77,.87,.946]],red);
+  surface([[wrapped(.77,2.012,.869),wrapped(.77,2.012,.946)],[wrapped(.864,1.908,.853),wrapped(.862,1.908,.958)],
+   [wrapped(.891,1.638,.882),wrapped(.882,1.638,.933)]],red);
+ }
+ for(const end of [-1,1]){
+  band(end,[[-.253,end<0?.425:.602,end<0?.532:.708],[0,end<0?.425:.602,end<0?.532:.708],[.253,end<0?.425:.602,end<0?.532:.708]],paint);
+  const z=end<0?.64:.83;
+  const emblem=mesh(new THREE.TorusGeometry(.045,.005,8,36),chrome,'astra-opel-ring');emblem.rotation.x=Math.PI/2;emblem.position.set(0,end*2.180,z);
+  const outline=[[-.064,.011],[.011,.011],[.001,.001],[.064,.001],[.052,-.009],[-.014,-.009],[-.005,.002],[-.054,.002]];
+  const shape=new THREE.Shape(outline.map(([x,y])=>new THREE.Vector2(x,y)));
+  const bolt=mesh(new THREE.ExtrudeGeometry(shape,{depth:.003,bevelEnabled:false}),chrome,'astra-opel-blitz');
+  bolt.rotation.set(Math.PI/2,0,end>0?Math.PI:0,'ZXY');bolt.position.set(0,end*2.182,z);
+ }
+}
+
+function iconAstraAlloys({THREE,mesh,line,tyre,black,alloy,chrome}) {
+ for(const y of [-1.225,1.437])for(const side of [-1,1]){
+  const wheelX=side*.776,z=.313;
+  const circular=(geometry,x,finish,name)=>{
+   const m=mesh(geometry,finish,name);m.position.set(x,y,z);m.rotation.z=Math.PI/2;return m;
+  };
+  circular(new THREE.CylinderGeometry(.313,.313,.204,40),wheelX,tyre,'astra-tyre');
+  circular(new THREE.CylinderGeometry(.211,.211,.011,40),side*.881,black);
+  const rim=mesh(new THREE.TorusGeometry(.207,.009,8,40),alloy);rim.rotation.y=Math.PI/2;rim.position.set(side*.889,y,z);
+  const p=(r,a,x)=>[side*x,y+r*Math.cos(a),z+r*Math.sin(a)];
+  for(let i=0;i<5;i++)for(const s of [-1,1]){
+   const a=i*2*Math.PI/5;
+   line([p(.044,a,.893),p(.115,a+s*.065,.89),p(.196,a+s*.17,.888)],.0105,alloy);
+  }
+  circular(new THREE.CylinderGeometry(.053,.053,.014,24),side*.890,alloy);
+  circular(new THREE.CylinderGeometry(.027,.027,.012,20),side*.898,chrome);
+ }
+}
+
+function iconGarageAstra(context,bay) {
+ const {THREE,group,obstacle}=context,[left,front,right,back]=bay;
+ const car=iconAstraModel(THREE),cx=(left+right)/2,cy=(front+back)/2;
+ car.position.set(cx,cy,.008);group.add(car);
+ obstacle(car.name,[cx-.9045,cy-2.185,cx+.9045,cy+2.185],.008,1.493);
+ for(const sign of [-1,1]){
+  const mx=cx+sign*.944;
+  obstacle(car.name+'-mirror-'+sign,[mx-.077,cy-.806,mx+.077,cy-.58],.969,1.072);
+ }
+}
+
 export function addIconGarage(context) {
  const {THREE,group,box,beam,obstacle,mats,data}=context,spec=data.garageFitout;
  iconGarageCabinet(context,spec.workbench);
+ iconGarageAstra(context,spec.parkingBays[0]);
  for(const bike of spec.bikes){
   group.add(iconBicycle(THREE,bike));
   const [cx,cy,z]=bike.center;

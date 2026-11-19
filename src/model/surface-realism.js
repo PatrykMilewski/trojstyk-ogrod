@@ -208,7 +208,7 @@ const surfaceTurfColors = {
 function surfaceProfileFor(object, material, key, index, hasVinylTexture) {
   const {name, parent, geometry} = object;
   if (!material.isMeshStandardMaterial || material.map || material.transparent) return null;
-  if (material.userData.surfaceProfile === 'plaster') return 'plaster';
+  if (material.userData.surfaceProfile === 'smoothPaint') return null;
   const color = material.color.getHexString();
   if (/^(parcel|context)-grass-/.test(name)) return 'grass';
   if (/^(parcel|context)-soil-/.test(name)) return 'soil';
@@ -373,13 +373,15 @@ const scannedSurfaces = {
 async function loadSurfaceScans(THREE, scans, anisotropy) {
   const textures = new Map(), loader = new THREE.TextureLoader();
   await Promise.all(Object.entries(scans).map(async ([type, images]) => {
-    const [map, bumpMap] = await Promise.all(images.map(url => loader.loadAsync(url)));
-    for (const texture of [map, bumpMap]) {
+    const loaded = await Promise.all(images.map(url => loader.loadAsync(url)));
+    const [map, bumpMap] = loaded;
+    for (const texture of loaded) {
       texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
       texture.anisotropy = anisotropy;
     }
     map.colorSpace = THREE.SRGBColorSpace;
-    textures.set(type, {map, bumpMap});
+    if (type === 'kitchenWorktopOak') map.wrapT = THREE.MirroredRepeatWrapping;
+    textures.set(type, bumpMap ? {map, bumpMap} : {map});
   }));
   return textures;
 }
@@ -390,10 +392,19 @@ export async function applyRealisticSurfaces({THREE, scene, mats, renderer, scan
   const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   const textures = await loadSurfaceScans(THREE, scans, anisotropy);
   const hasVinylTexture = textures.has('virginOakVinyl');
+  const worktopScan = textures.get('kitchenWorktopOak')?.map;
   scene.traverse(object => {
     if (!object.isMesh || !object.geometry?.getAttribute('position')) return;
     if (object.isInstancedMesh && object.name.endsWith('-trunks') && textures.has('bark')) {
       applyBarkScan(object.material, textures.get('bark'));
+      return;
+    }
+    if (object.material.userData?.surfaceProfile === 'kitchenWorktopOak') {
+      if (worktopScan && object.material.map !== worktopScan) {
+        object.material.map = worktopScan;
+        object.material.color.setHex(0xffffff);
+        object.material.needsUpdate = true;
+      }
       return;
     }
     const originals = Array.isArray(object.material) ? object.material : [object.material];
@@ -426,5 +437,5 @@ export async function applyRealisticSurfaces({THREE, scene, mats, renderer, scan
     object.material = replacements.length > 1 ? replacements : replacements[0];
     if (object.name === 'boundary-fence-boards') surfaceTintFence(THREE, object);
   });
-  return {textureCount: textures.size * 2, materialCount: materials.size};
+  return {textureCount: Array.from(textures.values()).reduce((sum, maps) => sum + Object.keys(maps).length, 0), materialCount: materials.size};
 }

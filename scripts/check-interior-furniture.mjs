@@ -407,44 +407,48 @@ test('each entry wardrobe door has an accessible handle and space to open beside
   }
 });
 
-test('under the half-landing the Curv has tank lift room and a level approach beside the vented AV cupboard', () => {
+test('flush push front conceals the Qrevo Curv 2 Pro and AV bay, leaves only the level exit, and opens for tank service', () => {
   const part = name => bounds(interior.group.getObjectByName(name));
   const shell = part('landing-service-curv-dock-shell').union(part('landing-service-wash-tray'));
   const robot = part('landing-service-robot-bumper').union(part('landing-service-robot-base')).union(part('landing-service-robot-lid'));
-  const av = part('landing-av-apple-tv-4k'), shelf = part('landing-service-av-shelf');
-  const door = part('landing-service-av-removable-front'), cap = part('landing-service-av-cap');
-  const backing = part('landing-service-back');
-  const size = box => box.getSize(new THREE.Vector3()).toArray();
-  size(shell).forEach((length, i) => close(length, .45, 'Dock axis ' + i));
-  size(robot).forEach((length, i) => close(length, [.352,.35,.0798][i], 'Robot axis ' + i));
-  size(av).forEach((length, i) => close(length, [.093,.093,.031][i], 'Apple TV axis ' + i));
-  close(av.min.z,shelf.max.z,'Apple TV rests on shelf');
-  assert(door.max.x<av.min.x && av.max.z<cap.min.z && av.min.y>door.min.y && av.max.y<door.max.y);
-  close(cap.max.z,backing.max.z,'Common joinery height');
-  close(backing.max.z,.68,'Backing stays below the stair drawing');
-  const opening = [part('landing-service-cheek-dry').max.y,part('landing-service-cheek-rear').min.y];
-  assert(opening[1]-opening[0] > .80 && shelf.max.y < opening[0]);
-  close(shell.max.x,part('landing-service-back').min.x,'Dock against backing');
-  const headroom = part('stair-landing').min.z;
-  close(headroom,1.578,'Landing underside');
-  interior.group.updateMatrixWorld(true);
-  function hits(from,dir,length) {
-    const start = new THREE.Vector3(...from).applyMatrix4(interior.group.matrixWorld);
-    const direction = new THREE.Vector3(...dir).transformDirection(interior.group.matrixWorld);
-    return new THREE.Raycaster(start,direction,.001,length).intersectObjects(interior.group.children,true);
+  const av = part('landing-av-apple-tv-4k'), shelf = part('landing-service-av-shelf'), cap = part('landing-service-cap');
+  for(const [box,dims] of [[shell,[.45,.45,.45]],[robot,[.352,.35,.0798]],[av,[.093,.093,.031]]])
+    box.getSize(new THREE.Vector3()).toArray().forEach((v,i)=>close(v,dims[i],'Appliance envelope'));
+  close(av.min.z,shelf.max.z,'TV on dry shelf');
+  assert(shelf.min.y>shell.max.y && cap.min.z-shell.max.z>.45,'Unobstructed height above the tanks');
+  const front=cap.min.x,mid=shell.getCenter(new THREE.Vector3()).y;
+  interior.group.parent.updateMatrixWorld(true);
+  const {group,serviceBay}=interior,door=group.getObjectByName('landing-service-flush-front');
+  assert.equal(door.material,group.getObjectByName('landing-service-cheek-left').material);
+  function rays(from,dir,length){
+    group.updateWorldMatrix(true,true);
+    const point=new THREE.Vector3(...from).applyMatrix4(group.matrixWorld);
+    const vector=new THREE.Vector3(...dir).transformDirection(group.matrixWorld);
+    return new THREE.Raycaster(point,vector,.00001,length).intersectObjects(group.children,true);
   }
-  const across = y => hits([door.min.x-.05,y,.506],[1,0,0],.07);
-  assert.equal(across((av.min.y+av.max.y)/2)[0]?.object.name,'landing-service-av-removable-front','Door hides the device');
-  for (let i=0;i<7;i++) {
-    const vent = hits([door.min.x-.05,door.min.y+.024+i*.013,.55],[1,0,0],.085);
-    assert.equal(vent.length,0,'Routed vents pass through the front');
+  const through=(y,z)=>rays([front-.005,y,z],[1,0,0],.028);
+  for(const y of [mid-.199,mid,mid+.199])for(const z of [.010,.112])assert.equal(through(y,z).length,0,'Robot can leave front first');
+  for(const [dy,z] of [[-.203,.05],[.203,.05],[0,.117],[0,.44],[.29,.51]])assert.equal(through(mid+dy,z)[0]?.object,door);
+  const fromLocal=p=>new THREE.Vector3(...p).applyMatrix4(group.matrixWorld);
+  const camera=new THREE.PerspectiveCamera(52,1,.02,10);camera.up.set(0,0,1);
+  function aim(eye,target){
+    camera.position.copy(fromLocal(eye));camera.lookAt(fromLocal(target));camera.updateMatrixWorld(true);
+    return serviceBay.toggleAt(new THREE.Vector2(0,0),camera);
   }
-  for (let i=0;i<2;i++)close(part('landing-service-av-magnetic-catch-'+i).min.x,door.max.x,'Catch meets removable front');
-  for(const x of [shell.min.x+.01,shell.max.x-.03])for(const y of [shell.min.y+.01,shell.max.y-.01])
-    assert.equal(hits([x,y,shell.max.z+.001],[0,0,1],headroom-shell.max.z-.003).length,0,'Lift tanks straight up');
-  for(const y of [opening[0]+.005,(opening[0]+opening[1])/2,opening[1]-.005])
-    for(const z of [.008,.08,.40,.89])
-      assert.equal(hits([shell.min.x-.005,y,z],[-1,0,0],1.30).length,0,'Clear approach to living room');
+  const barrier=interior.navigation.obstacles.find(o=>o.id==='landing-service-push-door');
+  const before=structuredClone(barrier.ring);
+  assert(!aim([front+.60,mid,.48],[front,mid,.48]),'Opaque back prevents clicking through');
+  assert(!aim([front-.18,mid,1.48],[front,mid,.48]),'Door does not swing through the viewer');
+  assert(aim([front-1.3,mid,1.35],[front,mid,.48]) && serviceBay.isOpen,'Standing viewer can open the real mesh');
+  assert.notDeepEqual(barrier.ring,before);
+  for(const z of [.15,.506,.89])assert.equal(through(mid,z).length,0,'Open front clears the service opening');
+  for(const x of [shell.min.x+.02,shell.max.x-.02])for(const y of [shell.min.y+.02,shell.max.y-.02])
+    assert.equal(rays([x,y,shell.max.z+.002],[0,0,1],.458).length,0,'Tanks lift vertically');
+  for(const y of [mid-.175,mid,mid+.175])for(const z of [.017,.086])
+    assert.equal(rays([shell.min.x-.006,y,z],[-1,0,0],1.2).length,0,'Clear robot approach to the living room');
+  const hinge=door.parent.position;
+  assert(aim([front-1.15,mid+.5,1.17],[hinge.x-.34,hinge.y+.012,.50]) && !serviceBay.isOpen,'Tap the open leaf to close');
+  assert.deepEqual(barrier.ring,before);
 });
 
 test('opaque office backing seals the gap above the cabinets up to the flight, landing and rear wall', () => {
@@ -1200,7 +1204,7 @@ test('the 70 cm single bowl is let into the worktop below the full-width mosaic'
   assert(bounds(get('loft-fixture-'+socket+'-frame')).min.y>=tile.max.y,'Socket mounts to the finished face');
 });
 
-test('matched laminate waterfalls flank the salon-side Palet tiles on the 435 × 105 cm island', () => {
+test('the matte oak scan follows the 435 × 105 cm island, its folded ends and the back counter', async () => {
   const get=id=>interior.group.getObjectByName(id);
   const skin=get('kitchen-island-palet-cladding'),top=get('kitchen-island-top'),hob=get('hob-glass');
   const texture=skin.material.map,{position,normal,uv}=skin.geometry.attributes;
@@ -1226,9 +1230,26 @@ test('matched laminate waterfalls flank the salon-side Palet tiles on the 435 ×
   assert.equal(top.material,get('kitchen-back-top').material);
   assert.notEqual(top.material,skin.material);
   close(bounds(hob).min.z,slab.max.z,'Hob sits on worktop');
-  assert.match(top.material.name,/HPL/);
-  const grain=top.material.map.image.data;
-  assert(grain[0]>80 && grain[0]<125 && grain[0]>grain[2],'Medium-dark warm laminate');
+  const {applyRealisticSurfaces}=await load(await readFile(new URL('../src/model/surface-realism.js',import.meta.url),'utf8'));
+  const bytes=await readFile(new URL('../src/model/surface-scans/kitchen_worktop_oak.webp',import.meta.url));
+  assert.equal(bytes.toString('ascii',8,12),'WEBP');
+  const source='data:image/webp;base64,'+bytes.toString('base64'),scan=new THREE.Texture();
+  class Loader{async loadAsync(url){assert.equal(url,source);return scan;}}
+  const group=new THREE.Group();
+  const material=top.material.clone(),surfaces=['kitchen-island-top','kitchen-island-waterfall-left','kitchen-island-waterfall-right','kitchen-back-top'];
+  for(const name of surfaces){
+    const copy=get(name).clone();copy.material=material;group.add(copy);
+  }
+  await applyRealisticSurfaces({THREE:{...THREE,TextureLoader:Loader},scene:group,mats:{},
+    renderer:{capabilities:{getMaxAnisotropy:()=>4}},scans:{kitchenWorktopOak:[source]}});
+  assert.equal(material.map,scan);assert.equal(scan.colorSpace,THREE.SRGBColorSpace);
+  assert.equal(material.color.getHex(),0xffffff);assert.equal(material.bumpMap,null);
+  assert(material.roughness>.8 && material.specularIntensity<=.15 && material.metalness===0);
+  const {position:topPoints,normal:topNormals,uv:topUv}=top.geometry.attributes;
+  for(let i=0;i<topPoints.count;i++)if(topNormals.getZ(i)>.99){
+    close(topUv.getX(i),topPoints.getX(i)/1.88,'Oak grain runs along the worktop');
+    close(topUv.getY(i),topPoints.getY(i)/1.08,'Scan retains the physical aspect ratio');
+  }
   close(surface.max.z,slab.min.z,'Tile meets the underside of the slab');
   close(surface.min.y,surface.max.y,'Palet only on the long salon plane');
   close(slab.max.y-surface.max.y,.018,'Worktop overhang at salon face');

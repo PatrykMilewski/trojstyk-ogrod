@@ -185,7 +185,7 @@ test('indigo on the stair flank follows the lower treads while the hall and offi
   const model=interior.group.clone();
   await applyRealisticSurfaces({THREE,scene:model,mats:{},renderer:{capabilities:{getMaxAnisotropy:()=>1}}});
   model.updateMatrixWorld(true);
-  const frontPaint=model.getObjectByName('hall-terracotta-ceiling').material;
+  const frontPaint=model.getObjectByName('hall-painted-ceiling').material;
   const faceAt=(origin,direction)=>{
     const ray=new THREE.Raycaster(new THREE.Vector3(...origin).applyMatrix4(model.matrix),
       new THREE.Vector3(...direction).transformDirection(model.matrix),0,.4);
@@ -195,7 +195,7 @@ test('indigo on the stair flank follows the lower treads while the hall and offi
   };
   const officePaint=faceAt([10.85,9.5,1.40],[0,-1,0]);
   const plaster=model.getObjectByName('office-backing-flight-0').material[0];
-  assert.equal(plaster.map?.name,'plaster-albedo');
+  assert.equal(plaster.map,null);assert.equal(plaster.bumpMap,null);
   const indigo=faceAt([8.78,9.36,1.4],[1,0,0]);
   assert.equal(indigo.map,null);
   assert.equal(indigo.bumpMap,null);
@@ -229,7 +229,7 @@ test('indigo on the stair flank follows the lower treads while the hall and offi
     for(const wall of [section,neighbour])
       assert.equal(hits(wall,[sx+width+.04,seam-.01,1],[0,1,0],.02).length,0,'No buried faces at '+seam);
   }
-  assert.equal(officePaint.map?.name,'plaster-albedo');assert.notEqual(officePaint,plaster);
+  assert.equal(officePaint.map,null);assert.equal(officePaint.bumpMap,null);assert.notEqual(officePaint,plaster);
   assert.equal(faceAt([9.95,11.7,2.1],[-1,0,0]),officePaint,'Office side of the stair partition');
   assert.equal(flank(11.300,1.535),indigo,'Exposed sliver before the landing riser');
   assert.equal(flank(11.312,1.535),plaster,'Past the landing riser');
@@ -362,9 +362,9 @@ test('folded indigo steel follows all 18 rises, with thin treads and risers clos
   assert(!interior.group.children.some(mesh=>mesh.name.startsWith('stair-stringer-')));
 });
 
-test('the kitchen and hall share terracotta paint on the real kitchen soffit', () => {
-  const ceiling=object('kitchen-terracotta-ceiling');
-  assert.equal(ceiling.material,object('hall-terracotta-ceiling').material);
+test('the kitchen and hall share eucalyptus paint on the real kitchen soffit', () => {
+  const ceiling=object('kitchen-painted-ceiling');
+  assert.equal(ceiling.material,object('hall-painted-ceiling').material);
   for(const [x,y] of [[.55,8.70],[4,9.65],[6.48,10.25],[6.73,9.24],[7.4,9.8],[7.91,10.27]]){
     const from=[x,y,2.72],up=[0,0,1];
     assert(hits(ceiling,from,up,.11).length);
@@ -374,8 +374,8 @@ test('the kitchen and hall share terracotta paint on the real kitchen soffit', (
     assert.equal(hits(ceiling,[x,y,2.72],[0,0,1],.11).length,0);
 });
 
-test('coral faces and ceiling stay within the ground hall and both concealed doors swing clear', () => {
-  const paint=object('hall-terracotta-ceiling').material;
+test('eucalyptus faces and ceiling stay within the ground hall and both concealed doors swing clear', () => {
+  const paint=object('hall-painted-ceiling').material;
   for(const wall of ['guest-inner','guest-office','hall-front','garage-hall']){
     const mesh=object(wall);
     assert.deepEqual(mesh.geometry.groups.map(g=>g.materialIndex),wall==='hall-front'?[0,1]:[0,1,2,3],'One draw group per paint color');
@@ -388,7 +388,7 @@ test('coral faces and ceiling stay within the ground hall and both concealed doo
     assert.equal(requestedFace(...probe),paint);
   for(const probe of [['guest-inner',11.46,8.21,-1,0],['guest-inner',11.10,6.9,1,0],['guest-office',12.9,9.11,0,1],['hall-front',8.88,7.72,0,1]])
     assert.notEqual(requestedFace(...probe),paint);
-  const ceiling=object('hall-terracotta-ceiling');
+  const ceiling=object('hall-painted-ceiling');
   for(const [x,y,expected] of [[9.2,8.55,true],[10.5,9.25,true],[7.3,8.22,true],[10.2,7.7,false],[11.45,8.7,false],[10.3,9.6,false],[5.8,8.9,false],[8.2,9.45,false]])
     assert.equal(hits(ceiling,[x,y,2.70],[0,0,1],.12).length>0,expected,'Hall ceiling at '+[x,y]);
   for(const [id,wall,x,y,dx,dy] of [['office','guest-office',10.34,9.13,0,1],['playroom','guest-inner',11.04,8.84,1,0]]){
@@ -429,8 +429,8 @@ test('all thirteen panel doors use their plan handing, room finishes and usable 
   ];
   const items=data.walls.flatMap(wall=>(wall.doorLeaves??[]).map((spec,i)=>({wall,spec,opening:wall.doors[i]})));
   assert.deepEqual(items.map(i=>i.spec.id).sort(),expected.map(([id])=>id).sort());
-  const paints={wall:0xe9e3d7,coral:0xc77d59,garage:0x505b57,oat:0xddd4c5,linen:0xc8c2b5,
-    vestibule:0xeadbc7,playroom:0xb7ccaf,office:0xaec4cd,
+  const paints={wall:0xe9e3d7,coral:0x9ea995,garage:0x505b57,oat:0xddd4c5,linen:0xc8c2b5,
+    vestibule:0xd7dbcb,playroom:0xb7ccaf,office:0xaec4cd,
     familyBath:0xc8bca9,privateBath:0xb59e87,groundBath:0x81462f};
   for(const [id,hand,openX,openY] of expected){
     const {wall,spec,opening:[lo,hi]}=items.find(item=>item.spec.id===id),base=wall.level?data.levels.upper:0;
@@ -564,7 +564,7 @@ test('play mat rests on the floor and the train track rests on the mat', () => {
   close(bounds(object('play-train-beech-track')).min.z, bounds(object('play-mat-woven-face')).max.z, 'track base');
 });
 
-test('surface projection and static batching preserve plaster continuity and independent door movement', async () => {
+test('surface finishing and static batching preserve smooth walls, flush painted leaves and independent door movement', async () => {
   const {applyRealisticSurfaces}=await load(await readFile(new URL('../src/model/surface-realism.js',import.meta.url),'utf8'));
   const {batchStaticInteriorDetails}=await load(await readFile(new URL('../src/model/static-detail-batches.js',import.meta.url),'utf8'));
   const scene=new THREE.Scene(),model=addIconInterior({THREE,scene,house,data}),get=name=>model.group.getObjectByName(name);
@@ -573,18 +573,24 @@ test('surface projection and static batching preserve plaster continuity and ind
   await applyRealisticSurfaces({THREE,scene,mats:{},renderer:{capabilities:{getMaxAnisotropy:()=>1}}});
   batchStaticInteriorDetails(THREE,model.group);
   for(const [i,name] of bespoke.entries())assert.equal(get(name).material,authored[i],name+' keeps its authored finish');
-  const plaster=get('guest-office').material[0],coral=get('guest-office').material[1];
-  assert(plaster.map&&plaster.bumpMap,'Wall has projected plaster');
-  for(const [id,axis] of [['office','x'],['playroom','y']]){
-    const leaf=get('hall-flush-'+id+'-leaf'),door=leaf.parent,side=door.userData.side;
-    assert.equal(leaf.material[side===1?2:3],coral);assert.equal(leaf.material[side===1?3:2],get(id==='office'?'guest-office':'guest-inner').material[2]);
-    const {position,normal,uv}=leaf.geometry.attributes;
-    for(let i=0;i<position.count;i++){
-      if(Math.abs(normal.getY(i))<.99)continue;
-      const point=new THREE.Vector3().fromBufferAttribute(position,i).applyMatrix4(leaf.matrix).applyMatrix4(door.matrix);
-      close(uv.getX(i),point[axis]/2.5,id+' aligns with plaster along the wall');
-      close(uv.getY(i),point.z/2.5,id+' aligns with plaster height');
+  const hall=get('hall-painted-ceiling').material;
+  const paints=new Set();
+  model.group.traverse(mesh=>{
+    if(!mesh.isMesh)return;
+    for(const mat of Array.isArray(mesh.material)?mesh.material:[mesh.material]){
+      assert.notEqual(mat.map?.name,'plaster-albedo',mesh.name);
+      assert.notEqual(mat.bumpMap?.name,'plaster-relief',mesh.name);
+      if(mat.userData.surfaceProfile==='smoothPaint')paints.add(mat);
     }
+  });
+  assert(paints.size>=10);
+  for(const paint of paints){
+    assert.equal(paint.map,null);assert.equal(paint.bumpMap,null);assert.equal(paint.normalMap,null);
+  }
+  for(const [id,wall] of [['office','guest-office'],['playroom','guest-inner']]){
+    const leaf=get('hall-flush-'+id+'-leaf'),side=leaf.parent.userData.side;
+    assert.equal(leaf.material[side===1?2:3],hall);
+    assert.equal(leaf.material[side===1?3:2],get(wall).material[2]);
   }
   const doors=model.group.children.filter(o=>o.userData.kind==='walk-door');
   assert.equal(doors.length,18);
@@ -639,7 +645,7 @@ test('pantry and garage paint covers only the interior faces and ceilings of eac
   }
 });
 
-test('rendered service-room paints retain plaster rather than facade cladding', async () => {
+test('service-room walls and ceilings retain their smooth paint after surface finishing', async () => {
   const {applyRealisticSurfaces}=await load(await readFile(new URL('../src/model/surface-realism.js',import.meta.url),'utf8'));
   const group=new THREE.Group();group.name=interior.group.name;
   for(const id of ['garage-back','garage-painted-ceiling','pantry-painted-ceiling'])group.add(object(id).clone());
@@ -647,15 +653,15 @@ test('rendered service-room paints retain plaster rather than facade cladding', 
   await applyRealisticSurfaces({THREE,scene:group,mats:{},renderer});
   const [,garage,pantry]=group.children[0].material;
   for(const paint of [garage,pantry,...group.children.slice(1).map(mesh=>mesh.material)]){
-    assert.equal(paint.map.name,'plaster-albedo');
-    assert.equal(paint.bumpMap.name,'plaster-relief');
+    assert.equal(paint.map,null);
+    assert.equal(paint.bumpMap,null);
   }
   assert.equal(pantry,group.children[2].material);
   assert.notEqual(garage.color.getHex(),pantry.color.getHex());
 });
 
-test('linen, sage and mist follow each front room wall, its inward reveals and the actual ceiling edges',()=>{
-  const paints={vestibule:0xeadbc7,playroom:0xb7ccaf,office:0xaec4cd};
+test('lichen, sage and mist follow each front room wall, its inward reveals and the actual ceiling edges',()=>{
+  const paints={vestibule:0xd7dbcb,playroom:0xb7ccaf,office:0xaec4cd};
   const probes=[
     ['vestibule','garage-hall',[6.68,7.3,1],[-1,0,0]],['vestibule','entry-garage-jamb-return',[7,4.65,1],[-1,0,0]],
     ['vestibule','facade-front-wing',[8.1,4.92,1],[0,-1,0]],['vestibule','guest-inner',[11,5,1],[1,0,0]],

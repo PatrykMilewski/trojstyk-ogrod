@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-19.12",
+  "modelVersion": "2026-11-19.13",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -59,7 +59,8 @@
     "Apple TV 4K · wymiary": "https://support.apple.com/pl-pl/111839",
     "De’Longhi Magnifica Evo ECAM290.21.B": "https://www.delonghi.com/pl-pl/p/magnifica-evo-automatyczny-ekspres-magnifica-evo-ecam290.21.b/ECAM290.21.B.html",
     "PVGIS 5.3 · połać południowo-zachodnia": "https://re.jrc.ec.europa.eu/api/v5_3/PVcalc?lat=54.4321&lon=18.4407&peakpower=1&loss=14&angle=44.86&aspect=43.89&raddatabase=PVGIS-SARAH3&outputformat=json",
-    "PVGIS 5.3 · połać południowo-wschodnia": "https://re.jrc.ec.europa.eu/api/v5_3/PVcalc?lat=54.4321&lon=18.4407&peakpower=1&loss=14&angle=44.86&aspect=-46.11&raddatabase=PVGIS-SARAH3&outputformat=json"
+    "PVGIS 5.3 · połać południowo-wschodnia": "https://re.jrc.ec.europa.eu/api/v5_3/PVcalc?lat=54.4321&lon=18.4407&peakpower=1&loss=14&angle=44.86&aspect=-46.11&raddatabase=PVGIS-SARAH3&outputformat=json",
+    "Opel Astra K hatchback · wymiary nadwozia MY2018": "https://www.vauxhall.co.uk/content/dam/vauxhall/Home/PDFs/Cars/astra/price_guides/GML_10935891_Astra_Spec_PG_1_April_2018-1522319331.pdf"
   },
   "houses": [
     {
@@ -1744,10 +1745,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "8b6d221b5cb50afe91603930a89f8a988566456df566fe9e2feda2edc8f2ca22",
-    "proceduralCodeSha256": "f28e65f81bfd542148d9fd4925bc2e84fb2d7a8a449e34f84393ac2a653c99e2",
+    "proceduralCodeSha256": "69e6fdebc6c17d20de8f41e46f082eec1cc7e31d6e2035b7fa5bdf9615ac44ac",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "f6f27de0208ddacc1880061ce21577c8aa17d9cf9595e32efb76d2759fffda44",
-    "runtimeSha256": "932da2b51d1dfbc63cf993ef55db28825b3153d870c80f58ff6a3a9995e959d5"
+    "runtimeSha256": "8db9ac10cde8c9ca554a2b22b937f1bfa422f4ab3835b5c8a807b0c7dd3de1bd"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1789,7 +1790,8 @@
     "Dom /193: piekarnik po prawej stronie płyty od strony zlewu, dwie szuflady pod pochłaniaczem, czarny zlew ze srebrną baterią oraz indygo między biegami schodów.",
     "Dom /193: rozsunięte zasłony przy oknie kuchni, jasne drewno więźby, stół 135 × 78 cm i gładka farba indygo między biegami schodów.",
     "Dom /193: kolory wiatrołapu, bawialni i gabinetu, otwierane okno biura, blaty z laminatu, rośliny, wyposażenie techniczne i południowo-zachodnia instalacja PV 20 × 500 Wp.",
-    "Dom /193: czarna pompa Thermatec przy garażu. Instalacja PV 10 kWp na dwóch połaciach: 12 modułów na SW i 8 na SE (6 + 4 kWp). PVGIS-SARAH3, 2005–2023, 14% strat: ok. 9737 kWh/rok przed lokalnym zacienieniem, poprzednio ok. 9745 kWh/rok. Pełnowysokie otwierane skrzydło gabinetu, zlew 70 cm, ekspres De’Longhi oraz wnęka pod spocznikiem na Roborock Qrevo Curv 2 Pro i Apple TV."
+    "Dom /193: czarna pompa Thermatec przy garażu. Instalacja PV 10 kWp na dwóch połaciach: 12 modułów na SW i 8 na SE (6 + 4 kWp). PVGIS-SARAH3, 2005–2023, 14% strat: ok. 9737 kWh/rok przed lokalnym zacienieniem, poprzednio ok. 9745 kWh/rok. Pełnowysokie otwierane skrzydło gabinetu, zlew 70 cm, ekspres De’Longhi oraz wnęka pod spocznikiem na Roborock Qrevo Curv 2 Pro i Apple TV.",
+    "Dom /193: gładkie ściany, jasny wiatrołap, eukaliptusowy hol i sufit kuchni, blaty dębowe na podstawie próbki. Biała Astra K hatchback w garażu, zamykana wnęka robota. Wokół elewacji czarny cokół gresowy 30 cm, opaska 60 cm z płukanego otoczaka bazaltowego 16–30 mm, dziewięć kinkietów z jednym obwodem nocnym. Przyciski dopasowują się do widocznego obszaru przeglądarki."
   ],
   "contextParcels": [
     {

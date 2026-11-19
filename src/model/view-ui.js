@@ -33,7 +33,7 @@ function bindViewMenu({ menu, toggle, tools, toolsToggle, solar, requestDraw, ca
   toggle.addEventListener('click', () => {
     const open = menu.hidden; closeTools(); menu.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open)); positionPanels();
-    if (open) menu.querySelector('button').focus();
+    if (open) menu.querySelector('button').focus({ preventScroll: true });
   });
   toolsToggle.addEventListener('click', () => {
     const open = tools.hidden; closeMenu(); tools.hidden = !open;
@@ -56,19 +56,29 @@ function bindViewMenu({ menu, toggle, tools, toolsToggle, solar, requestDraw, ca
 }
 
 function positionViewPanels({ tools, menu, clock, info }) {
+  const viewport = window.visualViewport;
+  const left = viewport?.offsetLeft ?? 0, offsetTop = viewport?.offsetTop ?? 0;
+  const right = viewport ? Math.max(0, innerWidth - left - viewport.width) : 0;
+  const visibleBottom = viewport ? offsetTop + viewport.height : innerHeight;
+  const style = document.documentElement.style;
+  style.setProperty('--visible-left', left + 'px');
+  style.setProperty('--visible-right', right + 'px');
+  style.setProperty('--visible-top', offsetTop + 'px');
+  style.setProperty('--visible-bottom', Math.max(0, innerHeight - visibleBottom) + 'px');
   const top = document.querySelector('.panel').getBoundingClientRect().bottom + 10;
   const walk = document.getElementById('walk-controls');
   const halfClock = (clock.offsetWidth || 230) / 2;
-  const overlapsClock = rect => rect.left < innerWidth / 2 + halfClock && rect.right > innerWidth / 2 - halfClock;
+  const center = left + (viewport?.width ?? innerWidth) / 2;
+  const overlapsClock = rect => rect.left < center + halfClock && rect.right > center - halfClock;
   const walkHeight = walk && !walk.hidden ? walk.getBoundingClientRect().height + 32 : 0;
   const infoRect = info.getBoundingClientRect();
   const infoHeight = overlapsClock(infoRect) && infoRect.height ? infoRect.height + 26 : 0;
   const bottom = Math.max(20, walkHeight, infoHeight);
-  clock.style.bottom = bottom + 'px';
+  clock.style.bottom = 'calc(var(--visible-bottom, 0px) + ' + bottom + 'px)';
   for (const panel of [tools, menu]) {
     const reserved = !clock.hidden && overlapsClock(panel.getBoundingClientRect()) ? bottom + clock.offsetHeight + 12 : 16;
     panel.style.top = top + 'px';
-    panel.style.maxHeight = Math.max(80, innerHeight - top - reserved) + 'px';
+    panel.style.maxHeight = Math.max(0, visibleBottom - top - reserved) + 'px';
   }
 }
 
@@ -98,6 +108,8 @@ export function setupViewUI({ solar, requestDraw, canvas }) {
   const observer = new ResizeObserver(positionPanels);
   observer.observe(document.querySelector('.panel')); observer.observe(info); observer.observe(clock);
   const walkPanel = document.getElementById('walk-controls'); if (walkPanel) observer.observe(walkPanel);
+  globalThis.visualViewport?.addEventListener('resize', positionPanels);
+  globalThis.visualViewport?.addEventListener('scroll', positionPanels);
   info.addEventListener('toggle', positionPanels);
   return { syncClock, positionPanels, closeMenu };
 }
