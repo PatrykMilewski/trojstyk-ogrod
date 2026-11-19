@@ -123,13 +123,13 @@ test('mirrored lower flight has a right-hand guard and the upper flight protects
     const ends=[-halfLength,halfLength].map(v=>new THREE.Vector3(0,v,0).applyMatrix4(rail.matrix));
     assert(ends.some(end=>end.distanceTo(joint)<1e-5),'Handrail joins landing at '+name);
   }
-  const support=bounds(object('upper-void-rim'));
-  close(support.max.z,s.floorHeight,'Mezzanine rim supports the guard');
-  close(support.max.x,sx,'Rim ends at the mezzanine corner');
+  assert(!interior.group.getObjectByName('upper-void-rim'));
   for(const post of interior.group.children.filter(m=>m.name.startsWith('upper-void-edge-post-'))){
     const b=bounds(post);
-    assert(b.min.x>=support.min.x-.02&&b.max.x<=support.max.x+.02&&b.min.y>=support.min.y-.02&&b.max.y<=support.max.y+.02);
-    close(b.min.z,support.max.z,'Mezzanine post bears on rim');
+    close(b.min.z,s.floorHeight,'Post reaches structural floor');
+    for(const x of [b.min.x,b.max.x])for(const y of [b.min.y,b.max.y]){
+      assert(hits(object('upper-oak-finish'),[x,y,s.floorHeight+.05],[0,0,-1],.07).length,'Whole foot of post over slab');
+    }
   }
   const oldWing=['upper-stair-edge','upper-stair-rear','upper-stair-rim'];
   assert(!interior.group.children.some(mesh=>oldWing.some(prefix=>mesh.name.startsWith(prefix))));
@@ -321,7 +321,7 @@ test('coral faces and ceiling stay within the ground hall and both concealed doo
   const paint=object('hall-terracotta-ceiling').material;
   for(const wall of ['guest-inner','guest-office','hall-front','garage-hall']){
     const mesh=object(wall);
-    assert.deepEqual(mesh.geometry.groups.map(g=>g.materialIndex),[0,1],'One draw group per paint color');
+    assert.deepEqual(mesh.geometry.groups.map(g=>g.materialIndex),wall==='garage-hall'?[0,1,2]:[0,1],'One draw group per paint color');
   }
   const requestedFace=(name,x,y,dx,dy,z=1.4)=>{
     const hit=hits(object(name),[x,y,z],[dx,dy,0],.45)[0];assert(hit,name+' surface');
@@ -525,4 +525,43 @@ test('the house can omit the optional pantry cabinet and retain its walking door
   assert.equal(model.group.children.filter(o=>o.userData.kind==='walk-door').length,16);
   model.updateHallDoors(new THREE.Vector3(...model.localToWorld([1.5,8.52,1.7])));
   model.updateHallDoors(null);
+});
+
+
+test('pantry and garage paint covers only the interior faces and ceilings of each room', () => {
+  const probes=[
+    ['garage','facade-main-side',[1,4,1],[-1,0,0]],['garage','facade-garage',[.8,1,1],[0,-1,0]],
+    ['garage','garage-back',[3,6,1],[0,1,0]],['garage','facade-garage-side',[6,3,1],[1,0,0]],
+    ['garage','entry-garage-jamb-return',[6,4.46,1],[1,0,0]],['garage','garage-hall',[6,6.1,1],[1,0,0]],
+    ['pantry','garage-back',[3,7.1,1],[0,-1,0]],['pantry','kitchen-back',[3,8.1,1],[0,1,0]],
+    ['pantry','pantry-technical',[3.3,7.5,1],[1,0,0]],['pantry','facade-main-side',[1,7.5,1],[-1,0,0]],
+    ['neutral','garage-back',[4.2,7.1,1],[0,-1,0]],['neutral','kitchen-back',[3,9,1],[0,-1,0]],
+    ['neutral','facade-main-side',[-.4,7.5,1],[1,0,0]],
+  ];
+  for(const [room,id,origin,direction] of probes){
+    const mesh=object(id),hit=hits(mesh,origin,direction,.9)[0];
+    assert(hit,id);const mat=Array.isArray(mesh.material)?mesh.material[hit.face.materialIndex]:mesh.material;
+    assert.equal(mat.name.startsWith('Garage sage'),room==='garage',id);
+    assert.equal(mat.name.startsWith('Pantry pale straw'),room==='pantry',id);
+  }
+  for(const [name,points] of [['pantry',[[.52,6.81],[3.58,8.36]]],['garage',[[.52,.52],[6.38,6.5],[6.39,4.45]]]]){
+    const mesh=object(name+'-painted-ceiling');
+    for(const [x,y] of points)assert(hits(mesh,[x,y,2.73],[0,0,1],.1).length);
+    for(const [x,y] of [[4.2,7.3],[3,8.9],[7.2,5.6]])assert.equal(hits(mesh,[x,y,2.73],[0,0,1],.1).length,0);
+  }
+});
+
+test('rendered service-room paints retain plaster rather than facade cladding', async () => {
+  const {applyRealisticSurfaces}=await load(await readFile(new URL('../src/model/surface-realism.js',import.meta.url),'utf8'));
+  const group=new THREE.Group();group.name=interior.group.name;
+  for(const id of ['garage-back','garage-painted-ceiling','pantry-painted-ceiling'])group.add(object(id).clone());
+  const renderer={capabilities:{getMaxAnisotropy:()=>1}};
+  await applyRealisticSurfaces({THREE,scene:group,mats:{},renderer});
+  const [,garage,pantry]=group.children[0].material;
+  for(const paint of [garage,pantry,...group.children.slice(1).map(mesh=>mesh.material)]){
+    assert.equal(paint.map.name,'plaster-albedo');
+    assert.equal(paint.bumpMap.name,'plaster-relief');
+  }
+  assert.equal(pantry,group.children[2].material);
+  assert.notEqual(garage.color.getHex(),pantry.color.getHex());
 });

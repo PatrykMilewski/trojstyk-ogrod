@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-19.5",
+  "modelVersion": "2026-11-19.6",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -50,7 +50,9 @@
     "Poly Haven · white_oak_veneer": "https://polyhaven.com/a/white_oak_veneer",
     "Samsung BRR29703EWW/EF": "https://www.samsung.com/pl/refrigerators/built-in-one-door/brr6000b-built-in-1door-larder-with-smartthings-289l-white-brr29703eww-ef/",
     "Samsung BRZ22700EWW/EF": "https://www.samsung.com/pl/refrigerators/built-in-one-door/brr6000b-built-in-1door-freezer-with-smartthings-218l-white-brz22700eww-ef/",
-    "Beliani · MADOX 120/150 cm, ciemny orzech": "https://www.beliani.pl/stol-do-jadalni-ciemne-drewno-rozkladany-120-150-x-75-cm-madox.html"
+    "Beliani · MADOX 120/150 cm, ciemny orzech": "https://www.beliani.pl/stol-do-jadalni-ciemne-drewno-rozkladany-120-150-x-75-cm-madox.html",
+    "Palet · Zig Zag Half 173 / 334": "https://palet.shop/shop?color-1=173&color-2=334&design=zig-zag-half",
+    "IKEA · system BROR": "https://www.ikea.com/pl/pl/cat/system-bror-42245/"
   },
   "houses": [
     {
@@ -1738,7 +1740,7 @@
     "proceduralCodeSha256": "f28e65f81bfd542148d9fd4925bc2e84fb2d7a8a449e34f84393ac2a653c99e2",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "f6f27de0208ddacc1880061ce21577c8aa17d9cf9595e32efb76d2759fffda44",
-    "runtimeSha256": "baff5fa71cbaeaab06c26edfc01aa44c0f365f19ffa771eaa895273e1b38c60e"
+    "runtimeSha256": "83f2cbd21d537f1ee6ddc2239231475eac8398ce3d2dcb61c56f1907d8bf6fba"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1773,7 +1775,8 @@
     "Dom /193: balustrady schodów i otworu na piętrze, start Spaceru w salonie, winylowa jodełka i dodatki przy szafce RTV.",
     "Dom /193: przejście po schodach, siatka na otwartej części spocznika i balustrada antresoli. Gest dwóch palców reguluje pole widzenia podczas spaceru.",
     "Dom /193: zabudowa spiżarni z blatem i regałem oraz osobno otwierane lodówka i zamrażarka Samsung w kuchni.",
-    "Dom /193: skorygowany narożnik i biegi schodów, szklana balustrada w indygo, złożony MADOX z sześcioma krzesłami, gniazdo wyspy, wyrównane fronty i zabudowa spiżarni z czytelnymi etykietami."
+    "Dom /193: skorygowany narożnik i biegi schodów, szklana balustrada w indygo, złożony MADOX z sześcioma krzesłami, gniazdo wyspy, wyrównane fronty i zabudowa spiżarni z czytelnymi etykietami.",
+    "Dom /193: dwa słupki 60 cm, pełny blat i piekarnik pod płytą na wyspie, okładzina Palet Zig Zag Half, gniazdo przy oknie, balustrada bez listwy, szafa w czarno-białym fornirze, spiżarnia BROR i kolory pomieszczeń gospodarczych."
   ],
   "contextParcels": [
     {
@@ -3612,7 +3615,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "bfd221f945fb7f6ceb99892afe3f5eeab288a390749d38b9b9fb1e4347391414",
+    "dataSha256": "a6a2f1d4c2363d0b0780d843068a3d4e495aa94570b24694bef4a71f86efca11",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,

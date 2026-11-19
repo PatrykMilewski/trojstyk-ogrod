@@ -125,8 +125,9 @@ test('source wall storage contacts are preserved and cabinet handles face into r
   }
   for (const item of data.furniture.filter(item => ['cabinet', 'counter'].includes(item.type))) {
     const body = partCenter(item.id, 'body');
+    const direction=item.id==='kitchen-island'?{facing:'-y'}:item;
     for (const handle of parts(item.id).filter(object => object.name.includes('-handle-'))) {
-      assert(facingProjection(item, bounds(handle).getCenter(new THREE.Vector3())) > facingProjection(item, body), item.id + ' handles face outward');
+      assert(facingProjection(direction, bounds(handle).getCenter(new THREE.Vector3())) > facingProjection(direction, body), item.id + ' handles face outward');
     }
   }
 });
@@ -223,7 +224,7 @@ test('Room2 has a solid collision wall beside the void; only the hall has a rail
   const actual = bounds(interior.group.getObjectByName(wall.id));
   close(actual.min.y, 10.18, 'Room2 wall inner face'); close(actual.max.y, 10.32, 'Room2 wall outer face');
   const guard = bounds(interior.group.getObjectByName('upper-void-edge-top'));
-  close(guard.min.x, 4.91, 'Rail starts at hall'); close(guard.max.x, data.stairs.box[0], 'Rail ends at stair');
+  close(guard.min.x, 4.91, 'Rail starts at hall'); close(guard.max.x, data.rails.find(r=>r.id==='upper-void-edge').b[0], 'Rail ends at inset corner');
   const collision = createWalkCollision(interior.navigation.obstacles.filter(item => item.id.startsWith('u-room2-void-')));
   assert(collision.pathBlocked(interior.localToWorld([3, 9.9]).slice(0, 2), interior.localToWorld([3, 10.6]).slice(0, 2)));
   const rear = data.walls.find(item => item.id === 'u-suite-front');
@@ -268,6 +269,39 @@ test('mirrored vestibule dimensions and office storage follow the supplied groun
   }
   close(y,12.23,'Run reaches actual back wall');
   close(y-office.box[1],2.81,'Built cabinet length');
+});
+
+test('five under-stair doors and their fitted fascias share a continuous figured veneer', () => {
+  const cabinets = data.furniture.filter(item => item.id.startsWith('office-under-stair-'));
+  const leaves = cabinets.flatMap(item => parts(item.id).filter(mesh => mesh.name.includes('-door-')));
+  const fascias = cabinets.map(item => interior.group.getObjectByName(item.id + '-filler'));
+  assert.equal(leaves.length, 5);
+  const veneer = leaves[0].material;
+  assert.match(veneer.userData.source, /sekcja 05/);
+  assert.equal(veneer.map.wrapS, THREE.MirroredRepeatWrapping);
+  const { data: pixels, width, height } = veneer.map.image;
+  assert.ok(width >= 128 && height >= 256);
+  const tones = new Set();
+  for (let i = 0; i < pixels.length; i += 4) tones.add(pixels[i]);
+  assert.ok(Math.min(...tones) < 50 && Math.max(...tones) > 215 && tones.size >= 15);
+  for (const face of [...leaves, ...fascias]) {
+    assert.equal(face.material, veneer);
+    const { position, normal, uv } = face.geometry.attributes;
+    let visibleVertices = 0;
+    for (let i = 0; i < position.count; i++) {
+      if (normal.getX(i) < .99) continue;
+      close(uv.getX(i) * 1.78, face.position.y + position.getY(i), 'Grain continues across leaves');
+      close(uv.getY(i) * 2.84, face.position.z + position.getZ(i), 'Grain continues up fitted fascia');
+      visibleVertices++;
+    }
+    assert.ok(visibleVertices >= 3, face.name + ' presents veneer toward office');
+  }
+  for (const item of cabinets) {
+    const leaf = parts(item.id).find(mesh => mesh.name.includes('-door-'));
+    const handle = parts(item.id).find(mesh => mesh.name.includes('-handle-'));
+    close(bounds(leaf).max.x, bounds(interior.group.getObjectByName(item.id + '-filler')).max.x, 'Flush scribed front');
+    close(bounds(handle).max.x, item.box[2], 'Pull stays within cabinet footprint');
+  }
 });
 
 test('each entry wardrobe door has an accessible handle and space to open beside the return', () => {
@@ -578,7 +612,7 @@ test('the closed painted portal joins the ceiling-height kitchen and admits walk
   const run = ['kitchen-pantry','kitchen-back','kitchen-tall'].map(itemBounds);
   for (const section of run) close(section.max.z,data.levels.groundCeiling,'Cabinetry touches slab');
   close(furniture.get('kitchen-island').box[1]-furniture.get('kitchen-back').box[3],1.08,'Island working aisle');
-  for(let i=0;i<4;i++) {
+  for(let i=0;i<5;i++) {
     const light = bounds(interior.group.getObjectByName('kitchen-back-upper-'+i));
     const crown = bounds(interior.group.getObjectByName('kitchen-back-crown-'+i));
     assert(light.max.y+.10<crown.max.y && light.min.z>1.55 && crown.max.z>2.79);
@@ -826,12 +860,15 @@ test('Samsung columns preserve product envelopes, removable shelves, drawers and
     assert.equal(moving.filter(o=>/bin-\d+-front$/.test(o.name)).length,bins);
     assert(moving.every(o=>o.userData.dynamic));
     const face=bounds(get('kitchen-tall-'+id)),x=(face.min.x+face.max.x)/2;
-    const ovenFace=bounds(get('kitchen-back-oven-upper')),ovenCrown=bounds(get('kitchen-back-oven-crown'));
-    close(face.max.z,ovenFace.max.z,'Appliance fronts share the 2.10 m oven seam');
-    close(bounds(get('kitchen-tall-crown-'+i)).min.z,ovenCrown.min.z,'Upper cabinet doors align');
+    const upper=bounds(get('kitchen-back-upper-4')),crown=bounds(get('kitchen-back-crown-4'));
+    close(face.max.z,upper.max.z,'Appliance fronts share the 2.10 m kitchen seam');
+    close(bounds(get('kitchen-tall-crown-'+i)).min.z,crown.min.z,'Upper cabinet doors align');
+    close(face.max.x-face.min.x,.594,'Two 3 mm edge reveals in each nominal 600 mm module');
+    close(x,5.55+i*.60,'600 mm column centres');
     const shelf=bounds(get(prefix+'dry-shelf')),roof=bounds(get(prefix+'dry-ceiling'));
     assert(shelf.min.z>skin.max.z && roof.min.z-shelf.max.z>=.15);
-    assert(shelf.max.x-shelf.min.x>=.60 && shelf.max.y-shelf.min.y>=.50);
+    close(shelf.max.x-shelf.min.x,.573,'Dry shelf clears the outer cheek and centre divider');
+    assert(shelf.max.y-shelf.min.y>=.50);
     const direction=new THREE.Vector3(0,-1,0).transformDirection(interior.group.matrix);
     const first=z=>{
       const origin=new THREE.Vector3(...interior.localToWorld([x,10.15,z]));
@@ -850,21 +887,23 @@ test('Samsung columns preserve product envelopes, removable shelves, drawers and
     assert.equal(first(1.749),applianceLeaf,'Closing restores the appliance front');
     assert.equal(first(shelfOpening),applianceLeaf,'Closing covers the dry shelf');
   }
-  const counter=bounds(get('kitchen-back-top')),sink=itemBounds('kitchen-sink'),oven=bounds(get('kitchen-back-oven-0.7'));
-  assert(counter.min.x<=sink.min.x && counter.max.x>=sink.max.x);
-  assert(oven.min.x>counter.max.x && oven.max.x<bounds(get('kitchen-tall-fridge')).min.x);
+  const counter=bounds(get('kitchen-back-top')),sink=itemBounds('kitchen-sink');
+  close(counter.max.x-counter.min.x,3.20,'Full 3.10 m original counter plus 100 mm released from the two columns');
+  close(counter.max.x-sink.max.x,.85,'85 cm of counter to the right of the sink');
+  close(sink.min.x-counter.min.x,1.45,'145 cm to the left');
+  close(counter.max.x,furniture.get('kitchen-tall').box[0],'Perimeter counter meets the first column');
 });
 
 test('every kitchen cabinet and concealed pantry door has the same matte yellow slab front', () => {
   const get=id=>interior.group.getObjectByName(id);
   const aisle=parts('kitchen-island').filter(o=>o.name.includes('-working-drawer-'));
-  assert.equal(aisle.length,10);
+  assert.equal(aisle.length,12);
   const portal=get('kitchen-pantry-closed-leaf'),yellow=portal.material;
   assert.equal(yellow.color.getHex(),0xe5c368);
   assert(yellow.roughness>=.6 && !yellow.map);
   const perimeter=['kitchen-pantry','kitchen-back','kitchen-tall'].flatMap(parts).filter(o=>
-    /-(closed-leaf|left-front|right-front|front-\d-\d|crown-\d|upper-\d|oven-upper|oven-base|oven-crown|fridge|freezer)$/.test(o.name));
-  assert.equal(perimeter.length,28);
+    /-(closed-leaf|left-front|right-front|front-\d-\d|crown-\d|upper-\d|fridge|freezer)$/.test(o.name));
+  assert.equal(perimeter.length,29);
   for(const door of [...perimeter,...aisle]){
     const face=bounds(door);
     close(face.max.y-face.min.y,.021,'Unframed 21 mm slab door');
@@ -877,6 +916,23 @@ test('every kitchen cabinet and concealed pantry door has the same matte yellow 
   assert(grip.min.y<drawer.min.y-.018);
 });
 
+test('a single 595 mm built-in oven faces the working aisle below the induction hob', () => {
+  const get=id=>interior.group.getObjectByName('kitchen-island-oven-'+id);
+  const oven=get('window'),glass=bounds(oven),rail=bounds(get('lower-trim')),handle=bounds(get('handle'));
+  const ovenTop=bounds(get('fascia')).max.z,hob=bounds(interior.group.getObjectByName('hob-glass'));
+  const island=furniture.get('kitchen-island'),center=glass.getCenter(new THREE.Vector3());
+  close(center.x,(hob.min.x+hob.max.x)/2,'Oven shares the hob centre line');
+  close(ovenTop-rail.min.z,.595,'Oven has full 595 mm height');
+  close(glass.max.x-glass.min.x+.05,.595,'Full-sized 595 mm front including 25 mm jambs');
+  assert(ovenTop<hob.min.z-.06 && handle.max.y<glass.min.y && handle.min.y>island.box[1]);
+  assert(oven.material.transparent && get('fan-ring') && get('rack-wire-0-0') && get('rack-wire-1-0'));
+  assert.equal(inventoryMeshes.filter(m=>/^kitchen-.*oven-window/.test(m.name)).length,1);
+  assert(!inventoryMeshes.some(m=>/^kitchen-.*microwave|^kitchen-back-oven/.test(m.name)));
+  for(const drawer of parts(island.id).filter(m=>m.name.includes('working-drawer-'))){
+    const b=bounds(drawer);assert(b.max.x<=center.x-.30 || b.min.x>=center.x+.30);
+  }
+});
+
 test('white covered socket is set into a real worktop opening well away from the hob', () => {
   const get = id => interior.group.getObjectByName('kitchen-island-'+id);
   const top = get('top'), bezel = get('socket-bezel'), lid = get('socket-lid'), housing = get('socket-housing');
@@ -887,7 +943,15 @@ test('white covered socket is set into a real worktop opening well away from the
   assert.equal(lid.material,bezel.material);
   assert.match(lid.material.name,/White brushed aluminium/);
   assert(casing.max.z<flap.min.z && casing.min.z<slab.min.z);
-  assert(rim.min.x-bounds(interior.group.getObjectByName('hob-glass')).max.x>.8);
+  const hob=bounds(interior.group.getObjectByName('hob-glass'));
+  const sideWall=data.facades.find(w=>w.id==='facade-main-side'),window=sideWall.openings[0];
+  assert.equal(sideWall.a[0],0);
+  assert(rim.min.y>=window.start&&rim.max.y<=window.end);
+  close(rim.max.x-rim.min.x,.12,'120 mm opening along the island');
+  close(rim.max.y-rim.min.y,.27,'270 mm opening across the island');
+  close(rim.min.x-slab.min.x,.26,'260 mm of stone to window-side end');
+  close(rim.min.y-slab.min.y,.175,'175 mm to the near working edge');
+  close(hob.min.x-rim.max.x,1.52,'Clear counter between socket and hob');
   const center = flap.getCenter(new THREE.Vector3()), ray = new THREE.Raycaster();
   ray.set(new THREE.Vector3(center.x,center.y,1.1),new THREE.Vector3(0,0,-1));
   for(const obj of [top,bezel,lid]){
@@ -900,9 +964,10 @@ test('white covered socket is set into a real worktop opening well away from the
 
 test('Palet island tiles wrap three faces at physical scale with one draw and clear the aisle', () => {
   const get=id=>interior.group.getObjectByName(id);
-  const skin=get('kitchen-island-palet-rain-cladding'),top=get('kitchen-island-top'),hob=get('hob-glass');
+  const skin=get('kitchen-island-palet-zigzag-cladding'),top=get('kitchen-island-top'),hob=get('hob-glass');
   const texture=skin.material.map,{position,normal,uv}=skin.geometry.attributes;
-  assert.equal(skin.material.name,'Palet Rain 51 / 49');
+  assert.equal(skin.material.name,'Palet Zig Zag Half 173 / 334');
+  assert.match(skin.material.userData.source,/color-1=173&color-2=334&design=zig-zag-half$/);
   assert.equal(texture.wrapS,THREE.RepeatWrapping);assert.equal(texture.wrapT,THREE.RepeatWrapping);
   close(1/(texture.repeat.x*4),.149+.002,'Four 149 mm tiles with 2 mm grout per repeat');
   close(texture.repeat.x,texture.repeat.y,'Square tiles');
@@ -1143,49 +1208,49 @@ test('the private bath ledge blocks walking and vessels sit on the exposed famil
   }
 });
 
-test('pantry has a clear landing counter, reachable single-depth shelves and floor-level reserves', () => {
-  const get = name => bounds(interior.group.getObjectByName(name));
-  const top = get('pantry-right-landing-top'), rack = get('pantry-left-shelf-2');
-  close(top.max.z,.90,'Finished landing height');
-  close(top.max.x-top.min.x,.55,'Usable top depth');
-  close(top.max.y-top.min.y,1.54,'Usable top length');
-  const landing = top.clone();
-  landing.min.z = top.max.z+.001;
-  landing.max.z = top.max.z+.45;
-  landing.min.y += .02;
-  landing.max.y = landing.min.y+1.10;
-  for(const mesh of parts('pantry-right'))assert(!landing.intersectsBox(bounds(mesh)),mesh.name+' clears a 110 cm grocery landing');
-  assert(rack.max.x-rack.min.x<.28);
-  const lower = get('pantry-right-reserve-shelf-0'), upper = get('pantry-right-shelf-0');
-  assert(lower.max.z<.12 && lower.max.x-lower.min.x>2*(upper.max.x-upper.min.x));
-  for(const name of ['pantry-left-dry-0-0-glass','pantry-left-tin-3','pantry-right-potato-crate-produce-0','pantry-right-weighing-bowl']){
-    const box=get(name),size=box.getSize(new THREE.Vector3());
-    assert(size.x>.085 && size.x<.26 && size.z>.045 && size.z<.25,name+' retains household scale');
+test('BROR base frames, folded steel decks and wall combination match the IKEA module sizes', () => {
+  const rackIds=['pantry-bror-85','pantry-bror-65','pantry-bror-return'];
+  for(const [index,id] of rackIds.entries()){
+    const item=furniture.get(id),pieces=parts(id);
+    assert.equal(item.shelfLevelsM.length,index?6:5);
+    const post=pieces.find(piece=>piece.name.endsWith('pierced-post-0'));
+    assert.equal(post.material.color.getHex(),0x303234);
+    assert.equal(post.geometry.parameters.shapes.holes.length,17);
+    assert.equal(pieces.filter(piece=>piece.name.includes('-cross-brace-')).length,2);
+    const frame=pieces.filter(piece=>piece.name.includes('-post-') || piece.name.includes('-foot-cap-'))
+      .reduce((box,piece)=>box.union(bounds(piece)),new THREE.Box3());
+    const dimensions=frame.getSize(new THREE.Vector3());
+    close(Math.max(dimensions.x,dimensions.y),index?.65:.85,'BROR frame width');
+    close(Math.min(dimensions.x,dimensions.y),.55,'BROR frame depth');
+    close(dimensions.z,1.90,'BROR uprights including feet');
+    for(const [i,z] of item.shelfLevelsM.entries()){
+      const deck=bounds(interior.group.getObjectByName(id+'-shelf-'+i+'-deck'));
+      close(deck.max.z,z+item.elevation,'Shelf elevation');
+      close(Math.min(deck.max.x-deck.min.x,deck.max.y-deck.min.y),.54,'54 cm usable shelf');
+      const onDeck=pieces.filter(piece=>/-(?:tub|can|glass|packet|carton-\d+)$/.test(piece.name))
+        .map(bounds).filter(box=>Math.abs(box.min.z-deck.max.z)<.001);
+      assert(onDeck.length>0,'Every deck carries stock');
+      for(const stock of onDeck)for(const axis of ['x','y']){
+        assert(stock.min[axis]>=deck.min[axis]-.001 && stock.max[axis]<=deck.max[axis]+.001,'Stock fits inside shelf edges');
+      }
+    }
   }
+  const id='pantry-bror-bench',top=bounds(interior.group.getObjectByName(id+'-pine-plywood'));
+  close(top.max.x-top.min.x,.55,'Bench depth');close(top.max.y-top.min.y,1.10,'Bench width');
+  close(top.max.z-furniture.get(id).elevation,.88,'Pine plywood working height');
+  const grocerySpace=top.clone();grocerySpace.min.z=top.max.z+.001;grocerySpace.max.z=top.max.z+.50;
+  assert(parts(id).every(piece=>!grocerySpace.intersectsBox(bounds(piece))),'Entire worktop available for unloading');
+  const shelves=parts(id).filter(piece=>piece.name.includes('-wall-shelf-'));
+  assert.equal(shelves.length,4);
+  for(const shelf of shelves){
+    const size=bounds(shelf).getSize(new THREE.Vector3());
+    close(size.x,.40,'Wall deck depth');close(size.y,.85,'Wall deck width');
+  }
+  assert(data.metadata.furnitureSources[furniture.get(id).wallShelfSource].includes('09571854'));
 });
 
-test('pantry has 21 open shelf levels and four closed cupboards without occupying the doors or electrical controls', () => {
-  const shelfRuns = [['pantry-left',6],['pantry-right',3],['pantry-kitchen-jamb',7],['pantry-spices',5]];
-  const stocks = [];
-  for(const [id,count] of shelfRuns){
-    const shelves=parts(id).filter(piece=>/-shelf-\d+$/.test(piece.name) && !piece.name.includes('reserve-'));
-    assert.equal(shelves.length,count,id+' shelf levels');
-    for(const shelf of shelves){
-      const deck=bounds(shelf);
-      assert(Math.min(deck.max.x-deck.min.x,deck.max.y-deck.min.y)>=.16,'Useful shelf depth');
-      const stocked=parts(id).some(piece=>piece!==shelf && !piece.name.includes('label') &&
-        Math.abs(bounds(piece).min.z-deck.max.z)<.001 && bounds(piece).intersectsBox(deck.clone().expandByScalar(.001)));
-      assert(stocked,shelf.name+' carries accessible stock');
-    }
-    stocks.push(itemBounds(id));
-  }
-  for(const [id,bank,doors] of [['pantry-left','overhead',3],['pantry-right','wall-cupboard',3],
-    ['pantry-right','base-cupboard',2],['pantry-kitchen-jamb','low-cupboard',1]]){
-    const pieces=parts(id).filter(mesh=>mesh.name.startsWith(id+'-'+bank+'-'));
-    assert.equal(pieces.filter(mesh=>mesh.name.includes('-front-')).length,doors);
-    assert.equal(pieces.filter(mesh=>mesh.name.includes('-pull-')).length,doors);
-    assert.equal(pieces.filter(mesh=>mesh.name.includes('-deck-')).length,3);
-  }
+test('deep BROR pantry fittings leave both doors and electrical controls accessible', () => {
+  const stocks=data.furniture.filter(item=>item.room==='0.2').map(item=>itemBounds(item.id));
   const controls = data.electrical.points.filter(point=>point.room==='0.2');
   for(const point of controls){
     const switchZone=new THREE.Vector3(point.alongM,6.81,point.heightM);
@@ -1212,7 +1277,7 @@ test('pantry has 21 open shelf levels and four closed cupboards without occupyin
 test('both moving doors clear a continuous kitchen–pantry–garage walking route', () => {
   const doors=['kitchen-pantry-closed-leaf','hall-flush-garage-pantry-leaf'].map(name=>interior.group.getObjectByName(name));
   const collision=createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<1.7 && o.maxZ>.03),.36);
-  const local=[[1.50,9.81],[1.50,8.01],[2.12,8.01],[2.12,6.03]];
+  const local=[[1.50,9.81],[1.50,7.98],[1.90,7.93],[2.07,7.59],[2.12,7.25],[2.12,6.03]];
   const route=local.map(p=>new THREE.Vector3(...interior.localToWorld([...p,1.30])));
   for(let i=1;i<route.length;i++){
     const a=route[i-1],b=route[i];
@@ -1238,7 +1303,7 @@ test('the two kitchen appliance doors toggle independently from the aisle after 
   const state = id => model.group.getObjectByName('kitchen-' + id + '-door');
   const world = (x, y, z) => model.group.localToWorld(new THREE.Vector3(x, y, z));
   function tap(id, targetHeight=1.24) {
-    const x = id === 'fridge' ? 5.48 : 6.12;
+    const x = id === 'fridge' ? 5.55 : 6.15;
     camera.position.copy(world(x, 9.99, 1.58));
     camera.up.set(0, 0, 1);
     camera.lookAt(world(x, 9.235, targetHeight));
@@ -1270,7 +1335,7 @@ test('the two kitchen appliance doors toggle independently from the aisle after 
     close(state(id).rotation.z,0,id+' returns to its closed position');
   }
   const blocker = new THREE.Mesh(new THREE.BoxGeometry(.42,.42,.42), new THREE.MeshBasicMaterial());
-  blocker.position.copy(world(5.48, 9.65, 1.45));
+  blocker.position.copy(world(5.55, 9.65, 1.45));
   scene.add(blocker);
   assert.equal(tap('fridge'), false, 'Opaque obstruction prevents opening the fridge');
 });

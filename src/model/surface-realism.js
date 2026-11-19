@@ -208,6 +208,7 @@ const surfaceTurfColors = {
 function surfaceProfileFor(object, material, key, index, hasVinylTexture) {
   const {name, parent, geometry} = object;
   if (!material.isMeshStandardMaterial || material.map || material.transparent) return null;
+  if (material.userData.surfaceProfile === 'plaster') return 'plaster';
   const color = material.color.getHexString();
   if (/^(parcel|context)-grass-/.test(name)) return 'grass';
   if (/^(parcel|context)-soil-/.test(name)) return 'soil';
