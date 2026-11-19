@@ -11,7 +11,7 @@ const marker='const [source,garden,house,neighbors]=';
 const [, , house]=JSON.parse(html.slice(html.indexOf(marker)+marker.length,html.indexOf(';\nconst landscaping=')));
 const data=JSON.parse(await read('../trzy-domy-3d/interior-data.json'));
 const {addIconInterior}=await load(await read('../src/model/interior.js'));
-const {group}=addIconInterior({THREE,scene:new THREE.Scene(),data,house});
+const {group,navigation}=addIconInterior({THREE,scene:new THREE.Scene(),data,house});
 function geometry(name){
  const part=group.getObjectByName(name);
  assert(part,name);
@@ -24,7 +24,6 @@ function bounds(name) {
 }
 const rooms=[
  ['living','facade-garden-glass-0-pane-0','facade-garden-glass-0-pane-2',0,-1],
- ['kitchen','facade-main-side-glass-0','facade-main-side-glass-0',1,1],
  ['playroom','facade-front-wing-glass-2','facade-front-wing-glass-2',0,1],
  ['study','facade-wing-end-glass-1','office-window-frame-latch',1,-1],
  ['bedroom-one','front-gable-glass-0','front-gable-glass-0',0,1],
@@ -58,18 +57,43 @@ test('open linen panels gather beside the jambs, inside the glass and clear of t
  }
 });
 
-test('kitchen curtains clear the pantry swing and island aisle and leave the middle of the side window open',()=>{
+test('two tilted Venetian blinds fit inside the kitchen reveal and admit light between their slats',()=>{
  const glass=bounds('facade-main-side-glass-0');
- const pantry=data.furniture.find(f=>f.id==='kitchen-pantry');
+ const facade=data.facades.find(f=>f.id==='facade-main-side');
+ const depth=facade.thickness??.48;
+ const mullion=bounds('facade-main-side-mullion-0');
  const island=data.furniture.find(f=>f.id==='kitchen-island');
  const door=group.getObjectByName('concealed-pantry-door');
- const [left,right]=['left','right'].map(side=>bounds('curtain-kitchen-'+side));
- const exposed=Math.min(glass.max.y,right.min.y)-Math.max(glass.min.y,left.max.y);
- assert(exposed/(glass.max.y-glass.min.y)>.91,'over 91% of the glass width remains clear');
- for(const b of [left,right,bounds('curtain-kitchen-track')]){
-  assert(b.min.y>pantry.box[3]+.015,'fabric and hardware clear pantry front');
-  assert(b.max.x<door.position.x-.10,'outside the full quarter-turn of the pantry door');
-  assert(island.box[0]-b.max.x>1.45,'unobstructed aisle at the end of the island');
+ assert(!group.children.some(m=>m.name.startsWith('curtain-kitchen-')));
+ assert(navigation.obstacles.some(o=>o.id==='facade-main-side-glass-barrier-0'));
+ const parts=group.children.filter(m=>m.name.startsWith('blind-kitchen-'));
+ assert.equal(parts.length,3,'the complete blind uses three draw calls');
+ const boxes={};
+ for(const mesh of parts){
+  assert(mesh.isInstancedMesh);
+  mesh.geometry.computeBoundingBox();
+  boxes[mesh.name]=Array.from({length:mesh.count},(_,i)=>{
+   const matrix=new THREE.Matrix4();mesh.getMatrixAt(i,matrix);
+   const b=mesh.geometry.boundingBox.clone().applyMatrix4(matrix);
+   assert(b.min.x>mullion.max.x+.01 && b.max.x<facade.a[0]+depth,'in the recess, clear of the glass and frame');
+   assert(b.min.y>=glass.min.y && b.max.y<=glass.max.y && b.max.z<=glass.max.z+.00001 && b.min.z>glass.min.z);
+   assert(b.max.x<door.position.x-.10 && island.box[0]-b.max.x>1.45,'clear of pantry swing and island aisle');
+   return b;
+  });
+ }
+ const rails=boxes['blind-kitchen-rails'].sort((a,b)=>b.max.z-a.max.z);
+ assert.equal(rails.length,4);
+ assert(rails.slice(0,2).every(b=>Math.abs(b.max.z-glass.max.z)<.0001),'top-mounted housings touch the lintel');
+ assert.equal(boxes['blind-kitchen-tapes'].length,8,'each bay has two pairs of ladder tapes');
+ for(const bank of [0,1]){
+  const center=glass.min.y+(bank+.5)*(glass.max.y-glass.min.y)/2;
+  const slats=boxes['blind-kitchen-slats'].filter(b=>b.min.y<center && b.max.y>center).sort((a,b)=>a.min.z-b.min.z);
+  assert(slats.length>40 && slats.length<60);
+  for(const [i,slat] of slats.entries()){
+   assert(slat.max.y-slat.min.y>1.45 && slat.max.x-slat.min.x>.04);
+   assert(slat.max.z-slat.min.z>.017 && slat.max.z-slat.min.z<.026,'visible slat tilt');
+   if(i)assert(slat.min.z-slats[i-1].max.z>.018,'open line of sight between adjacent slats');
+  }
  }
 });
 

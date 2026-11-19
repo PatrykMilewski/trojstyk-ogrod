@@ -113,3 +113,55 @@ test('a sloped upper roof blocks low headroom and limits jumps', () => {
   assert.ok(motion.getState().position[2] <= 5.2); motion.move(0, 0, 1);
   assert.equal(motion.getState().floorHeightM, 3.2); assert.ok(motion.getState().grounded);
 });
+
+test('low postures can pass under a header and require full body clearance before rising', () => {
+  const nav = { floors: [], ramps: [], obstacles: [{ ring: rect(-1, 1, 1, 2), minZ: .85, maxZ: 2 }] };
+  const motion = motionFor(nav);
+  motion.reset([0, 0]); motion.togglePosture('crouching');
+  motion.move(1, 0, 2);
+  assert.ok(Math.abs(motion.getState().position[1] - .72) < 1e-6);
+  motion.togglePosture('crawling'); motion.move(1, 0, 2);
+  assert.ok(motion.getState().position[1] > 1);
+  assert.equal(motion.togglePosture('crouching'), false);
+  assert.equal(motion.togglePosture('crawling'), false);
+  motion.move(1, 0, .7);
+  assert.ok(motion.getState().position[1] > 2);
+  assert.equal(motion.togglePosture('crawling'), false);
+  motion.move(1, 0, .4);
+  assert.equal(motion.togglePosture('crawling'), true);
+  assert.equal(motion.getState().position[2], 1.7);
+});
+
+test('posture clearance follows upper-floor roof height and preserves airborne feet position', () => {
+  const nav = { floors: [{ ring: rect(-10, -10, 10, 10), z: 3.2 }], ramps: [], obstacles: [],
+    ceilingHeight: point => 4.2 + point[0] };
+  const motion = motionFor(nav);
+  motion.reset([2, 0, 3.2]); motion.togglePosture('crawling'); motion.move(0, -1, 6);
+  assert.ok(Math.abs(motion.getState().position[0] + .62) < 1e-6);
+  assert.equal(motion.togglePosture('crawling'), false);
+  assert.equal(motion.togglePosture('crouching'), false);
+  motion.move(0, 1, 1.4); assert.equal(motion.togglePosture('crouching'), true);
+  assert.equal(motion.togglePosture('crouching'), false);
+  motion.move(0, 1, 2);
+  motion.jump(); motion.move(0, 0, .15);
+  const jumpHeight = motion.getState().jumpHeight;
+  assert.ok(jumpHeight > .2);
+  assert.equal(motion.togglePosture('crouching'), true);
+  assert.equal(motion.getState().jumpHeight, jumpHeight);
+  motion.move(0, 0, 1); assert.equal(motion.getState().position[2], 4.9);
+});
+
+test('jumping near an overhang observes the same body radius as rising from a crawl', () => {
+  const nav = { floors: [], ramps: [], obstacles: [{ ring: rect(-1, 1, 1, 2), minZ: .85, maxZ: 2 }] };
+  const motion = motionFor(nav);
+  for (const [y, blocked] of [[.891, true], [.70, false]]) {
+    motion.reset([0, 0]); motion.togglePosture('crawling'); motion.move(1, 0, y / .55);
+    assert.equal(motion.getState().posture, 'crawling');
+    if (blocked) assert.equal(motion.togglePosture('crawling'), false);
+    motion.jump();
+    let apex = 0;
+    for (let i = 0; i < 100; i++) apex = Math.max(apex, motion.move(0, 0, .01)[2]);
+    assert.ok(Math.abs(apex - (blocked ? .85 : .98)) < .001);
+    assert.equal(motion.getState().grounded, true);
+  }
+});

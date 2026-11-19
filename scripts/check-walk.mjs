@@ -110,6 +110,23 @@ test('sprint uses 2.2 times walking speed with normalized diagonals and released
   assert.throws(() => motion.move(1, 0, -1), TypeError);
 });
 
+test('outdoor posture toggles adjust eye height and normalized speed and reset on entry', () => {
+  const motion = createWalkMotion(createWalkCollision([]));
+  motion.reset([0, 0]);
+  for (const [posture, height, speed] of [['crouching', 1.05, 1.1], ['crawling', .38, .55]]) {
+    const previous = motion.getState().position;
+    assert.equal(motion.togglePosture(posture), true);
+    const [x, y, z] = motion.move(1, 1, 1, 0, true);
+    assert.equal(z, height);
+    assert.equal(motion.getState().sprinting, false);
+    assert.ok(Math.abs(Math.hypot(x - previous[0], y - previous[1]) - speed) < 1e-9);
+  }
+  motion.togglePosture('crawling');
+  assert.equal(motion.getState().posture, 'standing');
+  motion.togglePosture('crouching'); motion.reset([2, 3]);
+  assert.deepEqual(motion.getState().position, [2, 3, 1.7]);
+});
+
 test('jump reaches 0.6 m, rejects air jumps, and lands exactly at the base eye height', () => {
   const motion = createWalkMotion(createWalkCollision([])), initial = motion.getState();
   const apexTime = Math.sqrt(2 * initial.jumpHeightM / initial.gravityMps2);
@@ -189,7 +206,7 @@ function joystickHarness(t) {
     body: { append() {}, classList: { add() {}, remove() {} } } });
   const host = new EventTarget();
   let frame, time = performance.now() + 100;
-  const globals = { document: doc, window: host, innerWidth: 390, innerHeight: 844,
+  const globals = { document: doc, window: host, Element: Control, innerWidth: 390, innerHeight: 844,
     requestAnimationFrame(callback) { frame = callback; return 1; }, cancelAnimationFrame() {} };
   for (const [name, value] of Object.entries(globals)) {
     const descriptor = Object.getOwnPropertyDescriptor(globalThis, name);
@@ -209,6 +226,23 @@ function joystickHarness(t) {
   }
   return { walk, pad, thumb, canvas, doc, host, enter, tick, touch };
 }
+
+test('walk keyboard switches posture once per press, ignores shortcuts and restores standing on entry', t => {
+  const { walk, host, enter } = joystickHarness(t);
+  const key = (type, code, flags = {}) => host.dispatchEvent(Object.assign(new Event(type), { code, ...flags }));
+  key('keydown', 'KeyC'); key('keydown', 'KeyC', { repeat: true }); key('keyup', 'KeyC');
+  assert.equal(walk.camera.position.z, 1.05);
+  key('keydown', 'KeyX'); key('keyup', 'KeyX');
+  assert.equal(walk.camera.position.z, .38);
+  key('keydown', 'KeyC', { ctrlKey: true }); key('keyup', 'KeyC');
+  assert.equal(walk.getState().posture, 'crawling');
+  key('keydown', 'KeyX'); key('keyup', 'KeyX');
+  assert.equal(walk.camera.position.z, 1.7);
+  key('keydown', 'KeyX'); key('keyup', 'KeyX');
+  walk.exit(); key('keydown', 'KeyC'); key('keyup', 'KeyC'); enter();
+  assert.equal(walk.getState().posture, 'standing');
+  assert.equal(walk.camera.position.z, 1.7);
+});
 
 test('joystick moves at proportional speed through all headings in the camera frame', t => {
   const { walk, pad, enter, tick, touch } = joystickHarness(t);

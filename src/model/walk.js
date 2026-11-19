@@ -99,32 +99,68 @@ export function createWalkCollision(footprints, radius = .28) {
   return { radius, footprints, move, safeSpawn, blocked: point => pathBlocked(point, point), pathBlocked };
 }
 
+const walkPostures = {
+  standing: { eyeHeightM: 1.7, walkSpeedMps: 2.2, label: 'Pozycja stojąca' },
+  crouching: { eyeHeightM: 1.05, walkSpeedMps: 1.1, label: 'Kucanie' },
+  crawling: { eyeHeightM: .38, walkSpeedMps: .55, label: 'Czołganie' },
+};
+const sprintMultiplier = 2.2, jumpHeightM = .6, gravityMps2 = 9.81;
+const walkLaunchSpeed = Math.sqrt(2 * gravityMps2 * jumpHeightM);
+
 export function createWalkMotion(collision, navigation) {
-  if (navigation) return createInteriorWalkMotion(collision, navigation);
-  const eyeHeightM = 1.7, walkSpeedMps = 2.2, sprintMultiplier = 2.2, jumpHeightM = .6, gravityMps2 = 9.81;
-  const launchSpeedMps = Math.sqrt(2 * gravityMps2 * jumpHeightM);
-  let position = [0, 0, eyeHeightM], flightTime = null, sprinting = false;
-  function reset(point) { position = [...point, eyeHeightM]; flightTime = null; sprinting = false; }
-  function jump() {
-    if (flightTime !== null) return false;
-    flightTime = 0; return true;
+  const body = navigation ? createInteriorWalkMotion(collision, navigation) : createOutdoorWalkMotion(collision);
+  let posture = 'standing', sprinting = false;
+  function eyePosition() {
+    const [x, y, feet] = body.position;
+    return [x, y, feet + walkPostures[posture].eyeHeightM];
+  }
+  function togglePosture(requested) {
+    if (requested !== 'crouching' && requested !== 'crawling') return false;
+    const next = posture === requested ? 'standing' : requested;
+    const height = walkPostures[next].eyeHeightM;
+    if (height > walkPostures[posture].eyeHeightM && body.canRise && !body.canRise(height)) return false;
+    posture = next; sprinting = false;
+    return true;
   }
   function move(forward, right, dt, yaw = 0, sprint = false) {
     if (![forward, right, dt, yaw].every(Number.isFinite) || dt < 0) throw new TypeError('Nieprawidłowy krok spaceru.');
-    sprinting = sprint && !!(forward || right);
-    const distance = walkSpeedMps * (sprinting ? sprintMultiplier : 1) * dt / Math.max(1, Math.hypot(forward, right));
-    const point = collision.move(position.slice(0, 2), [(Math.sin(yaw) * forward + Math.cos(yaw) * right) * distance,
-      (Math.cos(yaw) * forward - Math.sin(yaw) * right) * distance]);
-    if (flightTime !== null) {
-      flightTime += dt;
-      if (flightTime >= 2 * launchSpeedMps / gravityMps2) flightTime = null;
-    }
-    const height = flightTime === null ? 0 : launchSpeedMps * flightTime - gravityMps2 * flightTime * flightTime / 2;
-    position = [...point, eyeHeightM + height]; return [...position];
+    sprinting = posture === 'standing' && sprint && !!(forward || right);
+    const { eyeHeightM, walkSpeedMps } = walkPostures[posture];
+    const speed = walkSpeedMps * (sprinting ? sprintMultiplier : 1) / Math.max(1, Math.hypot(forward, right));
+    body.move((Math.sin(yaw) * forward + Math.cos(yaw) * right) * speed,
+      (Math.cos(yaw) * forward - Math.sin(yaw) * right) * speed, dt, eyeHeightM);
+    return eyePosition();
   }
-  return { reset, jump, move, setPosition: point => { position = [...point, position[2]]; }, clearSprint: () => { sprinting = false; },
-    getState: () => ({ position: [...position], eyeHeightM, walkSpeedMps, sprintMultiplier, jumpHeightM, gravityMps2,
-      floorHeightM: 0, jumpHeight: position[2] - eyeHeightM, grounded: flightTime === null, sprinting }) };
+  function getState() {
+    const { eyeHeightM, walkSpeedMps } = walkPostures[posture];
+    return { ...body.state(), position: eyePosition(), posture, eyeHeightM, walkSpeedMps, sprintMultiplier,
+      jumpHeightM, gravityMps2, sprinting };
+  }
+  return { reset(point) { posture = 'standing'; sprinting = false; body.reset(point); },
+    jump: body.jump, setPosition: body.setPosition, clearSprint: () => { sprinting = false; }, togglePosture, move, getState };
+}
+
+function createOutdoorWalkMotion(collision) {
+  let position = [0, 0, 0], flightTime = null;
+  return {
+    get position() { return position; },
+    reset(point) { position = [point[0], point[1], 0]; flightTime = null; },
+    setPosition(point) { position = [point[0], point[1], position[2]]; },
+    jump() {
+      if (flightTime !== null) return false;
+      flightTime = 0; return true;
+    },
+    move(dx, dy, dt) {
+      const point = collision.move(position.slice(0, 2), [dx * dt, dy * dt]);
+      if (flightTime !== null) {
+        flightTime += dt;
+        if (flightTime >= 2 * walkLaunchSpeed / gravityMps2) flightTime = null;
+      }
+      const feet = flightTime === null ? 0 : walkLaunchSpeed * flightTime - gravityMps2 * flightTime * flightTime / 2;
+      position = [...point, feet];
+    },
+    state: () => ({ floorHeightM: 0, jumpHeight: position[2], grounded: flightTime === null }),
+  };
 }
 
 function walkRampHeight(point, ramp) {
@@ -148,12 +184,12 @@ function walkSupport(point, navigation, ceiling, connectedRamps = new Set(), air
   return Math.max(0, ...floorHeights, ...rampHeights);
 }
 
-function walkCeilingMove(navigation, start, end, feet) {
-  if (!navigation.ceilingHeight || navigation.ceilingHeight(end) >= feet + 1.7) return end;
+function walkCeilingMove(navigation, start, end, head) {
+  if (!navigation.ceilingHeight || navigation.ceilingHeight(end) >= head) return end;
   let low = 0, high = 1;
   for (let i = 0; i < 30; i++) {
     const t = (low + high) / 2, point = [start[0] + (end[0] - start[0]) * t, start[1] + (end[1] - start[1]) * t];
-    if (navigation.ceilingHeight(point) >= feet + 1.7) low = t; else high = t;
+    if (navigation.ceilingHeight(point) >= head) low = t; else high = t;
   }
   return [start[0] + (end[0] - start[0]) * low, start[1] + (end[1] - start[1]) * low];
 }
@@ -169,18 +205,28 @@ function walkAboveCover(point, feet, { ramp, landing }) {
   return feet >= height - 1e-6;
 }
 
-function walkInteriorCollision(collision, navigation, feet, nextFeet, point, grounded = false) {
+function walkInteriorCollision(collision, navigation, feet, nextFeet, point, grounded = false, height = walkPostures.standing.eyeHeightM) {
   const minFeet = Math.min(feet, nextFeet), maxFeet = Math.max(feet, nextFeet);
-  const walls = navigation.obstacles.filter(wall => wall.minZ < maxFeet + 1.7 - 1e-6 && wall.maxZ > minFeet + 1e-6 &&
+  const walls = navigation.obstacles.filter(wall => wall.minZ < maxFeet + height - 1e-6 && wall.maxZ > minFeet + 1e-6 &&
     !(point && wall.cover && walkAboveCover(point, feet, wall.cover)) &&
     !(grounded && walkSlabStepClear(wall, point, minFeet, navigation, collision.radius)));
   return createWalkCollision([...collision.footprints, ...walls], collision.radius);
 }
 
+function walkJumpCeiling(navigation, point, feet, head, nextHead, radius) {
+  let limit = navigation.ceilingHeight?.(point) ?? Infinity;
+  for (const wall of navigation.obstacles) {
+    if (wall.minZ < head - 1e-6 || wall.minZ > nextHead || wall.minZ >= limit) continue;
+    if (wall.cover && walkAboveCover(point, feet, wall.cover)) continue;
+    const ring = wall.ring;
+    if (walkInside(point, ring) || ring.some((a, i) =>
+      walkPointSegmentDistance(point, a, ring[(i + 1) % ring.length]) <= radius)) limit = wall.minZ;
+  }
+  return limit;
+}
+
 function createInteriorWalkMotion(collision, navigation) {
-  const eyeHeightM = 1.7, walkSpeedMps = 2.2, sprintMultiplier = 2.2, jumpHeightM = .6, gravityMps2 = 9.81;
-  const launchSpeed = Math.sqrt(2 * gravityMps2 * jumpHeightM);
-  let position = [0, 0, eyeHeightM], floorHeightM = 0, velocity = 0, grounded = true, sprinting = false;
+  let position = [0, 0, 0], floorHeightM = 0, velocity = 0, grounded = true;
   let landingCeiling = 0, connectedRamps = new Set();
   let needsSupportCheck = true;
   function airborneRamps() {
@@ -190,23 +236,28 @@ function createInteriorWalkMotion(collision, navigation) {
   }
   function reset(point) {
     floorHeightM = walkSupport(point, navigation, point[2] ?? 0);
-    position = [point[0], point[1], floorHeightM + eyeHeightM];
-    velocity = 0; grounded = true; sprinting = false; landingCeiling = floorHeightM; connectedRamps = new Set();
+    position = [point[0], point[1], floorHeightM];
+    velocity = 0; grounded = true; landingCeiling = floorHeightM; connectedRamps = new Set();
     needsSupportCheck = false;
   }
   function jump() {
     if (!grounded) return false;
-    connectedRamps = airborneRamps(); grounded = false; velocity = launchSpeed; landingCeiling = floorHeightM; return true;
+    connectedRamps = airborneRamps(); grounded = false; velocity = walkLaunchSpeed; landingCeiling = floorHeightM; return true;
   }
-  function step(delta, dt) {
-    const feet = position[2] - eyeHeightM;
+  function canRise(height) {
+    const feet = position[2];
+    if ((navigation.ceilingHeight?.(position) ?? Infinity) < feet + height) return false;
+    return !walkInteriorCollision(collision, navigation, feet, feet, position, grounded, height).blocked(position);
+  }
+  function step(delta, dt, eyeHeightM) {
+    const feet = position[2];
     let nextFeet = grounded ? feet : feet + velocity * dt - gravityMps2 * dt * dt / 2;
     const tentative = [position[0] + delta[0], position[1] + delta[1]];
     // Only a small connected rise may be stepped onto; a jump cannot select another storey.
     const support = walkSupport(tentative, navigation, grounded ? feet + .12 : landingCeiling + .12, grounded ? undefined : connectedRamps, grounded ? Infinity : Math.max(feet, nextFeet) + .12);
     if (grounded && support >= feet - .12) nextFeet = support;
-    const walls = walkInteriorCollision(collision, navigation, feet, nextFeet, position, grounded);
-    const point = walkCeilingMove(navigation, position, walls.move(position.slice(0, 2), delta), feet);
+    const walls = walkInteriorCollision(collision, navigation, feet, nextFeet, position, grounded, eyeHeightM);
+    const point = walkCeilingMove(navigation, position, walls.move(position.slice(0, 2), delta), feet + eyeHeightM);
     const surface = walkSupport(point, navigation, grounded ? feet + .12 : landingCeiling + .12, grounded ? undefined : connectedRamps, grounded ? Infinity : Math.max(feet, nextFeet) + .12);
     if (grounded && surface >= feet - .12) { nextFeet = surface; floorHeightM = surface; landingCeiling = surface; }
     else {
@@ -216,39 +267,32 @@ function createInteriorWalkMotion(collision, navigation) {
         nextFeet = surface; floorHeightM = surface; velocity = 0; grounded = true;
       }
     }
-    const ceiling = navigation.obstacles.filter(wall => wall.minZ >= feet + eyeHeightM - 1e-6 &&
-      walkInside(point, wall.ring)).reduce((height, wall) => Math.min(height, wall.minZ - eyeHeightM), navigation.ceilingHeight ? navigation.ceilingHeight(point) - eyeHeightM : Infinity);
-    if (!grounded && nextFeet > ceiling) { nextFeet = ceiling; velocity = Math.min(0, velocity); }
-    position = [...point, nextFeet + eyeHeightM];
+    if (!grounded && nextFeet > feet) {
+      const ceiling = walkJumpCeiling(navigation, point, feet, feet + eyeHeightM, nextFeet + eyeHeightM, collision.radius);
+      if (nextFeet + eyeHeightM > ceiling) { nextFeet = ceiling - eyeHeightM; velocity = 0; }
+    }
+    position = [...point, nextFeet];
   }
-  function move(forward, right, dt, yaw = 0, sprint = false) {
-    if (![forward, right, dt, yaw].every(Number.isFinite) || dt < 0) throw new TypeError('Nieprawidłowy krok spaceru.');
-    sprinting = sprint && !!(forward || right);
-    if (grounded && !forward && !right && !needsSupportCheck) return [...position];
-    const speed = walkSpeedMps * (sprinting ? sprintMultiplier : 1) / Math.max(1, Math.hypot(forward, right));
-    const dx = (Math.sin(yaw) * forward + Math.cos(yaw) * right) * speed;
-    const dy = (Math.cos(yaw) * forward - Math.sin(yaw) * right) * speed;
+  function move(dx, dy, dt, eyeHeightM) {
+    if (grounded && !dx && !dy && !needsSupportCheck) return;
     const count = Math.max(1, Math.ceil(dt * Math.max(120, Math.hypot(dx, dy) / .025)));
-    for (let i = 0; i < count; i++) step([dx * dt / count, dy * dt / count], dt / count);
+    for (let i = 0; i < count; i++) step([dx * dt / count, dy * dt / count], dt / count, eyeHeightM);
     needsSupportCheck = false;
-    return [...position];
   }
   function setPosition(point) {
     if (point[0] === position[0] && point[1] === position[1]) return;
     position = [point[0], point[1], position[2]];
     needsSupportCheck = true;
   }
-  return { reset, jump, move, setPosition,
-    clearSprint: () => { sprinting = false; },
-    getState: () => ({ position: [...position], eyeHeightM, walkSpeedMps, sprintMultiplier, jumpHeightM, gravityMps2,
-      floorHeightM, jumpHeight: position[2] - eyeHeightM - floorHeightM, grounded, sprinting }) };
+  return { reset, jump, move, setPosition, canRise, get position() { return position; },
+    state: () => ({ floorHeightM, jumpHeight: position[2] - floorHeightM, grounded }) };
 }
 
 function walkMarkup(button) {
   button.setAttribute('aria-pressed', 'false'); button.setAttribute('aria-controls', 'walk-controls');
   const panel = document.createElement('section'); panel.id = 'walk-controls'; panel.hidden = true;
   panel.setAttribute('aria-label', 'Sterowanie spacerem');
-  panel.innerHTML = `<p id="walk-help">Wysokość oczu 1,70 m · WASD / strzałki: ruch · Shift: sprint · Spacja: skok · przeciągnij widok: rozglądanie · Esc: wyjście</p>
+  panel.innerHTML = `<p id="walk-help"><span id="walk-posture" aria-live="polite"></span> · WASD / strzałki: ruch · C: kucanie · X: czołganie · ponownie: wstań · Shift: sprint · Spacja: skok · przeciągnij widok: rozglądanie · Esc: wyjście</p>
     <div class="walk-touch"><div id="walk-joystick" class="walk-stick" tabindex="0" role="group" aria-label="Drążek ruchu" aria-description="Przesuń drążek lub użyj klawiszy WASD albo strzałek.">
       <span class="walk-stick-thumb" aria-hidden="true"></span>
     </div><button type="button" id="walk-gyro" aria-pressed="false" data-state="off" hidden>rozglądanie się</button></div>`;
@@ -256,17 +300,21 @@ function walkMarkup(button) {
   return panel;
 }
 
-function walkKeyboard({ held, isActive, jump, exit, clear }) {
+function walkKeyboard({ held, isActive, jump, togglePosture, exit, clear }) {
   const actions = { KeyW: 'forward', ArrowUp: 'forward', KeyS: 'back', ArrowDown: 'back',
     KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right', ShiftLeft: 'sprint', ShiftRight: 'sprint' };
-  const formControl = target => target instanceof Element && !!target.closest('input,select,textarea,button,a,summary,[contenteditable="true"]');
+  const postureKeys = { KeyC: 'crouching', KeyX: 'crawling' };
+  const formControl = target => target instanceof Element && (target.isContentEditable || !!target.closest('input,select,textarea,button,a,summary'));
   window.addEventListener('keydown', event => {
     if (!isActive()) return;
     if (event.code === 'Escape') { event.preventDefault(); exit(); return; }
     if (event.ctrlKey || event.metaKey || event.altKey) return;
-    if ((!actions[event.code] && event.code !== 'Space') || formControl(event.target)) return;
+    if ((!actions[event.code] && !postureKeys[event.code] && event.code !== 'Space') || formControl(event.target)) return;
     event.preventDefault();
-    if (event.code === 'Space' && !event.repeat && !held.has('Space')) jump();
+    if (!event.repeat && !held.has(event.code)) {
+      if (event.code === 'Space') jump();
+      if (postureKeys[event.code]) togglePosture(postureKeys[event.code]);
+    }
     held.add(event.code);
   });
   window.addEventListener('keyup', event => { held.delete(event.code); });
@@ -370,11 +418,11 @@ function walkTrackpad(canvas, isActive, widen, touchingCanvas) {
   return { clear() { nativeGesture = null; } };
 }
 
-function walkInput({ canvas, panel, isActive, move, look, widen, jump, exit, clearSprint }) {
+function walkInput({ canvas, panel, isActive, move, look, widen, jump, togglePosture, exit, clearSprint }) {
   const held = new Set();
   const joystick = walkJoystick({ pad: panel.querySelector('#walk-joystick'), isActive });
   function clear() { held.clear(); clearDrag(); joystick.clear(); clearSprint(); }
-  const actions = walkKeyboard({ held, isActive, jump, exit, clear });
+  const actions = walkKeyboard({ held, isActive, jump, togglePosture, exit, clear });
   const clearDrag = walkPointers({ canvas, isActive, look, widen });
   return { clear, tick(dt) {
     const active = new Set([...held].map(code => actions[code]));
@@ -542,8 +590,19 @@ export function setupWalk({ THREE, scene, house, neighbors, camera, controls, re
     perspective.position.set(...point); view.updateLook();
   }
   const jump = () => active && motion.jump();
+  const postureStatus = panel.querySelector('#walk-posture');
+  function showPosture(blocked = false) {
+    const { posture, eyeHeightM } = motion.getState();
+    const height = eyeHeightM.toLocaleString('pl-PL', { minimumFractionDigits: 2 });
+    postureStatus.textContent = `${walkPostures[posture].label} · wysokość oczu ${height} m${blocked ? ' · za mało miejsca, żeby się podnieść' : ''}`;
+  }
+  function togglePosture(requested) {
+    const changed = motion.togglePosture(requested);
+    showPosture(!changed);
+    if (changed) { perspective.position.set(...motion.getState().position); view.updateLook(); }
+  }
   const input = walkInput({ canvas, panel, isActive: () => active, move, look: view.look, widen: view.widen,
-    jump, clearSprint: motion.clearSprint, exit: () => exit() });
+    jump, togglePosture, clearSprint: motion.clearSprint, exit: () => exit() });
   function tick(now) {
     frame = null; if (!active) return;
     input.tick(Math.min(.1, Math.max(0, (now - last) / 1000))); last = now; frame = requestAnimationFrame(tick);
@@ -557,7 +616,7 @@ export function setupWalk({ THREE, scene, house, neighbors, camera, controls, re
     view.face(facing ? new THREE.Vector3(facing[0], facing[1], 0) : camera.getWorldDirection(new THREE.Vector3()));
     if (frame !== null) cancelAnimationFrame(frame);
     motion.reset(navigation ? spawn : spawn.slice(0, 2)); perspective.position.set(...motion.getState().position); active = true; controls.enabled = false;
-    input.clear(); gyro.enter(); panel.hidden = false; document.body.classList.add('walk-mode');
+    showPosture(); input.clear(); gyro.enter(); panel.hidden = false; document.body.classList.add('walk-mode');
     button.setAttribute('aria-pressed', 'true'); button.textContent = 'Wyjdź ze spaceru';
     shortcutButton?.setAttribute('aria-pressed', 'true');
     resize(); view.updateLook(); onCameraChange(perspective); canvas.focus({ preventScroll: true });

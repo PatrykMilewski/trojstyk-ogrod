@@ -1213,6 +1213,22 @@ test('the 70 cm single bowl is let into the worktop below the full-width mosaic'
   const bowl=get('kitchen-sink-basin'),slab=get('kitchen-back-top'),drain=get('kitchen-sink-basket-strainer');
   const rim=bounds(bowl),stone=bounds(slab),tile=bounds(get('kitchen-back-glazed-tiles'));
   close(rim.max.x-rim.min.x,.70,'Overall sink width including rim');
+  const dividers=[0,1,2,3].map(i=>bounds(get('kitchen-back-cabinet-divider-'+i)));
+  const face=bounds(get('kitchen-back-front-2-0'));
+  close(face.max.x-face.min.x,.795,'800 mm sink cabinet door with two 2.5 mm reveals');
+  assert(!get('kitchen-back-front-2-1'),'One full-height sink front');
+  for(const [edge,divider] of [['min',dividers[1]],['max',dividers[2]]])
+    close(Math.abs(face[edge].x-divider.getCenter(new THREE.Vector3()).x),.0025,'Front terminates at side partition');
+  close(dividers[2].min.x-dividers[1].max.x,.782,'Clear sink cabinet width');
+  close(rim.min.x-dividers[1].max.x,.041,'Left basin rim clearance');
+  close(dividers[2].min.x-rim.max.x,.041,'Right basin rim clearance');
+  assert(dividers.every(panel=>!panel.intersectsBox(rim)));
+  const [cutout]=slab.geometry.parameters.shapes.holes;
+  const hole=cutout.getPoints(8).map(p=>new THREE.Vector3(p.x,p.y,0).applyMatrix4(slab.matrix));
+  const opening=new THREE.Box3().setFromPoints(hole);
+  close(opening.max.x-opening.min.x,.682,'Worktop cut-out width');
+  close(opening.min.x-dividers[1].max.x,.050,'Cut-out clearance on the left');
+  close(dividers[2].min.x-opening.max.x,.050,'Cut-out clearance on the right');
   const shell=new THREE.Mesh(bowl.geometry,bowl.material),box=bowl.geometry.boundingBox;
   const center=box.getCenter(new THREE.Vector3());
   center.z=box.max.z-.000001;
@@ -1242,8 +1258,11 @@ test('the 70 cm single bowl is let into the worktop below the full-width mosaic'
   close(tile.max.x,stone.max.x-.0009,'Mosaic meets appliance column');
   close(tile.min.z,stone.max.z+.0009,'Mosaic starts at the slab');
   close(tile.max.z,bounds(get('kitchen-back-upper-0')).min.z-.0009,'Mosaic finishes under the upper cabinets');
-  const socket=data.electrical.points.findIndex(o=>o.support==='kitchen-back-slab-backsplash');
-  assert(bounds(get('loft-fixture-'+socket+'-frame')).min.y>=tile.max.y,'Socket mounts to the finished face');
+  assert(!data.electrical.points.some(point=>point.support==='kitchen-back-slab-backsplash'));
+  assert(!interior.group.children.some(mesh=>mesh.userData.support==='kitchen-back-slab-backsplash'));
+  const ray=new THREE.Raycaster(new THREE.Vector3(...interior.localToWorld([3.23,9.15,1.17])),
+    new THREE.Vector3(0,-1,0).transformDirection(interior.group.matrix),0,.6);
+  assert.equal(ray.intersectObjects(interior.group.children,true)[0].object.name,'kitchen-back-glazed-tiles');
 });
 
 test('the matte oak scan follows the 435 × 105 cm island, its folded ends and the back counter', async () => {

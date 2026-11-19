@@ -387,10 +387,15 @@ test('terracotta faces and ceiling stay within the ground hall and both conceale
   };
   for(const probe of [['guest-inner',11.10,8.21,1,0],['guest-office',10.9,9.15,0,1],['hall-front',8.88,8.18,0,-1]])
     assert.equal(requestedFace(...probe),paint);
+  for(const probe of [['kitchen-back',6.52,8.82,0,-1],['kitchen-back',6.8,8.43,-1,0],
+    ['kitchen-back',6.8,8.59,-1,0],['garage-hall',6.575,8.46,0,-1],['garage-hall',6.8,8.12,-1,0]])
+    assert.equal(requestedFace(...probe),paint,'Hall paint wraps the exposed pier at '+probe.slice(1,3));
+  assert.equal(requestedFace('garage-hall',6.8,7.80,-1,0),object('vestibule-painted-ceiling').material);
   for(const probe of [['guest-inner',11.46,8.21,-1,0],['guest-inner',11.10,6.9,1,0],['guest-office',12.9,9.11,0,1],['hall-front',8.88,7.72,0,1]])
     assert.notEqual(requestedFace(...probe),paint);
   const ceiling=object('hall-painted-ceiling');
-  for(const [x,y,expected] of [[9.2,8.55,true],[10.5,9.25,true],[7.3,8.22,true],[10.2,7.7,false],[11.45,8.7,false],[10.3,9.6,false],[5.8,8.9,false],[8.2,9.45,false]])
+  for(const [x,y,expected] of [[9.2,8.55,true],[10.5,9.25,true],[7.3,8.22,true],[6.574,8.40,true],[6.66,8.63,true],
+    [6.55,8.52,false],[6.62,7.90,false],[6.62,8.68,false],[10.2,7.7,false],[11.45,8.7,false],[10.3,9.6,false],[5.8,8.9,false],[8.2,9.45,false]])
     assert.equal(hits(ceiling,[x,y,2.70],[0,0,1],.12).length>0,expected,'Hall ceiling at '+[x,y]);
   for(const [id,wall,x,y,dx,dy] of [['office','guest-office',10.34,9.13,0,1],['playroom','guest-inner',11.04,8.84,1,0]]){
     const leaf=object('hall-flush-'+id+'-leaf'),door=leaf.parent;

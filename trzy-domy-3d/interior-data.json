@@ -1127,6 +1127,7 @@
       "facing": "+y",
       "source": "ground-plan",
       "height": 0.315,
+      "baseCabinetWidthM": 0.80,
       "support": "kitchen-back",
       "elevation": 0.95
     },
@@ -2484,15 +2485,6 @@
         "normal": "+x",
         "alongM": 8.93,
         "heightM": 1.08
-      },
-      {
-        "room": "0.4",
-        "type": "socket",
-        "finish": "blue",
-        "support": "kitchen-back-slab-backsplash",
-        "normal": "+y",
-        "alongM": 3.23,
-        "heightM": 1.16
       },
       {
         "room": "0.4",
