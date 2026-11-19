@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-19.3",
+  "modelVersion": "2026-11-19.4",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -47,7 +47,9 @@
     "Arbiton · Amaron Herringbone EIR Dąb Virgin": "https://arbiton.com/pl/panele-winylowe/panele-winylowe-na-klik/panele-winylowe-arbiton-amaron-herringbone-eir-dab-virgin-5mm-0-55mm",
     "Poly Haven · oak_veneer_01": "https://polyhaven.com/a/oak_veneer_01",
     "Poly Haven · oak_veneer_05": "https://polyhaven.com/a/oak_veneer_05",
-    "Poly Haven · white_oak_veneer": "https://polyhaven.com/a/white_oak_veneer"
+    "Poly Haven · white_oak_veneer": "https://polyhaven.com/a/white_oak_veneer",
+    "Samsung BRR29703EWW/EF": "https://www.samsung.com/pl/refrigerators/built-in-one-door/brr6000b-built-in-1door-larder-with-smartthings-289l-white-brr29703eww-ef/",
+    "Samsung BRZ22700EWW/EF": "https://www.samsung.com/pl/refrigerators/built-in-one-door/brr6000b-built-in-1door-freezer-with-smartthings-218l-white-brz22700eww-ef/"
   },
   "houses": [
     {
@@ -1735,7 +1737,7 @@
     "proceduralCodeSha256": "f28e65f81bfd542148d9fd4925bc2e84fb2d7a8a449e34f84393ac2a653c99e2",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "f6f27de0208ddacc1880061ce21577c8aa17d9cf9595e32efb76d2759fffda44",
-    "runtimeSha256": "4b60262f16238e6d108b89306be58317b6284daec726eb8d6c5964db73843b7a"
+    "runtimeSha256": "19158ad8d513a9c3a8bd2b3d90e8e39f6db6747839ae2690b88badabe5c11ec2"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1768,7 +1770,8 @@
     "Dom /193. Dębowa jodełka, drzwi wewnętrzne, żółta kuchnia z wyspą w kaflach, terakotowy sufit kuchni oraz sześć różnych krzeseł przy zaokrąglonym stole. W trybie spaceru na telefonie można rozglądać się ruchem urządzenia.",
     "Spacer mobilny obsługuje joystick dotykowy, a w domu /193 można włączyć i zgasić projekcję nieruchomego obrazu.",
     "Dom /193: balustrady schodów i otworu na piętrze, start Spaceru w salonie, winylowa jodełka i dodatki przy szafce RTV.",
-    "Dom /193: przejście po schodach, siatka na otwartej części spocznika i balustrada antresoli. Gest dwóch palców reguluje pole widzenia podczas spaceru."
+    "Dom /193: przejście po schodach, siatka na otwartej części spocznika i balustrada antresoli. Gest dwóch palców reguluje pole widzenia podczas spaceru.",
+    "Dom /193: zabudowa spiżarni z blatem i regałem oraz osobno otwierane lodówka i zamrażarka Samsung w kuchni."
   ],
   "contextParcels": [
     {
@@ -3607,7 +3610,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "c6c5450b4cd454b25a96503b272a9db075cbf8da9f95d48753e1a052fef7a6f4",
+    "dataSha256": "d79f8f57dbd9a57cd53e908891c2292863234e3e8ea114d05545a6ec6a567443",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,

@@ -411,7 +411,7 @@ test('both living room roof slopes have uninterrupted smooth white plaster and r
 });
 
 test('room fixtures are suspended from the slab or the actual sloped lining, with walking headroom', () => {
- const names=['hall','guest','office','upper-hall','upper-one','upper-two','upper-master'];
+ const names=['pantry','hall','guest','office','upper-hall','upper-one','upper-two','upper-master'];
  for(const id of names){
   const name='light-fixture-'+id+'-',shade=object(name+'shade'),canopy=object(name+'canopy');
   assert.equal(shade.geometry.type,'LatheGeometry');
@@ -425,7 +425,7 @@ test('room fixtures are suspended from the slab or the actual sloped lining, wit
   assert(bounds(shade).min.z-(upper?data.levels.upper:0)>2.30,id+' clear height');
  }
  const lights=interior.group.children.filter(child=>child.isPointLight);
- assert.equal(lights.length,9+5);
+ assert.equal(lights.length,names.length+2+5);
  for(const id of ['entry','family-basin','private-basins','ground-bath','living']){
   const lamp=object('sconce-light-'+id);
   const globe=object(id==='living'?'living-sconce-opal':id==='ground-bath'?'light-fixture-bath-sunburst-opal':'light-fixture-mood-'+id+'-opal');
@@ -470,6 +470,15 @@ test('surface projection and static batching preserve plaster continuity and ind
     else close(Math.abs(door.rotation.z-closedYaw),Math.PI/2,door.name+' still swings after batching');
     model.updateHallDoors(null);
   }
+});
+
+test('omitting the appliance tower also omits its two hinges and cabinet-mounted switch', () => {
+  const withoutTower={...data,furniture:data.furniture.filter(item=>item.id!=='kitchen-tall')};
+  const model=addIconInterior({THREE,scene:new THREE.Scene(),house,data:withoutTower});
+  for(const id of ['fridge','freezer'])assert(!model.group.getObjectByName('kitchen-'+id+'-door'));
+  const index=data.electrical.points.findIndex(point=>point.support==='kitchen-tall-body');
+  assert(index>=0 && !model.group.getObjectByName('loft-fixture-'+index+'-frame'));
+  assert(model.group.getObjectByName('concealed-pantry-door'));
 });
 
 test('the house can omit the optional pantry cabinet and retain its walking doors', () => {

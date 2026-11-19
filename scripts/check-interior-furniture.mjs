@@ -566,7 +566,7 @@ test('the closed painted portal joins the ceiling-height kitchen and admits walk
   const run = ['kitchen-pantry','kitchen-back','kitchen-tall'].map(itemBounds);
   for (const section of run) close(section.max.z,data.levels.groundCeiling,'Cabinetry touches slab');
   close(furniture.get('kitchen-island').box[1]-furniture.get('kitchen-back').box[3],1.08,'Island working aisle');
-  for(let i=0;i<5;i++) {
+  for(let i=0;i<4;i++) {
     const light = bounds(interior.group.getObjectByName('kitchen-back-upper-'+i));
     const crown = bounds(interior.group.getObjectByName('kitchen-back-crown-'+i));
     assert(light.max.y+.10<crown.max.y && light.min.z>1.55 && crown.max.z>2.79);
@@ -795,6 +795,44 @@ test('the downstairs bath finishes are confined to its own walls and keep the ha
   }
 });
 
+test('Samsung columns preserve product envelopes, removable shelves, drawers and door bins', () => {
+  const get=id=>interior.group.getObjectByName(id);
+  for(const [i,id,model,shelves,drawers,bins] of [
+    [0,'fridge','BRR29703EWW/EF',4,3,4],[1,'freezer','BRZ22700EWW/EF',2,5,0],
+  ]){
+    const body=get('kitchen-'+id+'-body'),door=get('kitchen-'+id+'-door'),prefix='kitchen-tall-'+id+'-';
+    assert.equal(body.userData.appliance,id);assert.equal(door.userData.model,model);
+    assert.equal(body.parent,interior.group);assert.equal(door.parent,interior.group);
+    const casing=bounds(get(prefix+'back')),skin=bounds(get(prefix+'door-white-skin'));
+    close(casing.max.x-casing.min.x,.54,'540 mm appliance width');
+    close(casing.max.z-casing.min.z,1.775,'1775 mm appliance height');
+    close(skin.max.y-casing.min.y,.55,'550 mm appliance depth');
+    const list=body.getObjectsByProperty('isMesh',true);
+    assert.equal(list.filter(o=>/shelf-\d+$/.test(o.name)).length,shelves);
+    assert.equal(list.filter(o=>/drawer-\d+-front$/.test(o.name)).length,drawers);
+    const moving=door.getObjectsByProperty('isMesh',true);
+    assert.equal(moving.filter(o=>/bin-\d+-front$/.test(o.name)).length,bins);
+    assert(moving.every(o=>o.userData.dynamic));
+    const face=bounds(get('kitchen-tall-'+id)),x=(face.min.x+face.max.x)/2;
+    const origin=new THREE.Vector3(...interior.localToWorld([x,10.15,1.749]));
+    const direction=new THREE.Vector3(0,-1,0).transformDirection(interior.group.matrix);
+    const ray=new THREE.Raycaster(origin,direction,0,2);
+    const fixedBack=get(prefix+'metal-duct');
+    const first=()=>ray.intersectObjects(interior.group.children,true)[0].object;
+    interior.group.updateMatrixWorld(true);
+    assert.equal(first(),get('kitchen-tall-'+id),'Closed slab hides the chamber');
+    close(door.rotation.z,0,'Closed position');
+    door.rotation.z=door.userData.openYaw;interior.group.updateMatrixWorld(true);
+    assert.equal(Math.sign(door.rotation.z),i?-1:1);
+    assert.equal(first(),fixedBack,'Open door reveals the chamber back through the cabinet');
+    door.rotation.z=0;interior.group.updateMatrixWorld(true);
+    assert.equal(first(),get('kitchen-tall-'+id),'Closing restores the front');
+  }
+  const counter=bounds(get('kitchen-back-top')),sink=itemBounds('kitchen-sink'),oven=bounds(get('kitchen-back-oven-0.7'));
+  assert(counter.min.x<=sink.min.x && counter.max.x>=sink.max.x);
+  assert(oven.min.x>counter.max.x && oven.max.x<bounds(get('kitchen-tall-fridge')).min.x);
+});
+
 test('every kitchen cabinet and concealed pantry door has the same matte yellow slab front', () => {
   const get=id=>interior.group.getObjectByName(id);
   const aisle=parts('kitchen-island').filter(o=>o.name.includes('-working-drawer-'));
@@ -803,8 +841,8 @@ test('every kitchen cabinet and concealed pantry door has the same matte yellow 
   assert.equal(yellow.color.getHex(),0xe5c368);
   assert(yellow.roughness>=.6 && !yellow.map);
   const perimeter=['kitchen-pantry','kitchen-back','kitchen-tall'].flatMap(parts).filter(o=>
-    /-(closed-leaf|left-front|right-front|front-\d-\d|crown-\d|upper-\d|oven-upper|oven-base|fridge)$/.test(o.name));
-  assert.equal(perimeter.length,30);
+    /-(closed-leaf|left-front|right-front|front-\d-\d|crown-\d|upper-\d|oven-upper|oven-base|oven-crown|fridge|freezer)$/.test(o.name));
+  assert.equal(perimeter.length,28);
   for(const door of [...perimeter,...aisle]){
     const face=bounds(door);
     close(face.max.y-face.min.y,.021,'Unframed 21 mm slab door');
@@ -1060,4 +1098,84 @@ test('the private bath ledge blocks walking and vessels sit on the exposed famil
     assert(vase.min.x>wall.max.x && vase.max.x<=shelf.max.x);
     close(vase.min.z,shelf.max.z,'Vessel is supported by shelf');
   }
+});
+
+test('pantry has a clear landing counter, reachable single-depth shelves and floor-level reserves', () => {
+  const get = name => bounds(interior.group.getObjectByName(name));
+  const top = get('pantry-right-landing-top'), rack = get('pantry-left-shelf-2');
+  close(top.max.z,.90,'Finished landing height');
+  close(top.max.x-top.min.x,.55,'Usable top depth');
+  close(top.max.y-top.min.y,1.54,'Usable top length');
+  const landing = top.clone();
+  landing.min.z = top.max.z+.001;
+  landing.max.z = top.max.z+.45;
+  landing.min.y += .02;
+  landing.max.y = landing.min.y+1.10;
+  for(const mesh of parts('pantry-right'))assert(!landing.intersectsBox(bounds(mesh)),mesh.name+' clears a 110 cm grocery landing');
+  assert(rack.max.x-rack.min.x<.28);
+  const lower = get('pantry-right-reserve-shelf-0'), upper = get('pantry-right-shelf-0');
+  assert(lower.max.z<.12 && lower.max.x-lower.min.x>2*(upper.max.x-upper.min.x));
+  for(const name of ['pantry-left-dry-0-0-glass','pantry-left-tin-3','pantry-right-potato-crate-produce-0','pantry-right-weighing-bowl']){
+    const box=get(name),size=box.getSize(new THREE.Vector3());
+    assert(size.x>.085 && size.x<.26 && size.z>.045 && size.z<.25,name+' retains household scale');
+  }
+});
+
+test('both moving doors clear a continuous kitchen–pantry–garage walking route', () => {
+  const doors=['kitchen-pantry-closed-leaf','hall-flush-garage-pantry-leaf'].map(name=>interior.group.getObjectByName(name));
+  const collision=createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<1.7 && o.maxZ>.03),.36);
+  const local=[[1.50,9.81],[1.50,8.01],[2.12,8.01],[2.12,6.03]];
+  const route=local.map(p=>new THREE.Vector3(...interior.localToWorld([...p,1.30])));
+  for(let i=1;i<route.length;i++){
+    const a=route[i-1],b=route[i];
+    assert(!collision.pathBlocked(a.toArray().slice(0,2),b.toArray().slice(0,2)),'72 cm body clears walls and stock');
+    for(let t=0;t<=20;t++){
+      const walker=a.clone().lerp(b,t/20);
+      interior.updateHallDoors(walker);interior.group.updateMatrixWorld(true);
+      for(const leaf of doors){
+        leaf.geometry.computeBoundingBox();
+        assert(leaf.geometry.boundingBox.distanceToPoint(leaf.worldToLocal(walker.clone()))>.36,leaf.name+' clears walking body');
+      }
+    }
+  }
+  interior.updateHallDoors(null);
+});
+
+test('the two kitchen appliance doors toggle independently from the aisle after batching', async () => {
+  const scene = new THREE.Scene(), model = addIconInterior({ THREE, scene, house, data });
+  const { batchStaticInteriorDetails } = await load(await readFile(new URL('../src/model/static-detail-batches.js', import.meta.url), 'utf8'));
+  batchStaticInteriorDetails(THREE, model.group);
+  scene.updateMatrixWorld(true);
+  const camera = new THREE.PerspectiveCamera(62, 1, .03, 100);
+  const state = id => model.group.getObjectByName('kitchen-' + id + '-door');
+  const world = (x, y, z) => model.group.localToWorld(new THREE.Vector3(x, y, z));
+  function tap(id) {
+    const x = id === 'fridge' ? 5.48 : 6.12;
+    camera.position.copy(world(x, 9.99, 1.58));
+    camera.up.set(0, 0, 1);
+    camera.lookAt(world(x, 9.1, 1.24));
+    return model.appliances.toggleAt({ x:0, y:0 }, camera);
+  }
+  function finish() {
+    assert.equal(model.appliances.update(performance.now() + 500), false);
+  }
+  for (const id of ['fridge', 'freezer']) {
+    const compartment = model.group.getObjectByName('kitchen-' + id + '-body');
+    assert.equal(compartment.visible, false);
+    assert(tap(id));
+    finish();
+    assert.equal(compartment.visible, true);
+    close(state(id).rotation.z, state(id).userData.openYaw, id + ' reaches its hinge stop');
+  }
+  assert(tap('fridge'));
+  finish();
+  close(state('fridge').rotation.z, 0, 'Fridge closes when tapping its visible compartment');
+  close(state('freezer').rotation.z, state('freezer').userData.openYaw, 'Freezer stays open');
+  assert(tap('freezer'));
+  finish();
+  close(state('freezer').rotation.z, 0, 'Freezer closes');
+  const blocker = new THREE.Mesh(new THREE.BoxGeometry(.42,.42,.42), new THREE.MeshBasicMaterial());
+  blocker.position.copy(world(5.48, 9.65, 1.45));
+  scene.add(blocker);
+  assert.equal(tap('fridge'), false, 'Opaque obstruction prevents opening the fridge');
 });

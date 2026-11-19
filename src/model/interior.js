@@ -8,6 +8,7 @@ export function addIconInterior(options) {
  iconInteriorFurnishings(context);
  options.fitGarage?.(context);
  const projector=iconLivingProjector(context);
+ const appliances=iconApplianceControls(context);
  iconLivingWallSconce(context);
  iconLivingMediaAccessories(context);
  iconInteriorLightingAndRoof(context);
@@ -16,7 +17,7 @@ export function addIconInterior(options) {
  options.joinStory?.(options.THREE,context.group);
  const updateHallDoors=iconHallDoorMotion(context);
  const {group,navigation,data,world} = context;
- return {group,navigation,rooms:data.rooms,metadata:data.metadata,localToWorld:world,updateHallDoors,projector};
+ return {group,navigation,rooms:data.rooms,metadata:data.metadata,localToWorld:world,updateHallDoors,projector,appliances};
 }
 
 const iconInteriorContains = (p,r)=>{let yes=false;for(let i=0,j=r.length-1;i<r.length;j=i++){const a=r[i],b=r[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;};
@@ -1107,7 +1108,7 @@ function iconKitchenEspresso(frame,s,p,x,z) {
 
 function iconKitchenNiche(context,frame,s,p,k) {
  const {width:w,depth:d,part}=frame,top=context.data.levels.groundCeiling;
- const counter=frame.item.height,upper=1.58,crown=2.1,front=d-.065,bay=w/5;
+ const counter=frame.item.height,upper=1.58,crown=2.1,front=d-.065,bay=w/4;
  part('slab-backsplash',[0,0,w,.029],counter,upper-counter,p.chalk);
  const left=.056,right=bay*1.69;
  part('mosaic-grout',[left,.029,right,.035],counter+.013,upper-counter-.028,p.putty);
@@ -1116,7 +1117,7 @@ function iconKitchenNiche(context,frame,s,p,k) {
  part('niche-end-trim',[.010,.029,.028,.393],counter,upper-counter,p.accentWalnut);
  part('upper-carcass',[0,0,w,.423],upper,crown-upper,k.recess);
  part('crown-carcass',[0,0,w,front-.021],crown,top-crown,k.recess);
- for(let i=0;i<5;i++){
+ for(let i=0;i<4;i++){
   const l=bay*i+.0025,r=bay*(i+1)-.0025;
   iconKitchenPanel(frame,'upper-'+i,l,r,upper,crown-.003,.445,k.yellow);
   iconKitchenPanel(frame,'crown-'+i,l,r,crown+.002,top,front,k.yellow);
@@ -1124,20 +1125,159 @@ function iconKitchenNiche(context,frame,s,p,k) {
  part('niche-light',[.036,.38,w-.036,.39],upper-.008,.008,frame.mats.lamp);
 }
 
-function iconKitchenTower(frame,p,k,face) {
- const {width:w,part,item}=frame,oven=.65,crown=2.1;
- const front=(id,l,r,b,t)=>iconKitchenPanel(frame,id,l,r,b,t,face,k.yellow);
- for(const [i,l,r] of [[0,.002,oven-.002],[1,oven+.002,w-.002]])front('crown-'+i,l,r,crown+.002,item.height);
- front('oven-base',.003,oven-.003,.121,.697);
- front('oven-upper',.003,oven-.003,1.751,crown-.003);
- front('fridge',oven+.003,w-.003,.121,crown-.003);
- iconKitchenGrip(frame,'fridge-pull',oven+.014,face,1.04,.275,true,k.bronze);
+function iconKitchenOvens(frame,p,k,face,start,end,ceiling) {
+ const {part}=frame,center=(start+end)/2,front=(id,b,t)=>iconKitchenPanel(frame,id,start+.003,end-.003,b,t,face,k.yellow);
+ part('oven-carcass',[start,0,end,face-.021],.118,ceiling-.118,k.recess);
+ front('oven-base',.121,.697);front('oven-upper',1.751,2.097);front('oven-crown',2.102,ceiling);
  for(const z of [.70,1.225]){
-  part('oven-'+z,[.004,face-.021,oven-.004,face+.003],z,.519,p.black);
-  part('oven-window-'+z,[.056,face+.003,oven-.056,face+.005],z+.039,.352,p.screen);
-  part('oven-pull-'+z,[.073,face+.005,oven-.073,face+.034],z+.405,.016,p.silver);
-  part('oven-display-'+z,[.266,face+.003,.383,face+.005],z+.465,.023,p.screen);
+  part('oven-'+z,[start+.004,face-.021,end-.004,face+.003],z,.519,p.black);
+  part('oven-window-'+z,[start+.056,face+.003,end-.056,face+.005],z+.039,.352,p.screen);
+  part('oven-pull-'+z,[start+.073,face+.005,end-.073,face+.034],z+.405,.016,p.silver);
+  part('oven-display-'+z,[center-.058,face+.003,center+.058,face+.005],z+.465,.023,p.screen);
  }
+}
+
+function iconSamsungFinishes({THREE}) {
+ const finish=(name,color,roughness,extra={})=>new THREE.MeshStandardMaterial({name,color,roughness,...extra});
+ const steel=iconFinishTexture(THREE,'Samsung Metal Cooling brushed aluminium',64,256,.42,(u,v)=>{
+  const grain=1.2*Math.sin(2*Math.PI*(123*v+.25*Math.sin(2*Math.PI*u)))+1.6*Math.sin(2*Math.PI*59*v);
+  return [179+grain,183+grain,185+grain];
+ });
+ steel.metalness=.24;
+ return {steel,white:finish('Snow White moulded liner','#f1f2ef',.32),trim:finish('Porcelain shelf trim','#d1d6d7',.39),
+  gasket:finish('Door bellows','#adb5b7',.78),slot:finish('Cold-air outlet','#424b51',.64),
+  glass:finish('Tempered shelf glass','#c3e1df',.13,{transparent:true,opacity:.31,depthWrite:false}),
+  smoke:finish('Clear smoked storage bin','#a4adb0',.21,{transparent:true,opacity:.55,depthWrite:false}),
+  rim:finish('Smoked polycarbonate rim','#80909a',.24),lamp:finish('Ceiling LED diffuser','#f6ffff',.35,{emissive:'#e1f5ff',emissiveIntensity:.6})};
+}
+
+function iconSamsungMark(context,frame,tag,label,x,y,z,width,height) {
+ const {THREE}=context;
+ if(typeof document==='undefined')return;
+ const flake=label==='❄',canvas=document.createElement('canvas');canvas.width=flake?64:256;canvas.height=64;
+ const ink=canvas.getContext('2d');if(!ink)return;
+ if(flake){
+  ink.translate(32,32);ink.strokeStyle='#d5dcdd';ink.lineWidth=3;
+  for(let arm=0;arm<6;arm++){
+   ink.beginPath();ink.moveTo(0,0);ink.lineTo(0,29);ink.moveTo(-6,22);ink.lineTo(0,15);ink.lineTo(6,22);
+   ink.stroke();ink.rotate(Math.PI/3);
+  }
+ }else{
+  ink.textAlign='center';ink.textBaseline='middle';ink.font='600 36px Arial,sans-serif';
+  ink.fillStyle='#536067';ink.fillText(label,128,32,248);
+ }
+ const map=new THREE.CanvasTexture(canvas);map.colorSpace=THREE.SRGBColorSpace;
+ const mat=new THREE.MeshBasicMaterial({map,transparent:true,depthWrite:false,toneMapped:false});
+ const geometry=new THREE.PlaneGeometry(width,height);
+ if(context.group.matrix.determinant()<0){const uv=geometry.attributes.uv;for(let i=0;i<uv.count;i++)uv.setX(i,1-uv.getX(i));}
+ geometry.rotateX(Math.PI/2);geometry.rotateZ(Math.PI);
+ const mesh=iconLivingShapes(context,frame).add(tag+'-print',geometry,mat,x,y,z);
+ mesh.castShadow=mesh.receiveShadow=false;mesh.renderOrder=2;
+}
+
+function iconSamsungDrawers(context,frame,id,x,front,base,heights,m) {
+ let bottom=base+.06;
+ for(const [i,height] of heights.entries()){
+  const name=id+'-drawer-'+i,back=front-.407,top=bottom+height;
+  const bin=(tag,l,r,y0,y1,b,t,mat)=>frame.part(name+'-'+tag,[x+l,y0,x+r,y1],b,t-b,mat);
+  bin('floor',-.221,.221,back,front,bottom,bottom+.008,m.trim);
+  bin('rear',-.221,.221,back,back+.009,bottom+.008,top-.024,m.trim);
+  for(const side of [-.221,.214])bin('side-'+side,side,side+.007,back+.009,front-.008,bottom+.008,top-.011,m.smoke);
+  bin('front',-.221,.221,front-.008,front,bottom+.008,top-.019,m.smoke);
+  bin('grip',-.219,.219,front-.016,front+.002,top-.019,top,m.rim);
+  if(i===0&&id==='fridge')bin('recessed-pull',-.186,.186,front,front+.004,top-.088,top-.049,m.rim);
+  const label=id==='freezer'?'❄':['Fresh Box','Optimal Fresh+','Humidity Fresh+'][i];
+  iconSamsungMark(context,frame,name,label,x+(id==='freezer'?.157:0),front+.003,bottom+height*.40,id==='freezer'?.062:.206,id==='freezer'?.062:.036);
+  bottom=top+.009;
+ }
+}
+
+function iconSamsungCavity(context,frame,id,x,face,base,m) {
+ // The 510 mm carcass ends behind a 40 mm appliance door and a separate 21 mm joinery front.
+ const nose=face-.061,rear=nose-.510,inner=rear+.042,top=base+1.775;
+ const plate=(tag,l,r,a,b,z0,z1,mat)=>frame.part(id+'-'+tag,[x+l,a,x+r,b],z0,z1-z0,mat);
+ plate('back',-.270,.270,rear,inner,base,top,m.white);
+ plate('metal-duct',-.199,.199,inner,inner+.007,base+.064,top-.118,m.steel);
+ for(const side of [-.270,.233])plate('jamb-'+side,side,side+.037,inner,nose,base,top,m.white);
+ plate('sill',-.233,.233,inner,nose,base,base+.057,m.white);
+ plate('lintel',-.233,.233,inner,nose-.004,top-.074,top,m.white);
+ plate('led',-.108,.108,rear+.157,nose-.067,top-.079,top-.074,m.lamp);
+ plate('control-strip',-.125,.125,nose-.004,nose-.002,top-.049,top-.012,m.trim);
+ iconSamsungMark(context,frame,id+'-header','SAMSUNG',x-.192,nose-.003,top-.032,.105,.025);
+ iconSamsungMark(context,frame,id+'-display',id==='fridge'?'03°':'−18°',x,nose-.001,top-.032,.082,.028);
+ for(const [i,h] of [1.575,1.427,1.282].entries()){
+  const width=i?.049:.147;
+  for(const offset of i?[-.061,.061]:[0])plate('vent-'+i+'-'+offset,offset-width/2,offset+width/2,inner+.007,inner+.009,base+h,base+h+.007,m.slot);
+ }
+ iconSamsungMark(context,frame,id+'-duct','Metal Cooling',x,inner+.010,base+1.503,.207,.040);
+ const fridge=id==='fridge',shelfFront=nose-(fridge?.121:.028);
+ for(const [i,h] of (fridge?[.85,1.051,1.261,1.477]:[1.252,1.454]).entries()){
+  const z=base+h;
+  plate('shelf-'+i,-.231,.231,inner+.009,shelfFront,z,z+.006,m.glass);
+  plate('shelf-nose-'+i,-.232,.232,shelfFront-.004,shelfFront+.006,z-.003,z+.009,m.trim);
+  for(const side of [-.233,.222])plate('shelf-rail-'+i+'-'+side,side,side+.011,inner+.011,shelfFront,z-.013,z,m.white);
+ }
+ if(fridge)plate('humidity-slider',-.030,.030,shelfFront-.002,shelfFront+.008,base+.855,base+.862,m.rim);
+ iconSamsungDrawers(context,frame,id,x,nose-.024,base,fridge?[.396,.174,.189]:[.254,.251,.252,.174,.170],m);
+}
+
+function iconSamsungDoor(context,frame,id,x,face,base,left,right,m,k) {
+ const top=base+1.775,nose=face-.021,inner=nose-.040,swing=id==='fridge'?1:-1;
+ const plate=(tag,l,r,a,b,z0,z1,mat)=>frame.part(id+'-door-'+tag,[x+l,a,x+r,b],z0,z1-z0,mat);
+ iconKitchenPanel(frame,id,left+.003,right-.003,base-.012,top+.009,face,k.yellow);
+ const pullX=swing>0?right-.026:left+.018;
+ iconKitchenGrip(frame,id+'-pull',pullX,face,1.03,.275,true,k.bronze);
+ plate('white-skin',-.27,.27,inner+.006,nose,base,top,m.white);
+ plate('bellows',-.257,.257,inner+.002,inner+.006,base+.020,top-.021,m.gasket);
+ plate('lining',-.248,.248,inner,inner+.002,base+.030,top-.034,m.white);
+ plate('metal',-.216,.216,inner-.002,inner,base+.059,top-.059,m.steel);
+ if(id==='fridge'){
+  for(const [i,h] of [.887,1.267,1.425,1.580].entries()){
+   const z=base+h,depth=i?.095:.109,height=i?.057:.092;
+   plate('bin-'+i+'-floor',-.209,.209,inner-depth,inner-.002,z,z+.006,m.trim);
+   plate('bin-'+i+'-front',-.209,.209,inner-depth,inner-depth+.006,z+.006,z+height-.005,m.smoke);
+   for(const side of [-.209,.203])plate('bin-'+i+'-side-'+side,side,side+.006,inner-depth+.006,inner-.002,z+.006,z+height-.005,m.smoke);
+   plate('bin-'+i+'-lip',-.210,.210,inner-depth-.001,inner-depth+.007,z+height-.005,z+height,m.rim);
+  }
+ }
+}
+
+function iconSamsungTower(context,frame,k,face) {
+ const {width:w,part,item}=frame,base=.133,top=base+1.775,m=iconSamsungFinishes(context);
+ // The right end cheek also carries the existing kitchen/hall light switch.
+ part('body',[w-.018,0,w,face-.021],.118,item.height-.118,k.yellow);
+ part('left-cheek',[0,0,.018,face-.021],.118,item.height-.118,k.yellow);
+ part('centre-divider',[w/2-.009,0,w/2+.009,face-.021],base,top+.012-base,k.recess);
+ part('support-shelf',[.018,0,w-.018,face-.022],.115,base-.115,k.recess);
+ part('bridge',[.018,0,w-.018,face-.022],top+.012,item.height-top-.012,k.recess);
+ for(const [i,id] of ['fridge','freezer'].entries()){
+  const left=w*i/2,right=w*(i+1)/2,x=(left+right)/2;
+  part(id+'-toe-vent',[x-.206,face-.064,x+.206,face-.062],.037,.064,m.slot);
+  for(let rib=0;rib<4;rib++)part(id+'-grille-'+rib,[x-.203,face-.062,x+.203,face-.060],.043+rib*.016,.004,m.rim);
+  iconKitchenPanel(frame,'crown-'+i,left+.003,right-.003,top+.014,item.height,face,k.yellow);
+  // Fill the strips outside the 540 mm appliance; the food compartment itself is hollow.
+  for(const [j,a,b] of [[0,left+.018,x-.270],[1,x+.270,right-.018]])
+   part(id+'-filler-'+j,[a,0,b,face-.023],base,1.775,m.white);
+  const bodyStart=context.group.children.length;
+  iconSamsungCavity(context,frame,id,x,face,base,m);
+  const doorStart=context.group.children.length;
+  iconSamsungDoor(context,frame,id,x,face,base,left,right,m,k);
+  const hinge=frame.point(i?right-.003:left+.003,face);
+  (frame.appliances??=[]).push({id,hinge,body:context.group.children.slice(bodyStart,doorStart),door:context.group.children.slice(doorStart)});
+ }
+}
+
+function iconMountSamsung(context,{id,hinge,body,door}) {
+ const {THREE,group}=context,model=id==='fridge'?'BRR29703EWW/EF':'BRZ22700EWW/EF';
+ const fixed=new THREE.Group(),pivot=new THREE.Group(),mount=new THREE.Group();
+ fixed.name='kitchen-'+id+'-body';fixed.userData={kind:'appliance-body',appliance:id,model};
+ pivot.name='kitchen-'+id+'-door';pivot.position.set(...hinge);
+ pivot.userData={kind:'appliance-door',appliance:id,model,dynamic:true,closedYaw:0,openYaw:(id==='fridge'?1:-1)*Math.PI/2};
+ // Compensate for the pivot while keeping each part's original furniture coordinates.
+ mount.position.copy(pivot.position).multiplyScalar(-1);
+ for(const mesh of [...body,...door])if(mesh.material.transparent)mesh.castShadow=false;
+ for(const mesh of door)mesh.userData.dynamic=true;
+ group.add(fixed,pivot);fixed.add(...body);pivot.add(mount);mount.add(...door);
 }
 
 function iconKitchenDrawers(frame,k,start,end,count,face,reverse=false) {
@@ -1212,18 +1352,20 @@ function iconLivingKitchen(context,frame,s,p) {
  }
  const k=context.kitchenFinishes??=iconKitchenFinishes(context);
  if(item.id==='kitchen-pantry'){iconKitchenPantry(context,frame,k);return;}
- const island=item.id==='kitchen-island',tall=item.id==='kitchen-tall',height=item.height,face=island?d-.15:d-.065;
- const end=island?.053:0,back=island?.045:0;
- part('recessed-plinth',[.064,back+.049,w-.064,face-.064],.014,.105,p.shadow);
- part('body',[end,back+(island?.021:0),w-end,face-.021],.118,height-.118-(tall?0:.05),k.yellow);
- if(tall){iconKitchenTower(frame,p,k,face);return;}
- part('top',[0,0,w,d],height-.05,.05,p.stone);
+ const island=item.id==='kitchen-island',tall=item.id==='kitchen-tall',height=item.height;
+ const face=island?d-.15:d-.065,end=island?.053:0,back=island?.045:0;
+ part('recessed-plinth',[.064,back+.049,w-.064,(tall?d-.035:face)-.064],.014,.105,p.shadow);
+ if(tall){iconSamsungTower(context,frame,k,d-.035);return;}
+ const run=island?w:w-.62;
+ part('body',[end,back+(island?.021:0),run-end,face-.021],.118,height-.168,k.yellow);
+ part('top',[0,0,run,d],height-.05,.05,p.stone);
  if(island){
   iconKitchenIslandTiles(context,frame,back);
   iconKitchenDrawers(frame,k,end,w-end,5,back,true);
  }else{
-  iconKitchenDrawers(frame,k,0,w,5,face);
-  iconKitchenNiche(context,frame,s,p,k);
+  iconKitchenDrawers(frame,k,0,run,4,face);
+  iconKitchenNiche(context,{...frame,width:run},s,p,k);
+  iconKitchenOvens(frame,p,k,d-.035,run,w,context.data.levels.groundCeiling);
  }
 }
 
@@ -1448,12 +1590,10 @@ function iconProjectedPaint(THREE,paint,zone,handedness) {
  return finish;
 }
 
-function iconProjectorControl({THREE,scene,group,data},assembly,wall) {
+function iconVisiblePick({THREE,scene},roots) {
  const ray=new THREE.Raycaster(),direction=new THREE.Vector3(),segment=new THREE.Box3(),instanceBounds=new THREE.Box3();
- const lens=assembly.getObjectByName('projector-lens-glass'),paint=wall.material[2];
- let projectedPaint,isOn=false;
  function blocks(object){
-  if(!object.visible||object===assembly)return false;
+  if(!object.visible)return false;
   if(object.isMesh&&object.layers.test(ray.layers)){
    if(object.isInstancedMesh){
     if(!object.boundingBox)object.computeBoundingBox();
@@ -1467,18 +1607,77 @@ function iconProjectorControl({THREE,scene,group,data},assembly,wall) {
   }
   return object.children.some(blocks);
  }
- function toggleAt(ndc,camera){
-  for(let ancestor=assembly;ancestor;ancestor=ancestor.parent)if(!ancestor.visible)return false;
-  camera.updateWorldMatrix(true,false);assembly.updateWorldMatrix(true,true);
+ return (ndc,camera)=>{
+  const visibleRoots=roots.filter(root=>{
+   for(let node=root;node;node=node.parent)if(!node.visible)return false;
+   root.updateWorldMatrix(true,true);
+   return true;
+  });
+  camera.updateWorldMatrix(true,false);
   ray.setFromCamera(ndc,camera);ray.layers.mask=camera.layers.mask;
   const forward=ray.ray.direction.dot(camera.getWorldDirection(direction));
   ray.near=camera.near/forward;ray.far=camera.far/forward;
-  const hit=ray.intersectObjects(assembly.children,false).find(hit=>hit.object.visible&&hit.object.material.visible);
-  if(!hit)return false;
+  const hit=ray.intersectObjects(visibleRoots,true).find(({object,face})=>{
+   for(let node=object;node;node=node.parent)if(!node.visible)return false;
+   return (Array.isArray(object.material)?object.material[face.materialIndex]:object.material)?.visible;
+  });
+  if(!hit)return null;
   ray.far=hit.distance-.0001;
   segment.setFromPoints([ray.ray.at(ray.near,direction),hit.point]);
   scene.updateMatrixWorld();
-  if(blocks(scene))return false;
+  if(blocks(scene))return null;
+  let root=hit.object;
+  while(!visibleRoots.includes(root))root=root.parent;
+  return root;
+ };
+}
+
+function iconApplianceControls(context) {
+ const parts=new Map(),doors=[];
+ for(const id of ['fridge','freezer']){
+  const pivot=context.group.getObjectByName('kitchen-'+id+'-door');
+  if(!pivot)continue;
+  const body=context.group.getObjectByName('kitchen-'+id+'-body');
+  body.visible=false;
+  const state={pivot,body,open:false,start:0,from:0,target:0,moving:false};
+  doors.push(state);
+  parts.set(pivot,state);
+  parts.set(body,state);
+ }
+ const pick=iconVisiblePick(context,[...parts.keys()]);
+ function update(now){
+  let moving=false;
+  for(const state of doors){
+   if(!state.moving)continue;
+   const t=Math.min(1,(now-state.start)/340);
+   state.pivot.rotation.z=state.from+(state.target-state.from)*t*t*(3-2*t);
+   state.moving=t<1;
+   state.body.visible=state.open||state.moving;
+   moving||=state.moving;
+  }
+  return moving;
+ }
+ function toggleAt(ndc,camera){
+  const part=pick(ndc,camera),state=parts.get(part);
+  if(!state||(!state.open&&part!==state.pivot))return false;
+  const now=performance.now();
+  update(now);
+  state.open=!state.open;
+  state.body.visible=true;
+  state.from=state.pivot.rotation.z;
+  state.target=state.open?state.pivot.userData.openYaw:state.pivot.userData.closedYaw;
+  state.start=now;state.moving=true;
+  return true;
+ }
+ return {toggleAt,update};
+}
+
+function iconProjectorControl(context,assembly,wall) {
+ const {THREE,group,data}=context,pick=iconVisiblePick(context,[assembly]);
+ const lens=assembly.getObjectByName('projector-lens-glass'),paint=wall.material[2];
+ let projectedPaint,isOn=false;
+ function toggleAt(ndc,camera){
+  if(!pick(ndc,camera))return false;
   projectedPaint??=iconProjectedPaint(THREE,paint,data.projection,Math.sign(group.matrix.determinant()));
   isOn=!isOn;
   wall.material[2]=isOn?projectedPaint:paint;
@@ -1872,6 +2071,7 @@ function iconInteriorFurnishings(context) {
   if(item.type==='rug'||item.type==='concealed-door'||item.support)continue;
   const bounds=objects.reduce((max,object)=>{object.updateMatrix();object.geometry.computeBoundingBox();return Math.max(max,object.geometry.boundingBox.clone().applyMatrix4(object.matrix).max.z);},frame.z);
   obstacle('furniture-'+item.id,frame.walkBox??item.box,frame.z,bounds);
+  for(const appliance of frame.appliances??[])iconMountSamsung(context,appliance);
  }
 }
 
@@ -2081,6 +2281,7 @@ function iconRoomCeilingLights(context) {
  const linenShade=palette.linen.clone();
  linenShade.side=THREE.DoubleSide;
  const fittings=[
+  ['pantry',2.12,7.58,2.53,'opal',.14],
   ['hall',8.3,8.4,2.52,'opal',.16],['guest',12.6,7,2.44,'pleated',.29],
   ['office',12,10.9,2.49,'disc',.32],['upper-hall',5.6,7.5,5.70,'opal',.19],
   ['upper-one',4.52,2,5.64,'pleated',.26],['upper-two',3.2,7.6,5.66,'pleated',.26],
@@ -2608,6 +2809,132 @@ function iconGroundShower(context,frame,s,p) {
  frame.walkBox=[Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.max(a[0],b[0]),Math.max(a[1],b[1])];
 }
 
+function iconPantryLabel(context,shapes,key,text,u,v,z,width,height) {
+ const {THREE}=context,labels=context.pantryLabels??=new Map();
+ if(!labels.has(text)){
+  const paper=new THREE.MeshStandardMaterial({color:'#f5edda',roughness:.88});
+  if(typeof document!=='undefined'){
+   const canvas=document.createElement('canvas');canvas.width=256;canvas.height=96;
+   const ink=canvas.getContext('2d');ink.fillStyle='#f5edda';ink.fillRect(0,0,256,96);
+   ink.fillStyle='#344541';ink.fillRect(10,9,236,5);ink.fillRect(10,81,236,3);
+   ink.font='bold 36px sans-serif';ink.textAlign='center';ink.textBaseline='middle';ink.fillText(text,128,48,226);
+   paper.map=new THREE.CanvasTexture(canvas);paper.map.colorSpace=THREE.SRGBColorSpace;paper.color.set(0xffffff);
+  }
+  labels.set(text,paper);
+ }
+ const face=new THREE.PlaneGeometry(width,height).rotateX(Math.PI/2).rotateZ(Math.PI);
+ shapes.add(key+'-label',face,labels.get(text),u,v,z);
+}
+
+function iconPantryJar(context,shapes,key,u,v,z,r,h,contents,cap,label) {
+ const {THREE}=context;
+ const glass=context.pantryGlass??=new THREE.MeshStandardMaterial({color:'#d4e6d8',transparent:true,opacity:.19,depthWrite:false,roughness:.13,metalness:.10});
+ const skin=[[0,0],[r*.9,0],[r,.007],[r,h*.78],[r*.93,h*.84],[r*.77,h*.88],[r*.77,h*.94]];
+ const profile=skin.map(([radius,height])=>new THREE.Vector2(radius,height));
+ const jar=new THREE.LatheGeometry(profile,18).rotateX(Math.PI/2);
+ shapes.add(key+'-glass',jar,glass,u,v,z).castShadow=false;
+ shapes.disc(key+'-contents',u,v,z+.006,r*.94,r*.94,h*.72,contents);
+ shapes.disc(key+'-cap',u,v,z+h*.92,r*.83,r*.83,h*.08,cap);
+ iconPantryLabel(context,shapes,key,label,u,v+r+.001,z+h*.46,r*1.22,r*.55);
+}
+
+function iconPantryShelves(frame,levels,board,steel) {
+ const {width:w,part}=frame;
+ for(const [i,u] of [.08,w/2,w-.08].entries()){
+  part('wall-standard-'+i,[u-.015,0,u+.015,.017],levels[0][0]-.12,levels.at(-1)[0]-levels[0][0]+.16,steel);
+  for(const [j,[z,d]] of levels.entries()){
+   part('bracket-'+i+'-'+j,[u-.009,.012,u+.009,d-.025],z-.036,.018,steel);
+   frame.line('brace-'+i+'-'+j,[u,.022,z-.108],[u,d-.054,z-.035],.006,steel);
+  }
+ }
+ for(const [i,[z,d]] of levels.entries())part('shelf-'+i,[0,.017,w,d],z-.018,.018,board);
+}
+
+function iconPantryRack(context,frame,shapes,paint) {
+ const {depth:d,part}=frame,finish=iconBedroomOfficePalette(context);
+ iconPantryShelves(frame,[[.21,d],[.59,d],[.94,.27],[1.29,.27],[1.64,.25],[1.98,.25]],finish.lacquer,finish.graphite);
+ const foods=[['RYŻ',paint.chalk],['KASZA',paint.putty],['SOCZEWICA',paint.clay]];
+ for(const [row,z] of [.94,1.29].entries()){
+  for(let i=0;i<6;i++){
+   const [name,food]=foods[Math.floor(i/2)],h=row?.19:.24;
+   iconPantryJar(context,shapes,'dry-'+row+'-'+i,.19+i*.206,.156,z,.060,h,food,paint.cocoa,name);
+  }
+ }
+ for(let i=0;i<5;i++){
+  const u=.18+i*.208,body=i<3?paint.clay:paint.olive,h=i<3?.118:.157;
+  shapes.disc('tin-'+i,u,.157,.59,.055,.055,h,body);
+  shapes.disc('tin-base-'+i,u,.157,.59,.056,.056,.004,paint.silver);
+  shapes.disc('tin-lid-'+i,u,.157,.59+h-.006,.056,.056,.006,paint.silver);
+  iconPantryLabel(context,shapes,'tin-'+i,i<3?'POMIDORY':'GROSZEK',u,.213,.59+h*.48,.091,.042);
+ }
+ for(let i=0;i<3;i++){
+  const u=.25+i*.295;
+  part('flour-bag-'+i,[u-.09,.051,u+.09,.198],1.64,.246,finish.beech);
+  part('folded-seam-'+i,[u-.083,.106,u+.083,.135],1.886,.023,paint.chalk);
+  iconPantryLabel(context,shapes,'flour-'+i,'MĄKA',u,.199,1.76,.128,.061);
+ }
+ for(const [i,u] of [.23,.68,1.13].entries()){
+  shapes.cushion('reserve-box-'+i,u,.157,.331,.335,.234,.242,.016,i===1?paint.putty:finish.laminate);
+  part('reserve-box-lid-'+i,[u-.171,.036,u+.171,.278],.45,.018,paint.ivory);
+  iconPantryLabel(context,shapes,'reserve-'+i,['ZAPASY','HERBATA','KAWA'][i],u,.276,.338,.15,.055);
+ }
+ for(const [i,u] of [.29,.75].entries()){
+  part('light-box-'+i,[u-.168,.028,u+.168,.23],1.98,.16,finish.beech);
+  part('paper-tape-'+i,[u-.019,.028,u+.019,.23],2.14,.001,paint.chalk);
+ }
+}
+
+function iconPantryCrate(context,frame,shapes,key,u,z,produce,vegetable) {
+ const {part}=frame,p=iconBedroomOfficePalette(context),width=.48,depth=.36,back=.09,front=back+depth;
+ part(key+'-bottom',[u,back,u+width,front],z,.016,p.beech);
+ for(const [i,x] of [u,u+width-.014].entries())part(key+'-end-'+i,[x,back,x+.014,front],z+.016,.177,p.beech);
+ for(const [i,y] of [back,front-.012].entries())for(const [j,h] of [.021,.095,.167].entries()){
+  part(key+'-slat-'+i+'-'+j,[u+.014,y,u+width-.014,y+.012],z+h,.038,p.beech);
+ }
+ for(let i=0;i<11;i++){
+  const upper=i>=8,col=upper?i-8:i%4;
+  const x=u+.079+col*.107+(upper?.053:0),y=back+.106+(upper?.056:Math.floor(i/4)*.112);
+  const radiusZ=vegetable?.046:.057;
+  const tuber=new context.THREE.SphereGeometry(1,11,7);
+  tuber.scale(.058,.052,radiusZ);
+  const root=shapes.add(key+'-produce-'+i,tuber,produce,x,y,z+.016+radiusZ*(upper?2.25:1));
+  root.rotation.z+=i*.85;
+ }
+}
+
+function iconPantryBench(context,frame,shapes,paint) {
+ const {width:w,depth:d,part}=frame,p=iconBedroomOfficePalette(context);
+ for(const [i,u] of [.01,w/2-.009,w-.028].entries()){
+  part('gables-'+i,[u,.024,u+.018,d-.028],.008,.854,p.laminate);
+ }
+ for(const [i,z] of [.105,.468].entries()){
+  part('reserve-shelf-'+i,[.028,.024,w/2-.009,d-.028],z-.022,.022,p.laminate);
+  part('reserve-shelf-far-'+i,[w/2+.009,.024,w-.028,d-.028],z-.022,.022,p.laminate);
+ }
+ part('landing-top',[0,0,w,d],.862,.038,p.laminate);
+ iconPantryShelves(frame,[[1.48,.245],[1.89,.245]],p.lacquer,p.graphite);
+ iconPantryCrate(context,frame,shapes,'potato-crate',.116,.105,paint.putty,true);
+ iconPantryCrate(context,frame,shapes,'onion-crate',w/2+.119,.105,p.beech,false);
+ for(const [i,u] of [.235,.534,1.00,1.30].entries()){
+  shapes.cushion('bulk-tub-'+i,u,.284,.579,.234,.334,.222,.023,i<2?p.lacquer:paint.putty);
+  part('bulk-tub-lid-'+i,[u-.120,.113,u+.120,.455],.69,.021,p.graphite);
+  iconPantryLabel(context,shapes,'bulk-'+i,i<2?'MĄKA':'RYŻ',u,.452,.59,.15,.053);
+ }
+ for(let i=0;i<4;i++){
+  iconPantryJar(context,shapes,'preserve-'+i,.18+i*.208,.148,1.48,.057,.147,i<2?paint.clay:paint.olive,p.graphite,i<2?'PASSATA':'OGÓRKI');
+ }
+ for(let i=0;i<3;i++){
+  const u=.255+i*.36;
+  part('tea-carton-'+i,[u-.105,.045,u+.105,.194],1.89,.15,i===1?paint.olive:paint.clay);
+  iconPantryLabel(context,shapes,'tea-'+i,'HERBATA',u,.195,1.962,.148,.052);
+ }
+ const u=w-.226,v=.238;
+ shapes.cushion('kitchen-scale-base',u,v,.931,.242,.224,.062,.015,paint.olive);
+ shapes.disc('kitchen-scale-foot',u,v,.962,.052,.052,.042,p.silver);
+ const bowl=[[0,0],[.053,0],[.117,.050],[.119,.058],[.111,.058],[.05,.014],[0,.014]];
+ shapes.add('weighing-bowl',new context.THREE.LatheGeometry(bowl.map(([r,h])=>new context.THREE.Vector2(r,h)),24).rotateX(Math.PI/2),p.silver,u,v,1.004);
+}
+
 function iconGroundRoomFurniture(context,frame) {
  const id=frame.item.id;
  const draw=iconGroundRoomBuilders[id];
@@ -2619,6 +2946,8 @@ function iconGroundRoomFurniture(context,frame) {
 }
 
 const iconGroundRoomBuilders={
+ 'pantry-left':iconPantryRack,
+ 'pantry-right':iconPantryBench,
  'entry-wardrobe-rear':iconEntryWardrobe,
  'entry-wardrobe-side':iconEntryWardrobe,
  'entry-console':iconEntryConsole,
@@ -3133,6 +3462,8 @@ function iconLoftElectrical({THREE,data,group,mesh}) {
  for(const [i,point] of points.entries()){
   const {room,type,finish,support,normal,alongM,heightM}=point;
   const anchor=group.getObjectByName(support);
+  const cabinet=['kitchen-tall','kitchen-back'].find(id=>support.startsWith(id+'-'));
+  if(!anchor&&cabinet&&!data.furniture.some(item=>item.id===cabinet))continue;
   if(!anchor?.isMesh)throw new Error('Missing support for Loft fixture '+i+': '+support);
   anchor.updateMatrix();
   if(!anchor.geometry.boundingBox)anchor.geometry.computeBoundingBox();

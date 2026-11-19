@@ -837,6 +837,7 @@
       "living-render": "work/icon3d-research/top-original.png, publisher living room and kitchen render",
       "mirrored-ground-plan": "User-supplied publisher mirrored ground-floor plan, room 0.9 with 76 cm under-stair storage allowance.",
       "user-entry": "Entrance console, removable pouf, and painted fitted wardrobes interpreted from the user brief and reference photographs. Furniture sizes are design allowances.",
+      "user-pantry": "Concept fit-out within room 0.2. Inexpensive laminate, painted shelf standards and produce crates sized for the mirrored kitchen-to-garage passage.",
       "user-ground-rooms": "Furnishings requested for the guest room, study and bathroom, fitted to the published plan. Furniture dimensions and finishes are schematic.",
       "user-study-playroom": "User-requested two-person study and children’s playroom fitted to publisher rooms 0.9 and 0.8. Desk, toy and unfolded sofa dimensions are design allowances.",
       "user-study-storage": "User-requested fitted bookcase behind the two existing workstations. Painted board and plain laminate, fitted to the study wall.",
@@ -856,45 +857,31 @@
   "furniture": [
     {
       "id": "pantry-left",
-      "type": "cabinet",
+      "type": "open-shelves",
       "room": "0.2",
       "box": [
         0.5,
-        6.79,
-        1.0,
-        8.39
+        6.82,
+        0.8,
+        8.36
       ],
       "facing": "+x",
-      "source": "ground-plan",
-      "height": 2.1
+      "source": "user-pantry",
+      "height": 2.141
     },
     {
       "id": "pantry-right",
-      "type": "cabinet",
+      "type": "pantry-workbench",
       "room": "0.2",
       "box": [
-        3.11,
-        6.79,
+        3.06,
+        6.82,
         3.61,
-        8.39
+        8.36
       ],
       "facing": "-x",
-      "source": "ground-plan",
-      "height": 2.1
-    },
-    {
-      "id": "pantry-rear",
-      "type": "cabinet",
-      "room": "0.2",
-      "box": [
-        1.98,
-        7.89,
-        3.11,
-        8.39
-      ],
-      "facing": "-y",
-      "source": "ground-plan",
-      "height": 2.1
+      "source": "user-pantry",
+      "height": 2.04
     },
     {
       "id": "utility-left",
