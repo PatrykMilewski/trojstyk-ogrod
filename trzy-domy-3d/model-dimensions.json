@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-20.8",
+  "modelVersion": "2026-11-20.9",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1744,10 +1744,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "5aa5b42c0b297314a6e5341c7b32e9070523c716b82b169b99fd00d3bc9dce06",
-    "proceduralCodeSha256": "998fe56619935ddf998748d51b26bd26d164ba72b543d43c7e0f8e455a73a39d",
+    "proceduralCodeSha256": "f5f58b62f1f12e02300951cee412ee004e14b895e4faf1c562a083a8b3743418",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
-    "planSha256": "e83538a8d82a8a788fc2f7655de79ba713c631b0fc041f98856326de93ea545c",
-    "runtimeSha256": "a65e187e9c67e4e18bd832b0a63c7cb3977fd59d21e91a2fd6e7f0b80997ee66"
+    "planSha256": "9fd4c337c62205d82adab636c32db854d5451d68bf5df0366140da4e28405f23",
+    "runtimeSha256": "47c14e192542d1dbd0fc4b3a8192d8e097d8dac22ee1cf3bfa2f1457d6d6639a"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1805,7 +1805,8 @@
     "Dom /193: podłogówka pod zabudowami i schodami, niskie prowadzenie rur pompy ciepła, cyrkulacja CWU i odpływy obu urządzeń w pralni. Zbiornik deszczówki przy bocznej rabacie, rewizje w trawniku i otwarte koryta rynien.",
     "Dom /193: zbiornik przy północno-wschodniej ścianie, rozdzielone pola deszczówki i oczyszczalni z dostępem od rabat, zlicowane rynny z rewizjami, wywiewka dachowa, zmywarka i sieć Ethernet z rezerwą PoE na dachu.",
     "Dom /193: BioDisc i pole tuneli za domem, przebudowany kolektor, indygo na drzwiach wejściowych oraz kremowy dywan 200 × 300 cm w błękitną kratkę.",
-    "Dom /193: BioDisc i tunele wracają na pierwotne miejsce przy garażu, z rewizją i wywiewkami w rabacie. Rozsącz deszczówki w trzech grupach pod centralnym trawnikiem."
+    "Dom /193: BioDisc i tunele wracają na pierwotne miejsce przy garażu, z rewizją i wywiewkami w rabacie. Rozsącz deszczówki w trzech grupach pod centralnym trawnikiem.",
+    "Dom /193: wspólne przejście dachowe PoE i DN110, Ethernet w garażu, rozdzielnica, magazyn MUST, wallbox trójfazowy, zbiornik deszczówki na południu i korekta wywiewek BioDisc."
   ],
   "contextParcels": [
     {
@@ -3571,7 +3572,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "b00cdb29738a9bd009ed3998823c4064691da0446da1ae0cbbe5e6d9348e2ebf",
+    "dataSha256": "3edbc6cd22b6b8559191b609a93901da9f7004c49c08d6f5d7e15b2756ebe82e",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,

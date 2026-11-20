@@ -4698,18 +4698,19 @@ function iconPlantRack(context,{width:w,depth:d,line,part},s,p) {
  for(const u of [.026,w-.05])part('rack-rail-'+u,[u,d-.071,u+.024,d-.052],.025,.353,p.silver);
  for(const [i,z] of [.100,.192,.276].entries()){
   part(['router','ethernet-switch','patch-panel'][i],[.054,.045,w-.054,d-.051],z,.044,i===1?p.silver:p.black);
-  const count=i===0?4:8;
+  const count=[4,16,8][i];
   for(let j=0;j<count;j++){
-   const u=.092+j*.037;
-   part('rj45-'+i+'-'+j,[u,d-.052,u+.025,d-.048],z+.010,.019,p.display);
-   part('link-'+i+'-'+j,[u+.014,d-.048,u+.021,d-.046],z+.032,.004,p.led);
+   const u=.104+j*(i===1?.024:.037),half=i===1?.008:.012;
+   part('rj45-'+i+'-'+j,[u-half,d-.052,u+half,d-.048],z+.010,.019,p.display);
+   part('link-'+i+'-'+j,[u+.001,d-.048,u+.008,d-.046],z+.032,.004,p.led);
   }
  }
- for(let i=0;i<7;i++){
-  const u=.104+i*.037;
-  s.tube('patch-lead-'+i,[[u,d-.046,.293],[u,d-.026,.286],[u+.014,d-.015,.249],[u,d-.024,.228],[u,d-.046,.211]],.0034,i%2?p.blue:p.brass);
+ for(let i=0;i<8;i++){
+  const panel=.104+i*.037,sw=.104+i*.024;
+  s.tube('patch-lead-'+i,[[panel,d-.048,.295],[panel,d-.022,.275],[sw,d-.022,.231],[sw,d-.048,.211]],.0034,i%2?p.blue:p.brass);
  }
- s.tube('switch-router-uplink',[[.363,d-.046,.211],[.363,d-.02,.19],[.104,d-.02,.147],[.104,d-.046,.120]],.0034,p.blue);
+ const uplink=.104+15*.024;
+ s.tube('switch-router-uplink',[[uplink,d-.048,.211],[uplink,d-.022,.195],[.104,d-.022,.139],[.104,d-.048,.120]],.0034,p.blue);
  part('perforated-door-insert',[.027,d-.008,w-.027,d-.007],.029,h-.058,grille).castShadow=false;
  for(const u of [0,w-.026])part('door-stile-'+u,[u,d-.018,u+.026,d],.016,h-.032,p.graphite);
  part('door-lower-rail',[.026,d-.015,w-.026,d],t,.027,p.graphite);
@@ -4717,16 +4718,82 @@ function iconPlantRack(context,{width:w,depth:d,line,part},s,p) {
  iconPlantMark(context,s,'LAN',w*.79,d+.0004,.029,.075,.022);
 }
 
-function iconPlantInverter(context,{width:w,depth:d,line,part},s,p) {
+function iconPlantBattery(context,frame,s,p) {
+ const {width:w,depth:d,item,line,part}=frame,h=item.height;
+ for(const u of [.074,w-.074])for(const v of [.048,d-.048]){
+  line('caster-'+u+'-'+v,[u-.018,v,.043],[u+.018,v,.043],.043,p.black);
+  part('caster-fork-'+u+'-'+v,[u-.024,v-.019,u+.024,v+.019],.046,.062,p.graphite);
+ }
+ s.cushion('steel-shell',w/2,(d-.012)/2,.569,w-.016,d-.012,.944,.020,p.enamel);
+ s.cushion('front-panel',w/2,d-.018,(h+.094)/2,w,.030,h-.094,.016,p.enamel);
+ for(const u of [.047,w-.047])line('carry-handle-'+u,[u,.038,1.057],[u,d-.053,1.057],.016,p.silver);
+ for(const [id,[u,v,z]] of Object.entries(item.ports))
+  s.disc('terminal-'+id,u,v,1.032,.022,.022,z-1.032,id==='positive'?p.red:p.black);
+ s.cushion('lcd-bezel',w/2,d-.002,.898,.175,.002,.120,.002,p.black);
+ part('lcd-screen',[w/2-.047,d-.001,w/2+.047,d-.0005],.866,.065,p.display);
+ for(let i=0;i<4;i++)part('lcd-bar-'+i,[w/2-.035+i*.018,d-.0005,w/2-.021+i*.018,d],.887,.022,p.led);
+ part('status-strip',[w/2-.004,d-.001,w/2+.004,d],.455,.220,p.graphite);
+ iconApplianceMark(context,frame,'maker','MUST',w/2,d,.256,.148,.071,'#c52636');
+ iconPlantMark(context,s,item.model,w/2,d,.129,.171,.027);
+}
+
+function iconPlantBoard(context,{width:w,depth:d,item,part},s,p) {
+ const h=item.height;
+ part('steel-enclosure',[0,0,w,d-.035],.014,h-.014,p.graphite);
+ for(const u of [0,w-.019])part('edge-'+u,[u,d-.035,u+.019,d-.004],0,h,p.enamel);
+ for(const z of [0,h-.024])part('edge-'+z+'-rail',[.019,d-.035,w-.019,d],z,.024,p.enamel);
+ iconPlantMark(context,s,'ROZDZIELNICA',w/2,d-.033,.586,.245,.047);
+ const rows=[['WYŁ. GŁÓWNY','SPD'],['FALOWNIK','WALLBOX'],['ZMYWARKA','REZERWA']];
+ for(const [i,labels] of rows.entries()){
+  const z=.434-.165*i;
+  part('din-rail-'+i,[.035,d-.036,w-.035,d-.028],z,.033,p.silver);
+  for(const [j,label] of labels.entries()){
+   const u=.046+j*.178;
+   const modules=label==='ZMYWARKA'?1:label==='REZERWA'?0:4;
+   for(let k=0;k<modules;k++){
+    const a=u+k*.031;
+    part('din-device-'+i+'-'+j+'-'+k,[a,d-.030,a+.029,d-.010],z-.019,.080,p.enamel);
+    if(label==='WALLBOX'&&k===0)part('rcbo-test-button',[a+.007,d-.010,a+.022,d-.003],z+.041,.010,p.blue);
+    part('toggle-'+i+'-'+j+'-'+k,[a+.004,d-.010,a+.025,d-.001],z+.005,.025,label==='SPD'?p.red:p.black);
+   }
+   iconPlantMark(context,s,label,u+.062,d-.033,z-.042,.135,.022);
+  }
+ }
+ part('clear-cover',[.019,d-.0008,w-.019,d],.024,h-.048,p.glass).castShadow=false;
+ for(const z of [.095,h-.125])part('hinge-'+z,[.004,d-.012,.016,d],z,.027,p.silver);
+ part('door-latch',[w-.017,d-.013,w-.003,d],h/2,.040,p.black);
+ for(const [id,[u,v,z]] of Object.entries(item.ports))
+  s.disc('gland-'+id,u,v,0,.015,.015,z,p.black);
+}
+
+function iconGarageWallbox(context,{width:w,depth:d,item,part,line},s,p) {
+ const c=w/2;
+ part('wall-mount',[.061,0,w-.061,.052],.419,.392,p.graphite);
+ s.cushion('enclosure',c,.099,.623,w-.034,.145,.454,.053,p.enamel);
+ s.cushion('fascia',c,.163,.628,w-.065,.032,.409,.015,p.graphite);
+ part('charge-indicator',[c-.059,.179,c+.059,.181],.733,.013,p.led);
+ iconPlantMark(context,s,'11 kW · 3~ 400 V',c,.181,.675,.236,.038);
+ const [u,v,z]=item.ports.ac;
+ s.disc('ac-inlet',u,v,z,.016,.016,.038,p.black);
+ line('cable-hook',[c,.092,.36],[c,.159,.36],.035,p.graphite);
+ line('plug-socket',[.257,.147,.529],[.257,.180,.529],.047,p.black);
+ s.cushion('type-2-handle',.257,.181,.493,.074,.054,.150,.020,p.enamel,-.18);
+ s.tube('coiled-ev-cable',[[.116,.110,.413],[.062,.121,.256],[.067,.14,.100],[.145,.147,.055],
+  [.262,.15,.079],[.297,.156,.156],[.272,.154,.297],[.208,.148,.367],[.160,.157,.365],
+  [.08,.166,.256],[.082,.174,.111],[.155,.176,.076],[.248,.179,.096],[.285,.184,.17],
+  [.258,.185,.303],[.249,.189,.369],[.257,.191,.436]],.010,p.black);
+}
+
+function iconPlantInverter(context,{width:w,depth:d,item,part},s,p) {
  part('heat-sink',[.027,0,w-.027,.069],.115,.591,p.graphite);
  for(let i=0;i<12;i++)part('cooling-fin-'+i,[.033+i*.029,.019,.042+i*.029,.125],.114,.588,p.silver);
  s.cushion('inverter-housing',w/2,.151,.435,w-.019,.173,.614,.025,p.enamel);
  part('indicator-window',[w*.22,d-.005,w*.78,d-.001],.335,.071,p.display);
  for(let i=0;i<3;i++)part('status-'+i,[.134+i*.060,d-.001,.146+i*.060,d],.365,.008,p.led);
- iconPlantMark(context,s,'FALOWNIK PV',w/2,d-.001,.582,.227,.044);
- for(const [i,u] of [.091,.145,.285,.335].entries()){
-  s.disc('cable-gland-'+i,u,.139,.109,.019,.019,.037,p.graphite);
-  s.tube('cable-'+i,[[u,.139,.113],[u,.139,.079],[u,.114,.040],[u,.079,.031],[u,.006,.031]],.007,i<2?p.black:p.silver);
+ iconPlantMark(context,s,'FALOWNIK HYBRYDOWY',w/2,d-.001,.582,.227,.044);
+ for(const [i,[u,v,z]] of [[.065,.139,.109],[.135,.139,.109],item.ports.ac,item.ports.batteryPlus,item.ports.batteryMinus].entries()){
+  s.disc('cable-gland-'+i,u,v,z,.019,.019,.037,p.graphite);
+  if(i<2)s.tube('cable-'+i,[[u,.139,.113],[u,.139,.079],[u,.114,.040],[u,.079,.031],[u,.006,.031]],.007,i<2?p.black:p.silver);
  }
 }
 
@@ -4819,7 +4886,7 @@ function iconGroundRoomFurniture(context,frame) {
  const id=frame.item.id;
  const draw=iconGroundRoomBuilders[id];
  if(!draw)return false;
- const p=frame.item.room==='0.3'?iconPlantPalette(context):frame.item.room==='0.8'||frame.item.room==='0.9'?iconBedroomOfficePalette(context):iconLivingPalette(context);
+ const p=['0.1','0.3'].includes(frame.item.room)?iconPlantPalette(context):frame.item.room==='0.8'||frame.item.room==='0.9'?iconBedroomOfficePalette(context):iconLivingPalette(context);
  const segments=draw===iconStudyDesk?3:5;
  draw(context,frame,iconLivingShapes(context,frame,segments),p);
  return true;
@@ -4833,6 +4900,9 @@ const iconGroundRoomBuilders={
  'utility-water-meter':iconPlantMeter,
  'utility-network-rack':iconPlantRack,
  'utility-pv-inverter':iconPlantInverter,
+ 'utility-battery':iconPlantBattery,
+ 'utility-distribution-board':iconPlantBoard,
+ 'garage-wallbox':iconGarageWallbox,
  'pantry-bror-85':iconBrorRack,
  'pantry-bror-65':iconBrorRack,
  'pantry-bror-return':iconBrorRack,

@@ -24,8 +24,8 @@ const wastewaterRowOffsets = Array.from({length:wastewater193.rows},(_,i)=>
 // Sealed vent laterals leave the far end caps and rise into the driveway-side shrub bed.
 const ventCapY193=-wastewaterRunLength/2-wastewater193.endCapDepth;
 const ventRoutes193=[
-  [[wastewaterRowOffsets[0],ventCapY193],[-.75,-3.22],[-1.16,-3.63],[-2.82,-3.63],[-4.35,-2.10],[-4.35,-1.70]],
-  [[wastewaterRowOffsets[1],ventCapY193],[.75,-3.48],[.12,-4.11],[-3.64,-4.11],[-4.35,-3.40]]
+  [[wastewaterRowOffsets[0],ventCapY193],[-.75,-3.22],[-1.16,-3.63],[-2.82,-3.63],[-3.75,-2.70],[-3.75,-1.70]],
+  [[wastewaterRowOffsets[1],ventCapY193],[.75,-3.48],[.12,-4.11],[-3.04,-4.11],[-3.75,-3.40]]
 ];
 const ventEnds193=ventRoutes193.map(route=>route.at(-1));
 const ventServiceRadius193=.38;
@@ -40,7 +40,8 @@ function wastewaterTankLocal193([x,y]) {
 // A 90 cm grass strip connects the driveway to the BioDisc lid.
 function wastewaterApproach193() {
   const [x,y]=wastewater193.tankPlanCenter;
-  return [[6,y-.45],[x-.90,y-.45],[x-.90,y+.45],[6,y+.45]].map(wastewaterTankLocal193);
+  const centerY=y+.90;
+  return [[6,centerY-.45],[x-.90,centerY-.45],[x-.90,centerY+.45],[6,centerY+.45]].map(wastewaterTankLocal193);
 }
 
 export function wastewaterServiceAccess193() {

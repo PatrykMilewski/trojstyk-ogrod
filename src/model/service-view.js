@@ -6,13 +6,13 @@ export function bindIconServiceView({THREE,indoor,rain,wastewater,camera,control
   const floor=document.getElementById('service-floor');
   const key=document.getElementById('service-key');
   const legend={
-    all:'Koralowy – podłogówka · fioletowy – pompa · niebieski, czerwony i malinowy – woda · ochra – ścieki · turkus – deszczówka · zielony – Ethernet',
+    all:'Koralowy – podłogówka · fioletowy – pompa · niebieski, czerwony i malinowy – woda · ochra – ścieki · turkus – deszczówka · zielony – Ethernet · złoty – obwody elektryczne AC',
     underfloor:'Koralowy – pętle grzewcze · bursztynowy – powroty',
     'heat-pump':'Fiolet – zasilanie i powrót · grafit – przewód elektryczny',
     water:'Niebieski – zimna woda · czerwony – ciepła woda · malinowy – powrót cyrkulacji CWU',
     sewer:'Ochra – odpływy do oczyszczalni · turkus przy zbiorniku – odpływ po oczyszczeniu',
-    ethernet:'Zielony – gniazda RJ45 w sześciu pokojach · żółty – rezerwa PoE na dachu · wszystkie przewody wracają do szafy w kotłowni',
-    power:'Zasilanie zmywarki z gniazda w sąsiedniej szafce',
+    ethernet:'Zielony – gniazda RJ45 w sześciu pokojach i garażu · żółty – rezerwa PoE na dachu · wszystkie przewody wracają do szafy w kotłowni',
+    power:'Złoty – obwody AC rozdzielnicy, falownika i wallboxa · koralowy i szaroniebieski – przewody DC magazynu · grafitowy – zmywarka',
     rain:'Turkus – rynny, piony i przewody do zbiornika · kratownica – rozsącz deszczówki'
   };
   let active=false;

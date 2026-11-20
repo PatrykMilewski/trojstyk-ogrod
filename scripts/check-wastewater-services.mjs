@@ -139,6 +139,27 @@ test('the tank and tunnels occupy the original garage-side site, with service ac
   for(const geo of [hard.house,hard.terrace])assert.equal(clipping.intersection([approach],geo.coordinates).length,0);
 });
 
+test('actual BioDisc lid, rim, distribution hatch and vent cowls clear the parcel boundary',()=>{
+  const boundary=neighbors.parcels['193'].coordinates[0];
+  for(const [name,minGap] of [['biodisc-service-lid',2],['biodisc-lid-seam',2],
+    ['distributor-hatch',2],['vent-cowl-0',2.20],['vent-cowl-1',2.20]]){
+    const part=surface.getObjectByName(name),center=part.getWorldPosition(new THREE.Vector3());
+    const vertices=part.geometry.getAttribute('position'),vertex=new THREE.Vector3();
+    let radius=0;
+    for(let i=0;i<vertices.count;i++){
+      part.localToWorld(vertex.fromBufferAttribute(vertices,i));
+      radius=Math.max(radius,Math.hypot(vertex.x-center.x,vertex.y-center.y));
+    }
+    const outline=Array.from({length:48},(_,i)=>{
+      const angle=i*Math.PI/24;
+      return [center.x+radius*Math.cos(angle),center.y+radius*Math.sin(angle)];
+    });
+    assert.equal(clipping.difference([outline],[boundary]).length,0,name+' must lie inside /193');
+    const gap=clearance(xy(center),boundary)-radius;
+    assert(gap>=minGap,name+' outer edge '+gap+' m from boundary');
+  }
+});
+
 test('vent openings and the distributor align with the accessible surface fittings',()=>{
   const access=wastewaterServiceAccess193();
   const centre=m=>m.getWorldPosition(new THREE.Vector3());
@@ -177,7 +198,8 @@ test('each tunnel vents through its far end cap and drains condensation back fro
 });
 
 test('the separate rain and wastewater networks clear each other in three dimensions',async()=>{
-  const {createRainServices}=await load(await read('../src/model/rain-services.js'));
+  const {createRainServices,rainTankFootprint193}=await load(await read('../src/model/rain-services.js'));
+  const {iconPlanPoint}=await load(await read('../src/model/roof-windows.js'));
   const group=new THREE.Group();group.matrix.copy(planToSite);
   const data=JSON.parse(await read('../trzy-domy-3d/interior-data.json'));
   const rain=createRainServices(THREE,house,{group},data);
@@ -193,7 +215,12 @@ test('the separate rain and wastewater networks clear each other in three dimens
   assert(closest>.10,'least pipe wall clearance '+closest);
   const bays=rain.children.filter(m=>/^rain-crate-\d/.test(m.name));
   assert(bays.length>0);
-  const footprint=worldFieldRing();
+  const footprint=worldFieldRing(),rainTank=rainTankFootprint193(house,iconPlanPoint).ring;
+  const bioDisc=wastewaterServiceAccess193().find(s=>s.id==='tank').footprint;
+  for(const [outline,minGap] of [[footprint,18.5],[bioDisc,23.2]]){
+    assert.equal(clipping.intersection([outline],[rainTank]).length,0);
+    assert(ringDistance(outline,rainTank)>minGap);
+  }
   for(const bay of bays){
     const {width,height}=bay.geometry.parameters;
     const ring=[[-width,-height],[width,-height],[width,height],[-width,height]].map(([x,y])=>

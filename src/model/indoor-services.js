@@ -397,22 +397,22 @@ const iconSewerExit=[8.74235626,4.20878006,-.716596133];
 
 function soilVentRoofPosition193(levels) {
  const x=4.70,y=7.77,pitch=(levels.ridge-levels.eave)/4.25;
- return {x,y,pitch,z:levels.ridge-(x-4.25)*pitch};
+ return {x,y,pitch,z:levels.ridge-(x-4.25)*pitch,poeY:y+.155};
 }
 
 export function soilVentRoofCut193(metadata,project=iconPlanPoint) {
- const {x,y}=soilVentRoofPosition193(metadata.dimensions),r=.057;
- const ring=[[-r,-r],[-r,r],[r,r],[r,-r]].map(([dx,dy])=>project(metadata,x+dx,y+dy,0).slice(0,2));
+ const {x,y,poeY}=soilVentRoofPosition193(metadata.dimensions),r=.065;
+ const ring=[[x-r,y-r],[x-r,poeY+.030],[x+r,poeY+.030],[x+r,y-r]].map(([u,v])=>project(metadata,u,v,0).slice(0,2));
  return {parcel:'193',ring};
 }
 
 export function createSoilVentSurface(THREE,house,interior) {
  const group=new THREE.Group();group.name='soil-vent-exterior-193';
  group.matrixAutoUpdate=false;group.matrix.copy(interior.group.matrix);
- const {x,y,z,pitch}=soilVentRoofPosition193(house.metadata.dimensions);
+ const {x,y,z,pitch,poeY}=soilVentRoofPosition193(house.metadata.dimensions);
  const material=new THREE.MeshStandardMaterial({color:0x384143,metalness:.34,roughness:.55,side:THREE.DoubleSide});
  // Local rings follow the roofing below the boot and turn horizontal at the open DN110 outlet.
- function rings(name,sections){
+ function rings(name,sections,axisY=y){
   const vertices=[],indices=[],segments=40;
   for(const [radius,h,slope] of sections)for(let i=0;i<segments;i++){
    const angle=2*Math.PI*i/segments,dx=radius*Math.cos(angle);
@@ -425,12 +425,28 @@ export function createSoilVentSurface(THREE,house,interior) {
   const geometry=new THREE.BufferGeometry();
   geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
   geometry.setIndex(indices);geometry.computeVertexNormals();
-  const mesh=new THREE.Mesh(geometry,material);mesh.name=name;mesh.position.set(x,y,z);
+  const mesh=new THREE.Mesh(geometry,material);mesh.name=name;mesh.position.set(x,axisY,z);
   mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);
  }
- rings('soil-vent-weathering-boot',[[.183,.006,pitch],[.090,.008,pitch],[.062,.13,0]]);
+ const outline=[[-.185,-.17],[.185,-.17],[.185,poeY-y+.13],[-.185,poeY-y+.13]];
+ const apron=new THREE.Shape(outline.map(([u,v])=>new THREE.Vector2(u,v)));
+ for(const [v,r] of [[0,.060],[poeY-y,.020]]){
+  const hole=new THREE.Path();hole.absarc(0,v,r,0,Math.PI*2,true);apron.holes.push(hole);
+ }
+ const flashing=new THREE.ExtrudeGeometry(apron,{depth:.006,bevelEnabled:false,curveSegments:24});
+ const pos=flashing.getAttribute('position');
+ for(let i=0;i<pos.count;i++)pos.setZ(i,pos.getZ(i)-pitch*pos.getX(i));
+ flashing.computeVertexNormals();
+ const base=new THREE.Mesh(flashing,material);base.name='soil-vent-weathering-boot';
+ base.position.set(x,y,z+.004);base.receiveShadow=true;group.add(base);
+ rings('soil-vent-collar',[[.100,.009,pitch],[.078,.027,pitch],[.062,.13,0]]);
  rings('soil-vent-open-pipe',[[.062,.115,0],[.062,.566,0],[.067,.572,0],[.067,.62,0],
   [.055,.62,0],[.055,-.18,0]]);
+ rings('ethernet-roof-sealed-gland',[[.020,-.18,0],[.024,-.18,0],[.024,.009,pitch],
+  [.040,.009,pitch],[.026,.040,0],[.026,.093,0],[.020,.105,0]],poeY);
+ const enclosure=new THREE.Mesh(new THREE.BoxGeometry(.104,.120,.082),material);
+ enclosure.name='ethernet-roof-sealed-box';enclosure.position.set(x,poeY,z+.14);
+ enclosure.castShadow=true;enclosure.receiveShadow=true;group.add(enclosure);
  return group;
 }
 
@@ -511,6 +527,50 @@ function serviceDishwasher(groups,data,pipe,THREE,interior) {
  }
 }
 
+function serviceElectricalPort(item,name) {
+ const [,y0,x1,y1]=item.box,[u,v,h]=item.ports[name],z=(item.elevation||0)+h;
+ return item.facing==='-x'?[x1-v,y0+u,z]:[x1-u,y1-v,z];
+}
+
+function servicePower(group,data,pipe,THREE,interior) {
+ const get=id=>data.furniture.find(f=>f.id===id);
+ const board=get('utility-distribution-board'),inverter=get('utility-pv-inverter');
+ const battery=get('utility-battery'),charger=get('garage-wallbox');
+ const ac='#ffce68',plug=group.getObjectByName('dishwasher-power-cord').userData.from;
+ for(const item of [board,inverter,battery,charger]){
+  const [w,s,e,n]=item.box,z=(item.elevation||0)+item.height;
+  const outline=[[w,s,z],[e,s,z],[e,n,z],[w,n,z],[w,s,z]];
+  pipe(group,item.id+'-outline',outline,'#e3dbbd',.014,{device:item.id});
+ }
+ const leads=interior?.group&&!interior.group.getObjectByName('battery-to-inverter-harness')?serviceGroup(THREE,interior.group,'battery-to-inverter-harness'):null;
+ const port=serviceElectricalPort;
+ for(const [terminal,input,color,finish] of [
+  ['positive','batteryPlus','#fa7865','#9b3931'],['negative','batteryMinus','#a8b1cb','#303535']
+ ]){
+  const start=port(battery,terminal),end=port(inverter,input),bend=start[2]+(terminal==='positive'?.11:.18);
+  const mesh=pipe(group,'battery-dc-'+terminal,[start,[start[0],start[1],bend],[end[0],start[1],bend],
+   [end[0],end[1],bend],end],color,.014,{circuit:'battery-dc',voltage:battery.nominalVoltageV});
+  if(leads){
+   const cable=new THREE.Mesh(mesh.geometry,new THREE.MeshStandardMaterial({color:finish,roughness:.80}));
+   cable.name='fitted-battery-dc-'+terminal;leads.add(cable);
+  }
+ }
+ const boardWall=data.walls.find(w=>w.id==='kitchen-back').a[1];
+ const eastWall=data.walls.find(w=>w.id==='garage-hall').a[0];
+ const inv=port(inverter,'ac'),feed=port(board,'inverter'),z=data.levels.groundCeiling-.25;
+ pipe(group,'inverter-ac-to-board',[inv,[inv[0],inv[1],inv[2]-.055],[eastWall,inv[1],inv[2]-.055],
+  [eastWall,inv[1],z],[eastWall,boardWall,z],[feed[0],boardWall,z],[feed[0],boardWall,feed[2]-.050],
+  [feed[0],feed[1],feed[2]-.050],feed],ac,.019,{circuit:'inverter-ac'});
+ const ev=port(board,'ev'),end=port(charger,'ac'),garageWall=data.walls.find(w=>w.id==='garage-back').a[1];
+ const evWallX=eastWall+.028,evWallY=boardWall+.034,head=z+.064;
+ pipe(group,'distribution-board-to-wallbox',[ev,[ev[0],ev[1],ev[2]-.095],[ev[0],evWallY,ev[2]-.095],
+  [ev[0],evWallY,head],[evWallX,evWallY,head],[evWallX,garageWall,head],[end[0],garageWall,head],
+  [end[0],garageWall,end[2]-.070],[end[0],end[1],end[2]-.070],end],ac,.022,{circuit:'garage-ev',phases:charger.phases});
+ const kitchen=port(board,'dishwasher'),lane=boardWall-.048;
+ pipe(group,'distribution-board-to-dishwasher-socket',[kitchen,[kitchen[0],kitchen[1],kitchen[2]-.13],
+  [kitchen[0],lane,kitchen[2]-.13],[kitchen[0],lane,.55],[plug[0],lane,.55],plug],ac,.016,{circuit:'dishwasher-ac'});
+}
+
 function serviceDrainBranch(group,pipe,name,waste,stack,slope,radius,fixture){
  const [x,y]=waste,[sx,sy,stackZ]=stack,midZ=stackZ+Math.abs(sy-y)*slope,branchZ=midZ+Math.abs(x-sx)*slope;
  pipe(group,name,[waste,[x,y,branchZ],[sx,y,midZ],stack],iconServiceColors.sewer,radius,{fixture});
@@ -523,55 +583,61 @@ const iconLanOutlets=[
  {id:'gabinet',room:'0.9',face:[11.40,12.21,.48],normal:[0,-1]},
  {id:'pokoj-1',room:'1.1',face:[7.55,3.60,.32],normal:[0,-1]},
  {id:'pokoj-2',room:'1.3',face:[1.70,5.78,.32],normal:[0,1]},
- {id:'sypialnia',room:'1.8',face:[11.48,8.03,.32],normal:[0,1]}
+ {id:'sypialnia',room:'1.8',face:[11.48,8.03,.32],normal:[0,1]},
+ {id:'garaz',room:'0.1',port:8,face:[5.76,6.53,1.05],normal:[0,-1]}
 ];
-
-function serviceLanRoof(levels) {
- const x=6.23,y=3.67,pitch=(levels.ridge-levels.eave)/4.25;
- return [x,y,levels.ridge-(x-4.25)*pitch+.085];
-}
 
 export function createEthernetOutlets(THREE,data) {
  const group=new THREE.Group();group.name='ethernet-outlets-193';
  const face=new THREE.MeshStandardMaterial({color:0xe4dfd6,roughness:.58});
- const port=new THREE.MeshStandardMaterial({color:0x282e30,roughness:.76});
+ const insert=new THREE.MeshStandardMaterial({color:0x282e30,roughness:.76});
  function box(parent,name,size,position,material){
   const mesh=new THREE.Mesh(new THREE.BoxGeometry(...size),material);
   mesh.name=name;mesh.position.set(...position);parent.add(mesh);return mesh;
  }
- for(const [index,{id,room,face:[x,y,h],normal:[nx,ny]}] of iconLanOutlets.entries()){
-  const outlet=new THREE.Group();outlet.name='rj45-'+id;outlet.userData={room,port:index+1};
+ for(const [index,{id,room,port,face:[x,y,h],normal:[nx,ny]}] of iconLanOutlets.entries()){
+  const outlet=new THREE.Group();outlet.name='rj45-'+id;outlet.userData={room,port:port??index+1};
   outlet.position.set(x,y,h+(room.startsWith('1.')?data.levels.upper:0));
   outlet.rotation.z=Math.atan2(-nx,ny);group.add(outlet);
   box(outlet,'ramka',[.080,.009,.080],[0,.0045,0],face);
-  box(outlet,'gniazdo',[.015,.002,.013],[0,.010,-.003],port);
-  box(outlet,'zatrzask',[.007,.002,.004],[0,.010,-.011],port);
+  box(outlet,'gniazdo',[.015,.002,.013],[0,.010,-.003],insert);
+  box(outlet,'zatrzask',[.007,.002,.004],[0,.010,-.011],insert);
  }
- const roof=box(group,'ethernet-roof-sealed-box',[.15,.17,.092],serviceLanRoof(data.levels),port);
- const flange=box(group,'ethernet-roof-flashing',[.24,.26,.022],[...roof.position.toArray()],port);
- roof.rotation.y=Math.atan((data.levels.ridge-data.levels.eave)/4.25);
- flange.rotation.y=roof.rotation.y;flange.translateZ(-.049);
  return group;
 }
 
 function serviceEthernet(THREE,levels,data,pipe) {
  const rack=data.furniture.find(f=>f.id==='utility-network-rack'),[west,,,front]=rack.box;
- const roof=serviceLanRoof(data.levels);
- const runs=[...iconLanOutlets,{id:'dach-poe',face:roof}];
+ const roof=soilVentRoofPosition193(data.levels);
+ const runs=[...iconLanOutlets,{id:'dach-poe',port:7,face:[roof.x,roof.poeY,roof.z+.14]}];
  for(const level of ['ground','upper'])servicePlanOutline(THREE,levels[level],data,level);
- for(const [i,{id,room,face:[x,y,height]}] of runs.entries()){
-  const upper=!room||room.startsWith('1.'),color=room?'#84e58c':'#e8d15b',meta={port:i+1,room:room??'dach',outlet:id};
+ const rackY=front-.048;
+ const sw=index=>[west+.104+index*.024,rackY,rack.elevation+.211];
+ const uplink=sw(15),router=[west+.104,rackY,rack.elevation+.120];
+ pipe(levels.ground,'lan-switch-router-uplink',[uplink,[uplink[0],rackY+.026,uplink[2]-.016],
+  [router[0],rackY+.026,router[2]+.019],router],'#75bbdf',.009,{switchPort:16,routerPort:1});
+ for(const [index,{id,room,port=index+1,face:[x,y,height]}] of runs.entries()){
+  const i=port-1;
+  const upper=!room||room.startsWith('1.'),color=room?'#84e58c':'#e8d15b',meta={port,room:room??'dach',outlet:id};
   const run=(group,part,points)=>pipe(group,'lan-'+id+'-'+part,points,color,part==='patch'?.009:.029,meta);
-  const rackX=west+.104+i*.037,rackY=front-.05,panel=[rackX,rackY,rack.elevation+.296];
-  const sw=[rackX,rackY,rack.elevation+.211],shaftX=6.23+i*.020,shaftY=6.72;
-  run(levels.ground,'patch',[sw,[rackX,rackY+.026,sw[2]+.02],[rackX,rackY+.026,panel[2]-.02],panel]);
+  const rackX=west+.104+i*.037,panel=[rackX,rackY,rack.elevation+.295];
+  const switchPort=sw(i),shaftX=6.23+i*.020,shaftY=6.72;
+  run(levels.ground,'patch',[switchPort,[switchPort[0],rackY+.026,switchPort[2]+.02],[rackX,rackY+.026,panel[2]-.02],panel]);
   const behind=[rackX,front-.26,panel[2]],z=(upper?data.levels.upper:0)-.205;
   const destination=[x,y,(room&&upper?data.levels.upper:0)+height];
   let route;
   if(upper){
    const split=[shaftX,shaftY,data.levels.groundCeiling];
    run(levels.ground,'pion',[panel,behind,[shaftX,behind[1],behind[2]],[shaftX,shaftY,behind[2]],split]);
-   route=[split,[shaftX,shaftY,z],[shaftX,y,z],[x,y,z],destination];
+   route=[split,[shaftX,shaftY,z],[shaftX,y,z]];
+   if(!room){
+    // Rise inside the solid partition beyond the bedroom doorway, then cross above the attic ceiling.
+    const chaseX=data.walls.find(w=>w.id==='u-room2-hall').a[0],atticZ=data.levels.upperCeiling+.18;
+    route.push([chaseX,y,z],[chaseX,y,atticZ],[x,y,atticZ]);
+   }else route.push([x,y,z]);
+   route.push(destination);
+  }else if(id==='garaz'){
+   route=[panel,behind,[rackX,shaftY,panel[2]],[x,shaftY,panel[2]],[x,shaftY,height],destination];
   }else{
    const lane=7.52+.05*i;
    route=[panel,behind,[rackX,behind[1],z],[rackX,lane,z],[x,lane,z],[x,y,z],destination];
@@ -597,5 +663,6 @@ export function createIndoorServices(THREE,interior,data) {
  serviceWater(groups.water,data,pipe);
  serviceSewer(groups.sewer,data,pipe);
  serviceDishwasher(groups,data,pipe,THREE,interior);
+ servicePower(groups.power.ground,data,pipe,THREE,interior);
  return root;
 }

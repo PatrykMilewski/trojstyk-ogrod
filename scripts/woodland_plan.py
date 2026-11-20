@@ -39,7 +39,7 @@ def garden_services(house):
     repository = ROOT.parent if (ROOT.parent / "src/model").is_dir() else ROOT.parent / "trojstyk-pages-publish"
     script = """
 import {wastewaterServiceAccess193} from './src/model/wastewater.js';
-import {rainFieldFootprints193,rainServiceAccess193} from './src/model/rain-services.js';
+import {rainFieldFootprints193,rainServiceAccess193,rainTankFootprint193} from './src/model/rain-services.js';
 import {iconPlanPoint} from './src/model/roof-windows.js';
 import {readFileSync} from 'node:fs';
 const house=JSON.parse(readFileSync(0,'utf8'));
@@ -48,7 +48,7 @@ console.log(JSON.stringify({
   access:[...wastewater,...rainServiceAccess193(house,iconPlanPoint)],
   footprints:[
     ...wastewater.filter(item=>item.footprint).map(({id,footprint})=>({id,ring:footprint})),
-    ...rainFieldFootprints193(house,iconPlanPoint)
+    rainTankFootprint193(house,iconPlanPoint), ...rainFieldFootprints193(house,iconPlanPoint)
   ]
 }));
 """

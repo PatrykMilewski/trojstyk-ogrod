@@ -8,7 +8,7 @@ const html=await read('../trzy-domy-3d/index.html');
 const imports=JSON.parse(html.split('<script type="importmap">')[1].split('</script>')[0]).imports;
 const THREE=await load(Buffer.from(imports.three.split(',')[1],'base64').toString().replaceAll("'three/core'","'"+imports['three/core']+"'"));
 const data=JSON.parse(await read('../trzy-domy-3d/interior-data.json'));
-const {createIndoorServices,createEthernetOutlets}=await load(await read('../src/model/indoor-services.js'));
+const {createIndoorServices,createEthernetOutlets,createSoilVentSurface}=await load(await read('../src/model/indoor-services.js'));
 const model=createIndoorServices(THREE,null,data);
 const at=name=>model.getObjectByName(name);
 const nameOfFloor=item=>item.room.startsWith('1.')?'upper':'ground';
@@ -290,24 +290,94 @@ test('all foul-water stacks vent through a common open outlet above the actual r
 });
 
 
-test('seven independent Ethernet connections terminate at their assigned wall outlets or sealed roof provision',()=>{
+test('eight Ethernet home runs connect physical rack ports to six rooms, the roof and the garage',async()=>{
  const outlets=createEthernetOutlets(THREE,data);
- const cables=at('ethernet').children.flatMap(o=>o.children).filter(o=>o.name.endsWith('-kabel'));
- assert.deepEqual(cables.map(o=>o.userData.port),[1,2,3,4,5,6,7]);
- assert.deepEqual(cables.map(o=>o.userData.room),['0.4','0.8','0.9','1.1','1.3','1.8','dach']);
+ const marker='const [source,garden,house,neighbors]=',start=html.indexOf(marker)+marker.length;
+ const [,,house]=JSON.parse(html.slice(start,html.indexOf(';\nconst landscaping=',start)));
+ const {addIconInterior}=await load(await read('../src/model/interior.js'));
+ const interior=addIconInterior({THREE,scene:new THREE.Scene(),house,data});
+ const roof=createSoilVentSurface(THREE,house,interior);
+ const cables=at('ethernet').children.flatMap(o=>o.children).filter(o=>o.name.endsWith('-kabel')).sort((a,b)=>a.userData.port-b.userData.port);
+ assert.deepEqual(cables.map(o=>o.userData.port),[1,2,3,4,5,6,7,8]);
+ assert.deepEqual(cables.map(o=>o.userData.room),['0.4','0.8','0.9','1.1','1.3','1.8','dach','0.1']);
+ const inPort=(device,port,p)=>{
+  const mesh=interior.group.getObjectByName('utility-network-rack-rj45-'+device+'-'+(port-1));
+  mesh.geometry.computeBoundingBox();mesh.updateMatrix();
+  const socket=mesh.geometry.boundingBox.clone().applyMatrix4(mesh.matrix).expandByScalar(.00001);
+  assert(socket.containsPoint(new THREE.Vector3(...p)),device+' port '+port+' vs '+p);
+ };
  for(const cable of cables){
   const {outlet:id,port,from,to}=cable.userData;
   const patch=at('lan-'+id+'-patch'),riser=at('lan-'+id+'-pion');
-  assert.deepEqual(patch.userData.from,[5.855+.104+(port-1)*.037,7.175-.05,1.36+.211]);
+  inPort(1,port,patch.userData.from);inPort(2,port,patch.userData.to);
   if(riser){
    assert.deepEqual(riser.userData.from,patch.userData.to);
    assert.deepEqual(riser.userData.to,from);
    assert(Math.abs(from[1]-6.66)<.13,'riser inside technical-room partition');
   }else assert.deepEqual(from,patch.userData.to);
-  const socket=outlets.getObjectByName(port===7?'ethernet-roof-sealed-box':'rj45-'+id);
+  const socket=id==='dach-poe'?roof.getObjectByName('ethernet-roof-sealed-box'):outlets.getObjectByName('rj45-'+id);
   assert.deepEqual(to,socket.position.toArray());
  }
+ const uplink=at('lan-switch-router-uplink').userData;
+ inPort(1,16,uplink.from);inPort(0,1,uplink.to);
  const play=outlets.getObjectByName('rj45-bawialnia').position;
  assert(!inside(play.x,play.y,data.furniture.find(f=>f.id==='guest-wardrobe').box));
  assert(outlets.getObjectByName('rj45-pokoj-1').position.x-7.37>.081,'separate data and power faceplates');
+ const point=outlets.getObjectByName('rj45-garaz').position,wall=data.walls.find(w=>w.id==='garage-back');
+ assert.equal(point.y,wall.a[1]-wall.thickness/2);
+ interior.group.add(outlets);interior.group.updateMatrixWorld(true);
+ const outward=new THREE.Vector3(0,-1,0).transformDirection(interior.group.matrixWorld);
+ const startAt=point.clone().applyMatrix4(interior.group.matrixWorld).addScaledVector(outward,.60);
+ const ray=new THREE.Raycaster(startAt,outward.negate(),0,.64);
+ const hits=ray.intersectObject(interior.group,true);
+ assert.equal(hits[0]?.object.parent.name,'rj45-garaz','socket is visible from the garage');
+ const backing=hits.find(h=>h.object.parent.name!=='rj45-garaz');
+ assert(backing&&Math.abs(backing.distance-.60)<.004,'socket contacts finished garage wall');
+ assert(wall.doors.every(([lo,hi])=>point.x+.04<wall.a[0]+lo||point.x-.04>wall.a[0]+hi));
+ assert(point.x-.04>data.garageFitout.workbench.footprint[2]);
+ for(const item of data.furniture.filter(f=>f.room==='0.1')){
+  assert(point.x+.04<item.box[0]||point.x-.04>item.box[2]||point.z+.04<item.elevation||
+   point.z-.04>item.elevation+item.height||point.y-item.box[3]>.60,'access clear of '+item.id);
+ }
+ const power=data.electrical.points.find(o=>o.room==='0.1'&&o.type==='socket');
+ assert.equal(point.z,power.heightM);assert(Math.abs(point.x-power.alongM)>.085);
+ const lan=pipeCenterline(at('lan-dach-poe-kabel')),wallUp=data.walls.find(w=>w.id==='u-room2-hall');
+ const halfway=(data.levels.upper+data.levels.upperCeiling)/2;
+ const i=lan.findIndex(p=>p.z>=halfway),rise=lan[i-1].clone().lerp(lan[i],(halfway-lan[i-1].z)/(lan[i].z-lan[i-1].z));
+ assert(Math.abs(rise.x-wallUp.a[0])<.01&&wallUp.doors.every(([a,b])=>rise.y-wallUp.a[1]<a||rise.y-wallUp.a[1]>b));
+});
+
+test('battery DC and dedicated AC circuits reach the physical terminals and dishwasher plug',()=>{
+ const equipment=id=>data.furniture.find(f=>f.id===id);
+ const battery=equipment('utility-battery'),board=equipment('utility-distribution-board');
+ const inverter=equipment('utility-pv-inverter'),charger=equipment('garage-wallbox');
+ const pin=(item,id)=>{
+  const [u,v,h]=item.ports[id],[,,e,n]=item.box;
+  return [...(item.facing==='-x'?[e-v,item.box[1]+u]:[e-u,n-v]),(item.elevation||0)+h];
+ };
+ const cord=at('dishwasher-power-cord');
+ for(const [id,from,to] of [
+  ['battery-dc-positive',pin(battery,'positive'),pin(inverter,'batteryPlus')],
+  ['battery-dc-negative',pin(battery,'negative'),pin(inverter,'batteryMinus')],
+  ['inverter-ac-to-board',pin(inverter,'ac'),pin(board,'inverter')],
+  ['distribution-board-to-wallbox',pin(board,'ev'),pin(charger,'ac')],
+  ['distribution-board-to-dishwasher-socket',pin(board,'dishwasher'),cord.userData.from]
+ ]){
+  const mesh=at(id),path=pipeCenterline(mesh);
+  assert.equal(mesh.parent,at('power-ground'));
+  assert.deepEqual(mesh.userData.from,from);assert.deepEqual(mesh.userData.to,to);
+  assert(path[0].distanceTo(new THREE.Vector3(...from))<1e-5);
+  assert(path.at(-1).distanceTo(new THREE.Vector3(...to))<1e-5);
+ }
+ assert.equal(at('distribution-board-to-wallbox').userData.phases,3);
+ assert.equal(at('battery-dc-positive').userData.voltage,51.2);
+ const garageDoor=data.walls.find(w=>w.id==='garage-back');
+ const bay=data.garageFitout.parkingBays[1],radius=.022;
+ for(const p of pipeCenterline(at('distribution-board-to-wallbox'))){
+  assert(p.y-radius>bay[3],'EV supply stays outside the parking bay');
+  for(const [s,e] of garageDoor.doors){
+   if(Math.abs(p.y-garageDoor.a[1])<garageDoor.thickness/2+radius && p.z<2.1)
+    assert(p.x<garageDoor.a[0]+s-radius||p.x>garageDoor.a[0]+e+radius,'wire avoids door opening');
+  }
+ }
 });

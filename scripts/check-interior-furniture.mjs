@@ -179,6 +179,8 @@ test('plant equipment fits room 0.3, with both service sides reachable around it
     'utility-softener':['brine-cabinet','salt-lid','valve-head'],
     'utility-hrv':['counterflow-casing','filter-drawer','condensate-outlet'],
     'utility-pv-inverter':['heat-sink','indicator-window','cable-gland-3'],
+    'utility-battery':['steel-shell','caster-0.074-0.048','lcd-bezel','terminal-positive','terminal-negative'],
+    'utility-distribution-board':['steel-enclosure','din-rail-0','din-device-1-1-3','gland-ev'],
     'utility-network-rack':['perforated-door-insert','vented-side-1','router','ethernet-switch','patch-panel','patch-lead-3'],
   };
   assert.deepEqual(data.furniture.filter(item=>item.room==='0.3').map(item=>item.id).sort(),Object.keys(signature).sort());
@@ -188,7 +190,7 @@ test('plant equipment fits room 0.3, with both service sides reachable around it
   }
   const get=name=>interior.group.getObjectByName(name);
   assert(get('utility-network-rack-perforated-door-insert').material.alphaMap);
-  assert.equal(parts('utility-network-rack').filter(o=>o.name.startsWith('utility-network-rack-rj45-')).length,20);
+  assert.equal(parts('utility-network-rack').filter(o=>o.name.startsWith('utility-network-rack-rj45-')).length,28);
   for(let i=0;i<4;i++)close(bounds(get('utility-hrv-air-duct-'+i)).max.z,2.8,'Four duct runs meet ceiling',.002);
   close(itemBounds('dhw-cylinder').min.z,.008,'Vessel plinth rests on tiled floor');
   close(itemBounds('utility-softener').min.z,.008,'Softener base rests on tiled floor');
@@ -199,6 +201,39 @@ test('plant equipment fits room 0.3, with both service sides reachable around it
   const walk=groundWalk([{ring}]);
   assertGroundRoute(walk,[[5.10,6.25],[5.10,7.45],[4.64,7.41],[4.67,7.19]]);
   assertGroundRoute(walk,[[5.10,7.45],[5.20,7.66],[5.36,7.77],[5.53,7.77],[5.68,7.74],[5.77,7.72],[5.84,7.66],[5.88,7.60],[5.90,7.50]]);
+});
+
+test('MUST battery, distribution board and three-phase charger clear equipment, parking and door sweeps',()=>{
+  const battery=itemBounds('utility-battery'),inverter=itemBounds('utility-pv-inverter');
+  const charger=itemBounds('garage-wallbox'),board=itemBounds('utility-distribution-board');
+  const size=battery.getSize(new THREE.Vector3());
+  close(size.y,.600,'battery width',.001);
+  close(size.x,.264,'battery depth',.001);
+  close(size.z,1.093,'battery height',.001);
+  close(battery.min.z,0,'casters on floor');
+  assert(inverter.min.z-battery.max.z>.26);
+  for(const [id,box] of [['utility-battery',battery],['utility-distribution-board',board]]){
+    for(const f of data.furniture.filter(f=>f.room==='0.3'&&f.id!==id))
+      assert(!box.intersectsBox(itemBounds(f.id)),id+' clears '+f.id);
+  }
+  for(const suffix of ['fascia','charge-indicator','coiled-ev-cable','type-2-handle'])
+    assert(interior.group.getObjectByName('garage-wallbox-'+suffix)?.isMesh);
+  const garage=data.garageFitout;
+  for(const bay of garage.parkingBays)assert(charger.min.y-bay[3]>.70);
+  assert(charger.min.x-garage.workbench.footprint[2]>1);
+  assert(garage.bikes.every(b=>charger.min.x>b.center[0]+b.barWidth/2));
+  for(const id of ['garage-utility','garage-entry']){
+    const pivot=interior.group.getObjectByName('hall-flush-'+id);
+    for(let i=0;i<=30;i++){
+      const pose=new THREE.Matrix4().makeRotationZ(pivot.userData.closedYaw+pivot.userData.swing*Math.PI*i/60);
+      pose.setPosition(pivot.position);
+      for(const part of pivot.children){
+        const swept=bounds(part).applyMatrix4(pose);
+        for(const [name,box] of [['battery',battery],['board',board],['EV charger',charger]])
+          assert(!swept.intersectsBox(box),name+' clears '+id+' at '+i*3+' degrees');
+      }
+    }
+  }
 });
 
 test('the Thermatec outdoor unit faces the unobstructed road side of the garage',()=>{
@@ -251,6 +286,7 @@ test('furniture does not occupy another furniture footprint or an internal doorw
   for (let i = 0; i < occupied.length; i++) for (let j = i + 1; j < occupied.length; j++) {
     const a = occupied[i], b = occupied[j];
     if (a.room.startsWith('1.') !== b.room.startsWith('1.') || !overlaps(a.box, b.box)) continue;
+    if (itemBounds(a.id).max.z < itemBounds(b.id).min.z || itemBounds(b.id).max.z < itemBounds(a.id).min.z) continue;
     const tuckedChair = a.id === 'dining-table' ? b : b.id === 'dining-table' ? a : null;
     assert(tuckedChair?.chairStyle, `${a.id} overlaps ${b.id}`);
     for (const chairPart of parts(tuckedChair.id)) for (const tablePart of parts('dining-table')) {
@@ -1838,6 +1874,24 @@ test('dishwasher hoses and power lead end on the modeled valve, trap, adjacent c
  assert.deepEqual(get('trap-connection').userData.to,services.getObjectByName('kitchen-sink-drain').userData.from);
  assert(get('drain-hose').geometry.attributes.position.array.some((v,i)=>i%3===2&&v>.74));
  assert.equal(get('power-cord').parent.name,'power-ground');
+});
+
+test('electrical routes touch the visible terminal blocks, glands, charger and kitchen plug',async()=>{
+ const {createIndoorServices}=await load(await readFile(new URL('../src/model/indoor-services.js',import.meta.url),'utf8'));
+ const services=createIndoorServices(THREE,interior,data),get=name=>interior.group.getObjectByName(name);
+ for(const [id,source,sink] of [
+  ['battery-dc-positive','utility-battery-terminal-positive','utility-pv-inverter-cable-gland-3'],
+  ['battery-dc-negative','utility-battery-terminal-negative','utility-pv-inverter-cable-gland-4'],
+  ['inverter-ac-to-board','utility-pv-inverter-cable-gland-2','utility-distribution-board-gland-inverter'],
+  ['distribution-board-to-wallbox','utility-distribution-board-gland-ev','garage-wallbox-ac-inlet'],
+  ['distribution-board-to-dishwasher-socket','utility-distribution-board-gland-dishwasher','kitchen-back-dishwasher-plug']
+ ]){
+  const {from,to}=services.getObjectByName(id).userData;
+  for(const [name,pin] of [[source,from],[sink,to]])
+   assert(bounds(get(name)).distanceToPoint(new THREE.Vector3(...pin))<.001,id+' touches '+name);
+ }
+ assert.equal(interior.group.children.filter(o=>o.name==='battery-to-inverter-harness').length,1);
+ assert.equal(get('battery-to-inverter-harness').children.length,2);
 });
 
 test('every island drawer opens and closes on its own visible front after static batching', async () => {
