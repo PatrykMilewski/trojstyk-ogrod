@@ -13,7 +13,7 @@ export function bindIconServiceView({THREE,indoor,rain,wastewater,camera,control
     sewer:'Ochra – odpływy do oczyszczalni · turkus przy zbiorniku – odpływ po oczyszczeniu',
     ethernet:'Zielony – gniazda RJ45 w sześciu pokojach i garażu · żółty – rezerwa PoE na dachu · wszystkie przewody wracają do szafy w kotłowni',
     power:'Złoty – obwody AC rozdzielnicy, falownika i wallboxa · koralowy i szaroniebieski – przewody DC magazynu · grafitowy – zmywarka',
-    rain:'Turkus – rynny, piony i przewody do zbiornika · kratownica – rozsącz deszczówki'
+    rain:'Dwa spusty SW zasilają rozsącz w rabacie. Dwa spusty SE prowadzą do zbiornika z przelewem do dwóch pól w ogrodzie.'
   };
   let active=false;
   function update(frame) {

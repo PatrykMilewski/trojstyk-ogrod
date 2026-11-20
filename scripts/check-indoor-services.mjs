@@ -381,3 +381,24 @@ test('battery DC and dedicated AC circuits reach the physical terminals and dish
   }
  }
 });
+
+test('robot cabinet has a capped cold-water takeoff and a trapped drain returning to the kitchen collector',()=>{
+ const cabinet=data.furniture.find(f=>f.robotCabinet),[west,back]=cabinet.box;
+ const interior={group:new THREE.Group()};
+ const network=createIndoorServices(THREE,interior,data),find=id=>network.getObjectByName(id);
+ const valve=find('robot-isolation-valve'),trap=find('robot-capped-trap'),branch=find('robot-drain');
+ assert.deepEqual(find('robot-cold-supply').userData.from,find('kitchen-feed-cold').userData.to);
+ assert.deepEqual(find('robot-cold-supply').userData.to,valve.userData.from);
+ assert.deepEqual(trap.userData.to,branch.userData.from);
+ assert.deepEqual(branch.userData.to,find('kitchen-collector').userData.from);
+ const path=pipeCenterline(branch);
+ assert(path.every((p,i)=>!i||p.z<=path[i-1].z+.00001));
+ for(const [id,point] of [['cold',valve.userData.to],['waste',trap.userData.from]]){
+  const cap=interior.group.getObjectByName('robot-'+id+'-blanking-cap');
+  assert(cap&&cap.position.distanceTo(new THREE.Vector3(...point))<.006);
+  assert(point[0]>west+.02&&point[0]<west+.45&&point[1]>back+.018);
+  assert(point[2]>.45&&point[2]<cabinet.robotCabinet.shelfHeightsM[0]);
+ }
+ const oldData={...data,furniture:data.furniture.map(f=>f===cabinet?{...f,robotCabinet:null}:f)};
+ assert.equal(createIndoorServices(THREE,null,oldData).getObjectByName('robot-drain'),undefined);
+});

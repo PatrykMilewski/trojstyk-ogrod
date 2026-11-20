@@ -171,8 +171,11 @@ def generate(plot, garden, site, house):
         excluded = obstacles.union(service) if parcel_id == "193" else obstacles
         free = parcel.buffer(-.4, join_style="mitre").difference(excluded)
         # A plantable border around the openings joins the front beds; free already excludes working space.
-        inspection_beds = [surface(item).buffer(1.3) for item in services["access"]
-                           if parcel_id == "193" and item.get("id") in ("tank", "distributor", "vent-1", "vent-2")]
+        inspection_beds = [surface(item).buffer(2.0 if item.get("id", "").startswith("rain-") else 1.3)
+                           for item in services["access"]
+                           if parcel_id == "193" and item.get("id") in ("tank", "distributor", "vent-1", "vent-2",
+                                                                         "rain-sw-filter", "rain-leaf-filter",
+                                                                         "rain-tank-inspection", "rain-field-inspection")]
         beds = design(parcel_id, parcel, free, existing, inspection_beds)
         parts = sorted(polygon_parts(beds), key=lambda p: -p.area)
         polygons = [dict(ring=list(p.exterior.coords), holes=[list(h.coords) for h in p.interiors]) for p in parts]

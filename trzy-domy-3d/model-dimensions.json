@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-20.9",
+  "modelVersion": "2026-11-20.10",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1744,10 +1744,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "5aa5b42c0b297314a6e5341c7b32e9070523c716b82b169b99fd00d3bc9dce06",
-    "proceduralCodeSha256": "f5f58b62f1f12e02300951cee412ee004e14b895e4faf1c562a083a8b3743418",
+    "proceduralCodeSha256": "5d85bae8baf86bc832634725166af17e0d7f098b6d6f98f79da14bdd9f55b35a",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
-    "planSha256": "9fd4c337c62205d82adab636c32db854d5451d68bf5df0366140da4e28405f23",
-    "runtimeSha256": "47c14e192542d1dbd0fc4b3a8192d8e097d8dac22ee1cf3bfa2f1457d6d6639a"
+    "planSha256": "6f03de256282f8cd4124898bc02740eb0a63c36d216734413bf7cc02b9db0075",
+    "runtimeSha256": "56c70cc7544b47cd33575ec97bd5f3cfad5cb0074f640674dfde7c8e5e61b87c"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1806,7 +1806,8 @@
     "Dom /193: zbiornik przy północno-wschodniej ścianie, rozdzielone pola deszczówki i oczyszczalni z dostępem od rabat, zlicowane rynny z rewizjami, wywiewka dachowa, zmywarka i sieć Ethernet z rezerwą PoE na dachu.",
     "Dom /193: BioDisc i pole tuneli za domem, przebudowany kolektor, indygo na drzwiach wejściowych oraz kremowy dywan 200 × 300 cm w błękitną kratkę.",
     "Dom /193: BioDisc i tunele wracają na pierwotne miejsce przy garażu, z rewizją i wywiewkami w rabacie. Rozsącz deszczówki w trzech grupach pod centralnym trawnikiem.",
-    "Dom /193: wspólne przejście dachowe PoE i DN110, Ethernet w garażu, rozdzielnica, magazyn MUST, wallbox trójfazowy, zbiornik deszczówki na południu i korekta wywiewek BioDisc."
+    "Dom /193: wspólne przejście dachowe PoE i DN110, Ethernet w garażu, rozdzielnica, magazyn MUST, wallbox trójfazowy, zbiornik deszczówki na południu i korekta wywiewek BioDisc.",
+    "Dom /193: deszczówka SE i osobny rozsącz SW, wymiary od granicy, zmywarka pod ekspresem, rezerwa przyłączy stacji robota, spiżarnia gospodarcza i cztery osoby w salonie."
   ],
   "contextParcels": [
     {
@@ -3572,7 +3573,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "3edbc6cd22b6b8559191b609a93901da9f7004c49c08d6f5d7e15b2756ebe82e",
+    "dataSha256": "be5a9a7db1134277a33f103e2a9b246a5dc9d15202bd6a15f392c3b394df64db",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,

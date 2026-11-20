@@ -503,16 +503,17 @@ function serviceSewer(levels,data,pipe) {
 
 function serviceDishwasher(groups,data,pipe,THREE,interior) {
  const sink=data.furniture.find(f=>f.id==='kitchen-sink'),counter=data.furniture.find(f=>f.id===sink.support);
- const center=(sink.box[0]+sink.box[2])/2,left=center+(sink.baseCabinetWidthM??.80)/2,right=(left+counter.box[2])/2;
+ const center=(sink.box[0]+sink.box[2])/2,sinkRight=center+(sink.baseCabinetWidthM??.80)/2;
+ const left=counter.box[0],right=(left+center-(sink.baseCabinetWidthM??.80)/2)/2;
  const [,wall]=counter.box,back=wall-.013,trapY=sink.box[1]+.204;
  const cold=iconServiceColors.cold,sewer=iconServiceColors.sewer,meta={fixture:'dishwasher'};
  const main=groups.water.ground.getObjectByName('kitchen-feed-cold').userData.to;
- const valve=[left-.15,wall+.046,.55],inlet=[left+.15,wall+.020,.16],outlet=[left+.21,wall+.020,.19];
+ const valve=[sinkRight-.15,wall+.046,.55],inlet=[left+.15,wall+.020,.16],outlet=[left+.21,wall+.020,.19];
  pipe(groups.water.ground,'dishwasher-stop-valve',[main,[valve[0],main[1],main[2]],[valve[0],back,.55],valve],cold,.012,meta);
  pipe(groups.water.ground,'dishwasher-inlet-hose',[valve,[valve[0]+.025,wall+.046,.48],[valve[0]+.025,back,.17],[inlet[0],back,.15],inlet],cold,.010,meta);
  const spigot=[center+.05,trapY,.645],trapOut=serviceFixture(sink,0).waste;
- pipe(groups.sewer.ground,'dishwasher-drain-hose',[outlet,[outlet[0],back,.21],[left-.05,back,.26],
-  [left-.07,back,.77],[center+.05,back,.77],[center+.05,trapY,.69],spigot],sewer,.012,meta);
+ pipe(groups.sewer.ground,'dishwasher-drain-hose',[outlet,[outlet[0],back,.21],[center-.24,back,.26],
+  [center-.22,back,.77],[center+.05,back,.77],[center+.05,trapY,.69],spigot],sewer,.012,meta);
  pipe(groups.sewer.ground,'dishwasher-trap-connection',[spigot,[center,trapY,.60],[center,trapY,.413],
   [center,trapY-.033,.364],[center,trapY-.075,.375],[center,trapY-.101,.433],[center,trapY-.138,.451],trapOut],sewer,.018,meta);
  const plug=[right+.13,wall+.050,.55],inletPower=[left+.30,wall+.020,.18];
@@ -524,6 +525,37 @@ function serviceDishwasher(groups,data,pipe,THREE,interior) {
   const overlay=group.getObjectByName('dishwasher-'+id);
   const mesh=new THREE.Mesh(overlay.geometry,new THREE.MeshStandardMaterial({color,roughness:.76}));
   mesh.name='dishwasher-fitted-'+id;fixed.add(mesh);
+ }
+}
+
+function serviceRobotCabinet(groups,data,pipe,THREE,interior) {
+ const item=data.furniture.find(f=>f.robotCabinet);
+ if(!item)return;
+ const [west,back]=item.box;
+ const cold=groups.water.ground,sewer=groups.sewer.ground;
+ const tap=cold.getObjectByName('kitchen-feed-cold').userData.to;
+ const stack=sewer.getObjectByName('kitchen-collector').userData.from;
+ const meta={fixture:'kitchen-robot',provision:true};
+ const fittings=[];
+ // Keep the capped terminals on the open side of the dock and below the first shelf.
+ const x=west+.10,y=back+.024;
+ const valve=[x,y+.047,.60],drain=[x+.105,y+.043,.53];
+ pipe(cold,'robot-cold-supply',[tap,[tap[0],tap[1],-.13],[x,tap[1],-.13],[x,y,-.13],[x,y,.60]],iconServiceColors.cold,.010,meta);
+ fittings.push(pipe(cold,'robot-isolation-valve',[[x,y,.60],valve],iconServiceColors.cold,.018,meta));
+ fittings.push(pipe(cold,'robot-valve-handle',[[x,y+.02,.606],[x,y+.02,.635]],'#377dad',.014,meta));
+ fittings.push(pipe(sewer,'robot-capped-trap',[drain,[drain[0],y,.53],[drain[0],y,.425],
+  [drain[0]+.048,y,.425],[drain[0]+.048,y,.475],[drain[0]+.082,y,.475]],iconServiceColors.sewer,.020,meta));
+ serviceDrainBranch(sewer,pipe,'robot-drain',fittings.at(-1).userData.to,stack,.022,.025,'kitchen-robot');
+ if(!interior?.group||interior.group.getObjectByName('robot-service-terminals'))return;
+ const fixed=serviceGroup(THREE,interior.group,'robot-service-terminals');
+ for(const fitting of fittings){
+  const material=new THREE.MeshStandardMaterial({color:fitting.material.color,roughness:.64});
+  fitting.geometry.computeVertexNormals();
+  const mesh=new THREE.Mesh(fitting.geometry,material);mesh.name=fitting.name+'-installed';fixed.add(mesh);
+ }
+ for(const [name,point,radius,color] of [['cold',valve,.018,0x8c9ea4],['waste',drain,.022,0x73695d]]){
+  const cap=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,.010,16),new THREE.MeshStandardMaterial({color}));
+  cap.name='robot-'+name+'-blanking-cap';cap.position.set(point[0],point[1]+.004,point[2]);fixed.add(cap);
  }
 }
 
@@ -663,6 +695,7 @@ export function createIndoorServices(THREE,interior,data) {
  serviceWater(groups.water,data,pipe);
  serviceSewer(groups.sewer,data,pipe);
  serviceDishwasher(groups,data,pipe,THREE,interior);
+ serviceRobotCabinet(groups,data,pipe,THREE,interior);
  servicePower(groups.power.ground,data,pipe,THREE,interior);
  return root;
 }

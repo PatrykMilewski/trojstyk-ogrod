@@ -254,3 +254,20 @@ test('the level mulch finishes join the shrub beds and leave every service openi
     assert.equal(down.intersectObject(soilMeshes[i]).length,0,id);
   }
 });
+
+test('tank boundary labels measure the lid edge and the rotated rain tank footprint in the site frame',async()=>{
+  const {measureTankGaps}=await load(await read('../src/model/tank-dimensions.js'));
+  const {rainTankFootprint193}=await load(await read('../src/model/rain-services.js'));
+  const footprint=rainTankFootprint193(house,(_house,x,y,z)=>new THREE.Vector3(x,y,z).applyMatrix4(planToSite).toArray()).ring;
+  const part=surface.getObjectByName('biodisc-lid-seam');
+  part.geometry.computeBoundingBox();
+  const radius=part.geometry.boundingBox.max.x,boundary=neighbors.parcels['193'].coordinates[0];
+  const [lid,body]=measureTankGaps(boundary,wastewater193.tankCenter,radius,footprint);
+  assert.equal(lid.length.toFixed(2),'2.10');
+  assert.equal(body.length.toFixed(2),'7.90');
+  assert(close(clearance(body.start,footprint),0));
+  for(const gap of [lid,body]){
+    assert(close(clearance(gap.end,boundary),0));
+    assert(close(Math.hypot(gap.start[0]-gap.end[0],gap.start[1]-gap.end[1]),gap.length));
+  }
+});

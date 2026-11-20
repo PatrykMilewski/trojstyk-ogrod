@@ -24,7 +24,7 @@ test('floor dimensions measure finished faces, both worktop edges and the clear 
   assert.deepEqual(widths(island), [595, 595, 595, 595, 595, 595]);
   assert.equal(island[1].caption, 'piekarnik');
   assert.equal(base[5].caption, 'pod zlewem');
-  assert.equal(base[6].caption, 'zmywarka');
+  assert.equal(base[3].caption, 'zmywarka');
   assert.equal(mm(islandTop.max.x - islandTop.min.x), 3823);
   assert.equal(mm(islandTop.max.y - islandTop.min.y), 1050);
   assert.equal(mm(islandTop.min.y - wallTop.max.y), 1080);

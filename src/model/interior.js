@@ -10,7 +10,7 @@ export function addIconInterior(options) {
  iconInteriorFurnishings(context);
  const robotCabinet=iconKitchenRobotControl(context);
  iconPlantOutdoorUnit(context);
- iconRecliningAdult(context);
+ iconSeatedLounge(context);
  options.fitGarage?.(context);
  const projector=iconLivingProjector(context);
  const appliances=iconApplianceControls(context);
@@ -1236,39 +1236,76 @@ function iconVelvetSectional(THREE,frame,s,p) {
  pillow.rotateX(.22);pillow.rotateY(.08);
 }
 
-function iconRecliningAdult(context) {
- const sofa=context.data.furniture.find(item=>item.id==='sofa');
- if(!sofa)return;
- const {THREE,material}=context,frame=iconInteriorFurnitureFrame(context,{...sofa,id:'lounge-reader'});
- const s=iconLivingShapes(context,frame),p=iconLivingPalette(context);
- const sphere=new THREE.SphereGeometry(1,20,14),detailSphere=new THREE.SphereGeometry(1,10,7);
- const start=context.group.children.length;
- const fabric=(name,color)=>material(color,{name,map:p.linen.map,roughness:.96});
- const skin=material('#c48e71',{name:'Warm skin',roughness:.84}),hair=material('#342720',{name:'Dark chestnut hair',roughness:.83});
- const knit=fabric('Rust cotton knit','#ad6047'),rib=fabric('Ribbed knit edging','#944b37');
- const denim=fabric('Indigo lounge trousers','#354958'),sock=fabric('Oatmeal socks','#e4dbc3');
- const lips=material('#995e54'),brow=material('#4e382d');
- const ball=(name,center,radii,mat)=>{
-  const mesh=s.add(name,Math.max(...radii)<.012?detailSphere:sphere,mat,...center);
-  mesh.scale.set(...radii);return mesh;
+function iconSeatedLounge(context) {
+ const seats=[
+  {support:'sofa',cushion:'seat-0',id:'sofa-guest-1',size:1,turn:.22,tuckedFeet:true,skin:'#c48e71',hair:'#342720',shirt:'#ad6047',trousers:'#354958'},
+  {support:'sofa',cushion:'seat',id:'sofa-guest-2',size:.94,turn:-.18,skin:'#e1b794',hair:'#756049',shirt:'#768985',trousers:'#bfb29e'},
+  {support:'sofa',cushion:'seat-2',id:'sofa-guest-3',size:1.04,turn:.32,skin:'#a47152',hair:'#2e2825',shirt:'#e3d6ba',trousers:'#4f574d',chaise:true},
+  {support:'living-armchair',cushion:'seat',id:'armchair-guest',size:.98,turn:-.42,bun:true,skin:'#d5a187',hair:'#5a4339',shirt:'#756477',trousers:'#384654'}
+ ];
+ for(const guest of seats){
+  const chair=context.data.furniture.find(item=>item.id===guest.support);
+  if(!chair)continue;
+  const cushion=context.group.getObjectByName(chair.id+'-'+guest.cushion);
+  const frame=iconInteriorFurnitureFrame(context,{...chair,id:guest.id});
+  cushion.geometry.computeBoundingBox();
+  const [x,y]=frame.point(0,0),[ux,uy]=frame.point(1,0);
+  const center=(cushion.position.x-x)*(ux-x)+(cushion.position.y-y)*(uy-y);
+  const seatHeight=cushion.position.z-frame.z+cushion.geometry.boundingBox.max.z;
+  const depth=frame.depth-(guest.support==='sofa' ? .34 : .43);
+  const point=(u,v,z)=>frame.point(center+u*guest.size,depth+v*guest.size,seatHeight+z*guest.size);
+  const start=context.group.children.length;
+  iconSeatedAdult(context,iconLivingShapes(context,{...frame,point}),guest,seatHeight);
+  for(const mesh of context.group.children.slice(start)){
+   mesh.scale.multiplyScalar(guest.size);
+   mesh.userData={furnitureId:guest.id,room:chair.room,support:chair.id,pose:'seated'};
+  }
+  if(!guest.chaise){
+   const a=point(-.21,.36,0),b=point(.21,.75,0);
+   context.obstacle(guest.id+'-legs',[Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.max(a[0],b[0]),Math.max(a[1],b[1])],.02,seatHeight+.10);
+  }
+ }
+}
+
+function iconSeatedAdult(context,s,guest,seatHeight) {
+ const {THREE,material}=context,p=iconLivingPalette(context);
+ const fabric=color=>material(color,{map:p.linen.map,roughness:.96});
+ const skin=material(guest.skin),hair=material(guest.hair),shirt=fabric(guest.shirt),pants=fabric(guest.trousers);
+ const sphere=new THREE.SphereGeometry(1,18,14);
+ const ball=(name,center,radii,finish)=>{
+  const piece=s.add(name,sphere,finish,...center);piece.scale.set(...radii);return piece;
  };
- const sweep=(name,rows,mat,sides)=>iconBodySweep(THREE,s,name,rows,mat,sides);
- const pad=iconVelvetBlock(THREE,s,'head-pillow',.53,.674,.524,.52,.52,.142,p.linen,0,.68);
- pad.rotateZ(.06);
- sweep('pullover',[[.647,.68,.642,.060,.054],[.682,.68,.64,.113,.081],[.728,.678,.631,.166,.108],
-  [.783,.675,.621,.192,.119],[.883,.674,.607,.185,.131],[.977,.676,.588,.161,.119],
-  [1.046,.677,.579,.146,.106],[1.066,.677,.580,.148,.110],[1.080,.677,.575,.144,.103],
-  [1.118,.676,.571,.152,.104],[1.145,.676,.570,.154,.105],[1.162,.676,.566,.150,.098]],knit,26);
- sweep('pullover-waistband',[[1.158,.676,.568,.156,.104],[1.166,.676,.566,.158,.103],
-  [1.198,.675,.560,.156,.095],[1.209,.675,.559,.151,.091]],rib);
- sweep('trousers-seat',[[1.174,.673,.559,.131,.083],[1.212,.673,.560,.149,.093],
-  [1.269,.673,.559,.157,.096],[1.327,.673,.557,.149,.090],[1.381,.669,.551,.120,.076]],denim);
- iconRestingLegs(sweep,denim,sock);
- iconRestingArms(THREE,s,sweep,ball,knit,rib,skin);
- sweep('neck',[[.603,.678,.675,.056,.059],[.645,.679,.660,.064,.062],[.687,.68,.642,.064,.061]],skin);
- sweep('crew-neck',[[.650,.680,.646,.065,.059],[.659,.68,.645,.075,.068],[.678,.68,.642,.079,.070]],rib);
- iconRestingFace(THREE,s,ball,skin,hair,brow,lips);
- for(const object of context.group.children.slice(start))object.userData={furnitureId:'lounge-reader',room:sofa.room,pose:'reclining'};
+ const sweep=(name,rows,finish)=>iconBodySweep(THREE,s,name,rows,finish);
+ sweep('trousers-seat',[[0,.018,.002,.116,.075],[0,.012,.035,.158,.115],[0,.008,.094,.169,.118],
+  [0,0,.171,.152,.093],[0,0,.187,.143,.086]],pants);
+ sweep('pullover',[[0,.004,.148,.155,.102],[0,0,.169,.159,.104],[0,-.014,.258,.139,.094],
+  [0,-.031,.350,.158,.105],[0,-.046,.426,.187,.108],[0,-.055,.484,.197,.087],
+  [0,-.051,.500,.171,.071],[0,-.047,.531,.076,.049]],shirt);
+ sweep('neck',[[0,-.047,.503,.058,.052],[0,-.043,.554,.055,.049],[0,-.035,.604,.057,.054]],skin);
+ const foot=(.018-seatHeight)/guest.size;
+ for(const sign of [-1,1]){
+  const h=guest.chaise ? .14 : .083,offset=sign*.013;
+  const x=sign*.114,knee=.424+offset;
+  sweep('thigh-'+sign,[[x*.66,.024,.087,.085,.084],[x,.13,.096,.096,.099],
+   [x*1.06,.29,h+.016,.081,.082],[x*1.12,knee,h,.066,.069]],pants);
+  const ankle=guest.chaise ? .875 : (guest.tuckedFeet ? .43 : .53)+offset;
+  const z=guest.chaise ? .048 : foot+.083;
+  sweep('shin-'+sign,[[x*1.12,knee-.018,h,.067,.064],[x*1.14,knee+.028,h-.014,.066,.066],
+   [x*1.18,knee+(ankle-knee)*.47,(h+z)/2,.058,.059],[x*1.22,ankle,z,.038,.041]],pants);
+  const sole=guest.chaise ? .003 : foot;
+  ball('sock-'+sign,[x*1.22,ankle+.061,sole+.051],[.049,.124,.051],p.linen);
+  sweep('sleeve-'+sign,[[sign*.155,-.044,.458,.064,.062],[sign*.187,-.027,.441,.072,.069],
+   [sign*.200,.016,.354,.055,.059],[sign*.213,.057,.244,.050,.052],
+   [sign*.206,.084,.239,.050,.051],[sign*.164,.17,guest.chaise ? .235 : .204,.045,.042],[sign*.127,.247,guest.chaise ? .235 : .195,.033,.033]],shirt);
+  const handHeight=guest.chaise ? .23 : .195;
+  const hand=ball('hand-'+sign,[sign*.120,.267,handHeight],[.034,.042,.020],skin);hand.rotateZ(sign*.14);
+  for(let finger=0;finger<4;finger++){
+   const reach=[.032,.037,.035,.028][finger],x=sign*(.096+finger*.013);
+   ball('finger-'+sign+'-'+finger,[x,.294+reach*.5,handHeight-.006],[.0075,reach*.64,.009],skin);
+  }
+  ball('thumb-'+sign,[sign*.093,.273,handHeight+.003],[.012,.031,.012],skin).rotateZ(sign*.29);
+ }
+ iconSeatedFace(THREE,s,ball,skin,hair,material(guest.hair),material('#a56b60'),guest);
 }
 
 // Each cross-section follows the centreline, so bent fabric keeps its volume through elbows and knees.
@@ -1276,7 +1313,7 @@ function iconBodySweep(THREE,s,name,rows,mat,sides=18){
  const vertices=[],uv=[],index=[],centers=rows.map(row=>new THREE.Vector3(...row.slice(0,3)));
  for(const [i,row] of rows.entries()){
   const tangent=centers[Math.min(i+1,rows.length-1)].clone().sub(centers[Math.max(i-1,0)]).normalize();
-  const side=new THREE.Vector3(0,1,0);side.addScaledVector(tangent,-side.dot(tangent)).normalize();
+  const side=new THREE.Vector3(1,0,0);side.addScaledVector(tangent,-side.dot(tangent)).normalize();
   const up=tangent.clone().cross(side),[,,,width,thickness]=row;
   for(let j=0;j<=sides;j++){
    const angle=j*2*Math.PI/sides,point=centers[i].clone()
@@ -1285,63 +1322,18 @@ function iconBodySweep(THREE,s,name,rows,mat,sides=18){
    if(i&&j){const d=i*(sides+1)+j,a=d-sides-2;index.push(a,a+1,d,a,d,d-1);}
   }
  }
+ const last=(rows.length-1)*(sides+1);
+ for(let j=1;j<sides-1;j++)index.push(0,j+1,j,last,last+j,last+j+1);
  const geometry=new THREE.BufferGeometry();
  geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
  geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.setIndex(index);geometry.computeVertexNormals();
  return s.add(name,geometry,mat,0,0,0);
 }
 
-function iconRestingLegs(sweep,denim,sock) {
- const legs=[
-  [[1.28,.610,.558,.086,.090],[1.40,.591,.558,.083,.092],[1.57,.577,.550,.071,.085],
-   [1.697,.569,.537,.060,.067],[1.755,.572,.532,.058,.064],[1.872,.594,.532,.056,.065],
-   [2.00,.614,.518,.046,.050],[2.099,.637,.508,.036,.039]],
-  [[1.275,.742,.560,.085,.091],[1.414,.765,.602,.088,.096],[1.535,.783,.662,.076,.088],
-   [1.635,.794,.712,.065,.073],[1.686,.794,.710,.062,.072],[1.76,.785,.651,.061,.070],
-   [1.86,.773,.580,.052,.062],[1.988,.750,.516,.036,.042]]
- ];
- for(const [i,leg] of legs.entries()){
-  sweep('trouser-leg-'+i,leg,denim);
-  const [x,y,z]=leg.at(-1);
-  sweep('sock-'+i,[[x-.018,y,z+.006,.036,.037],[x+.015,y,z,.039,.04],
-   [x+.046,y+.006,z+.001,.045,.042],[x+.067,y+.014,z+.031,.044,.043],
-   [x+.082,y+.035,z+.074,.042,.038],[x+.092,y+.051,z+.104,.037,.031],
-   [x+.098,y+.058,z+.118,.019,.014],[x+.099,y+.059,z+.12,.002,.002]],sock);
- }
-}
-
-function iconRestingArms(THREE,s,sweep,ball,knit,rib,skin) {
- const arms=[
-  [[.717,.538,.639,.006,.008],[.728,.531,.640,.036,.039],[.744,.524,.637,.053,.058],[.764,.519,.631,.061,.068],[.824,.494,.618,.061,.061],[.931,.479,.585,.051,.055],
-   [1.018,.464,.545,.049,.050],[1.065,.469,.539,.048,.05],[1.129,.489,.538,.046,.044],[1.229,.522,.523,.034,.035]],
-  [[.710,.814,.640,.006,.008],[.720,.822,.640,.035,.036],[.738,.828,.64,.055,.056],[.764,.830,.638,.062,.065],[.834,.864,.615,.063,.062],[.941,.895,.571,.053,.054],
-   [1.010,.906,.553,.050,.05],[1.026,.906,.549,.050,.049],[1.038,.897,.556,.049,.049],
-   [1.047,.886,.569,.049,.049],[1.06,.859,.601,.047,.048],[1.084,.778,.674,.034,.034]]
- ];
- for(const [i,arm] of arms.entries()){
-  sweep('pullover-sleeve-'+i,arm,knit);
-  const [x,y,z]=arm.at(-1),forearm=new THREE.Vector3(x,y,z).sub(new THREE.Vector3(...arm.at(-2).slice(0,3))).normalize();
-  const axis=forearm.toArray(),from=length=>[x+length*axis[0],y+length*axis[1],z+length*axis[2]];
-  sweep('sleeve-cuff-'+i,[[...from(-.008),.036,.036],[...from(-.006),.037,.037],[...from(.017),.033,.032]],rib);
-  const wrist=from(.017),tip=i?[1.086,.670,.694]:[1.331,.553,.515];
-  const forward=new THREE.Vector3(...tip).sub(new THREE.Vector3(...wrist)).normalize();
-  const lateral=new THREE.Vector3(-forward.y,forward.x,0).normalize();
-  const at=(length,offset,lift)=>new THREE.Vector3(...wrist).addScaledVector(forward,length).addScaledVector(lateral,offset).add(new THREE.Vector3(0,0,lift)).toArray();
-  const palm=ball('hand-'+i,at(.041,0,.001),[.051,.036,.022],skin);palm.rotateZ(Math.atan2(forward.y,forward.x));
-  for(let finger=0;finger<4;finger++){
-   const length=[.048,.055,.051,.040][finger],offset=(finger-1.5)*.0135;
-   s.tube('hand-'+i+'-finger-'+finger,[at(.065,offset,.003),at(.067+length*.5,offset*1.12,.002),at(.067+length,offset*1.15,-.005)],.0078,skin);
-   ball('hand-'+i+'-fingertip-'+finger,at(.067+length,offset*1.15,-.005),[.008,.008,.008],skin);
-  }
-  s.tube('thumb-'+i,[at(.022,-.018,.006),at(.045,-.039,.010),at(.071,-.044,.002)],.012,skin);
- }
-}
-
-function iconRestingFace(THREE,s,ball,skin,hair,brow,lips) {
- // The head is turned toward the room; the back of the skull nestles into the linen cushion.
- const center=[.537,.683,.674],tilt=-.55,cos=Math.cos(tilt),sin=Math.sin(tilt);
- const head=(x,y,z)=>[center[0]+x,center[1]+y*cos-z*sin,center[2]+y*sin+z*cos];
- const oval=(name,x,y,z,radii,mat)=>ball(name,head(x,y,z),radii,mat).rotateX(tilt);
+function iconSeatedFace(THREE,s,ball,skin,hair,brow,lips,guest) {
+ const {turn}=guest,cos=Math.cos(turn),sin=Math.sin(turn);
+ const head=(x,y,z)=>[-y*cos-z*sin,-.027-y*sin+z*cos,.696-x];
+ const oval=(name,x,y,z,[rx,ry,rz],mat)=>ball(name,head(x,y,z),[ry,rz,rx],mat).rotateZ(turn);
  const curve=(name,points,r,mat)=>s.tube(name,points.map(q=>head(...q)),r,mat);
  const radii=x=>{
   const t=Math.max(0,1-(x/.126)**2)**.5,jaw=Math.max(0,x/.126);
@@ -1356,16 +1348,19 @@ function iconRestingFace(THREE,s,ball,skin,hair,brow,lips) {
    +.004*bump(.066,.012,0,.018)+.005*bump(.091,.014,0,.023);
   return [x,v,z+(h+offset)*front+Math.max(0,front)**4*relief];
  };
+ if(guest.bun)oval('bun',-.051,0,-.096,[.057,.061,.060],brow);
  const hairline=a=>-.048+.132*(1-Math.cos(a))/2+.013*Math.sin(a*2+.3)+.006*Math.sin(a*5+.6);
  for(const isHair of [false,true]){
-  const vertices=[],indices=[],uv=[],colors=[],rings=isHair?28:52,sides=isHair?108:84;
+  const vertices=[],indices=[],uv=[],colors=[],rings=isHair?20:32,sides=isHair?56:48;
   for(let i=0;i<=rings;i++)for(let j=0;j<=sides;j++){
    const a=j*2*Math.PI/sides;
    const fringe=hairline(a);
    const t=i/rings,x=-.126+t*(isHair?fringe+.126:.252);
    const ridge=.5+.5*Math.cos(28*a+2*Math.sin(4*a)+Math.sin(7*a)-4*t-.7*Math.sin(Math.PI*t));
    const offset=isHair?Math.min(1,8*t)*(.006+.003*ridge):0;
-   vertices.push(...head(...surface(x,a,offset)));uv.push(j/sides,t);
+   const vertex=surface(x,a,offset);
+   if(isHair)vertex[0]-=.0015*(1-t);
+   vertices.push(...head(...vertex));uv.push(j/sides,t);
    if(isHair){const tone=.80+.27*ridge+.13*Math.sin(3*a-.4*t)**2;colors.push(tone,tone,tone);}
    if(i&&j){const d=i*(sides+1)+j,b=d-sides-2;indices.push(b,d,b+1,b,d-1,d);}
   }
@@ -1380,6 +1375,7 @@ function iconRestingFace(THREE,s,ball,skin,hair,brow,lips) {
  };
  for(const side of [-1,1]){
   oval('ear-'+side,.021,side*.08,-.002,[.021,.010,.015],skin);
+  oval('eye-'+side,...onFace(.003,side*.030,.001),[.0038,.008,.0025],brow);
   curve('eyelid-'+side,[[.002,.013],[.004,.026],[.003,.039],[.001,.047]].map(([x,y])=>onFace(x,side*y,.0011)),.0012,brow);
   curve('eyebrow-'+side,[[-.010,.015],[-.016,.029],[-.016,.040],[-.012,.049]].map(([x,y])=>onFace(x,side*y,.0014)),.0021,brow);
  }
@@ -2272,7 +2268,7 @@ function iconSinkPullout(context,frame,s,k,face,left,right,sink) {
 }
 
 function iconDishwasher(context,frame,k,left,right,face,sink) {
- const {part,item}=frame,p=iconLivingPalette(context),mid=(left+right)/2+.009;
+ const {part,item}=frame,p=iconLivingPalette(context),mid=(left+right)/2;
  const back=.031,front=face-.047,bottom=.146,top=.894;
  const plate=(name,l,b,r,f,z,h,m=p.silver)=>part('dishwasher-'+name,[l,b,r,f],z,h,m);
  plate('back',mid-.298,back,mid+.298,back+.020,bottom,top-bottom);
@@ -2304,7 +2300,8 @@ function iconDishwasher(context,frame,k,left,right,face,sink) {
   plate(tag,x-.011,.020,x+.011,back,z-.011,.022,mat);
  const trapX=(sink.box[0]+sink.box[2])/2-item.box[0],trapY=sink.box[1]-item.box[1]+.204;
  frame.line('dishwasher-trap-spigot',[trapX+.05,trapY,.645],[trapX,trapY,.60],.014,p.putty);
- plate('isolation-valve',left-.17,.018,left-.13,.046,.538,.024,p.silver);
+ const valveX=trapX+(sink.baseCabinetWidthM??.80)/2-.15;
+ plate('isolation-valve',valveX-.020,.018,valveX+.020,.046,.538,.024,p.silver);
  plate('socket',right+.09,.018,right+.17,.032,.51,.08,p.chalk);
  plate('plug',right+.111,.032,right+.149,.050,.53,.04,p.black);
  const start=context.group.children.length;
@@ -2343,25 +2340,26 @@ function iconMountDishwasher(context,{door,hinge,left,right}) {
 function iconKitchenBackCounter(context,frame,s,k,face) {
  const {THREE,data}=context;
  const {width:w,depth:d,item,part}=frame,h=item.height;
- for(const x of [0,w-.018])part('cabinet-end-'+x,[x,.018,x+.018,face-.021],.136,h-.186,k.yellow);
  const outline=new THREE.Shape();
  outline.moveTo(0,0);outline.lineTo(w,0);outline.lineTo(w,d);outline.lineTo(0,d);outline.closePath();
  const sink=data.furniture.find(unit=>unit.id==='kitchen-sink'&&unit.support===item.id);
  const centre=sink?(sink.box[0]+sink.box[2])/2-item.box[0]:w/2;
  const bayWidth=sink?sink.baseCabinetWidthM??.80:w/5,left=centre-bayWidth/2,right=centre+bayWidth/2;
- const end=(right+w)/2;
- for(const [i,[a,b]] of [[0,right+.009],[end+.009,w]].entries()){
-  part(i?'body-end':'body',[a,0,b,.018],.118,h-.168,k.yellow);
-  part('cabinet-floor-'+i,[a,.018,b,face-.021],.118,.018,k.yellow);
-  part('recessed-plinth-'+i,[Math.max(a,.064),.049,Math.min(b,w-.064),face-.064],.014,.104,iconLivingPalette(context).shadow);
- }
- for(const [i,seam] of [left/2,left,right,end+.018].entries())
+ const first=left/2,end=(right+w)/2,start=sink?first:0;
+ // The pantry gable bounds the appliance on the left. Keep the full 600 mm niche clear underneath.
+ if(!sink)part('cabinet-end-left',[0,.018,.018,face-.021],.136,h-.186,k.yellow);
+ part('cabinet-end-right',[w-.018,.018,w,face-.021],.136,h-.186,k.yellow);
+ part('body',[start,0,w,.018],.118,h-.168,k.yellow);
+ part('cabinet-floor',[start,.018,w,face-.021],.118,.018,k.yellow);
+ part('recessed-plinth',[Math.max(start,.064),.049,w-.064,face-.064],.014,.104,iconLivingPalette(context).shadow);
+ for(const [i,seam] of [first+(sink ? .009 : 0),left,right,end].entries())
   part('cabinet-divider-'+i,[seam-.009,.018,seam+.009,face-.021],.136,h-.186,k.yellow);
- iconKitchenDrawers(frame,k,0,left,2,face);
+ if(sink)iconDishwasher(context,frame,k,0,first,face,sink);
+ else iconKitchenDrawers(frame,k,0,first,1,face);
+ iconKitchenDrawers(frame,k,first,left,1,face,1);
  if(sink)iconSinkPullout(context,frame,s,k,face,left,right,sink);
  else iconKitchenDrawers(frame,k,left,right,1,face,2);
- if(sink)iconDishwasher(context,frame,k,right,end,face,sink);
- else iconKitchenDrawers(frame,k,right,end,1,face,3);
+ iconKitchenDrawers(frame,k,right,end,1,face,3);
  iconKitchenDrawers(frame,k,end,w,1,face,4);
  if(sink){
   const [l,b,r,f]=sink.box.map((n,i)=>n-item.box[i%2]);
@@ -4485,6 +4483,72 @@ function iconBrorShelfStock(context,frame,shapes,paint,row,z,label) {
  }
 }
 
+function iconPantryOverhead(context,frame,shapes,paint,base,labels) {
+ const {width:w,depth:d,part}=frame,ply=iconBrorFinishes(context).plywood;
+ const top=context.data.levels.groundCeiling-.003-frame.z,depth=Math.min(d,.40),t=.018;
+ for(const [i,u] of [0,w-t].entries())part('overhead-side-'+i,[u,0,u+t,depth],base,top-base,ply);
+ part('overhead-cap',[t,0,w-t,depth],top-t,t,ply);
+ const pitch=(top-base-t)/labels.length;
+ for(const [i,label] of labels.entries()){
+  const z=base+i*pitch;
+  part('overhead-deck-'+i,[t,0,w-t,depth],z,t,ply);
+  part('overhead-wall-cleat-'+i,[t,0,w-t,.016],z+t,.051,ply);
+  const count=w>.54?2:1,binWidth=(w-2*t)/count-.039,binDepth=depth-.052,binHeight=Math.min(.195,pitch-.075);
+  for(let n=0;n<count;n++){
+   const u=t+(n+.5)*(w-2*t)/count,key='overhead-bin-'+i+'-'+n;
+   shapes.cushion(key,u,depth/2,z+t+binHeight/2,binWidth,binDepth,binHeight,.012,paint.putty);
+   part(key+'-lid',[u-binWidth/2-.003,.023,u+binWidth/2+.003,depth-.023],z+t+binHeight,.012,paint.chalk);
+   iconPantryLabel(context,shapes,key,label,u,depth/2+binDepth/2+.001,z+t+binHeight*.55,Math.min(.145,binWidth*.8),.047);
+  }
+ }
+}
+
+function iconPantryCleaningTools(context,frame,s,p,z) {
+ const {part,line}=frame;
+ part('tool-rail',[.040,.012,.61,.034],1.26,.044,p.silver);
+ for(const [i,u] of [.143,.462].entries()){
+  part('tool-grip-'+i,[u-.023,.033,u+.023,.096],1.259,.046,p.black);
+  line(i?'mop-shaft':'broom-shaft',[u,.087,.258],[u,.087,1.528],.012,i?p.silver:p.ash);
+ }
+ s.cushion('broom-head',.143,.087,.259,.213,.077,.040,.010,p.ash);
+ for(let i=0;i<15;i++){
+  const spread=(i-7)/7;
+  line('broom-bristles-'+i,[.143+spread*.105,.087,.177],[.143+spread*.094,.087,.241],.0068,p.cocoa);
+ }
+ s.cushion('mop-head',.462,.084,.244,.247,.100,.033,.012,p.indigo);
+ s.cushion('mop-pad',.462,.084,.220,.251,.112,.020,.009,p.linen);
+ const u=.420,v=.343;
+ iconUpperCeramic(s,context.THREE,'bucket',u,v,z,.168,.126,
+  [[0,0],[.76,0],[.79,.012],[.992,.229],[1,.238],[.947,.238],[.928,.225],[.733,.022],[0,.022]],p.indigo);
+ s.tube('bucket-bail',[[u-.151,v,z+.217],[u-.118,v+.016,z+.306],[u,v+.022,z+.341],
+  [u+.118,v+.016,z+.306],[u+.151,v,z+.217]],.005,p.silver);
+ for(let i=0;i<3;i++)s.cushion('folded-cloth-'+i,.326,.294,1.656+i*.037,.35,.21,.026,.010,i===1?p.indigo:p.linen);
+}
+
+function iconPantryVacuum(context,frame,s,p) {
+ const {width:w,part,line}=frame,u=w/2,foot=.071;
+ const charger=context.data.electrical?.points.find(point=>point.connectedPlug===frame.item.id+'-adapter');
+ part('jet-dock-back',[u-.052,.001,u+.052,.030],foot+.821,.236,p.black);
+ s.cushion('jet-dock-cradle',u,.054,foot+.849,.122,.089,.068,.012,p.black);
+ if(charger){
+  const plugU=frame.item.box[2]-charger.alongM,plugZ=charger.heightM-frame.z;
+  s.cushion('adapter',plugU,.038,plugZ,.050,.068,.074,.008,p.black);
+  s.tube('charger-lead',[[plugU,.052,plugZ-.030],[plugU,.044,plugZ-.134],[u+.065,.030,foot+.910],[u+.044,.028,foot+.887]],.003,p.black);
+ }
+ s.cushion('jet-brush',u,.1625,foot+.034,.250,.131,.068,.012,p.black);
+ line('jet-roller',[u-.103,.199,foot+.034],[u+.103,.199,foot+.034],.016,p.indigo);
+ line('jet-elbow',[u,.150,foot+.062],[u,.111,foot+.128],.021,p.black);
+ line('jet-wand',[u,.111,foot+.120],[u,.100,foot+.772],.016,p.silver);
+ s.disc('jet-dust-cup',u,.129,foot+.752,.051,.049,.151,context.mats.glass);
+ s.disc('jet-cyclone',u,.129,foot+.757,.030,.030,.142,p.silver);
+ s.disc('jet-motor',u,.128,foot+.903,.057,.053,.142,p.black);
+ s.disc('jet-filter',u,.128,foot+1.045,.055,.053,.085,p.indigo);
+ for(let i=0;i<5;i++)s.disc('jet-vent-'+i,u,.128,foot+1.051+i*.014,.0565,.055,.004,p.black);
+ s.tube('jet-grip',[[u,.104,foot+1.011],[u,.064,foot+1.026],[u,.048,foot+.984],[u,.049,foot+.902]],.014,p.black);
+ s.cushion('jet-battery',u,.066,foot+.888,.091,.080,.062,.008,p.black);
+ iconPantryOverhead(context,frame,s,p,1.71,['WORKI','FILTRY','ZAPAS']);
+}
+
 function iconBrorRack(context,frame,shapes,paint) {
  const {THREE}=context,{width:w,item}=frame,p=iconBrorFinishes(context);
  const levels=item.shelfLevelsM;
@@ -4498,9 +4562,13 @@ function iconBrorRack(context,frame,shapes,paint) {
  for(const [i,x] of [.034,w-.034].entries())
   frame.part('wall-restraint-'+i,[x-.009,0,x+.009,.030],1.82,.018,p.fastener);
  const wide=w>.8,goods=item.stock;
- for(let i=0;i<2;i++)
-  iconBrorStockBin(context,frame,shapes,'reserve-'+i,(i+.5)*w/2,levels[0],wide?.335:.252,.395,paint,goods[0]);
- for(let row=1;row<levels.length-1;row++)iconBrorShelfStock(context,frame,shapes,paint,row,levels[row],goods[row]);
+ iconPantryOverhead(context,frame,shapes,paint,2.09,item.cleaningBay?['AKCESORIA','ZAPAS']:['ZAPASY','SŁOIKI']);
+ if(item.cleaningBay)iconPantryCleaningTools(context,frame,shapes,paint,levels[0]);
+ else {
+  for(let i=0;i<2;i++)
+   iconBrorStockBin(context,frame,shapes,'reserve-'+i,(i+.5)*w/2,levels[0],wide?.335:.252,.395,paint,goods[0]);
+  for(let row=1;row<levels.length-1;row++)iconBrorShelfStock(context,frame,shapes,paint,row,levels[row],goods[row]);
+ }
  for(let i=0;i<2;i++){
   const u=(i+.5)*w/2,z=levels.at(-1);
   frame.part('carton-'+i,[u-.112,.087,u+.112,.398],z,.145,paint.chalk);
@@ -4558,6 +4626,7 @@ function iconBrorBench(context,frame,shapes,paint) {
  iconPantryCrate(context,frame,shapes,'onions',w-.518,.16,iconBedroomOfficePalette(context).beech,false);
  for(let i=0;i<3;i++)iconBrorStockBin(context,frame,shapes,'bulk-'+i,.195+i*.355,.49,.30,.38,paint,['MĄKA','RYŻ','KASZA'][i]);
  iconBrorWallRack(context,frame,shapes,paint);
+ iconPantryOverhead(context,frame,shapes,paint,2.46,['PRZETWORY']);
 }
 
 function iconPlantPalette(context) {
@@ -4906,6 +4975,7 @@ const iconGroundRoomBuilders={
  'pantry-bror-85':iconBrorRack,
  'pantry-bror-65':iconBrorRack,
  'pantry-bror-return':iconBrorRack,
+ 'pantry-vacuum-bay':iconPantryVacuum,
  'pantry-bror-bench':iconBrorBench,
  'entry-wardrobe-rear':iconEntryWardrobe,
  'entry-wardrobe-side':iconEntryWardrobe,

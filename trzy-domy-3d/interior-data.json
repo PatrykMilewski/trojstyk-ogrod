@@ -844,6 +844,7 @@
       "bror-85": "https://www.ikea.com/pl/pl/p/bror-regal-czarny-s89617443/",
       "bror-65": "https://www.ikea.com/pl/pl/p/bror-regal-czarny-s29619402/",
       "bror-bench": "https://www.ikea.com/pl/pl/p/bror-lawa-do-pracy-czarny-sklejka-sosnowa-30333286/",
+      "samsung-jet-85-pro": "Samsung Jet 85 pro VS20C8527TB/GE, 250 × 1130 × 202 mm, stacja 2w1 montowana do ściany. Gabaryty stacji i wysokość zawieszenia są poglądowe. https://www.samsung.com/pl/vacuum-cleaners/stick/vs9500al-stick-more-advance-cleaning-performance-hexajet-motor-jet-cyclone-blue-vs20c8527tb-ge/",
       "bror-wall": "https://www.ikea.com/pl/pl/p/bror-polka-scienna-kombinacja-czarny-s09571854/",
       "user-ground-rooms": "Furnishings requested for the guest room, study and bathroom, fitted to the published plan. Furniture dimensions and finishes are schematic.",
       "user-study-playroom": "User-requested two-person study and children’s playroom fitted to publisher rooms 0.9 and 0.8. Desk, toy and unfolded sofa dimensions are design allowances.",
@@ -927,6 +928,15 @@
       ]
     },
     {
+      "id": "pantry-vacuum-bay",
+      "type": "wall-mounted-vacuum",
+      "room": "0.2",
+      "box": [2.138, 8.159, 2.399, 8.39],
+      "facing": "-y",
+      "source": "samsung-jet-85-pro",
+      "elevation": 0.008
+    },
+    {
       "id": "pantry-bror-return",
       "type": "bror-shelving",
       "room": "0.2",
@@ -940,21 +950,12 @@
       "source": "bror-65",
       "height": 1.9,
       "elevation": 0.008,
-      "shelfLevelsM": [
-        0.103,
-        0.433,
-        0.763,
-        1.093,
-        1.423,
-        1.863
-      ],
+      "cleaningBay": true,
+      "shelfLevelsM": [0.103, 1.643, 1.863],
       "stock": [
-        "ZAPASY",
-        "DŻEM",
-        "MIÓD",
-        "PESTO",
-        "KAWA",
-        "HERBATA"
+        "SPRZĄTANIE",
+        "ŚCIERKI",
+        "RĘKAWICE"
       ]
     },
     {
@@ -3030,6 +3031,16 @@
         "normal": "-y",
         "alongM": 13.43,
         "heightM": 0.74
+      },
+      {
+        "room": "0.2",
+        "type": "socket",
+        "finish": "white",
+        "support": "kitchen-back",
+        "normal": "-y",
+        "connectedPlug": "pantry-vacuum-bay-adapter",
+        "alongM": 2.185,
+        "heightM": 1.38
       }
     ]
   },

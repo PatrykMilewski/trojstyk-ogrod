@@ -32,7 +32,13 @@ test('catchment uses the projected roof triangles and covers a 30 mm event with 
   const info=rain.userData;
   assert(close(info.projectedRoofM2,actual));
   assert(close(info.stormVolumeM3,actual*.03*.9));
-  assert(info.tankUsableM3>=info.stormVolumeM3);
+  const {sw,se}=info.circuits;
+  const westRoof=house.meshes.filter(m=>m.kind==='roof').flatMap(m=>m.faces.map(f=>f.map(i=>m.vertices[i])))
+    .filter(tri=>tri.every(p=>new THREE.Vector3(...p).applyMatrix4(group.matrix.clone().invert()).x<4.251));
+  const westArea=westRoof.reduce((sum,[a,b,c])=>sum+Math.abs((b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]))/2,0);
+  assert(close(sw.areaM2,westArea)&&close(se.areaM2,actual-westArea));
+  assert(close(se.stormM3+sw.stormM3,info.stormVolumeM3));
+  assert(sw.fieldM3>=sw.stormM3&&se.fieldM3>=se.stormM3&&info.tankUsableM3>=se.stormM3);
   assert(info.fieldNetM3>=info.stormVolumeM3);
   assert.equal(named('crate-').filter(m=>m.name!=='rain-crate-rib').length,22);
   assert(close(info.fieldNetM3,8.91));
@@ -175,58 +181,52 @@ function checkCrateWallEntry(modules,pipe,segment){
   }),pipe.name+' passes through the centreline of a single module wall');
 }
 
-test('concealed downpipes drain through continuously falling buried branches and an overflow into the field',()=>{
-  assert(!surface.children.some(m=>m.name.includes('downpipe')));
-  const tank=named('tank-shell')[0],{width,height:depth}=tank.geometry.parameters;
-  const filter=pipeEnds(named('filtered-inlet')[0])[0];
-  const branches=named('ground-').map(pipeEnds);
-  const reachesFilter=start=>{
-    let p=start;
-    for(let i=0;i<=branches.length;i++){
-      if(p.distanceTo(filter)<1e-6)return true;
-      const next=branches.find(([a])=>a.distanceTo(p)<1e-6);
-      if(!next)return false;
-      p=next[1];
+test('the SW outlets feed the shrub strip directly and SE reaches the separate overflow beds via the tank',()=>{
+  const tank=named('tank-shell')[0],{height:depth}=tank.geometry.parameters;
+  const exits=['sw','leaf'].map(id=>pipeEnds(named('filter-drop-'+id+'-filter')[0]));
+  const drains=named('ground-').map(pipeEnds);
+  function downstream(point) {
+    for(let i=0;i<=drains.length;i++){
+      const segment=drains.find(([start])=>start.distanceTo(point)<1e-6);
+      if(!segment)return point;
+      point=segment[1];
     }
-    return false;
-  };
-  for(const mesh of [...named('ground-'),...named('filtered-inlet'),...named('screened-overflow')]){
-    const [a,b]=pipeEnds(mesh);
-    assert(a.z-b.z>=.01*Math.hypot(b.x-a.x,b.y-a.y),mesh.name);
+    assert.fail('A buried branch loops');
   }
-  const tankIn=pipeEnds(named('filtered-inlet')[0])[1],over=named('screened-overflow').map(pipeEnds);
-  assert(close(tankIn.y,tank.position.y)&&close(tankIn.x,tank.position.x+width/2));
-  assert(close(over[0][0].y,tank.position.y+depth/2)&&close(over[0][0].x,tank.position.x));
-  assert(close(over[0][0].z,named('tank-water')[0].position.z)&&tankIn.z>over[0][0].z);
-  for(let i=1;i<over.length;i++)assert(over[i][0].distanceTo(over[i-1][1])<1e-6);
-  const discharge=over.at(-1)[1],chamber=rain.getObjectByName('rain-field-inspection');
-  assert(close(discharge.x,chamber.position.x)&&close(discharge.y,chamber.position.y));
-  const [bottom,top]=pipeEnds(chamber);
+  for(const [i,mesh] of named('downpipe-').entries()){
+    const foot=mesh.position.clone();foot.z-=mesh.geometry.parameters.depth/2;
+    assert(downstream(foot).distanceTo(exits[i<2?0:1][0])<1e-6,mesh.name);
+    const [intake,top]=pipeEnds(named('outlet-offset-'+i)[0]);
+    assert(close(mesh.position.z+mesh.geometry.parameters.depth/2,top.z)&&close(top.x,foot.x)&&close(top.y,foot.y));
+    assert(named('flow-').map(pipeEnds).some(([p])=>p.distanceTo(intake)<1e-6));
+  }
+  for(const [from,to] of exits)assert(close(from.z-to.z,.08)&&close(from.x,to.x)&&close(from.y,to.y));
+  const [out,tankIn]=pipeEnds(named('filtered-inlet')[0]);
+  assert(out.distanceTo(exits[1][1])<1e-6&&close(tankIn.y,tank.position.y-depth/2));
+  const [over,discharge]=pipeEnds(named('screened-overflow')[0]);
+  assert(close(over.y,tank.position.y+depth/2)&&close(over.x,tank.position.x));
+  assert(close(over.z-.065,named('tank-water')[0].position.z)&&tankIn.z>over.z);
   const faces=named('crate-').filter(m=>m.name!=='rain-crate-rib');
   for(let i=0;i<3;i++){
-    const feed=named('field-feed-'+i+'-').map(pipeEnds);
-    const air=named('field-vent-return-'+i+'-').map(pipeEnds);
-    assert(feed.length>=1&&air.length===feed.length);
-    for(const [route,k] of [[feed,0],[air,1]]){
+    const chamber=rain.getObjectByName(i?'rain-field-inspection':'rain-sw-filter');
+    const [bottom,top]=pipeEnds(chamber),inlet=i?discharge:exits[0][1];
+    assert(close(inlet.x,chamber.position.x)&&close(inlet.y,chamber.position.y));
+    for(const [k,prefix] of ['field-feed-','field-vent-return-'].entries()){
+      const pipes=named(prefix+i+'-'),route=pipes.map(pipeEnds),port=route[0][0];
       for(const [j,[a,b]] of route.entries()){
         if(j)assert(a.distanceTo(route[j-1][1])<1e-6);
         assert(close((a.z-b.z)/Math.hypot(b.x-a.x,b.y-a.y),.012));
       }
-      const port=route[0][0];
-      assert(Math.hypot(port.x-bottom.x,port.y-bottom.y)<=chamber.geometry.parameters.radiusTop);
-      assert(port.z>bottom.z&&port.z<top.z);
-      if(k)assert(port.z>discharge.z);
-      else assert(port.z<discharge.z&&close(port.z,named('field-feed-0-').map(pipeEnds)[0][0].z));
-      const pipes=named((k?'field-vent-return-':'field-feed-')+i+'-');
+      assert(close(port.x,bottom.x)&&close(port.y,bottom.y)&&port.z>bottom.z&&port.z<top.z);
+      if(k)assert(port.z>inlet.z);
+      else if(i)assert(port.z<discharge.z&&close(port.z,pipeEnds(named('field-feed-1-')[0])[0].z));
+      else assert(port.distanceTo(inlet)<1e-6);
       checkCrateWallEntry(faces.filter(m=>m.name.startsWith('rain-crate-'+i+'-')),pipes.at(-1),route.at(-1));
     }
   }
-  for(const mesh of named('downpipe-')){
-    const foot=mesh.position.clone();foot.z-=mesh.geometry.parameters.depth/2;
-    assert(reachesFilter(foot),mesh.name);
-    const [intake,top]=pipeEnds(named('outlet-offset-'+mesh.name.split('-').at(-1))[0]);
-    assert(close(mesh.position.z+mesh.geometry.parameters.depth/2,top.z)&&close(top.x,foot.x)&&close(top.y,foot.y));
-    assert(named('flow-').map(pipeEnds).some(([a])=>a.distanceTo(intake)<1e-6));
+  for(const mesh of [...named('ground-'),...named('filtered-inlet'),...named('screened-overflow')]){
+    const [a,b]=pipeEnds(mesh);
+    assert(a.z-b.z>=.01199*Math.hypot(b.x-a.x,b.y-a.y),mesh.name);
   }
   assert.equal(named('valley-').length,2);
 });
@@ -263,30 +263,32 @@ test('the 6 m³ tank clears the entire southern end of the house, paths, field b
   assert(footprint.ring.every(p=>polygon[0].some(q=>Math.hypot(p[0]-q[0],p[1]-q[1])<1e-6)));
   const southernmostWall=Math.min(...lot.house.coordinates[0].map(p=>p[1]));
   assert(Math.max(...polygon[0].map(p=>p[1]))<southernmostWall-.75,'northing of the whole shell');
+  const [ox,oy]=world([-3.70,17.90]),[nx,ny]=world([tank.position.x,tank.position.y]);
+  assert(close(ny,oy)&&close(nx-ox,6.98),'same northing, moved east');
   const water=named('tank-water')[0],shellFloor=tank.position.z-tank.geometry.parameters.depth/2+.08;
   assert(close(water.geometry.parameters.width*water.geometry.parameters.height*(water.position.z-shellFloor),6));
   assert(minimumDistance(polygon[0],lot.house.coordinates[0])>=2.65);
-  assert(minimumDistance(polygon[0],lot.terrace.coordinates[0])>=2.65);
+  assert(minimumDistance(polygon[0],lot.terrace.coordinates[0])>=1.9);
   assert(minimumDistance(polygon[0],outline[0])>3.1);
   for(const path of garden.polygons.filter(p=>p.kind==='path'||p.kind==='shared_path')){
     assert.equal(clipping.intersection(polygon,[path.ring,...path.holes||[]]).length,0,path.id);
-    assert(minimumDistance(polygon[0],path.ring)>7.75,path.id);
+    assert(minimumDistance(polygon[0],path.ring)>1.65,path.id);
   }
   for(const {ring} of rainFieldFootprints193(house,iconPlanPoint))assert(minimumDistance(polygon[0],ring)>4.75);
   for(const tree of [...woodParcels.flatMap(p=>p.trees),...garden.trees,...neighbors.gardenAdditions.trees]){
     assert(edgeDistance(tree.center,polygon[0])>Math.max(3,2*tree.crownRadius));
   }
   assert.equal(clipping.difference(polygon,...reservations).length,0);
-  const connected=clipping.union(...reservations).find(p=>clipping.intersection(lot.terrace.coordinates,p).length);
-  assert(connected,'plant-free route starts at the terrace edge');
-  for(const m of surface.children.filter(m=>/^rain-cover-(leaf-filter|tank-inspection|field-inspection)$/.test(m.name))){
+  const connected=clipping.union(...reservations).filter(p=>clipping.intersection(lot.terrace.coordinates,p).length);
+  assert(connected.length,'plant-free route starts at the terrace edge');
+  for(const m of surface.children.filter(m=>/^rain-cover-(sw-filter|leaf-filter|tank-inspection|field-inspection)$/.test(m.name))){
     const ring=Array.from({length:32},(_,i)=>world([m.position.x+.43*Math.cos(i*Math.PI/16),
       m.position.y+.43*Math.sin(i*Math.PI/16)]));
-    assert.equal(clipping.difference([ring],connected).length,0,m.name+' reachable from terrace');
+    assert.equal(clipping.difference([ring],...connected).length,0,m.name+' reachable from terrace');
   }
 });
 
-test('three separate infiltration beds span the central private lawn clear of paths, tree roots and foundations',()=>{
+test('the SW bed is in the shrub strip and both SE overflow beds remain under the private lawn',()=>{
   const crates=named('crate-').filter(m=>m.name!=='rain-crate-rib');
   const beds=rainFieldFootprints193(house,iconPlanPoint);
   assert.deepEqual(beds.map(b=>b.id),['rain-field-1','rain-field-2','rain-field-3']);
@@ -309,13 +311,18 @@ test('three separate infiltration beds span the central private lawn clear of pa
       assert(local.containsPoint(new THREE.Vector2(m.position.x+sign*m.geometry.parameters.width/2,
         m.position.y+sign*m.geometry.parameters.height/2)));
     }
-    assert.equal(clipping.difference(footprint,privateLawn).length,0,'outside the private lawn');
+    if(i)assert.equal(clipping.difference(footprint,privateLawn).length,0,'outside the private lawn');
+    else{
+      const swBorder=woodParcels.find(p=>p.id==='193').beds;
+      assert(swBorder.some(b=>minimumDistance(ring,b.ring)<.26),'next to the SW shrub border');
+      assert(modules[0].position.z+modules[0].geometry.parameters.depth/2>-.50,'shallow SW crates');
+    }
     assert.equal(clipping.difference(footprint,...reservations).length,0);
     clearFootprint(footprint);
     const baseDepth=-modules[0].position.z+modules[0].geometry.parameters.depth/2+.10;
     assert(minimumDistance(ring,lot.house.coordinates[0])>=1.5*baseDepth);
     assert(minimumDistance(ring,lot.terrace.coordinates[0])>=4);
-    assert(minimumDistance(ring,outline[0])>=6);
+    assert(minimumDistance(ring,outline[0])>=(i?6:2));
     for(const {id,ring:surface} of gardenSurfaces)assert(minimumDistance(ring,surface)>1,'excavation space by '+id);
     for(const t of allTrees)assert(edgeDistance(t.center,ring)>Math.max(3,2*t.crownRadius));
     for(const other of beds.slice(0,i))assert(minimumDistance(ring,other.ring)>3);
@@ -336,12 +343,14 @@ test('mulch joins the planted beds around every lid and the vent without coverin
     const ring=shape.getPoints(8).map(v=>world([v.x,v.y]));
     const polygon=[ring];
     clearFootprint(polygon);
-    assert(clipping.intersection(polygon,clipping.union(...beds)).length>0,'joins an existing bed');
+    assert(clipping.intersection(polygon,clipping.union(...beds)).length>0,'joins an existing bed '+mesh.name);
     for(const path of garden.polygons.filter(p=>p.kind==='path'))
       assert.equal(clipping.intersection(polygon,[path.ring]).length,0,path.id);
     return polygon;
   });
-  for(const mesh of surface.children.filter(m=>/^rain-cover-(leaf-filter|tank-inspection|field-inspection)$/.test(m.name)||m.name==='rain-field-vent-hood')){
+  assert.equal(clipping.difference([rainFieldFootprints193(house,iconPlanPoint)[0].ring],rings[0]).length,0,
+    'the entire SW crate bed lies under the mulched planting strip');
+  for(const mesh of surface.children.filter(m=>/^rain-cover-(sw-filter|leaf-filter|tank-inspection|field-inspection)$/.test(m.name)||/rain-(field|sw)-vent-hood/.test(m.name))){
     const r=mesh.geometry.parameters.radiusTop+.12;
     const ring=Array.from({length:32},(_,i)=>world([mesh.position.x+r*Math.cos(i*Math.PI/16),mesh.position.y+r*Math.sin(i*Math.PI/16)]));
     assert.equal(clipping.difference([ring],...rings).length,0,mesh.name+' surrounded by mulch');
@@ -350,9 +359,9 @@ test('mulch joins the planted beds around every lid and the vent without coverin
   }
 });
 
-test('all three covered openings align with buried chambers and remain visible in normal mode',()=>{
+test('all four covered openings align with buried chambers and remain visible in normal mode',()=>{
   const caps=surface.children.filter(m=>m.name.startsWith('rain-cover-')&&m.name!=='rain-cover-keyhole');
-  assert(surface.visible&&caps.length===3);
+  assert(surface.visible&&caps.length===4);
   assert(!rain.children.some(m=>m.name.includes('-cover')||m.name.endsWith('-rim')));
   for(const cap of caps){
     const chamber=rain.getObjectByName(cap.name.replace('rain-cover-','rain-'));

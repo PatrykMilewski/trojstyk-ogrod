@@ -1259,9 +1259,9 @@ test('the 70 cm single bowl is let into the worktop below the full-width mosaic'
   close(rim.max.x-rim.min.x,.70,'Overall sink width including rim');
   const dividers=[0,1,2,3].map(i=>bounds(get('kitchen-back-cabinet-divider-'+i)));
   const face=bounds(get('kitchen-back-front-2-0'));
-  const cabinetEdges=[stone.min.x,...dividers.slice(0,3).map(box=>box.getCenter(new THREE.Vector3()).x),
-    bounds(get('kitchen-back-dishwasher-front')).max.x+.0025,stone.max.x];
-  close(dividers[3].min.x-dividers[2].max.x,.600,'600 mm clear appliance niche');
+  const cabinetEdges=[stone.min.x,bounds(get('kitchen-back-dishwasher-front')).max.x+.0025,
+    ...dividers.slice(1).map(box=>box.getCenter(new THREE.Vector3()).x),stone.max.x];
+  close(dividers[0].min.x-stone.min.x,.600,'600 mm clear appliance niche against the pantry gable');
   const modules=cabinetEdges.slice(1).map((x,i)=>Math.round((x-cabinetEdges[i])*1000));
   assert.deepEqual(modules,[600,600,800,600,600],'Carcass partitions center the sink between two 600 mm cabinets on each side');
   close(face.max.x-face.min.x,.795,'800 mm sink cabinet door with two 2.5 mm reveals');
@@ -1613,7 +1613,8 @@ test('each room has a Loft light switch and a grounded or covered outlet fixed t
       assert(hits.length,'Frame '+i+' needs a solid support at '+mount.support+', offset '+edge);
       const others=interior.group.children.filter(obj=>obj.isMesh && obj!==support && !obj.name.startsWith('loft-fixture-'));
       const inFront=ray.intersectObjects(others,false).find(hit=>hit.distance<hits[0].distance-.010);
-      assert(!inFront,'Frame '+i+' obscured by '+inFront?.object.name+' at '+mount.support);
+      if(mount.connectedPlug && edge===0)assert.equal(inFront?.object.name,mount.connectedPlug);
+      else assert(!inFront,'Frame '+i+' obscured by '+inFront?.object.name+' at '+mount.support);
     }
   }
 });
@@ -1748,7 +1749,7 @@ test('BROR base frames, folded steel decks and wall combination match the IKEA m
   const rackIds=['pantry-bror-85','pantry-bror-65','pantry-bror-return'];
   for(const [index,id] of rackIds.entries()){
     const item=furniture.get(id),pieces=parts(id);
-    assert.equal(item.shelfLevelsM.length,index?6:5);
+    assert.equal(item.shelfLevelsM.length,[5,6,3][index]);
     const post=pieces.find(piece=>piece.name.endsWith('pierced-post-0'));
     assert.equal(post.material.color.getHex(),0x303234);
     assert.equal(post.geometry.parameters.shapes.holes.length,17);
@@ -1763,7 +1764,7 @@ test('BROR base frames, folded steel decks and wall combination match the IKEA m
       const deck=bounds(interior.group.getObjectByName(id+'-shelf-'+i+'-deck'));
       close(deck.max.z,z+item.elevation,'Shelf elevation');
       close(Math.min(deck.max.x-deck.min.x,deck.max.y-deck.min.y),.54,'54 cm usable shelf');
-      const onDeck=pieces.filter(piece=>/-(?:tub|can|glass|packet|carton-\d+)$/.test(piece.name))
+      const onDeck=pieces.filter(piece=>/-(?:tub|can|glass|packet|bucket|folded-cloth-0|carton-\d+)$/.test(piece.name))
         .map(bounds).filter(box=>Math.abs(box.min.z-deck.max.z)<.001);
       assert(onDeck.length>0,'Every deck carries stock');
       for(const stock of onDeck)for(const axis of ['x','y']){
@@ -1787,7 +1788,7 @@ test('BROR base frames, folded steel decks and wall combination match the IKEA m
 
 test('deep BROR pantry fittings leave both doors and electrical controls accessible', () => {
   const stocks=data.furniture.filter(item=>item.room==='0.2').map(item=>itemBounds(item.id));
-  const controls = data.electrical.points.filter(point=>point.room==='0.2');
+  const controls = data.electrical.points.filter(point=>point.room==='0.2'&&point.support==='garage-back');
   for(const point of controls){
     const switchZone=new THREE.Vector3(point.alongM,6.81,point.heightM);
     assert(stocks.every(stock=>stock.distanceToPoint(switchZone)>.15),'Approach to pantry electrical control');
@@ -1810,10 +1811,41 @@ test('deep BROR pantry fittings leave both doors and electrical controls accessi
   interior.group.updateMatrixWorld(true);
 });
 
+test('the wall-charged Jet is first on the right in the mirrored kitchen entrance', () => {
+  const id='pantry-vacuum-bay',pieces=parts(id);
+  const vacuum=pieces.filter(piece=>piece.name.startsWith(id+'-jet-')&&!piece.name.includes('-dock-'))
+    .reduce((box,piece)=>box.union(bounds(piece)),new THREE.Box3());
+  const size=vacuum.getSize(new THREE.Vector3());
+  close(size.x,.250,'Jet Dual brush width');close(size.y,.202,'Jet depth');close(size.z,1.130,'Jet height');
+  assert(data.metadata.furnitureSources[furniture.get(id).source].includes('VS20C8527TB/GE'));
+  const door=partCenter('kitchen-pantry','closed-leaf'),body=vacuum.getCenter(new THREE.Vector3());
+  const eye=new THREE.Vector3(...interior.localToWorld([door.x,door.y]));
+  const heading=new THREE.Vector3(...interior.localToWorld([door.x,door.y-1])).sub(eye);
+  const right=heading.cross(new THREE.Vector3(0,0,1));
+  const offset=p=>new THREE.Vector3(...interior.localToWorld([p.x,p.y])).sub(eye).dot(right);
+  const rack=itemBounds('pantry-bror-return');
+  assert(offset(body)>0 && offset(body)<offset(rack.getCenter(new THREE.Vector3())));
+  assert(vacuum.max.x<rack.min.x);
+  assert(bounds(interior.group.getObjectByName(id+'-jet-dock-cradle')).intersectsBox(vacuum));
+  const outlet=data.electrical.points.find(p=>p.room==='0.2'&&p.support==='kitchen-back'&&p.type==='socket');
+  const plug=partCenter(id,'adapter');
+  close(plug.x,outlet.alongM,'Charger uses its dedicated outlet');close(plug.z,outlet.heightM,'Outlet height');
+  const bucket=bounds(interior.group.getObjectByName('pantry-bror-return-bucket'));
+  for(const name of ['mop-shaft','mop-pad','broom-shaft','broom-bristles-0']){
+    assert(!bounds(interior.group.getObjectByName('pantry-bror-return-'+name)).intersectsBox(bucket));
+  }
+  const ceiling=bounds(interior.group.getObjectByName('pantry-painted-ceiling'));
+  for(const item of data.furniture.filter(item=>item.room==='0.2')){
+    const cap=bounds(interior.group.getObjectByName(item.id+'-overhead-cap'));
+    close(ceiling.min.z-cap.max.z,.001,'Ceiling-height storage');
+    assert(parts(item.id).some(piece=>piece.name.includes('-overhead-bin-')));
+  }
+});
+
 test('both moving doors clear a continuous kitchen–pantry–garage walking route', () => {
   const doors=['kitchen-pantry-closed-leaf','hall-flush-garage-pantry-leaf'].map(name=>interior.group.getObjectByName(name));
   const collision=createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<1.7 && o.maxZ>.03),.36);
-  const local=[[1.50,9.81],[1.50,7.98],[1.90,7.93],[2.07,7.59],[2.12,7.25],[2.12,6.03]];
+  const local=[[1.50,9.81],[1.50,7.98],[1.82,7.93],[2.07,7.59],[2.12,7.25],[2.12,6.03]];
   const route=local.map(p=>new THREE.Vector3(...interior.localToWorld([...p,1.30])));
   for(let i=1;i<route.length;i++){
     const a=route[i-1],b=route[i];
@@ -1834,7 +1866,9 @@ test('the integrated dishwasher folds down on a visible click, exposing both rac
   const model=addIconInterior({THREE,scene:new THREE.Scene(),house,data}),{group,appliances}=model;
   const get=name=>group.getObjectByName(name),pivot=get('kitchen-dishwasher-door'),panel=get('kitchen-back-dishwasher-front');
   const basin=get('kitchen-back-dishwasher-back'),racks=[0,1].map(i=>get('kitchen-back-dishwasher-rack-'+i+'-bar-0'));
-  close(bounds(panel).min.x,4.0525,'adjacent to sink');
+  const front=bounds(panel),coffee=bounds(get('kitchen-back-magnifica-tray-base'));
+  assert(front.min.x<coffee.min.x && front.max.x>coffee.max.x && front.max.z<coffee.min.z);
+  assert(front.max.x<bounds(get('kitchen-back-front-2-0')).min.x);
   close(bounds(basin).getSize(new THREE.Vector3()).x,.596,'appliance body width');
   assert(racks.every(r=>r&&bounds(r).max.y<bounds(panel).min.y));
   const {batchStaticInteriorDetails}=await load(await readFile(new URL('../src/model/static-detail-batches.js',import.meta.url),'utf8'));
@@ -1842,15 +1876,16 @@ test('the integrated dishwasher folds down on a visible click, exposing both rac
   const camera=new THREE.PerspectiveCamera(60,1,.02,50);camera.up.set(0,0,1);
   const world=p=>group.localToWorld(new THREE.Vector3(...p));
   const tap=(eye,target)=>{camera.position.copy(world(eye));camera.lookAt(world(target));return appliances.toggleAt({x:0,y:0},camera);};
-  const target=[4.35,9.205,.48],eye=[3.65,9.89,1.32];
+  const x=front.getCenter(new THREE.Vector3()).x,target=[x,9.205,.48],eye=[x+.7,9.89,1.32];
   const obstacle=model.navigation.obstacles.find(o=>o.id===pivot.name),closed=structuredClone(obstacle.ring);
-  assert(!tap([4.35,9.81,1.60],target),'walker within the opening arc');
+  assert(!tap([x,9.81,1.60],target),'walker within the opening arc');
   assert(tap(eye,target));appliances.update(performance.now()+400);
   close(pivot.rotation.x,-Math.PI/2,'fully lowered');
   assert.notDeepEqual(obstacle.ring,closed);
-  const drawerEye=[5.05,9.47,1.30],drawerTarget=[4.69,10.395,.28];
+  const drawerFront=bounds(get('kitchen-island-working-drawer-0-0')),drawerX=drawerFront.getCenter(new THREE.Vector3()).x;
+  const drawerEye=[drawerX+.5,9.47,1.30],drawerTarget=[drawerX,10.395,.28];
   assert(!tap(drawerEye,drawerTarget),'opposing lower drawer cannot enter the open door');
-  assert(tap(eye,[4.35,9.80,.16]));appliances.update(performance.now()+400);
+  assert(tap(eye,[x,9.80,.16]));appliances.update(performance.now()+400);
   close(pivot.rotation.x,0,'closed');assert.deepEqual(obstacle.ring,closed);
   assert(tap(drawerEye,drawerTarget),'opposing drawer releases after the door is closed');
 });
@@ -2041,27 +2076,31 @@ test('pantry printing reads left to right from the aisle in the default mirrored
   }
 });
 
-test('the reclining adult rests on the sectional within its walk footprint', () => {
-  const get = suffix => interior.group.getObjectByName('lounge-reader-' + suffix);
-  const adult = parts('lounge-reader');
-  assert(adult.length > 0 && adult.every(piece => piece.userData.pose === 'reclining'));
-  const sofa = itemBounds('sofa'), figure = itemBounds('lounge-reader');
-  for (const axis of ['x','y']) {
-    assert(figure.min[axis] >= sofa.min[axis] && figure.max[axis] <= sofa.max[axis], 'Figure fits inside the sofa on '+axis);
+test('three seated adults occupy distinct sofa cushions and a fourth faces out of the armchair', () => {
+  const seats=[['sofa-guest-1','sofa','seat-0'],['sofa-guest-2','sofa','seat'],
+    ['sofa-guest-3','sofa','seat-2'],['armchair-guest','living-armchair','seat']];
+  const guests=new Set(inventoryMeshes.filter(m=>m.userData.pose==='seated').map(m=>m.userData.furnitureId));
+  assert.deepEqual(guests,new Set(seats.map(([id])=>id)));
+  const occupied=[],table=itemBounds('coffee-table'),extension=itemBounds('chaise');
+  for(const [id,support,cushion] of seats){
+    const item=furniture.get(support),seat=bounds(interior.group.getObjectByName(support+'-'+cushion));
+    const parts=segment=>bounds(interior.group.getObjectByName(id+'-'+segment));
+    const hip=parts('trousers-seat'),face=parts('face'),figure=itemBounds(id);
+    const center=box=>box.getCenter(new THREE.Vector3());
+    const isChaise=id==='sofa-guest-3';
+    assert(inventoryMeshes.filter(m=>m.userData.furnitureId===id).every(m=>m.userData.support===support));
+    assert(hip.min.x>=seat.min.x&&hip.max.x<=seat.max.x&&hip.min.y>=seat.min.y&&hip.max.y<=seat.max.y);
+    close(hip.min.z,seat.max.z,'Pelvis rests on '+cushion,.016);
+    assert(face.min.z>hip.max.z+.32 && face.max.z-seat.max.z>.72);
+    assert(facingProjection(item,center(parts('eye-1')))>facingProjection(item,center(face))+.045,'Looks into the room');
+    for(const sign of [-1,1]){
+      const thigh=parts('thigh-'+sign),shin=parts('shin-'+sign),sock=parts('sock-'+sign);
+      assert(thigh.intersectsBox(hip)&&shin.intersectsBox(thigh)&&sock.intersectsBox(shin));
+      assert(facingProjection(item,center(shin))>facingProjection(item,center(hip))+.38);
+      close(sock.min.z,isChaise?extension.max.z:.018,'Feet meet their support',.008);
+      assert(!sock.intersectsBox(table));
+    }
+    assert(!occupied.some(other=>other.intersectsBox(figure)),'Each person has a distinct seat');
+    occupied.push(figure);
   }
-  const seat = bounds(interior.group.getObjectByName('sofa-seat')), cushion = bounds(get('head-pillow'));
-  const face = bounds(get('face')), hip = bounds(get('trousers-seat'));
-  assert(cushion.min.z <= seat.max.z && cushion.max.z > seat.max.z + .10);
-  assert(cushion.intersectsBox(face) && face.min.z > seat.max.z + .07);
-  assert(Math.abs(hip.min.z - seat.max.z) < .022, 'Hips bear on the seat');
-  const legs = [0,1].map(i => bounds(get('trouser-leg-'+i)));
-  assert(legs[1].max.z > legs[0].max.z + .11, 'One knee is raised');
-  for(const i of [0,1]) {
-    assert(Math.abs(bounds(get('sock-'+i)).min.z - seat.max.z) < .022, 'Socks rest on the cushion');
-  }
-  const extent = bounds(get('sock-0')).max.y - face.min.y;
-  assert(extent > 1.70 && extent < 1.90, 'Adult head-to-foot length in the reclined pose');
-  assert(figure.max.z < sofa.max.z + .02, 'Figure stays under the backrest silhouette');
-  assert(adult.reduce((sum,piece) => sum + piece.geometry.index.count / 3,0) < 35000);
-  assert(!interior.navigation.obstacles.some(obstacle => obstacle.id.includes('lounge-reader')));
 });

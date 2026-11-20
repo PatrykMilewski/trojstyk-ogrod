@@ -17,7 +17,7 @@ function wastewaterFieldPoint(point) {
   return wastewaterXY(point,wastewater193.fieldCenter,wastewater193.fieldAngleDeg);
 }
 
-const wastewaterCoverShoulder193={radiusFactor:.76,height:.245};
+const wastewaterCoverShoulder193={radiusFactor:.76,height:.245,rimFactor:1.003};
 const wastewaterRunLength = wastewater193.moduleLength*wastewater193.modulesPerRow;
 const wastewaterRowOffsets = Array.from({length:wastewater193.rows},(_,i)=>
   (i-(wastewater193.rows-1)/2)*(wastewater193.moduleWidth+wastewater193.clearBetweenRows));
@@ -250,7 +250,7 @@ export function createWastewaterSurface(THREE,plantingMaterial) {
   }
   const r=wastewater193.tankDiameter/2;
   turned('biodisc-service-lid',0,0,[[r,0],[r,.09],[r*.96,.12],[r*wastewaterCoverShoulder193.radiusFactor,wastewaterCoverShoulder193.height],[r*.3,.30],[.001,.31]],plastic);
-  turned('biodisc-lid-seam',0,0,[[r*.988,.086],[r*1.003,.09],[r*1.003,.106],[r*.98,.11]],trim);
+  turned('biodisc-lid-seam',0,0,[[r*.988,.086],[r*wastewaterCoverShoulder193.rimFactor,.09],[r*wastewaterCoverShoulder193.rimFactor,.106],[r*.98,.11]],trim);
   const field=wastewaterFieldGroup(THREE,group);
   const mulch=plantingMaterial??new THREE.MeshStandardMaterial({color:'#685847',roughness:.99});
   wastewaterMulchSurfaces(THREE,group,field,mulch);
