@@ -3,9 +3,58 @@ export const wastewater193 = {
   tankCenter: [-8.337,18.526], angleDeg: -43.5,
   tankDiameter: 1.995, tankHeight: 2.56, outletInvert: -.935, residents: 5, capacityPE: 6, capacityM3Day: 1.2,
   rows: 2, modulesPerRow: 5, moduleLength: 1.20, moduleWidth: .50, moduleHeight: .36,
-  clearBetweenRows: 1, fieldCenter: [3,-1.1], distributor: [3,2.7],
+  clearBetweenRows: 1, endCapDepth: .043, fieldCenter: [32.75,-8], fieldAngleDeg: 80,
+  distributorOffset: 3.90, outletSlope: .01, fieldBase: -1.50,
   status: 'Wariant warunkowy. Do potwierdzenia możliwość przyłączenia do kanalizacji i warunki gruntowo-wodne.'
 };
+
+function wastewaterXY([x,y], [cx,cy], degrees) {
+  const a = degrees*Math.PI/180, c = Math.cos(a), s = Math.sin(a);
+  return [cx+x*c-y*s,cy+x*s+y*c];
+}
+
+function wastewaterFieldPoint(point) {
+  return wastewaterXY(point,wastewater193.fieldCenter,wastewater193.fieldAngleDeg);
+}
+
+const wastewaterRunLength = wastewater193.moduleLength*wastewater193.modulesPerRow;
+const wastewaterRowOffsets = Array.from({length:wastewater193.rows},(_,i)=>
+  (i-(wastewater193.rows-1)/2)*(wastewater193.moduleWidth+wastewater193.clearBetweenRows));
+const wastewaterVentY = -wastewaterRunLength/2+.19;
+const wastewaterDistributor = wastewaterFieldPoint([0,wastewater193.distributorOffset]);
+
+export function wastewaterServiceAccess193() {
+  const world = p=>wastewaterXY(p,wastewater193.tankCenter,wastewater193.angleDeg);
+  const circle = (center,r)=>Array.from({length:40},(_,i)=>{
+    const a = 2*Math.PI*i/40;
+    return [center[0]+r*Math.cos(a),center[1]+r*Math.sin(a)];
+  });
+  const margin = .80;
+  const halfWidth = Math.max(...wastewaterRowOffsets)+wastewater193.moduleWidth/2+margin;
+  const halfLength = wastewaterRunLength/2+wastewater193.endCapDepth+margin;
+  const field = [[-halfWidth,-halfLength],[halfWidth,-halfLength],[halfWidth,halfLength],[-halfWidth,halfLength]];
+  return [circle([0,0],wastewater193.tankDiameter/2+.55),circle(wastewaterDistributor,.75),
+    field.map(wastewaterFieldPoint)].map(ring=>({ring:ring.map(world)}));
+}
+
+function wastewaterOutletInverts() {
+  const points = [[0,.98],[0,1.57],[.48,2.05],[14.90,2.05],[16.05,.90],[19.90,.90],
+    [24.45,-3.65],[25.30,-3.65],wastewaterDistributor];
+  let z = wastewater193.outletInvert;
+  return points.map(([x,y],i)=>{
+    if(i) z-=wastewater193.outletSlope*Math.hypot(x-points[i-1][0],y-points[i-1][1]);
+    return [x,y,z];
+  });
+}
+
+function wastewaterFieldGroup(THREE,parent) {
+  const field = new THREE.Group();
+  field.name = 'wastewater-tunnel-field';
+  field.position.set(...wastewater193.fieldCenter,0);
+  field.rotation.z = wastewater193.fieldAngleDeg*Math.PI/180;
+  parent.add(field);
+  return field;
+}
 
 function wastewaterDrawing(THREE, group) {
   const materials = new Map();
@@ -61,8 +110,8 @@ function wastewaterTank(THREE, {part,pipe,ring}) {
 }
 
 function wastewaterTunnels(THREE,{part,pipe}) {
-  const {fieldCenter:[cx,cy],modulesPerRow,rows,moduleLength:l,moduleWidth:w,moduleHeight:h,clearBetweenRows} = wastewater193;
-  const base = -1.24, run = l*modulesPerRow;
+  const {modulesPerRow,moduleLength:l,moduleWidth:w,moduleHeight:h,endCapDepth,fieldBase:base} = wastewater193;
+  const run = wastewaterRunLength;
   const arch = new THREE.Shape();
   arch.moveTo(-w/2,0);
   arch.bezierCurveTo(-w/2,h*1.33,w/2,h*1.33,w/2,0);
@@ -73,17 +122,20 @@ function wastewaterTunnels(THREE,{part,pipe}) {
     return geometry;
   }
   const tunnel = archSection(l-.014), rim = archSection(.025);
-  for (let row=0;row<rows;row++) {
-    const x = cx+(row-(rows-1)/2)*(w+clearBetweenRows);
+  for (const [row,x] of wastewaterRowOffsets.entries()) {
     const id = 'drain-row-'+(row+1);
     const gravel = new THREE.BoxGeometry(w+.10,run+.10,.11);
-    part(id+'-gravel',gravel,[x,cy,base-.055],'#c1a576',1,.86);
+    part(id+'-gravel',gravel,[x,0,base-.055],'#c1a576',1,.86);
     for (let i=0;i<modulesPerRow;i++) {
-      const end = cy+run/2-i*l;
+      const end = run/2-i*l;
       part(id+'-tunnel-'+(i+1),tunnel,[x,end,base],'#b97838',3);
       for (let j=0;j<4;j++) part(id+'-rib',rim,[x,end-.07-j*.29,base+.009],'#edc585',4);
     }
-    const ventY = cy-run/2+.19;
+    const cap = archSection(endCapDepth);
+    for(const [end,y] of [['inlet',run/2+endCapDepth],['end',-run/2]]) {
+      part(id+'-'+end+'-cap',cap,[x,y,base],'#82512e',4);
+    }
+    const ventY = wastewaterVentY;
     pipe(id+'-vent',[x,ventY,base+h],[x,ventY,0],.055,'#e8cc9e',5);
   }
 }
@@ -97,46 +149,86 @@ export function createWastewaterInstallation(THREE) {
   group.userData = {kind:'wastewater-concept',parcel:'193',...wastewater193};
   const draw = wastewaterDrawing(THREE,group);
   wastewaterTank(THREE,draw);
-  wastewaterTunnels(THREE,draw);
+  const fieldDraw = wastewaterDrawing(THREE,wastewaterFieldGroup(THREE,group));
+  wastewaterTunnels(THREE,fieldDraw);
   function pipeRun(name,points,color) {
     for (let i=1;i<points.length;i++) draw.pipe(name+'-'+i,points[i-1],points[i],.055,color,4);
   }
   pipeRun('building-inlet',[[6.11,-4.54,-.72],[1.28,-4.54,-.79],[0,-3.26,-.82],[0,-.98,-.85]],'#d58d63');
-  const [x,y] = wastewater193.distributor;
-  pipeRun('clarified-outlet',[[0,.98,wastewater193.outletInvert],[0,1.55,-.95],[1.15,y,-.97],[x,y,-1.00]],'#53b5aa');
-  draw.pipe('distribution-chamber',[x,y,-1.16],[x,y,.04],.20,'#346d70',5);
-  draw.ring('distributor-cover',x,y,.05,.20,'#9ed5bf',6);
-  for (const offset of [-.75,.75]) {
-    pipeRun('distribution-branch',[[x+offset/4,y,-1.01],[x+offset,y-.32,-1.04],
-      [x+offset,1.9,-1.06]],'#70c9b3');
+  const outlet = wastewaterOutletInverts();
+  pipeRun('clarified-outlet',outlet.map(([x,y,z])=>[x,y,z+.055]),'#53b5aa');
+  const y = wastewater193.distributorOffset, invert = outlet.at(-1)[2], radius = .055;
+  fieldDraw.pipe('distribution-chamber',[0,y,invert-.18],[0,y,.04],.20,'#346d70',5);
+  fieldDraw.ring('distributor-cover',0,y,.095,.20,'#9ed5bf',6);
+  const inletY = wastewaterRunLength/2+wastewater193.endCapDepth;
+  for(const [index,x] of wastewaterRowOffsets.entries()) {
+    const from = [0,y,invert-.015+radius];
+    const elbow = [x,y-.50,from[2]-.02*Math.hypot(x,.50)];
+    fieldDraw.pipe('distribution-branch-'+index+'-1',from,elbow,radius,'#70c9b3',4);
+    fieldDraw.pipe('distribution-branch-'+index+'-2',elbow,[x,inletY,elbow[2]-.02*(elbow[1]-inletY)],radius,'#70c9b3',4);
   }
   return group;
 }
 
-export function createWastewaterSurface(THREE) {
+function wastewaterMulchSurfaces(THREE,tank,field,material) {
+  const z=.084;
+  function hole(shape,x,y,radius){
+    const cut=new THREE.Path();
+    cut.absarc(x,y,radius,0,Math.PI*2,true);
+    shape.holes.push(cut);
+  }
+  function place(parent,shape,id){
+    const mesh=new THREE.Mesh(new THREE.ShapeGeometry(shape,40),material);
+    mesh.name='wastewater-mulch-'+id;
+    mesh.position.z=z;mesh.receiveShadow=true;parent.add(mesh);
+  }
+  const aroundTank=new THREE.Shape(),r=wastewater193.tankDiameter/2;
+  aroundTank.absarc(0,0,r+.55,0,Math.PI*2,false);
+  hole(aroundTank,0,0,r-.006);
+  place(tank,aroundTank,'biodisc');
+
+  const strip=new THREE.Shape(),y=wastewater193.distributorOffset;
+  const far=-wastewaterRunLength/2-wastewater193.endCapDepth-.81;
+  strip.moveTo(-.60,y);
+  strip.absarc(0,y,.60,Math.PI,0,true);
+  strip.bezierCurveTo(.40,y-1,.43,-1.30,.58,-1.65);
+  strip.bezierCurveTo(.77,-2.07,1.15,-2.14,1.18,-2.66);
+  strip.lineTo(1.18,far);strip.lineTo(-1.18,far);strip.lineTo(-1.18,-2.66);
+  strip.bezierCurveTo(-1.15,-2.14,-.77,-2.07,-.58,-1.65);
+  strip.bezierCurveTo(-.43,-1.30,-.40,y-1,-.60,y);
+  hole(strip,0,y,.214);
+  for(const x of wastewaterRowOffsets)hole(strip,x,wastewaterVentY,.051);
+  place(field,strip,'inspection-strip');
+}
+
+export function createWastewaterSurface(THREE,plantingMaterial) {
   const group = new THREE.Group();
   group.name = 'wastewater-surface-193';
   group.position.set(...wastewater193.tankCenter,0);
   group.rotation.z = wastewater193.angleDeg*Math.PI/180;
   const plastic = new THREE.MeshStandardMaterial({color:'#54624d',roughness:.83});
   const trim = new THREE.MeshStandardMaterial({color:'#39453c',roughness:.8});
-  function turned(name,x,y,profile,material) {
+  function turned(name,x,y,profile,material,parent=group) {
     const points = profile.map(([radius,z])=>new THREE.Vector2(radius,z));
     const part = new THREE.Mesh(new THREE.LatheGeometry(points,48),material);
     part.name=name;part.rotation.x=Math.PI/2;part.position.set(x,y,0);
-    part.castShadow=true;part.receiveShadow=true;group.add(part);
+    part.castShadow=true;part.receiveShadow=true;parent.add(part);
   }
   const r=wastewater193.tankDiameter/2;
   turned('biodisc-service-lid',0,0,[[r,0],[r,.09],[r*.96,.12],[r*.76,.245],[r*.3,.30],[.001,.31]],plastic);
   turned('biodisc-lid-seam',0,0,[[r*.988,.086],[r*1.003,.09],[r*1.003,.106],[r*.98,.11]],trim);
-  const [dx,dy]=wastewater193.distributor;
-  turned('distributor-hatch',dx,dy,[[.22,0],[.22,.07],[.20,.08],[.001,.08]],trim);
-  const {rows,fieldCenter:[cx,cy],moduleWidth,clearBetweenRows,moduleLength,modulesPerRow}=wastewater193;
-  const ventY=cy-moduleLength*modulesPerRow/2+.19;
-  for(let row=0;row<rows;row++){
-    const x=cx+(row-(rows-1)/2)*(moduleWidth+clearBetweenRows);
-    turned('tunnel-vent-'+row,x,ventY,[[.055,0],[.055,.36],[.047,.37]],plastic);
-    turned('vent-cowl-'+row,x,ventY,[[.043,.37],[.085,.377],[.085,.394],[.032,.414],[.001,.414]],trim);
+  const field=wastewaterFieldGroup(THREE,group);
+  const mulch=plantingMaterial??new THREE.MeshStandardMaterial({color:'#685847',roughness:.99});
+  wastewaterMulchSurfaces(THREE,group,field,mulch);
+  turned('distributor-hatch',0,wastewater193.distributorOffset,[[.22,0],[.22,.095],[.20,.11],[.001,.11]],trim,field);
+  for(const [row,x] of wastewaterRowOffsets.entries()){
+    turned('tunnel-vent-'+row,x,wastewaterVentY,[[.055,0],[.055,.36],[.047,.37]],plastic,field);
+    for(let i=0;i<3;i++){
+      const a=i*2*Math.PI/3;
+      turned('vent-cowl-stay',x+.045*Math.cos(a),wastewaterVentY+.045*Math.sin(a),
+        [[.005,.36],[.005,.404]],trim,field);
+    }
+    turned('vent-cowl-'+row,x,wastewaterVentY,[[.043,.399],[.085,.401],[.085,.415],[.032,.438],[.001,.438]],trim,field);
   }
   return group;
 }

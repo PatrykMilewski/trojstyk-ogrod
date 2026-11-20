@@ -2270,23 +2270,98 @@ function iconSinkPullout(context,frame,s,k,face,left,right,sink) {
  frame.pullouts=[{name:'kitchen-sink-pullout',travel:.45,bottom:.122,top:.895,moving,runners,box:[item.box[0]+left,item.box[1]+face-.021,item.box[0]+right,item.box[1]+face+.021]}];
 }
 
+function iconDishwasher(context,frame,k,left,right,face,sink) {
+ const {part,item}=frame,p=iconLivingPalette(context),mid=(left+right)/2+.009;
+ const back=.031,front=face-.047,bottom=.146,top=.894;
+ const plate=(name,l,b,r,f,z,h,m=p.silver)=>part('dishwasher-'+name,[l,b,r,f],z,h,m);
+ plate('back',mid-.298,back,mid+.298,back+.020,bottom,top-bottom);
+ plate('sump',mid-.298,back+.02,mid+.298,front,bottom,.055);
+ plate('ceiling',mid-.298,back+.02,mid+.298,front,top-.020,.020);
+ plate('toe-kick',mid-.298,face-.072,mid+.298,face-.064,.014,.104,p.shadow);
+ plate('spray-arm',mid-.205,back+.225,mid+.205,back+.247,.216,.013,p.black);
+ for(const sign of [-1,1]){
+  const x=mid+sign*.290;
+  plate('side-'+sign,x-.008,back+.02,x+.008,front,bottom+.055,top-bottom-.075);
+  for(const y of [.07,front-.07])plate('foot',x-.007,y-.015,x+.007,y+.015,.006,bottom-.006,p.black);
+ }
+ for(const [i,h] of [.255,.552].entries()){
+  for(let j=-5;j<=5;j++){
+   const x=mid+j*.049;
+   frame.line('dishwasher-rack-'+i+'-bar-'+j,[x,back+.044,h],[x,front-.014,h],.003,p.silver);
+  }
+  for(const [j,y] of [back+.044,back+.18,back+.31,front-.014].entries()){
+   frame.line('dishwasher-rack-'+i+'-cross-'+j,[mid-.26,y,h+.006],[mid+.26,y,h+.006],.004,p.silver);
+   for(const sign of [-1,1])frame.line('dishwasher-rack-'+i+'-upright',[mid+sign*.26,y,h+.006],[mid+sign*.26,y,h+.095],.004,p.silver);
+  }
+  for(const y of [back+.17,back+.31])for(let tine=-3;tine<=3;tine++){
+   const x=mid+tine*.050;
+   frame.line('dishwasher-rack-'+i+'-tine',[x,y,h+.006],[x,y+.022,h+.096],.0025,p.silver);
+  }
+  for(const sign of [-1,1])frame.line('dishwasher-rack-'+i+'-rim',[mid+sign*.26,back+.044,h+.095],[mid+sign*.26,front-.014,h+.095],.005,p.silver);
+ }
+ for(const [tag,x,z,mat] of [['inlet',left+.15,.16,p.silver],['outlet',left+.21,.19,p.putty],['power-inlet',left+.30,.18,p.black]])
+  plate(tag,x-.011,.020,x+.011,back,z-.011,.022,mat);
+ const trapX=(sink.box[0]+sink.box[2])/2-item.box[0],trapY=sink.box[1]-item.box[1]+.204;
+ frame.line('dishwasher-trap-spigot',[trapX+.05,trapY,.645],[trapX,trapY,.60],.014,p.putty);
+ plate('isolation-valve',left-.17,.018,left-.13,.046,.538,.024,p.silver);
+ plate('socket',right+.09,.018,right+.17,.032,.51,.08,p.chalk);
+ plate('plug',right+.111,.032,right+.149,.050,.53,.04,p.black);
+ const start=context.group.children.length;
+ iconKitchenPanel(frame,'dishwasher-front',left+.0025,right-.0025,.122,.895,face,k.yellow);
+ iconKitchenGrip(frame,'dishwasher-grip',(left+right)/2,face,.882,.145,false,k.bronze);
+ plate('door-liner',mid-.275,front,mid+.275,face-.021,.151,.732);
+ plate('detergent-lid',mid-.17,front-.012,mid-.05,front,.629,.07,p.black);
+ plate('control-strip',mid-.24,front+.002,mid+.24,face-.024,.883,.007,p.black);
+ frame.dishwasher={door:context.group.children.slice(start),hinge:frame.point(mid,face,.122),
+  left:item.box[0]+left,right:item.box[0]+right};
+}
+
+function iconMountDishwasher(context,{door,hinge,left,right}) {
+ const {THREE,group,world,navigation,obstacle}=context,pivot=new THREE.Group(),mount=new THREE.Group();
+ pivot.name='kitchen-dishwasher-door';pivot.position.set(...hinge);pivot.userData.dynamic=true;
+ mount.position.copy(pivot.position).multiplyScalar(-1);
+ group.add(pivot);pivot.add(mount);mount.add(...door);
+ const [,y,z]=hinge,reach=.895-z,eye=new THREE.Vector3();
+ obstacle(pivot.name,[left,y-.047,right,y+.021],z,.895);
+ const ring=navigation.obstacles.at(-1).ring;
+ const clearance=new THREE.Box3(new THREE.Vector3(left,y,z-.025),new THREE.Vector3(right,y+reach,.895));
+ return {roots:[pivot],clearance,dishwasher:true,
+  canOpen(camera){
+   if(!camera.isPerspectiveCamera)return true;
+   group.worldToLocal(camera.getWorldPosition(eye));
+   return eye.z<0||eye.z>2.6||Math.hypot(eye.x-THREE.MathUtils.clamp(eye.x,left,right),eye.y-THREE.MathUtils.clamp(eye.y,y,y+reach))>.28;
+  },
+  pose(fraction,opening){
+   pivot.rotation.x=-Math.PI/2*fraction;
+   const front=y+Math.max(.021,reach*(opening?1:Math.sin(-pivot.rotation.x)));
+   for(const [i,x] of [[2,right],[3,left]])ring[i]=world([x,front]).slice(0,2);
+  }
+ };
+}
+
 function iconKitchenBackCounter(context,frame,s,k,face) {
  const {THREE,data}=context;
  const {width:w,depth:d,item,part}=frame,h=item.height;
- part('body',[0,0,w,.018],.118,h-.168,k.yellow);
- part('cabinet-floor',[0,.018,w,face-.021],.118,.018,k.yellow);
  for(const x of [0,w-.018])part('cabinet-end-'+x,[x,.018,x+.018,face-.021],.136,h-.186,k.yellow);
  const outline=new THREE.Shape();
  outline.moveTo(0,0);outline.lineTo(w,0);outline.lineTo(w,d);outline.lineTo(0,d);outline.closePath();
  const sink=data.furniture.find(unit=>unit.id==='kitchen-sink'&&unit.support===item.id);
  const centre=sink?(sink.box[0]+sink.box[2])/2-item.box[0]:w/2;
  const bayWidth=sink?sink.baseCabinetWidthM??.80:w/5,left=centre-bayWidth/2,right=centre+bayWidth/2;
- for(const [i,seam] of [left/2,left,right,(right+w)/2].entries())
+ const end=(right+w)/2;
+ for(const [i,[a,b]] of [[0,right+.009],[end+.009,w]].entries()){
+  part(i?'body-end':'body',[a,0,b,.018],.118,h-.168,k.yellow);
+  part('cabinet-floor-'+i,[a,.018,b,face-.021],.118,.018,k.yellow);
+  part('recessed-plinth-'+i,[Math.max(a,.064),.049,Math.min(b,w-.064),face-.064],.014,.104,iconLivingPalette(context).shadow);
+ }
+ for(const [i,seam] of [left/2,left,right,end+.018].entries())
   part('cabinet-divider-'+i,[seam-.009,.018,seam+.009,face-.021],.136,h-.186,k.yellow);
  iconKitchenDrawers(frame,k,0,left,2,face);
  if(sink)iconSinkPullout(context,frame,s,k,face,left,right,sink);
  else iconKitchenDrawers(frame,k,left,right,1,face,2);
- iconKitchenDrawers(frame,k,right,w,2,face,3);
+ if(sink)iconDishwasher(context,frame,k,right,end,face,sink);
+ else iconKitchenDrawers(frame,k,right,end,1,face,3);
+ iconKitchenDrawers(frame,k,end,w,1,face,4);
  if(sink){
   const [l,b,r,f]=sink.box.map((n,i)=>n-item.box[i%2]);
   outline.holes.push(iconKitchenOutline(new THREE.Path(),l+.009,b+.009,r-l-.018,f-b-.018,.024));
@@ -2344,7 +2419,7 @@ function iconLivingKitchen(context,frame,s,p) {
  if(item.id==='kitchen-pantry'){iconKitchenPantry(context,frame,k);return;}
  const island=item.id==='kitchen-island',tall=item.id==='kitchen-tall',height=item.height;
  const face=d-.065;
- if(!island)part('recessed-plinth',[.064,.049,w-.064,(tall?d-.035:face)-.064],.014,.105,p.shadow);
+ if(tall)part('recessed-plinth',[.064,.049,w-.064,(tall?d-.035:face)-.064],.014,.105,p.shadow);
  if(tall){iconSamsungTower(context,frame,k,d-.035);return;}
  if(island){
   const hob=context.data.furniture.find(unit=>unit.id==='hob');
@@ -2641,7 +2716,8 @@ function iconMountPullout(context,{name,moving,runners,box,travel,bottom,top}) {
  const leadingEdge=travel<0?[0,1]:[2,3];
  const ring=navigation.obstacles.at(-1).ring,closed=ring.map(p=>p.slice());
  const a=world([0,0]),b=world([0,travel]),dx=b[0]-a[0],dy=b[1]-a[1],eye=new THREE.Vector3();
- return {roots:[drawer,slides],
+ const clearance=new THREE.Box3(new THREE.Vector3(box[0],box[1]+Math.min(0,travel),bottom),new THREE.Vector3(box[2],box[3]+Math.max(0,travel),top));
+ return {roots:[drawer,slides],clearance,
   canOpen(camera){
    if(!camera.isPerspectiveCamera)return true;
    group.worldToLocal(camera.getWorldPosition(eye));
@@ -2664,6 +2740,7 @@ function iconApplianceControls(context) {
   for(const root of state.roots)parts.set(root,state);
  }
  if(context.socketCover)add(context.socketCover);
+ if(context.dishwasher)add(context.dishwasher);
  for(const pullout of context.pullouts??[])add(pullout);
  for(const id of ['fridge','freezer']){
   const pivot=context.group.getObjectByName('kitchen-'+id+'-door');
@@ -2691,6 +2768,8 @@ function iconApplianceControls(context) {
  function toggleAt(ndc,camera){
   const part=pick(ndc,camera),state=parts.get(part);
   if(!state||(!state.open&&!state.canOpen(camera,part)))return false;
+  if(!state.open&&state.clearance&&motions.some(other=>other!==state&&(state.dishwasher||other.dishwasher)
+   &&(other.open||other.fraction>0)&&other.clearance?.intersectsBox(state.clearance)))return false;
   const now=performance.now();
   update(now);
   state.open=!state.open;
@@ -3143,6 +3222,7 @@ function iconInteriorFurnishings(context) {
   const bounds=objects.reduce((max,object)=>{object.updateMatrix();object.geometry.computeBoundingBox();return Math.max(max,object.geometry.boundingBox.clone().applyMatrix4(object.matrix).max.z);},frame.z);
   obstacle('furniture-'+item.id,frame.walkBox??item.box,frame.z,bounds);
   for(const appliance of frame.appliances??[])iconMountSamsung(context,appliance);
+  if(frame.dishwasher)context.dishwasher=iconMountDishwasher(context,frame.dishwasher);
   if(frame.socketCover){
    context.socketCover=frame.socketCover;
    for(const root of frame.socketCover.roots)root.userData.dynamic=true;
@@ -4624,10 +4704,11 @@ function iconPlantRack(context,{width:w,depth:d,line,part},s,p) {
    part('link-'+i+'-'+j,[u+.014,d-.048,u+.021,d-.046],z+.032,.004,p.led);
   }
  }
- for(let i=0;i<4;i++){
-  const u=.103+i*.037;
-  s.tube('patch-lead-'+i,[[u,d-.046,.293],[u,d-.026,.286],[u+.014,d-.015,.249],[u+.037,d-.024,.228],[u+.037,d-.046,.210]],.0034,i%2?p.blue:p.brass);
+ for(let i=0;i<7;i++){
+  const u=.104+i*.037;
+  s.tube('patch-lead-'+i,[[u,d-.046,.293],[u,d-.026,.286],[u+.014,d-.015,.249],[u,d-.024,.228],[u,d-.046,.211]],.0034,i%2?p.blue:p.brass);
  }
+ s.tube('switch-router-uplink',[[.363,d-.046,.211],[.363,d-.02,.19],[.104,d-.02,.147],[.104,d-.046,.120]],.0034,p.blue);
  part('perforated-door-insert',[.027,d-.008,w-.027,d-.007],.029,h-.058,grille).castShadow=false;
  for(const u of [0,w-.026])part('door-stile-'+u,[u,d-.018,u+.026,d],.016,h-.032,p.graphite);
  part('door-lower-rail',[.026,d-.015,w-.026,d],t,.027,p.graphite);

@@ -102,7 +102,7 @@ test('actual Icon interior lining callback opens every window through both real 
       assert.equal(hits(combined,origin,direction,2).length,0,`${opening.id}: actual roof or lining blocks sun`);
     }
   }
-  assert(html.includes('cutRoof:(geometry,matrix)=>cutRoofGeometry(THREE,geometry,roofOpenings.filter(o=>o.parcel==="193"),matrix)'),
+  assert(html.includes('cutRoof:(geometry,matrix)=>cutRoofGeometry(THREE,geometry,roofCuts.filter(o=>o.parcel==="193"),matrix)'),
     'generated model must pass the real lining cut callback');
 });
 

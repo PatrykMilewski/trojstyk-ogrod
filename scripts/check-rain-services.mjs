@@ -11,13 +11,14 @@ const THREE=await load(Buffer.from(imports.three.split(',')[1],'base64').toStrin
 const marker='const [source,garden,house,neighbors]=';
 const [source,garden,house,neighbors]=JSON.parse(html.slice(html.indexOf(marker)+marker.length,html.indexOf(';\nconst landscaping=')));
 const data=JSON.parse(await read('../trzy-domy-3d/interior-data.json'));
-const wood=JSON.parse(await read('../trzy-domy-3d/woodland-plan.json')).parcels.find(p=>p.id==='193');
-const {createRainServices,createRainSurface}=await load(await read('../src/model/rain-services.js'));
+const woodParcels=JSON.parse(await read('../trzy-domy-3d/woodland-plan.json')).parcels;
+const {createRainServices,createRainSurface,rainServiceAccess193,rainRoofCuts193,recessRainWallHeads193}=await load(await read('../src/model/rain-services.js'));
 const {matrix:[[a,b],[c,d]],translation:[x,y]}=house.metadata;
 const group=new THREE.Group();
 group.matrix.set(-a,b,0,a*14.64+x,-c,d,0,c*14.64+y,0,0,1,0,0,0,0,1);
 const rain=createRainServices(THREE,house,{group},data);
-const surface=createRainSurface(THREE,house,{group},data);
+const plantingMaterial=new THREE.MeshStandardMaterial();
+const surface=createRainSurface(THREE,house,{group},plantingMaterial);
 rain.updateMatrixWorld(true);surface.updateMatrixWorld(true);
 const named=prefix=>rain.children.filter(m=>m.name.startsWith('rain-'+prefix));
 const close=(a,b,tol=1e-6)=>Math.abs(a-b)<tol;
@@ -33,7 +34,8 @@ test('catchment uses the projected roof triangles and covers a 30 mm event with 
   assert(close(info.stormVolumeM3,actual*.03*.9));
   assert(info.tankUsableM3>=info.stormVolumeM3);
   assert(info.fieldNetM3>=info.stormVolumeM3);
-  assert.equal(named('crate-').filter(m=>m.name!=='rain-crate-rib').length,15);
+  assert.equal(named('crate-').filter(m=>m.name!=='rain-crate-rib').length,22);
+  assert(close(info.fieldNetM3,8.91));
   assert.equal(named('downpipe-').length,4);
 });
 
@@ -42,50 +44,95 @@ function pipeEnds(mesh) {
     .applyQuaternion(mesh.quaternion).add(mesh.position));
 }
 
-test('each actual low roof edge drops into an open folded metal gutter visible from above',()=>{
-  const gutters=surface.children.filter(m=>m.name.startsWith('rain-gutter-'));
+const {iconPlanPoint,cutRoofGeometry,roofWindowOpenings,clipRoofSeam}=await load(await read('../src/model/roof-windows.js'));
+const {addIconInterior}=await load(await read('../src/model/interior.js'));
+const {joinIconStorySurfaces}=await load(await read('../src/model/story-joints.js'));
+const {createSoilVentSurface,soilVentRoofCut193,createIndoorServices}=await load(await read('../src/model/indoor-services.js'));
+const cuts=[...roofWindowOpenings(house,neighbors).filter(o=>o.parcel==='193'),...rainRoofCuts193(house.metadata,iconPlanPoint),
+  soilVentRoofCut193(house.metadata,iconPlanPoint)];
+const interior=addIconInterior({THREE,scene:new THREE.Scene(),house,data,joinStory:joinIconStorySurfaces,
+  cutRoof:(geometry,matrix)=>cutRoofGeometry(THREE,geometry,cuts,matrix)});
+recessRainWallHeads193(THREE,interior.group,house.metadata.dimensions.eave);
+interior.group.updateMatrixWorld(true);
+const shell=interior.group.children.filter(m=>/^(interior-roof-lining-|upper-|facade-)|-gable$/.test(m.name)&&m.isMesh);
+const vents=createSoilVentSurface(THREE,house,interior);vents.updateMatrixWorld(true);
+const roofs=house.meshes.filter(m=>m.kind==='roof').map(part=>{
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(part.vertices.flat(),3));geometry.setIndex(part.faces.flat());
+  return new THREE.Mesh(cutRoofGeometry(THREE,geometry,cuts),new THREE.MeshBasicMaterial({side:THREE.DoubleSide}));
+});
+const gutters=surface.children.filter(m=>m.name.startsWith('rain-gutter-'));
+function ray(objects,point,direction,far=25){
+  const origin=new THREE.Vector3(...point).applyMatrix4(surface.matrixWorld);
+  const d=new THREE.Vector3(...direction).transformDirection(surface.matrixWorld);
+  return new THREE.Raycaster(origin,d,0,far).intersectObjects(objects,false)[0];
+}
+
+test('the visible trough, flashing and edge of the actual cut roofing sit inside all five facade planes',()=>{
   assert.equal(gutters.length,8);
-  assert.equal(named('gutter-').length,0);
-  assert(gutters.every(m=>m.material.isMeshStandardMaterial&&m.material.depthTest&&m.material.color.getHex()===0x384143));
-  const roofParts=house.meshes.filter(m=>m.kind==='roof');
-  const roofs=roofParts.map(part=>{
-    const geometry=new THREE.BufferGeometry();
-    geometry.setAttribute('position',new THREE.Float32BufferAttribute(part.vertices.flat(),3));geometry.setIndex(part.faces.flat());
-    return new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({side:THREE.DoubleSide}));
-  });
-  function firstHit(x,y){
-    const origin=new THREE.Vector3(x,y,12).applyMatrix4(surface.matrixWorld);
-    return new THREE.Raycaster(origin,new THREE.Vector3(0,0,-1)).intersectObjects([...gutters,...roofs])[0];
-  }
-  const inverse=rain.matrixWorld.clone().invert();
-  for(const part of roofParts)for(const face of part.faces){
-    const eave=house.metadata.dimensions.eave, low=face.map(i=>part.vertices[i]).filter(p=>close(p[2],eave));
-    if(low.length!==2)continue;
-    const [a,b]=low.map(p=>new THREE.Vector3(...p).applyMatrix4(inverse));
-    const nx=close(a.x,b.x)?(close(a.x,0)?-1:1):0,ny=nx?0:(close(a.y,4.21)?-1:1);
-    for(const t of [.13,.35,.62,.87]){
-      const p=a.clone().lerp(b,t);
-      const sole=firstHit(p.x+nx*.06,p.y+ny*.06),hem=firstHit(p.x+nx*.129,p.y+ny*.129);
-      assert(sole&&hem&&gutters.includes(sole.object)&&gutters.includes(hem.object),part.id);
-      assert(sole.point.z<eave-.075&&hem.point.z-sole.point.z>.080,part.id);
+  const {eave}=house.metadata.dimensions,all=[...roofs,...shell,...gutters];
+  const edges=[[[0,0],[0,18.13],[1,0]],[[8.5,0],[8.5,4.21],[-1,0]],
+    [[8.5,4.21],[14.64,4.21],[0,1]],[[8.5,12.71],[14.64,12.71],[0,-1]],
+    [[8.5,12.71],[8.5,18.13],[-1,0]]];
+  for(const [a,b,n] of edges)for(const t of [.07,.23,.49,.76,.90]){
+    const [x,y]=a.map((p,k)=>p+(b[k]-p)*t);
+    const fromTop=inset=>ray(all,[x+n[0]*inset,y+n[1]*inset,12],[0,0,-1]);
+    const sole=fromTop(.06),hem=fromTop(.004),sheet=fromTop(.17);
+    assert(sole&&gutters.includes(sole.object)&&sole.point.z<eave-.085,'clear gutter sole at '+[x,y]);
+    assert(hem&&gutters.includes(hem.object)&&hem.point.z-sole.point.z>.145,'raised flush rim at '+[x,y]);
+    assert(sheet&&roofs.includes(sheet.object),'actual roof above rear fold at '+[x,y]);
+    assert(!ray(gutters,[x-n[0]*.002,y-n[1]*.002,12],[0,0,-1]),'outside the facade at '+[x,y]);
+    for(const [z,expected] of [[eave-.22,shell],[eave-.05,gutters]]){
+      const side=ray(all,[x-n[0]*.22,y-n[1]*.22,z],[...n,0],.3);
+      assert(side&&expected.includes(side.object)&&close(side.distance,.22,.00001),'wall/rim alignment at '+[x,y,z]);
     }
+  }
+  const inverse=surface.matrixWorld.clone().invert();
+  for(const l of house.lines.filter(l=>l.kind==='roof-seam'))for(const [a,b] of clipRoofSeam(l.points,cuts)){
+    const center=new THREE.Vector3(...a).lerp(new THREE.Vector3(...b),.5).applyMatrix4(inverse);
+    assert(!ray(gutters,[center.x,center.y,12],[0,0,-1])||ray(roofs,[center.x,center.y,12],[0,0,-1]),'seam in gutter');
   }
   for(const offset of named('outlet-offset-')){
     const [intake]=pipeEnds(offset);
-    assert(!firstHit(intake.x,intake.y),'open drain throat '+offset.name);
-    const socket=surface.getObjectByName(offset.name.replace('outlet-offset','outlet-socket'));
-    const origin=intake.clone().setZ(12).applyMatrix4(surface.matrixWorld);
-    const hit=new THREE.Raycaster(origin,new THREE.Vector3(0,0,-1)).intersectObject(socket)[0];
-    assert(hit&&hit.point.z<intake.z-.015,'socket receives open throat '+offset.name);
+    assert(!ray(all,[intake.x,intake.y,5],[0,0,-1],5-intake.z+.12),'open drain throat '+offset.name);
   }
 });
 
-test('all four corner vertices of each socket meet the rectangular downpipe head',()=>{
+test('each removable plinth hatch reveals the drain inspection plug through the real cladding',()=>{
+  for(const [i,cleanout] of named('cleanout-').entries()){
+    const nx=i<2?1:0,ny=i===2?1:i===3?-1:0;
+    const x=nx?0:cleanout.position.x,y=nx?cleanout.position.y:ny>0?4.21:12.71;
+    const door=surface.getObjectByName('rain-service-hatch-door-'+i),plug=surface.getObjectByName('rain-service-hatch-plug-'+i);
+    const from=[x-nx*.25,y-ny*.25,.20],inward=[nx,ny,0];
+    assert.equal(ray([...shell,door,plug],from,inward,.5).object,door);
+    assert.equal(ray([...shell,plug],from,inward,.5).object,plug);
+    assert(ray(shell,[from[0]-.11*ny,from[1]+.11*nx,.20],inward,.28),'surrounding solid facade');
+  }
+});
+
+test('opaque roof vent surrounds an open bore and meets the sanitary overlay at the visible rim',()=>{
+  const indoor=createIndoorServices(THREE,interior,data),[x,y,top]=indoor.getObjectByName('soil-vent-to-roof').userData.to;
+  const down=[0,0,-1],all=[...roofs,...shell,...vents.children];
+  const boot=vents.getObjectByName('soil-vent-weathering-boot'),pipe=vents.getObjectByName('soil-vent-open-pipe');
+  assert(vents.visible&&vents.children.every(m=>m.material.depthTest&&!m.material.transparent));
+  for(const dx of [-.060,.060])assert(close(ray(all,[x+dx,y,12],down).point.z,top,.00001));
+  for(const dx of [-.13,.13])assert.equal(ray(all,[x+dx,y,12],down).object,boot);
+  assert.equal(ray(all,[x-.3,y,top-.32],[1,0,0],.5).object,pipe);
+  assert(!ray(all,[x,y,top+.1],down,.9),'roof layers and vent bore are open');
+});
+
+test('the two ends of every socket match the gutter throat and concealed rectangular downpipe',()=>{
+  const gutterVertices=gutters.flatMap(g=>{
+    const p=g.geometry.getAttribute('position');
+    return Array.from({length:p.count},(_,i)=>new THREE.Vector3().fromBufferAttribute(p,i));
+  });
   for(const pipe of named('downpipe-')){
     const socket=surface.getObjectByName(pipe.name.replace('downpipe','outlet-socket'));
     const vertices=socket.geometry.getAttribute('position');
     const {width,height,depth}=pipe.geometry.parameters;
     const corners=Array.from({length:vertices.count},(_,i)=>new THREE.Vector3().fromBufferAttribute(vertices,i));
+    const high=corners.filter(p=>p.z>pipe.position.z+depth/2+.1);
+    assert(high.length&&high.every(p=>gutterVertices.some(q=>p.distanceTo(q)<.000002)),socket.name+' throat');
     for(const dx of [-width/2,width/2])for(const dy of [-height/2,height/2]){
       const corner=pipe.position.clone().add(new THREE.Vector3(dx,dy,depth/2));
       const matched=corners.some(p=>corner.distanceTo(p)<.000002);
@@ -132,11 +179,11 @@ test('concealed downpipes drain through continuously falling buried branches and
 });
 
 const world=([x,y])=>new THREE.Vector3(x,y,0).applyMatrix4(rain.matrixWorld).toArray().slice(0,2);
-const lawn=garden.polygons.filter(p=>p.kind==='lawn').map(p=>[p.ring,...p.holes||[]]);
 const lot=source.variants[0],outline=neighbors.parcels['193'].coordinates;
 const obstacles=[...['house','terrace','driveway','entry'].map(key=>lot[key].coordinates),
-  ...[...wood.beds,...garden.polygons.filter(p=>p.kind!=='lawn'),...garden.objects.filter(p=>p.ring)]
+  ...[...garden.polygons.filter(p=>!['lawn','planting','path'].includes(p.kind)),...garden.objects.filter(p=>p.ring)]
     .map(p=>[p.ring,...p.holes||[]])];
+const reservations=rainServiceAccess193(house,iconPlanPoint).map(({ring})=>[ring]);
 
 function boxPolygon(mesh,margin=0){
   const {width,height}=mesh.geometry.parameters,x=width/2+margin,y=height/2+margin;
@@ -148,23 +195,76 @@ function pointEdgeDistance(point,a,b){
   return Math.hypot(point[0]-a[0]-t*dx,point[1]-a[1]-t*dy);
 }
 const edgeDistance=(p,ring)=>Math.min(...ring.map((a,i)=>pointEdgeDistance(p,a,ring[(i+1)%ring.length])));
-const clearLawn=polygon=>{
-  assert.equal(clipping.difference(polygon,...lawn).length,0,'private lawn');
+function minimumDistance(ring,other){
+  return Math.min(...ring.map(p=>edgeDistance(p,other)),...other.map(p=>edgeDistance(p,ring)));
+}
+function clearFootprint(polygon){
   assert.equal(clipping.difference(polygon,outline).length,0,'lot boundary');
   for(const obstacle of obstacles)assert.equal(clipping.intersection(polygon,obstacle).length,0,'garden or building obstacle');
-  for(const t of [...wood.trees,...garden.trees])assert(edgeDistance(t.center,polygon[0])>t.crownRadius);
-};
+}
 
-test('tank at the side planting bed leaves the central lawn free and has a 90 cm service approach from the terrace',()=>{
+test('the sealed 6 m³ tank occupies the geographic northeast side strip with access from the terrace',()=>{
   const tank=named('tank-shell')[0],polygon=boxPolygon(tank);
-  assert(tank.position.x<0&&Math.hypot(tank.position.x-10.2,tank.position.y-22.35)>11);
-  const nearestBed=Math.min(...wood.beds.flatMap(bed=>polygon[0].map(p=>edgeDistance(p,bed.ring))));
-  assert(nearestBed>.50&&nearestBed<.65);
-  assert(Math.min(...polygon[0].map(p=>edgeDistance(p,outline[0])))>5.7);
-  clearLawn(boxPolygon(tank,.45));
-  const access=[[.1,19.56],[1,19.56],[1,20.3],[-.15,22.8],[-1.05,22.8],[.1,20.1]];
-  clearLawn([access.map(world)]);
-  for(const crate of named('crate-').filter(m=>m.name!=='rain-crate-rib'))clearLawn(boxPolygon(crate));
+  clearFootprint(polygon);
+  const side=world([tank.position.x,tank.position.y]),center=world([7.32,9.065]);
+  assert(side[0]>center[0]&&side[1]>center[1]);
+  const water=named('tank-water')[0],shellFloor=tank.position.z-tank.geometry.parameters.depth/2+.08;
+  assert(close(water.geometry.parameters.width*water.geometry.parameters.height*(water.position.z-shellFloor),6));
+  assert(minimumDistance(polygon[0],lot.house.coordinates[0])>=1.35);
+  assert(minimumDistance(polygon[0],outline[0])>.68);
+  assert.equal(clipping.difference(polygon,...reservations).length,0);
+  const fromTerrace=clipping.intersection(lot.terrace.coordinates,clipping.union(...reservations));
+  assert(fromTerrace.length,'plant-free access starts at the terrace');
+});
+
+test('the connected single-layer infiltration field fits beside the fence and clears foundations and tree roots',()=>{
+  const crates=named('crate-').filter(m=>m.name!=='rain-crate-rib');
+  const field=clipping.union(...crates.map(m=>boxPolygon(m,.000001)));
+  assert.equal(field.length,1,'modules are edge-connected');
+  assert.equal(clipping.difference(field,...reservations).length,0);
+  const polygon=field[0];
+  clearFootprint(polygon);
+  const bottom=crates[0].position.z-crates[0].geometry.parameters.depth/2-.10;
+  assert(close(bottom,-1.77));
+  assert(minimumDistance(polygon[0],lot.house.coordinates[0])>=1.5*Math.abs(bottom));
+  assert(minimumDistance(polygon[0],outline[0])>=2);
+  const fences=garden.lines.filter(line=>line.kind.includes('fence'));
+  const fenceDistance=Math.min(...fences.flatMap(f=>polygon[0].flatMap(p=>
+    f.points.slice(1).map((b,i)=>pointEdgeDistance(p,f.points[i],b)))));
+  assert(fenceDistance>=1&&fenceDistance<1.10);
+  const allTrees=[...woodParcels.flatMap(p=>p.trees),...garden.trees];
+  for(const t of allTrees)assert(edgeDistance(t.center,polygon[0])>Math.max(3,2*t.crownRadius));
+  const [cover,connection]=pipeEnds(named('field-inspection-spur')[0]);
+  const riser=rain.getObjectByName('rain-field-inspection');
+  assert(close(cover.x,riser.position.x)&&close(cover.y,riser.position.y));
+  assert(crates.some(c=>Math.hypot(c.position.x-connection.x,c.position.y-connection.y)<1e-6&&
+    close(connection.z,c.position.z-c.geometry.parameters.depth/2+.12)));
+  const [branch,vent]=pipeEnds(named('field-air-branch')[0]),[riserBottom,riserTop]=pipeEnds(named('field-air-riser')[0]);
+  assert(vent.distanceTo(riserBottom)<1e-6&&branch.z>connection.z);
+  const hood=surface.getObjectByName('rain-field-vent-hood');
+  assert(close(hood.position.x,riserTop.x)&&close(hood.position.y,riserTop.y)&&hood.position.z>riserTop.z);
+});
+
+test('mulch joins the planted beds around every lid and the vent without covering the terrace or paths',()=>{
+  const patches=surface.children.filter(m=>m.name.startsWith('rain-mulch-'));
+  const beds=woodParcels.find(p=>p.id==='193').beds.map(b=>[b.ring,...b.holes||[]]);
+  const rings=patches.map(mesh=>{
+    assert.equal(mesh.material,plantingMaterial);
+    const shape=mesh.geometry.parameters.shapes;
+    const ring=shape.getPoints(8).map(v=>world([v.x,v.y]));
+    const polygon=[ring];
+    clearFootprint(polygon);
+    assert(clipping.intersection(polygon,clipping.union(...beds)).length>0,'joins an existing bed');
+    for(const path of garden.polygons.filter(p=>p.kind==='path'))
+      assert.equal(clipping.intersection(polygon,[path.ring]).length,0,path.id);
+    return polygon;
+  });
+  for(const mesh of surface.children.filter(m=>/^rain-cover-(leaf-filter|tank-inspection|field-inspection)$/.test(m.name)||m.name==='rain-field-vent-hood')){
+    const r=mesh.geometry.parameters.radiusTop+.12;
+    const ring=Array.from({length:32},(_,i)=>world([mesh.position.x+r*Math.cos(i*Math.PI/16),mesh.position.y+r*Math.sin(i*Math.PI/16)]));
+    assert.equal(clipping.difference([ring],...rings).length,0,mesh.name+' surrounded by mulch');
+    assert(mesh.position.z>patches[0].position.z);
+  }
 });
 
 test('all three covered openings align with buried chambers and remain visible in normal mode',()=>{
@@ -178,7 +278,8 @@ test('all three covered openings align with buried chambers and remain visible i
     const radius=cap.geometry.parameters.radiusTop;
     const perimeter=Array.from({length:40},(_,i)=>world([cap.position.x+(radius+.025)*Math.cos(i*Math.PI/20),
       cap.position.y+(radius+.025)*Math.sin(i*Math.PI/20)]));
-    clearLawn([perimeter]);
+    clearFootprint([perimeter]);
+    assert.equal(clipping.difference([perimeter],...reservations).length,0,'plant exclusion covers the whole lid');
     const lawnHeight=Math.max(...garden.polygons.filter(p=>p.kind==='lawn').map(p=>p.z))+.01;
     const highestBlade=lawnHeight+.001+.043*1.14;
     assert(cap.position.z+cap.geometry.parameters.height/2>highestBlade);

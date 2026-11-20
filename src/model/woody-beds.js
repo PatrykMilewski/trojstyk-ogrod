@@ -102,7 +102,7 @@ function shrubSpecimen(THREE,profile,random) {
   return geometry;
 }
 
-function sampleWoodyBed(bed,random,surfaceClearance,plant) {
+function sampleWoodyBed(bed,random,surfaceClearance,serviceAccess,plant) {
   const {ring}=bed;
   const xs=ring.map(p=>p[0]), ys=ring.map(p=>p[1]);
   const x0=Math.min(...xs), y0=Math.min(...ys), x1=Math.max(...xs), y1=Math.max(...ys);
@@ -112,7 +112,8 @@ function sampleWoodyBed(bed,random,surfaceClearance,plant) {
     for(let col=-1;x0+col*spacing<x1;col++) {
       const x=x0+(col+.28+(row%2)*.5+(random()-.5)*.49)*spacing;
       const y=y0+(row+.30+(random()-.5)*.47)*spacing*.87;
-      const gap=surfaceClearance(x,y,bed);
+      let gap=surfaceClearance(x,y,bed);
+      for(const area of serviceAccess)gap=Math.min(gap,-surfaceClearance(x,y,area));
       if(gap<.23) continue;
       plant(x,y,gap); count++;
     }
@@ -120,7 +121,7 @@ function sampleWoodyBed(bed,random,surfaceClearance,plant) {
   return count;
 }
 
-export function createWoodyBeds(THREE,parcels,{surfaceClearance,woodyRandom}) {
+export function createWoodyBeds(THREE,parcels,{surfaceClearance,woodyRandom,serviceAccess=[]}) {
   const group=new THREE.Group(), profiles=shrubProfiles, placements=profiles.map(()=>[]);
   group.name='woody-beds';
   const shapes=[],stats={},base=.068;
@@ -132,7 +133,7 @@ export function createWoodyBeds(THREE,parcels,{surfaceClearance,woodyRandom}) {
       const shape=new THREE.Shape(path(bed.ring));
       shape.holes=(bed.holes||[]).map(h=>new THREE.Path(path(h)));
       shapes.push(shape);
-      shrubs+=sampleWoodyBed(bed,random,surfaceClearance,(x,y,gap)=>{
+      shrubs+=sampleWoodyBed(bed,random,surfaceClearance,id==='193'?serviceAccess:[],(x,y,gap)=>{
         const drift=Math.sin(x*.44+phase)+.65*Math.sin(y*.62-phase)+.43*Math.sin((x+y)*.53);
         const interior=Math.min(1,gap/1.2), scale=.82+.30*random();
         const species=gap<.66?0:drift<-.98?3:drift<.08?1:drift<.61?0:2;

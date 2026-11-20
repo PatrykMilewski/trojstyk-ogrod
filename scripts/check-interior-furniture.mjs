@@ -1072,8 +1072,8 @@ test('every kitchen cabinet and concealed pantry door has the same matte yellow 
   assert.equal(yellow.color.getHex(),0xe5c368);
   assert(yellow.roughness>=.6 && !yellow.map);
   const perimeter=['kitchen-pantry','kitchen-back','kitchen-tall'].flatMap(parts).filter(o=>
-    /-(closed-leaf|left-front|right-front|front-\d-\d|crown-\d|upper-\d|fridge|freezer)$/.test(o.name));
-  assert.equal(perimeter.length,29);
+    /-(closed-leaf|left-front|right-front|dishwasher-front|front-\d-\d|crown-\d|upper-\d|fridge|freezer)$/.test(o.name));
+  assert.equal(perimeter.length,28);
   for(const door of [...perimeter,...aisle]){
     const face=bounds(door);
     close(face.max.y-face.min.y,.021,'Unframed 21 mm slab door');
@@ -1223,7 +1223,9 @@ test('the 70 cm single bowl is let into the worktop below the full-width mosaic'
   close(rim.max.x-rim.min.x,.70,'Overall sink width including rim');
   const dividers=[0,1,2,3].map(i=>bounds(get('kitchen-back-cabinet-divider-'+i)));
   const face=bounds(get('kitchen-back-front-2-0'));
-  const cabinetEdges=[stone.min.x,...dividers.map(box=>box.getCenter(new THREE.Vector3()).x),stone.max.x];
+  const cabinetEdges=[stone.min.x,...dividers.slice(0,3).map(box=>box.getCenter(new THREE.Vector3()).x),
+    bounds(get('kitchen-back-dishwasher-front')).max.x+.0025,stone.max.x];
+  close(dividers[3].min.x-dividers[2].max.x,.600,'600 mm clear appliance niche');
   const modules=cabinetEdges.slice(1).map((x,i)=>Math.round((x-cabinetEdges[i])*1000));
   assert.deepEqual(modules,[600,600,800,600,600],'Carcass partitions center the sink between two 600 mm cabinets on each side');
   close(face.max.x-face.min.x,.795,'800 mm sink cabinet door with two 2.5 mm reveals');
@@ -1790,6 +1792,52 @@ test('both moving doors clear a continuous kitchen–pantry–garage walking rou
     }
   }
   interior.updateHallDoors(null);
+});
+
+test('the integrated dishwasher folds down on a visible click, exposing both racks and reserving its swing',async()=>{
+  const model=addIconInterior({THREE,scene:new THREE.Scene(),house,data}),{group,appliances}=model;
+  const get=name=>group.getObjectByName(name),pivot=get('kitchen-dishwasher-door'),panel=get('kitchen-back-dishwasher-front');
+  const basin=get('kitchen-back-dishwasher-back'),racks=[0,1].map(i=>get('kitchen-back-dishwasher-rack-'+i+'-bar-0'));
+  close(bounds(panel).min.x,4.0525,'adjacent to sink');
+  close(bounds(basin).getSize(new THREE.Vector3()).x,.596,'appliance body width');
+  assert(racks.every(r=>r&&bounds(r).max.y<bounds(panel).min.y));
+  const {batchStaticInteriorDetails}=await load(await readFile(new URL('../src/model/static-detail-batches.js',import.meta.url),'utf8'));
+  batchStaticInteriorDetails(THREE,group);
+  const camera=new THREE.PerspectiveCamera(60,1,.02,50);camera.up.set(0,0,1);
+  const world=p=>group.localToWorld(new THREE.Vector3(...p));
+  const tap=(eye,target)=>{camera.position.copy(world(eye));camera.lookAt(world(target));return appliances.toggleAt({x:0,y:0},camera);};
+  const target=[4.35,9.205,.48],eye=[3.65,9.89,1.32];
+  const obstacle=model.navigation.obstacles.find(o=>o.id===pivot.name),closed=structuredClone(obstacle.ring);
+  assert(!tap([4.35,9.81,1.60],target),'walker within the opening arc');
+  assert(tap(eye,target));appliances.update(performance.now()+400);
+  close(pivot.rotation.x,-Math.PI/2,'fully lowered');
+  assert.notDeepEqual(obstacle.ring,closed);
+  const drawerEye=[5.05,9.47,1.30],drawerTarget=[4.69,10.395,.28];
+  assert(!tap(drawerEye,drawerTarget),'opposing lower drawer cannot enter the open door');
+  assert(tap(eye,[4.35,9.80,.16]));appliances.update(performance.now()+400);
+  close(pivot.rotation.x,0,'closed');assert.deepEqual(obstacle.ring,closed);
+  assert(tap(drawerEye,drawerTarget),'opposing drawer releases after the door is closed');
+});
+
+test('dishwasher hoses and power lead end on the modeled valve, trap, adjacent cupboard plug and appliance ports',async()=>{
+ const {createIndoorServices}=await load(await readFile(new URL('../src/model/indoor-services.js',import.meta.url),'utf8'));
+ const services=createIndoorServices(THREE,interior,data),get=id=>services.getObjectByName('dishwasher-'+id);
+ const fitting=(id,point)=>{
+  const mesh=interior.group.getObjectByName('kitchen-back-dishwasher-'+id);
+  assert(bounds(mesh).distanceToPoint(new THREE.Vector3(...point))<.001,id);
+ };
+ for(const [id,from,to] of [['inlet-hose','isolation-valve','inlet'],['drain-hose','outlet','trap-spigot'],['power-cord','plug','power-inlet']]){
+  const line=get(id),physical=interior.group.getObjectByName('dishwasher-fitted-'+id);
+  fitting(from,line.userData.from);fitting(to,line.userData.to);
+  assert.equal(physical.geometry,line.geometry);
+  assert(physical.material.depthTest&&!services.visible);
+ }
+ assert.deepEqual(get('stop-valve').userData.from,services.getObjectByName('kitchen-feed-cold').userData.to);
+ assert.deepEqual(get('stop-valve').userData.to,get('inlet-hose').userData.from);
+ assert.deepEqual(get('drain-hose').userData.to,get('trap-connection').userData.from);
+ assert.deepEqual(get('trap-connection').userData.to,services.getObjectByName('kitchen-sink-drain').userData.from);
+ assert(get('drain-hose').geometry.attributes.position.array.some((v,i)=>i%3===2&&v>.74));
+ assert.equal(get('power-cord').parent.name,'power-ground');
 });
 
 test('every island drawer opens and closes on its own visible front after static batching', async () => {

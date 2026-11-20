@@ -6,26 +6,29 @@ export function bindIconServiceView({THREE,indoor,rain,wastewater,camera,control
   const floor=document.getElementById('service-floor');
   const key=document.getElementById('service-key');
   const legend={
-    all:'Koralowy – podłogówka · fioletowy – pompa · niebieski, czerwony i malinowy – woda · ochra – ścieki · turkus – deszczówka',
+    all:'Koralowy – podłogówka · fioletowy – pompa · niebieski, czerwony i malinowy – woda · ochra – ścieki · turkus – deszczówka · zielony – Ethernet',
     underfloor:'Koralowy – pętle grzewcze · bursztynowy – powroty',
     'heat-pump':'Fiolet – zasilanie i powrót · grafit – przewód elektryczny',
     water:'Niebieski – zimna woda · czerwony – ciepła woda · malinowy – powrót cyrkulacji CWU',
     sewer:'Ochra – odpływy do oczyszczalni · turkus przy zbiorniku – odpływ po oczyszczeniu',
+    ethernet:'Zielony – gniazda RJ45 w sześciu pokojach · żółty – rezerwa PoE na dachu · wszystkie przewody wracają do szafy w kotłowni',
+    power:'Zasilanie zmywarki z gniazda w sąsiedniej szafce',
     rain:'Turkus – rynny, piony i przewody do zbiornika · kratownica – rozsącz deszczówki'
   };
   let active=false;
   function update(frame) {
     const choice=system.value,level=floor.value,all=choice==='all';
     const exterior=level==='both'||level==='ground';
-    floor.parentElement.hidden=choice==='rain'||choice==='heat-pump';
+    const groundSystem=choice==='heat-pump'||choice==='power';
+    floor.parentElement.hidden=choice==='rain'||groundSystem;
     indoor.visible=active && choice!=='rain';
     const layers=[];
     for(const category of indoor.children){
       category.visible=active && (all||category.name===choice);
       for(const storey of category.children){
-        storey.visible=choice==='heat-pump'||level==='both'||storey.userData.level===level;
+        storey.visible=groundSystem?storey.userData.level==='ground':level==='both'||storey.userData.level===level;
         const backdrop=storey.getObjectByName('service-floor-backdrop-'+storey.userData.level);
-        if(backdrop)backdrop.visible=choice==='underfloor'&&level!=='both'&&storey.visible;
+        if(backdrop)backdrop.visible=['underfloor','ethernet'].includes(choice)&&level!=='both'&&storey.visible;
         if(category.visible&&storey.visible)layers.push(storey);
       }
     }
@@ -55,7 +58,7 @@ function frameIconServices(THREE,layers,camera,controls,choice) {
   }
   if(bounds.isEmpty())return;
   const center=bounds.getCenter(new THREE.Vector3()),span=bounds.getSize(new THREE.Vector3());
-  const plan=['underfloor','water','sewer'].includes(choice);
+  const plan=['underfloor','water','sewer','ethernet','power'].includes(choice);
   controls.target.copy(center);
   camera.position.copy(center).add(new THREE.Vector3(0,plan?-.8:-28,plan?65:52));
   const height=plan?span.y:span.y*.89+span.z*.48;

@@ -2,6 +2,7 @@ const iconKitchenFrontLabels = new Map([
   ['kitchen-pantry-left-front', 'robot'],
   ['kitchen-pantry-closed-leaf', 'drzwi spiżarni'],
   ['kitchen-back-front-2-0', 'pod zlewem'],
+  ['kitchen-back-dishwasher-front', 'zmywarka'],
   ['kitchen-tall-fridge', 'lodówka'],
   ['kitchen-tall-freezer', 'zamrażarka'],
   ['kitchen-back-upper-2', 'górne fronty'],
@@ -25,7 +26,7 @@ export function measureIconKitchen(THREE, group) {
     if (name === 'kitchen-back-top') wallTop = bounds(mesh);
     if (name === 'kitchen-island-top') islandTop = bounds(mesh);
     let row;
-    if (/^kitchen-(?:pantry-(?:left-front|right-front|closed-leaf)|back-front-\d+-0|tall-(?:fridge|freezer))$/.test(name)) row = base;
+    if (/^kitchen-(?:pantry-(?:left-front|right-front|closed-leaf)|back-front-\d+-0|back-dishwasher-front|tall-(?:fridge|freezer))$/.test(name)) row = base;
     else if (/^kitchen-back-upper-\d+$/.test(name)) row = upper;
     else if (/^kitchen-island-(?:working-drawer-\d+-0|oven-tray-drawer)$/.test(name)) row = island;
     if (row) {

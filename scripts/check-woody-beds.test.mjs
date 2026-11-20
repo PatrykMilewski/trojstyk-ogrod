@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
+import clipping from 'polygon-clipping';
 import {checkWoodyPlanting} from './check-woody-beds.mjs';
 
 const ids = ['190', '191', '193'];
@@ -37,10 +38,25 @@ test('each mapped bed contains rendered shrubs within its ground footprint', asy
   const {surfaceClearance} = await load(await read('../src/model/garden-plantings.js'));
   const {woodyRandom} = await load(await read('../src/model/tree-realism.js'));
   const {parcels} = JSON.parse(await read('../trzy-domy-3d/woodland-plan.json'));
+  const {wastewaterServiceAccess193}=await load(await read('../src/model/wastewater.js'));
+  const {rainServiceAccess193}=await load(await read('../src/model/rain-services.js'));
+  const {iconPlanPoint}=await load(await read('../src/model/roof-windows.js'));
+  const marker='const [source,garden,house,neighbors]=';
+  const [,,house]=JSON.parse(html.slice(html.indexOf(marker)+marker.length,html.indexOf(';\nconst landscaping=')));
+  const serviceAccess=[...wastewaterServiceAccess193(),...rainServiceAccess193(house,iconPlanPoint)];
+  for(const bed of parcels.find(p=>p.id==='193').beds)for(const access of serviceAccess){
+    const overlap=clipping.intersection([bed.ring,...bed.holes],[access.ring]);
+    for(const polygon of overlap)for(const ring of polygon){
+      const [ox,oy]=ring[0];
+      const twiceArea=ring.slice(1).reduce((sum,[x,y],i)=>
+        sum+(ring[i][0]-ox)*(y-oy)-(x-ox)*(ring[i][1]-oy),0);
+      assert(Math.abs(twiceArea)<1e-7,'service corridor counted as woody planting');
+    }
+  }
   const canvasContext = new Proxy({}, {get: () => () => {}});
   t.after(() => { delete globalThis.document; });
   globalThis.document = {createElement: () => ({getContext: () => canvasContext})};
-  const group = createWoodyBeds(THREE, parcels, {surfaceClearance, woodyRandom});
+  const group = createWoodyBeds(THREE, parcels, {surfaceClearance, woodyRandom, serviceAccess});
   const beds = parcels.flatMap(p => p.beds), occupied = new Set();
   const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), scale = new THREE.Vector3();
   const orientation = new THREE.Quaternion();
@@ -50,6 +66,8 @@ test('each mapped bed contains rendered shrubs within its ground footprint', asy
       matrix.decompose(position, orientation, scale);
       const bed = beds.find(b => surfaceClearance(position.x, position.y, b) >= scale.x - 0.00001);
       assert.ok(bed, 'Shrub extends beyond its planted area');
+      for(const access of serviceAccess)assert(surfaceClearance(position.x,position.y,access)<-scale.x+.00001,
+        'Shrub blocks a service opening or underground system');
       occupied.add(bed);
     }
   }

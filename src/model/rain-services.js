@@ -2,18 +2,40 @@
 const rainOutlets193 = [
   [.075,.36], [.075,16.84], [14.19,4.285], [8.68,12.635]
 ];
-const rainField193 = {center:[9.6,26.65], columns:5, rows:3, unit:.80, height:.66, unitNetM3:.405};
-const rainTank193 = {center:[-1.05,22.75], outside:[2,2.9], wall:.08, usableM3:6, overflowZ:-1.22};
+// One connected layer of EcoBloc Inspect 420. The wider end turns away from the lot line.
+const rainField193 = {unit:.80, height:.66, unitNetM3:.405, centerZ:-1.34,
+  strips:[{x:16,y:15.6,columns:1,rows:10},{x:13.6,y:20.4,columns:3,rows:4}]};
+const fieldInspection193 = [17.35,16];
+const fieldVent193 = [17.60,16.24];
+const rainTank193 = {center:[17,6.65], outside:[2,2.9], wall:.08, usableM3:6, overflowZ:-1.22};
 
 const rainGutter193 = {outletDepth:.125, slope:.003, socketDrop:.12};
 const rainDownpipe193 = {width:.070, depth:.080};
-const rainFilter193 = [-1.05,20.30,-1.10];
-const rainIntake193 = [[-.06,.36],[-.06,16.84],[14.19,4.15],[8.68,12.77]];
+const rainFilter193 = [16.6,4.05,-1.10];
+const rainIntake193 = [[.072,.36],[.072,16.84],[14.19,4.282],[8.68,12.638]];
+const rainInward193 = [[1,0],[1,0],[0,1],[0,-1]];
 const rainCovers193 = [
   ['leaf-filter',...rainFilter193.slice(0,2),.23],
-  ['tank-inspection',rainTank193.center[0]+.45,rainTank193.center[1],.30],
-  ['field-inspection',rainField193.center[0]-2*rainField193.unit,rainField193.center[1]+rainField193.unit,.11]
+  ['tank-inspection',rainTank193.center[0]-.40,rainTank193.center[1],.30],
+  ['field-inspection',...fieldInspection193,.11]
 ];
+
+export function rainServiceAccess193(house,iconPlanPoint) {
+  const [x,y]=rainTank193.center,[w,d]=rainTank193.outside,margin=.15;
+  const areas=[
+    [x-w/2-margin,y-d/2-margin,x+w/2+margin,y+d/2+margin],
+    ...rainField193.strips.map(({x,y,columns,rows})=>[x-margin,y-margin,
+      x+columns*rainField193.unit+margin,y+rows*rainField193.unit+margin]),
+    [15.25,3.60,16.15,8.55]
+  ];
+  for(const [id,x,y,r] of rainCovers193){
+    const startX=id==='field-inspection'?15.62:15.25;
+    areas.push([startX,y-.45,x+Math.max(.45,r+.15),y+.45]);
+  }
+  return areas.map(([left,bottom,right,top])=>({
+    ring:[[left,bottom],[right,bottom],[right,top],[left,top]].map(([x,y])=>iconPlanPoint(house.metadata,x,y,0).slice(0,2))
+  }));
+}
 
 function rainDrawing(THREE,group) {
   const color = {gutter:0x44d0b8,lip:0xb4f0db,pipe:0x36beb5,body:0x17555d,water:0x46aeb5,grid:0x84e5d3};
@@ -49,15 +71,16 @@ function rainDrawing(THREE,group) {
 function rainGutterRuns193() {
   const [gf,gr,wf,wr]=rainIntake193;
   return [
-    [1,[gf,[-.06,0]]],[-1,[gf,[-.06,8.60]]],[1,[gr,[-.06,8.60]]],[-1,[gr,[-.06,18.13]]],
-    [-1,[wf,[8.56,4.15],[8.56,0]]],[1,[wf,[14.64,4.15]]],
-    [1,[wr,[8.56,12.77],[8.56,18.13]]],[-1,[wr,[14.64,12.77]]]
+    [1,[gf,[.072,0]]],[-1,[gf,[.072,8.60]]],[1,[gr,[.072,8.60]]],[-1,[gr,[.072,18.13]]],
+    [-1,[wf,[8.428,4.282],[8.428,0]]],[1,[wf,[14.64,4.282]]],
+    [1,[wr,[8.428,12.638],[8.428,18.13]]],[-1,[wr,[14.64,12.638]]]
   ];
 }
 
 function rainRoof193(draw,eave,ridge) {
   const z=eave-rainGutter193.outletDepth;
-  for(const [i,[,points]] of rainGutterRuns193().entries()){
+  const runs=rainGutterRuns193();
+  for(const [i,[,points]] of runs.entries()){
     let height=z;
     const route=points.map(([x,y],j)=>{
       if(j)height+=rainGutter193.slope*Math.hypot(x-points[j-1][0],y-points[j-1][1]);
@@ -71,19 +94,27 @@ function rainRoof193(draw,eave,ridge) {
     draw.box('downpipe-'+index,[rainDownpipe193.width,rainDownpipe193.depth,top+.47],[x,y,(top-.47)/2],'pipe');
     draw.box('cleanout-'+index,[.12,.13,.18],[x,y,.20],'lip',1,4);
   }
-  // Both valleys conduct runoff into the inside corners of the T-shaped eaves.
-  for(const [index,y] of [4.21,12.71].entries())draw.pipe('valley-'+index,[4.25,8.46,ridge],[8.5,y,eave],.041,'lip');
+  for(const [i,points] of [runs[4][1],runs[6][1]].entries()){
+    const [outlet,corner]=points;
+    const cornerZ=z+rainGutter193.slope*Math.hypot(outlet[0]-corner[0],outlet[1]-corner[1]);
+    const drip=[8.37,i?12.58:4.34,eave+.13*(ridge-eave)/4.25];
+    draw.pipe('valley-'+i,[4.25,8.46,ridge],drip,.041,'lip');
+    draw.pipe('corner-inflow-'+i,drip,[...corner,cornerZ],.021,'gutter');
+  }
 }
 
 function rainCollectors193(draw) {
   const [gf,gr,wf,wr]=rainOutlets193;
-  const westTee=[-1.48,gr[1],-.72],eastTee=[15.36,13.55,-.72],filter=rainFilter193;
-  draw.route('ground-front-west',[[...gf,-.47],[-1.48,gf[1],-.49],westTee]);
-  draw.route('ground-rear-west',[[...gr,-.47],[gr[0],gr[1],-.69],westTee]);
-  draw.route('ground-west-trunk',[westTee,[-1.48,19.87,-1.085],filter]);
-  draw.route('ground-front-east',[[...wf,-.47],[15.36,3.80,-.50],eastTee]);
-  draw.route('ground-rear-east',[[...wr,-.47],[9.48,13.55,-.60],eastTee]);
-  draw.route('ground-east-trunk',[eastTee,[15.36,19.66,-.83],[14.68,20.34,-.85],[.10,20.34,-1.08],filter]);
+  const westTee=[-.85,gr[1],-.67],eastTee=[15.85,13.55,-.97],filter=rainFilter193;
+  draw.route('ground-front-west',[[...gf,-.47],[-.85,gf[1],-.49],westTee]);
+  draw.route('ground-rear-west',[[...gr,-.47],[gr[0],gr[1],-.65],westTee]);
+  draw.route('ground-west-trunk',[westTee,[-.85,19.85,-.71],[.03,20.73,-.725],
+    [15.15,20.73,-.885],[15.85,20.03,-.896],eastTee]);
+  draw.route('ground-rear-east',[[...wr,-.47],[9.18,13.55,-.50],[15.72,13.55,-.58],
+    [15.72,13.55,-.96],eastTee]);
+  draw.route('ground-east-trunk',[eastTee,[15.85,5.10,-1.065],filter]);
+  draw.route('ground-front-east',[[...wf,-.47],[14.65,3.82,-.49],[16.28,3.82,-.515],
+    [16.28,3.82,-1.09],filter]);
   draw.chamber('leaf-filter',filter[0],filter[1],-1.23,.23);
   draw.route('filtered-inlet',[filter,[rainTank193.center[0],rainTank193.center[1]-rainTank193.outside[1]/2,-1.13]]);
 }
@@ -93,23 +124,97 @@ function rainStorage193(THREE,draw) {
   const depth=usableM3/((w-2*wall)*(d-2*wall)),bottom=overflowZ-depth,top=-.70;
   draw.box('tank-shell',[w,d,top-bottom+wall],[x,y,(top+bottom-wall)/2],'body',.38,0);
   draw.mesh('tank-water',new THREE.PlaneGeometry(w-2*wall,d-2*wall),[x,y,overflowZ],'water',.63,1);
-  draw.chamber('tank-inspection',x+.45,y,top,.30);
+  draw.chamber('tank-inspection',x-.40,y,top,.30);
   const field=rainField193;
-  const firstX=field.center[0]-(field.columns-1)*field.unit/2;
-  const nearY=field.center[1]-field.rows*field.unit/2;
-  const fieldInZ=-1.37;
-  draw.route('screened-overflow',[[x,y+d/2,overflowZ],[x,24.55,-1.23],[.40,26,-1.265],
-    [6.95,26,-1.35],[firstX-field.unit/2+.04,field.center[1],fieldInZ]]);
-  for(let col=0;col<field.columns;col++)for(let row=0;row<field.rows;row++){
-    const cx=firstX+col*field.unit,cy=nearY+(row+.5)*field.unit,cz=fieldInZ;
-    const size=field.unit-.014;
-    draw.box('crate-'+col+'-'+row,[size,size,field.height],[cx,cy,cz],'body',.66,1);
+  const fieldInZ=field.centerZ,[near]=field.strips;
+  const firstX=near.x+field.unit/2,firstY=near.y+field.unit/2;
+  draw.route('screened-overflow',[[x,y+d/2,overflowZ],[x,14.52,-1.30],
+    [firstX,15.12,-1.32],[firstX,near.y+.20,fieldInZ]]);
+  for(const [strip,{x,y,columns,rows}] of field.strips.entries())
+  for(let col=0;col<columns;col++)for(let row=0;row<rows;row++){
+    const cx=x+(col+.5)*field.unit,cy=y+(row+.5)*field.unit,cz=fieldInZ;
+    const size=field.unit;
+    draw.box('crate-'+strip+'-'+col+'-'+row,[size,size,field.height],[cx,cy,cz],'body',.66,1);
     for(const offset of [-.24,0,.24]){
       draw.box('crate-rib',[.022,size,.035],[cx+offset,cy,cz+field.height/2],'grid',1,3);
       draw.box('crate-rib',[size,.022,.035],[cx,cy+offset,cz+field.height/2],'grid',1,3);
     }
   }
-  draw.chamber('field-inspection',firstX,nearY+(field.rows-.5)*field.unit,fieldInZ,.11);
+  const cameraZ=fieldInZ-field.height/2+.12,ventZ=fieldInZ+field.height/2-.10;
+  draw.pipe('field-inspection-spur',[...fieldInspection193,cameraZ],[firstX,firstY,cameraZ],.10);
+  draw.chamber('field-inspection',...fieldInspection193,cameraZ,.11);
+  draw.pipe('field-air-branch',[firstX,fieldVent193[1],ventZ],[...fieldVent193,ventZ],.055);
+  draw.pipe('field-air-riser',[...fieldVent193,ventZ],[...fieldVent193,.22],.055);
+}
+
+// Five slots include both legs of each valley corner; dimensions are in local Icon plan metres.
+function rainEaveSlots193() {
+  return [[-.002,-.002,.130,18.132],[8.37,-.002,8.502,4.34],[8.37,4.208,14.642,4.34],
+    [8.37,12.58,8.502,18.132],[8.37,12.58,14.642,12.712]];
+}
+
+export function rainRoofCuts193(metadata,project=iconPlanPoint) {
+  return rainEaveSlots193().map(([l,f,r,b])=>{
+    const ring=[[l,f],[l,b],[r,b],[r,f]].map(([x,y])=>project(metadata,x,y,0).slice(0,2));
+    return {parcel:'193',ring};
+  });
+}
+
+function rainSubtractSlot(face,[l,f,r,b,low,high]) {
+  const planes=[[2,low,1],[2,high,-1],[0,l,1],[0,r,-1],[1,f,1],[1,b,-1]];
+  if(planes.some(([axis,limit,sign])=>face.every(p=>(p[axis]-limit)*sign<=0)))return [face];
+  const kept=[];
+  let inside=face;
+  for(const [axis,limit,sign] of planes){
+    const outside=[],next=[];
+    for(let i=0;i<inside.length;i++){
+      const p=inside[i],q=inside[(i+1)%inside.length],a=(p[axis]-limit)*sign,c=(q[axis]-limit)*sign;
+      (a>=0?next:outside).push(p);
+      if((a<0)!==(c<0)){
+        const cut=p.map((v,k)=>v+(q[k]-v)*a/(a-c));
+        next.push(cut);outside.push(cut);
+      }
+    }
+    if(outside.length>=3)kept.push(outside);
+    inside=next;
+    if(inside.length<3)break;
+  }
+  return kept;
+}
+
+export function recessRainWallHeads193(THREE,group,eave) {
+  const eaves=rainEaveSlots193().map(box=>[...box,eave-.14,eave+.3]);
+  const openings=new Map(['upper-main-side','upper-garage-side','upper-terrace-side','upper-front-wing',
+    'upper-rear-wing','front-gable','garden-gable','wing-gable'].map(id=>[id,eaves]));
+  for(const [i,[x,y]] of rainOutlets193.entries()){
+    const id=['facade-main-side','facade-main-side','facade-front-wing','facade-wing-rear'][i];
+    if(!openings.has(id))openings.set(id,[]);
+    const slot=i<2?[-.01,y-.073,.16,y+.073]:[x-.073,y-.13,x+.073,y+.13];
+    openings.get(id).push([...slot,.106,.294]);
+  }
+  for(const [name,slots] of openings){
+    const mesh=group.getObjectByName(name),old=mesh.geometry,geometry=new THREE.BufferGeometry();
+    const attributes=Object.entries(old.attributes).filter(([key])=>key!=='normal');
+    const output=attributes.map(()=>[]);
+    for(const {start,count,materialIndex} of old.groups){
+      const at=output[0].length/3;
+      for(let i=start;i<start+count;i+=3){
+        const triangle=[0,1,2].map(j=>{
+          const n=old.index?old.index.getX(i+j):i+j;
+          return attributes.flatMap(([,attr])=>Array.from({length:attr.itemSize},(_,k)=>attr.getComponent(n,k)));
+        });
+        let faces=[triangle];
+        for(const slot of slots)faces=faces.flatMap(face=>rainSubtractSlot(face,slot));
+        for(const face of faces)for(let j=1;j<face.length-1;j++)for(const p of [face[0],face[j],face[j+1]]){
+          let offset=0;
+          attributes.forEach(([,attr],k)=>{output[k].push(...p.slice(offset,offset+attr.itemSize));offset+=attr.itemSize;});
+        }
+      }
+      geometry.addGroup(at,output[0].length/3-at,materialIndex);
+    }
+    attributes.forEach(([key,attr],i)=>geometry.setAttribute(key,new THREE.Float32BufferAttribute(output[i],attr.itemSize)));
+    geometry.computeVertexNormals();mesh.geometry=geometry;old.dispose();
+  }
 }
 
 function rainChannelGeometry(THREE,points,side,eave) {
@@ -126,25 +231,26 @@ function rainChannelGeometry(THREE,points,side,eave) {
   });
   // Leave a 90 mm opening in the sole directly above each concealed offset.
   const [low,following]=sections,f=.045/lengths[1];
-  sections.splice(1,0,low.map((v,i)=>v+(following[i]-v)*f));
+  sections.splice(1,0,[low[0]+(following[0]-low[0])*f,low[1]+(following[1]-low[1])*f,low[2],low[3],.045]);
   function profile([x,y,nx,ny,run]){
     const floor=eave-rainGutter193.outletDepth+run*rainGutter193.slope;
-    // The inner fold tucks under the roof covering. The front hem and sole stay outside the wall.
-    return [[-.072,floor+.085],[-.065,floor+.085],[-.065,floor],
-      [.052,floor],[.060,eave-.006],[.079,eave+.008]].map(([offset,z])=>[x+nx*offset,y+ny*offset,z]);
+    // The front apron meets the cut wall below; the rear fold follows the slope under the covering.
+    return [[-.072,eave-.142],[-.072,eave+.065],[-.065,eave+.065],[-.065,floor],
+      [.052,floor],[.058,eave+.129],[.077,eave+.144]].map(([offset,z])=>[x+nx*offset,y+ny*offset,z]);
   }
   const rings=sections.map(profile);
   for(let i=1;i<rings.length;i++){
     const a=rings[i-1],b=rings[i];
     for(let j=1;j<a.length;j++){
-      if(i===1&&j===3)continue;
+      if(i===1&&j===4)continue;
       positions.push(...a[j-1],...b[j-1],...b[j],...a[j-1],...b[j],...a[j]);
     }
   }
   // Gable ends have stop ends. The two west runs meet at a shared high point.
-  if(!(points.at(-1)[0]===-.06&&points.at(-1)[1]===8.60)){
-    const [,lip,a,b,back]=rings.at(-1),backLip=[back[0],back[1],lip[2]];
-    positions.push(...a,...b,...backLip,...a,...backLip,...lip);
+  if(!(points.at(-1)[0]===.072&&points.at(-1)[1]===8.60)){
+    const [bottom,hem,,,,back,fold]=rings.at(-1);
+    const inside=[fold[0],fold[1],bottom[2]];
+    positions.push(...bottom,...hem,...back,...bottom,...back,...fold,...bottom,...fold,...inside);
   }
   const geometry=new THREE.BufferGeometry();
   geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
@@ -153,11 +259,11 @@ function rainChannelGeometry(THREE,points,side,eave) {
 }
 
 function rainOutletSocket(THREE,index,eave) {
-  const [x,y]=rainIntake193[index],[tx,ty]=rainOutlets193[index],distance=Math.hypot(tx-x,ty-y);
-  const nx=(tx-x)/distance,ny=(ty-y)/distance,positions=[];
+  const [x,y]=rainIntake193[index],[tx,ty]=rainOutlets193[index];
+  const [nx,ny]=rainInward193[index],positions=[];
   const z=eave-rainGutter193.outletDepth;
   const inlet=[[-.065,-.045],[.052,-.045],[.052,.045],[-.065,.045]]
-    .map(([n,t])=>[x+nx*n-ny*t,y+ny*n+nx*t,z]);
+    .map(([n,t])=>[x+nx*n-ny*t,y+ny*n+nx*t,z+Math.abs(t)*rainGutter193.slope]);
   const socket=inlet.map(([ix,iy])=>[
     tx+Math.sign(ix-x)*rainDownpipe193.width/2,
     ty+Math.sign(iy-y)*rainDownpipe193.depth/2,
@@ -173,24 +279,82 @@ function rainOutletSocket(THREE,index,eave) {
   return geometry;
 }
 
+function rainMulch193(THREE,group,plantingMaterial) {
+  const outlines=[
+    [[15.99,3.52],[16.98,3.53],[17.43,4.88],[18.10,4.91],[18.12,8.32],[17.12,8.35],
+      [16.46,7.57],[16.03,7.17],[15.98,6.65],[16.14,5.52],[16.17,4.86],[15.99,4.30]],
+    [[16.97,15.47],[17.75,15.48],[18.03,15.73],[18.01,16.39],[17.77,16.54],[17.20,16.57],
+      [16.95,16.32],[16.90,15.93]]
+  ];
+  const material=plantingMaterial??new THREE.MeshStandardMaterial({color:'#725d44',roughness:.99});
+  // The scanned planting surface repeats every 1.30 m in site coordinates.
+  const tileMetres=1.30;
+  for(const [index,outline] of outlines.entries()){
+    const shape=new THREE.Shape(),last=outline.at(-1);
+    shape.moveTo((outline[0][0]+last[0])/2,(outline[0][1]+last[1])/2);
+    outline.forEach(([x,y],i)=>{
+      const [nx,ny]=outline[(i+1)%outline.length];
+      shape.quadraticCurveTo(x,y,(x+nx)/2,(y+ny)/2);
+    });
+    const geometry=new THREE.ShapeGeometry(shape,8),position=geometry.getAttribute('position'),uv=geometry.getAttribute('uv');
+    const point=new THREE.Vector3();
+    for(let i=0;i<position.count;i++){
+      point.fromBufferAttribute(position,i).applyMatrix4(group.matrix);
+      uv.setXY(i,point.x/tileMetres,point.y/tileMetres);
+    }
+    const mulch=new THREE.Mesh(geometry,material);
+    mulch.name='rain-mulch-'+index;mulch.position.z=.084;mulch.receiveShadow=true;group.add(mulch);
+  }
+}
+
 function rainSurfaceCovers(THREE,group) {
   const frame=new THREE.MeshStandardMaterial({color:0x3e4741,roughness:.86});
   const lid=new THREE.MeshStandardMaterial({color:0x59605a,roughness:.88});
+  const [vx,vy]=fieldVent193;
+  for(const [name,r,h,z] of [['neck',.055,.19,.145],['hood',.078,.024,.264]]){
+    const vent=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,20,1,name==='neck'),frame);
+    vent.rotation.x=Math.PI/2;vent.position.set(vx,vy,z);vent.name='rain-field-vent-'+name;group.add(vent);
+  }
+  for(let i=0;i<3;i++){
+    const a=i*2*Math.PI/3,post=new THREE.Mesh(new THREE.BoxGeometry(.008,.008,.025),frame);
+    post.position.set(vx+.05*Math.cos(a),vy+.05*Math.sin(a),.244);post.name='rain-field-vent-post';group.add(post);
+  }
   for(const [id,x,y,radius] of rainCovers193){
     const collar=new THREE.Mesh(new THREE.CylinderGeometry(radius+.025,radius+.025,.065,40),frame);
     collar.name='rain-frame-'+id;
-    collar.rotation.x=Math.PI/2;collar.position.set(x,y,.0475);group.add(collar);
+    collar.rotation.x=Math.PI/2;collar.position.set(x,y,.0605);group.add(collar);
     const cover=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,.016,40),lid);
     cover.name='rain-cover-'+id;
-    cover.rotation.x=Math.PI/2;cover.position.set(x,y,.079);cover.receiveShadow=true;group.add(cover);
+    cover.rotation.x=Math.PI/2;cover.position.set(x,y,.092);cover.receiveShadow=true;group.add(cover);
     for(const offset of [-.38,.38]){
       const recess=new THREE.Mesh(new THREE.BoxGeometry(radius*.17,radius*.34,.003),frame);
-      recess.name='rain-cover-keyhole';recess.position.set(x+offset*radius,y,.087);group.add(recess);
+      recess.name='rain-cover-keyhole';recess.position.set(x+offset*radius,y,.100);group.add(recess);
     }
   }
 }
 
-export function createRainSurface(THREE,house,interior) {
+function rainFacadeCleanouts(THREE,group) {
+  const seal=new THREE.MeshStandardMaterial({color:0x1d2422,roughness:.86});
+  const panel=new THREE.MeshStandardMaterial({color:0x343b35,roughness:.81});
+  for(const [i,[x,y]] of rainOutlets193.entries()){
+    const [nx,ny]=rainInward193[i],wall=nx?[0,y]:[x,ny>0?4.21:12.71];
+    const part=(id,w,d,h,offset,z,material,along=0)=>{
+      const item=new THREE.Mesh(new THREE.BoxGeometry(w,d,h),material);
+      item.name='rain-service-hatch-'+id+'-'+i;
+      item.rotation.z=Math.atan2(-nx,ny);
+      item.position.set(wall[0]-nx*offset+ny*along,wall[1]-ny*offset-nx*along,z);group.add(item);
+    };
+    for(const edge of [-1,1]){
+      part('jamb',.007,.018,.205,-.006,.20,seal,edge*.0765);
+      part('frame',.146,.018,.0085,-.006,.20+edge*.09825,seal);
+    }
+    part('plug',.105,.018,.145,-.047,.20,panel);
+    part('door',.153,.004,.198,.005,.20,panel);
+    part('turn',.020,.002,.006,.008,.265,seal);
+  }
+}
+
+export function createRainSurface(THREE,house,interior,plantingMaterial) {
   const group=new THREE.Group();
   group.name='rain-surface-193';
   group.matrixAutoUpdate=false;group.matrix.copy(interior.group.matrix);
@@ -205,6 +369,8 @@ export function createRainSurface(THREE,house,interior) {
     const socket=new THREE.Mesh(rainOutletSocket(THREE,i,house.metadata.dimensions.eave),metal);
     socket.name='rain-outlet-socket-'+i;socket.receiveShadow=true;group.add(socket);
   }
+  rainFacadeCleanouts(THREE,group);
+  rainMulch193(THREE,group,plantingMaterial);
   rainSurfaceCovers(THREE,group);
   return group;
 }
@@ -219,7 +385,7 @@ export function createRainServices(THREE,house,interior,data) {
   },0))/2;
   group.userData={kind:'rain-services',parcel:'193',projectedRoofM2:area,assumedStormMm:30,
     runoffCoefficient:.90,stormVolumeM3:area*.030*.90,tankUsableM3:rainTank193.usableM3,
-    fieldNetM3:rainField193.columns*rainField193.rows*rainField193.unitNetM3};
+    fieldNetM3:rainField193.strips.reduce((sum,s)=>sum+s.columns*s.rows,0)*rainField193.unitNetM3};
   const draw=rainDrawing(THREE,group),{eave,ridge}=house.metadata.dimensions;
   rainRoof193(draw,eave,ridge);rainCollectors193(draw);rainStorage193(THREE,draw);
   return group;

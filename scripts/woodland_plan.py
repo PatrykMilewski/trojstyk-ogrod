@@ -3,6 +3,7 @@ import argparse
 import json
 import math
 import re
+import subprocess
 from pathlib import Path
 
 from shapely.affinity import rotate, translate
@@ -25,13 +26,29 @@ def sources(model):
         assignment = re.search(r"const\s*\[\s*source\s*,\s*garden\s*,\s*house\s*,\s*neighbors\s*\]\s*=\s*(?=\[)", text)
         if not assignment:
             raise ValueError(f"No embedded metric model in {model}")
-        (source, garden, _, site), _ = json.JSONDecoder().raw_decode(text, assignment.end())
+        (source, garden, house, site), _ = json.JSONDecoder().raw_decode(text, assignment.end())
     else:
-        source, garden, site = (
+        source, garden, house, site = (
             json.loads((ROOT.parent / path).read_text())
-            for path in ("results.json", "icon3d-garden.json", "neighbors/site-three.json")
+            for path in ("results.json", "icon3d-garden.json", "icon3d-house.json", "neighbors/site-three.json")
         )
-    return next(v for v in source["variants"] if v["id"] == "aktualny"), garden, site
+    return next(v for v in source["variants"] if v["id"] == "aktualny"), garden, site, house
+
+
+def service_access(house):
+    repository = ROOT.parent if (ROOT.parent / "src/model").is_dir() else ROOT.parent / "trojstyk-pages-publish"
+    script = """
+import {wastewaterServiceAccess193} from './src/model/wastewater.js';
+import {rainServiceAccess193} from './src/model/rain-services.js';
+import {iconPlanPoint} from './src/model/roof-windows.js';
+import {readFileSync} from 'node:fs';
+const house=JSON.parse(readFileSync(0,'utf8'));
+console.log(JSON.stringify([...wastewaterServiceAccess193(),...rainServiceAccess193(house,iconPlanPoint)]));
+"""
+    result = subprocess.run(["node", "--no-warnings", "--input-type=module", "-e", script],
+                            cwd=repository, input=json.dumps({"metadata": house["metadata"]}),
+                            text=True, capture_output=True, check=True)
+    return unary_union([surface(item) for item in json.loads(result.stdout)])
 
 
 def surface(item):
@@ -130,13 +147,15 @@ def new_trees(beds, parcel, obstacles, existing):
     return result
 
 
-def generate(plot, garden, site):
+def generate(plot, garden, site, house):
     obstacles = occupied(plot, garden, site)
+    service = service_access(house)
     existing = garden["trees"] + site["gardenAdditions"]["trees"]
     result = []
     for parcel_id in EDGE_WEIGHTS:
         parcel = shape(site["parcels"][parcel_id])
-        free = parcel.buffer(-.4, join_style="mitre").difference(obstacles)
+        excluded = obstacles.union(service) if parcel_id == "193" else obstacles
+        free = parcel.buffer(-.4, join_style="mitre").difference(excluded)
         beds = design(parcel_id, parcel, free, existing)
         parts = sorted(polygon_parts(beds), key=lambda p: -p.area)
         polygons = [dict(ring=list(p.exterior.coords), holes=[list(h.coords) for h in p.interiors]) for p in parts]
@@ -147,7 +166,7 @@ def generate(plot, garden, site):
         assert .305 <= drawn.area / parcel.area <= .31
         result.append(dict(id=parcel_id, boundary=list(parcel.exterior.coords), beds=polygons,
                            areaM2=parcel.area, plantedAreaM2=drawn.area,
-                           trees=new_trees(drawn, parcel, obstacles, existing)))
+                           trees=new_trees(drawn, parcel, excluded, existing)))
     return dict(parcels=result)
 
 

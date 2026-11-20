@@ -8,7 +8,7 @@ const html=await read('../trzy-domy-3d/index.html');
 const imports=JSON.parse(html.split('<script type="importmap">')[1].split('</script>')[0]).imports;
 const THREE=await load(Buffer.from(imports.three.split(',')[1],'base64').toString().replaceAll("'three/core'","'"+imports['three/core']+"'"));
 const data=JSON.parse(await read('../trzy-domy-3d/interior-data.json'));
-const {createIndoorServices}=await load(await read('../src/model/indoor-services.js'));
+const {createIndoorServices,createEthernetOutlets}=await load(await read('../src/model/indoor-services.js'));
 const model=createIndoorServices(THREE,null,data);
 const at=name=>model.getObjectByName(name);
 const nameOfFloor=item=>item.room.startsWith('1.')?'upper':'ground';
@@ -16,7 +16,7 @@ const inside=(x,y,rect)=>x>=rect[0]&&x<=rect[2]&&y>=rect[1]&&y<=rect[3];
 
 test('services overlay starts hidden and exposes separate storeys and noninteractive systems',()=>{
  assert.equal(model.visible,false);
- assert.deepEqual(model.children.map(o=>o.name),['underfloor','heat-pump','water','sewer']);
+ assert.deepEqual(model.children.map(o=>o.name),['underfloor','heat-pump','water','sewer','power','ethernet']);
  for(const system of model.children)assert.deepEqual(system.children.map(o=>o.userData.level),['ground','upper']);
  model.traverse(o=>{
   if(!o.geometry)return;
@@ -285,4 +285,27 @@ test('all foul-water stacks vent through a common open outlet above the actual r
  const clearance=top[2]-Math.max(...hits);
  assert(clearance>.55&&clearance<.70,'roof clearance '+clearance);
  assert.deepEqual(at('soil-vent-open-outlet').userData.to,top);
+});
+
+
+test('seven independent Ethernet connections terminate at their assigned wall outlets or sealed roof provision',()=>{
+ const outlets=createEthernetOutlets(THREE,data);
+ const cables=at('ethernet').children.flatMap(o=>o.children).filter(o=>o.name.endsWith('-kabel'));
+ assert.deepEqual(cables.map(o=>o.userData.port),[1,2,3,4,5,6,7]);
+ assert.deepEqual(cables.map(o=>o.userData.room),['0.4','0.8','0.9','1.1','1.3','1.8','dach']);
+ for(const cable of cables){
+  const {outlet:id,port,from,to}=cable.userData;
+  const patch=at('lan-'+id+'-patch'),riser=at('lan-'+id+'-pion');
+  assert.deepEqual(patch.userData.from,[5.855+.104+(port-1)*.037,7.175-.05,1.36+.211]);
+  if(riser){
+   assert.deepEqual(riser.userData.from,patch.userData.to);
+   assert.deepEqual(riser.userData.to,from);
+   assert(Math.abs(from[1]-6.66)<.13,'riser inside technical-room partition');
+  }else assert.deepEqual(from,patch.userData.to);
+  const socket=outlets.getObjectByName(port===7?'ethernet-roof-sealed-box':'rj45-'+id);
+  assert.deepEqual(to,socket.position.toArray());
+ }
+ const play=outlets.getObjectByName('rj45-bawialnia').position;
+ assert(!inside(play.x,play.y,data.furniture.find(f=>f.id==='guest-wardrobe').box));
+ assert(outlets.getObjectByName('rj45-pokoj-1').position.x-7.37>.081,'separate data and power faceplates');
 });
