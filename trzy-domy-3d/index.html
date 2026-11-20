@@ -1459,7 +1459,7 @@ function plantInspectionBorders(beds,serviceAccess,surfaceClearance,placements) 
 
 function addLidPlanters(THREE,group,plants,planters) {
   if(!planters.length)return;
-  const potHeight=.34,exposedRim=.33,mulchTop=.084;
+  const potHeight=.30,exposedRim=.085,mulchTop=.084;
   const pot=new THREE.CylinderGeometry(.174,.145,potHeight,16);
   pot.rotateX(Math.PI/2);
   const containers=new THREE.InstancedMesh(pot,new THREE.MeshStandardMaterial({color:'#544c3e',roughness:.98}),planters.length);

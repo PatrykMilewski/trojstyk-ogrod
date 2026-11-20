@@ -1789,7 +1789,7 @@
     "proceduralCodeSha256": "ce18885d610536d274aceca6edfa3c734c9f7e8b2a581fde682fa2a4665a8149",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "d145ef3d51bd9a06a07328a2f09708d9ed55712449a7a86612779fc827b78ad8",
-    "runtimeSha256": "30903598344585107cf9645c8e46757e36b9ea6a82731ff017312e9daaa984db"
+    "runtimeSha256": "8abc38ff188e4dd87851c766286e1e10acc63ac3c177e10a59e46226dfc0a239"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
