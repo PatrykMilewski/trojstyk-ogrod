@@ -1084,7 +1084,12 @@
       "facing": "+y",
       "source": "living-render",
       "height": 2.8,
-      "passageWall": "kitchen-back"
+      "passageWall": "kitchen-back",
+      "robotCabinet": {
+        "slotWidthM": 0.48,
+        "slotHeightM": 0.135,
+        "shelfHeightsM": [0.94, 1.33, 1.72, 2.10]
+      }
     },
     {
       "id": "kitchen-back",
@@ -1138,7 +1143,7 @@
       "box": [
         2.1,
         10.35,
-        6.45,
+        5.923,
         11.4
       ],
       "facing": "+y",

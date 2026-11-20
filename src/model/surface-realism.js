@@ -380,7 +380,7 @@ async function loadSurfaceScans(THREE, scans, anisotropy) {
       texture.anisotropy = anisotropy;
     }
     map.colorSpace = THREE.SRGBColorSpace;
-    if (type === 'kitchenWorktopOak') map.wrapT = THREE.MirroredRepeatWrapping;
+    if (type === 'kitchenWorktopSmokedWalnut') map.wrapS = map.wrapT = THREE.MirroredRepeatWrapping;
     textures.set(type, bumpMap ? {map, bumpMap} : {map});
   }));
   return textures;
@@ -392,14 +392,14 @@ export async function applyRealisticSurfaces({THREE, scene, mats, renderer, scan
   const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   const textures = await loadSurfaceScans(THREE, scans, anisotropy);
   const hasVinylTexture = textures.has('virginOakVinyl');
-  const worktopScan = textures.get('kitchenWorktopOak')?.map;
+  const worktopScan = textures.get('kitchenWorktopSmokedWalnut')?.map;
   scene.traverse(object => {
     if (!object.isMesh || !object.geometry?.getAttribute('position')) return;
     if (object.isInstancedMesh && object.name.endsWith('-trunks') && textures.has('bark')) {
       applyBarkScan(object.material, textures.get('bark'));
       return;
     }
-    if (object.material.userData?.surfaceProfile === 'kitchenWorktopOak') {
+    if (object.material.userData?.surfaceProfile === 'kitchenWorktopSmokedWalnut') {
       if (worktopScan && object.material.map !== worktopScan) {
         object.material.map = worktopScan;
         object.material.color.setHex(0xffffff);

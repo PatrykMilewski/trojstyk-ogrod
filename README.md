@@ -179,3 +179,9 @@ Niebo, tarcza słońca i barwa światła są widoczne od pierwszego wyświetleni
 ## Szybki spacer 2026-11-17.9
 
 Przycisk „Spacer” na głównym pasku, obok „Widoki i sterowanie”, przełącza ten sam tryb chodzenia co „Spacer · 1,7 m” w menu. Oba przyciski współdzielą stan; Esc, reset widoku i wejścia do wnętrz także go aktualizują.
+
+## Kuchnia /193 · 2026-11-20.1
+
+Blat zlewozmywaka i wyspa w kuchni /193 mają matowy laminat w kolorze ciemnego orzecha. Tekstura pochodzi z dostarczonego zdjęcia dekoru. Słoje biegną wzdłuż blatu i schodzą po obu bocznych płytach wyspy. Cienka brązowa krawędź odwzorowuje obrzeże widoczne na zdjęciu próbki. Wyspa ma 382,3 × 105 cm.
+
+Wysoki front tuż obok przejścia do spiżarni otwiera się po kliknięciu lub dotknięciu. W środku są stacja robota i półki. Podcięcie frontu ma 48 × 13,5 cm. Apple TV jest w uchwycie przy projektorze.

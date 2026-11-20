@@ -7,8 +7,8 @@ export function addIconInterior(options) {
  iconInteriorCurtains(context);
  iconInteriorStairs(context);
  iconInteriorOfficeBacking(context);
- const serviceBay=iconLandingServiceBay(context);
  iconInteriorFurnishings(context);
+ const robotCabinet=iconKitchenRobotControl(context);
  iconPlantOutdoorUnit(context);
  iconRecliningAdult(context);
  options.fitGarage?.(context);
@@ -25,7 +25,7 @@ export function addIconInterior(options) {
  const exteriorLights=iconExteriorLighting(context);
  const updateHallDoors=iconHallDoorMotion(context);
  const {group,navigation,data,world} = context;
- return {group,navigation,rooms:data.rooms,metadata:data.metadata,localToWorld:world,updateHallDoors,projector,appliances,officeWindow,exteriorLights,serviceBay};
+ return {group,navigation,rooms:data.rooms,metadata:data.metadata,localToWorld:world,updateHallDoors,projector,appliances,officeWindow,exteriorLights,robotCabinet};
 }
 
 const iconInteriorContains = (p,r)=>{let yes=false;for(let i=0,j=r.length-1;i<r.length;j=i++){const a=r[i],b=r[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;};
@@ -872,74 +872,6 @@ function iconCurvDock(context,frame) {
  frame.part('tank-lid-pull',[-.029,.405,.029,.411],.429,.002,tray);
 }
 
-function iconLandingServiceDoor(context,{front,left,right,top,slot,paint,cover}) {
- const {THREE,group,world,obstacle,navigation}=context,depth=.018,gap=.002;
- const pivot=new THREE.Group(),width=right-left-2*gap;
- pivot.name='landing-service-push-door';pivot.position.set(front,left+gap-depth,0);group.add(pivot);
- const outline=new THREE.Shape(),a=slot.left-pivot.position.y,b=slot.right-pivot.position.y;
- const points=[[depth,gap],[a,gap],[a,slot.height],[b,slot.height],[b,gap],[width+depth,gap],[width+depth,top-gap],[depth,top-gap]];
- points.forEach(([y,z],i)=>i?outline.lineTo(y,z):outline.moveTo(y,z));outline.closePath();
- const geometry=new THREE.ExtrudeGeometry(outline,{depth,bevelEnabled:false});
- geometry.applyMatrix4(new THREE.Matrix4().makeBasis(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,1),new THREE.Vector3(1,0,0)));
- const door=new THREE.Mesh(geometry,paint);door.name='landing-service-flush-front';door.castShadow=door.receiveShadow=true;pivot.add(door);
- obstacle(pivot.name,[front,left+gap,front+depth,right-gap],0,top,cover);
- const ring=navigation.obstacles.at(-1).ring, corners=[[0,depth],[depth,depth],[depth,width+depth],[0,width+depth]];
- const pick=iconVisiblePick(context,[pivot]), eye=new THREE.Vector3();
- let open=false;
- function toggleAt(ndc,camera){
-  if(!pick(ndc,camera))return false;
-  if(camera.isPerspectiveCamera){
-   group.worldToLocal(camera.getWorldPosition(eye));eye.sub(pivot.position);
-   // Keep a standing viewer out of the swept quadrant.
-   if(eye.z<top+1.7&&eye.z>0&&eye.x<.23&&eye.y>-.23&&Math.hypot(eye.x,eye.y)<width+depth+.23)return false;
-  }
-  open=!open;pivot.rotation.z=open?Math.PI/2:0;
-  const c=Math.cos(pivot.rotation.z),s=Math.sin(pivot.rotation.z);
-  for(const [i,[x,y]] of corners.entries()){
-   const [wx,wy]=world([front+x*c-y*s,pivot.position.y+x*s+y*c,0]);ring[i][0]=wx;ring[i][1]=wy;
-  }
-  pivot.updateWorldMatrix(true,true);
-  return true;
- }
- return {toggleAt,get isOpen(){return open;}};
-}
-
-function iconLandingServiceBay(context) {
- const {data,box,obstacle,navigation,group,mats}=context,stairs=data.stairs;
- const t=.018,backing=stairs.box[0]+stairs.width;
- const rearWall=data.facades.find(f=>f.id==='facade-wing-rear'),right=rearWall.a[1]-iconGroundFacadeDepth(rearWall);
- const left=right-.510,center=(left+right)/2,front=backing-.560,back=backing-t,dockBack=back-.056,top=.920-t;
- const slot={left:center-.20,right:center+.20,height:.116};
- const cover={ramp:navigation.ramps.find(r=>r.id==='stair-lower'),landing:navigation.floors.find(f=>f.id==='stair-landing')};
- const first=group.children.length,paint=mats.wall;
- const joinery=(id,bounds,z,height,finish=paint)=>{
-  box('landing-service-'+id,bounds,z,height,finish);obstacle('landing-service-'+id,bounds,z,z+height,cover);
- };
- joinery('back',[back,left+t,backing,right-t],0,top);
- joinery('cheek-left',[front,left,backing,left+t],0,top);
- joinery('cheek-right',[front,right-t,backing,right],0,top);
- joinery('cap',[front,left,backing,right],top,t);
- box('landing-service-push-latch',[front+t+.001,right-t-.005,front+.070,right-t+.010],top-.04,.02,mats.dark);
- const frameAt=(id,x)=>iconInteriorFurnitureFrame(context,{id,room:'0.4',facing:'-x',box:[x-.45,center,x,center+.45]});
- iconCurvDock(context,frameAt('landing-service',dockBack));
- obstacle('landing-service-dock',[dockBack-.45,center-.225,dockBack,center+.225],0,.45,cover);
- const s=iconLivingShapes(context,frameAt('landing-av',back),6),palette=iconLivingPalette(context);
- // Stand the Apple TV on a shallow rear ledge, clear of both tank openings.
- joinery('av-shelf',[back-.050,center-.064,back,center+.064],.456,.012,mats.oak);
- s.cushion('apple-tv-4k',0,.025,.5145,.093,.093,.031,.010,palette.black,-Math.PI/2);
- box('landing-service-av-shelf-lip',[back-.050,center-.064,back-.045,center+.064],.468,.010,mats.oak);
- s.cushion('status-led',-.0466,.028,.502,.001,.002,.001,.0004,mats.lamp);
- s.cushion('cable-grommet',.105,.003,.501,.035,.006,.028,.003,palette.shadow);
- for(const z of [.497,.529])s.tube('rear-lead-'+(z<.51?'power':'hdmi'),
-  [[.046,.025,z],[.068,.025,z],[.088,.021,z],[.105,.004,.501]],.0025,palette.black);
- const outlets=iconLivingShapes(context,frameAt('landing-service',back));
- outlets.cushion('socket',.150,.006,.33,.076,.012,.076,.005,palette.chalk);
- outlets.cushion('plug',.150,.024,.33,.032,.027,.031,.006,palette.black);
- outlets.tube('dock-cord',[[.150,.037,.33],[.150,.043,.285],[.140,.040,.225],[.110,.049,.215],[.090,.077,.215]],.003,palette.black);
- for(const mesh of group.children.slice(first))mesh.userData.furnitureId='landing-service-bay';
- return iconLandingServiceDoor(context,{front,left:left+t,right:right-t,top,slot,paint,cover});
-}
-
 function iconOfficeVeneer(context) {
  if(context.officeVeneer)return context.officeVeneer;
  const {THREE,data}=context,swatch=data.officeVeneer;
@@ -1623,8 +1555,18 @@ function iconLongGrainOak(THREE,name,base) {
 
 function iconKitchenFinishes({THREE}) {
  const lacquer=(name,color)=>new THREE.MeshStandardMaterial({name,color,roughness:.60});
- const laminate=new THREE.MeshPhysicalMaterial({name:'Natural oak matte HPL',color:'#b99672',roughness:.89,specularIntensity:.12});
- laminate.userData.surfaceProfile='kitchenWorktopOak';
+ const laminate=new THREE.MeshPhysicalMaterial({name:'Smoked walnut matte HPL',color:'#5c4a3b',roughness:.87,specularIntensity:.14});
+ laminate.userData.surfaceProfile='kitchenWorktopSmokedWalnut';
+ laminate.onBeforeCompile=shader=>{
+  shader.vertexShader='attribute float bandDistance; varying float vBandDistance;\n'+shader.vertexShader
+   .replace('#include <begin_vertex>','#include <begin_vertex>\nvBandDistance=bandDistance;');
+  shader.fragmentShader='varying float vBandDistance;\n'+shader.fragmentShader.replace('#include <map_fragment>',`
+   #include <map_fragment>
+   float bandAA = max(fwidth(vBandDistance), 0.0001);
+   float band = clamp((0.0015 - vBandDistance)/bandAA + 0.5, 0.0, 1.0);
+   diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.090, 0.050, 0.029), band);
+  `);
+ };
  return {
   laminate,
   yellow:lacquer('Matte butter-yellow lacquer','#e5c368'),
@@ -1644,18 +1586,79 @@ function iconKitchenGrip(frame,id,u,face,z,length,vertical,mat,reverse=false) {
  else frame.part(id,[u-length/2,depth[0],u+length/2,depth[1]],z-.005,.005,mat);
 }
 
+function iconKitchenRobotTower(context,frame,k,width,front,head) {
+ const {item,part}=frame,{mats}=context,t=.018,center=width/2;
+ const {slotWidthM,slotHeightM,shelfHeightsM}=item.robotCabinet,shoulder=(width-slotWidthM)/2;
+ part('robot-back',[t,0,width-t,t],0,item.height,mats.oak);
+ for(const [side,l,r] of [['left',0,t],['right',width-t,width]])
+  part('robot-side-'+side,[l,0,r,front-.021],0,item.height,mats.oak);
+ for(const [i,h] of shelfHeightsM.entries())
+  part('robot-shelf-'+i,[t,t,width-t,front-.045],h,t,mats.oak);
+ part('robot-top',[t,t,width-t,front-.021],item.height-t,t,mats.oak);
+ for(const [side,l,r] of [['left',.003,shoulder],['right',width-shoulder,width-.003]])
+  iconKitchenPanel(frame,'robot-slot-'+side,l,r,.002,slotHeightM-.003,front,k.yellow);
+ iconKitchenPanel(frame,'left-front',.003,width-.003,slotHeightM,head-.003,front,k.yellow);
+ iconKitchenGrip(frame,'robot-pull',width-.035,front,1.025,.20,true,k.bronze);
+ const [x,y]=frame.point(center,t+.037);
+ const dockFrame=iconInteriorFurnitureFrame(context,{id:'kitchen-robot',room:item.room,facing:'+y',box:[x,y,x+.45,y+.45]});
+ iconCurvDock(context,dockFrame);
+ const p=iconLivingPalette(context),service=iconLivingShapes(context,frame);
+ service.cushion('robot-socket',center+.150,t+.006,.33,.076,.012,.076,.005,p.chalk);
+ service.cushion('robot-plug',center+.150,t+.024,.33,.032,.027,.031,.006,p.black);
+ service.tube('robot-cord',[[center+.150,t+.037,.33],[center+.150,t+.043,.285],
+  [center+.140,t+.040,.225],[center+.110,t+.049,.215],[center+.090,t+.077,.215]],.003,p.black);
+ const [x0,y0]=item.box,inner=front-.021;
+ context.obstacle('robot-tower-back',[x0,y0,x0+width,y0+t],0,item.height);
+ context.obstacle('robot-tower-left',[x0,y0,x0+t,y0+inner],0,item.height);
+ context.obstacle('robot-tower-right',[x0+width-t,y0,x0+width,y0+inner],0,item.height);
+ context.obstacle('robot-tower-dock',[x-.225,y,x+.225,y+.45],0,.45);
+ context.obstacle('robot-tower-shelves',[x0+t,y0+t,x0+width-t,y0+inner],shelfHeightsM[0],item.height);
+}
+
+function iconKitchenRobotControl(context) {
+ const {THREE,group,navigation,world,obstacle}=context,door=group.getObjectByName('kitchen-pantry-left-front');
+ if(!group.getObjectByName('kitchen-pantry-robot-pull'))return null;
+ const {width,height:thickness,depth:height}=door.geometry.parameters;
+ const hinge=new THREE.Group(),mount=new THREE.Group();
+ hinge.name='kitchen-robot-cabinet-door';
+ hinge.position.set(door.position.x-width/2,door.position.y+thickness/2,0);
+ mount.position.copy(hinge.position).negate();group.add(hinge);hinge.add(mount);
+ mount.add(door,group.getObjectByName('kitchen-pantry-robot-pull'));
+ const {x,y}=hinge.position,lower=door.position.z-height/2;
+ obstacle(hinge.name,[x,y-thickness,x+width,y],lower,lower+height);
+ const ring=navigation.obstacles.at(-1).ring,eye=new THREE.Vector3(),pick=iconVisiblePick(context,[hinge]);
+ const corners=[[0,-thickness],[width,-thickness],[width,0],[0,0]];
+ let open=false;
+ function toggleAt(ndc,camera){
+  if(!pick(ndc,camera))return false;
+  if(camera.isPerspectiveCamera){
+   group.worldToLocal(camera.getWorldPosition(eye));eye.sub(hinge.position);
+   if(eye.z>0&&eye.z<lower+height+1.7&&eye.x>-.24&&eye.y>-.24&&Math.hypot(eye.x,eye.y)<width+.24)return false;
+  }
+  open=!open;hinge.rotation.z=open?Math.PI/2:0;
+  for(const [i,[u,v]] of corners.entries()){
+   const point=world(open?[x-v,y+u]:[x+u,y+v]);ring[i][0]=point[0];ring[i][1]=point[1];
+  }
+  hinge.updateWorldMatrix(true,true);
+  return true;
+ }
+ return {toggleAt,get isOpen(){return open;}};
+}
+
 function iconKitchenPantry(context,frame,k) {
  const {item,width:w,depth:d,part}=frame,[x0,y0,,y1]=item.box,top=item.height,front=d-.039;
  const wall=context.data.walls.find(wall=>wall.id===item.passageWall);
  const [a,b]=wall.doors[0].map(offset=>wall.a[0]+offset-x0),head=2.1;
- part('left-carcass',[0,0,a,front-.021],.008,top-.008,k.recess);
+ if(item.robotCabinet)iconKitchenRobotTower(context,frame,k,a,front,head);
+ else part('left-carcass',[0,0,a,front-.021],.008,top-.008,k.recess);
  part('right-filler',[b,0,w,front-.021],.008,top-.008,k.recess);
  part('bridge',[a,0,b,front-.021],head,top-head,k.recess);
  for(const [i,l,r] of [[0,0,a],[1,a,b],[2,b,w]]){
   const leaf=i===1,id=leaf?'closed-leaf':i===0?'left-front':'right-front';
-  iconKitchenPanel(frame,id,l+.003,r-.003,.008,head-.003,front,k.yellow);
+  const robot=i===0&&item.robotCabinet;
+  if(!robot)iconKitchenPanel(frame,id,l+.003,r-.003,.008,head-.003,front,k.yellow);
   iconKitchenPanel(frame,'crown-'+i,l+.003,r-.003,head+.002,top,front,k.yellow);
-  if(!leaf)context.obstacle('furniture-'+item.id+'-'+(i===0?'left':'right'),[x0+l,y0,x0+r,y1],0,top);
+  if(!leaf&&!robot)context.obstacle('furniture-'+item.id+'-'+(i===0?'left':'right'),[x0+l,y0,x0+r,y1],0,top);
  }
  iconKitchenGrip(frame,'leaf-pull',b-.017,front,1.025,.20,true,k.bronze);
  context.obstacle('furniture-'+item.id,[x0+a,y0,x0+b,y1],head,top);
@@ -2063,14 +2066,24 @@ function iconTacknan({THREE},frame,s,p) {
  s.cushion('blower',cx,d/2,h-.1495,.43,.435,.201,.028,iron);
 }
 
-function iconWorktopUV(geometry,base,height){
+function iconWorktopUV(THREE,geometry,base,height,fold){
  const {position,normal,uv}=geometry.attributes;
+ const bandDistance=new Float32Array(position.count);
+ const sampleDepth=1.05,sampleLength=sampleDepth*1642/1528;
  for(let i=0;i<position.count;i++){
   const x=position.getX(i),y=position.getY(i),drop=height-base-position.getZ(i);
-  const u=x+normal.getX(i)*drop,v=y+normal.getY(i)*drop;
-  // Metre-scale development of the 1880 × 1080 oak scan, including both folded ends.
-  uv.setXY(i,u/1.88,v/1.08);
+  const nx=normal.getX(i),ny=normal.getY(i);
+  let u=x+nx*drop,v=y+ny*drop;
+  const edge=Math.abs(ny)>.99;
+  if(fold && edge){
+   // Continue the waterfall grain around the narrow front and rear returns.
+   u=fold.outerX+fold.direction*drop;
+   v=y+ny*Math.abs(x-fold.outerX);
+  }
+  uv.setXY(i,u/sampleLength,v/sampleDepth);
+  bandDistance[i]=edge?(fold?Math.abs(x-fold.outerX):drop):1;
  }
+ geometry.setAttribute('bandDistance',new THREE.BufferAttribute(bandDistance,1));
 }
 
 function iconIslandWorktop({THREE},frame,s,p,laminate,cutout) {
@@ -2091,10 +2104,10 @@ function iconIslandWorktop({THREE},frame,s,p,laminate,cutout) {
  },[1,6]);aluminium.metalness=.27;
  const thick=.038,base=height-thick;
  const slab=plate('top',[0,0,w,d],[opening,cutout],base,thick,laminate);
- iconWorktopUV(slab.geometry,base,height);
+ iconWorktopUV(THREE,slab.geometry,base,height);
  for(const [end,x] of [['left',0],['right',w-thick]]){
   const panel=plate('waterfall-'+end,[x,0,thick,d],[],0,base,laminate);
-  iconWorktopUV(panel.geometry,0,height);
+  iconWorktopUV(THREE,panel.geometry,0,height,end==='left'?{outerX:0,direction:-1}:{outerX:w,direction:1});
  }
  plate('socket-housing',opening,[],height-.060,.057,p.black);
  plate('socket-bezel',opening,[reveal],height-.003,.003,aluminium);
@@ -2212,7 +2225,7 @@ function iconKitchenBackCounter(context,frame,s,k,face) {
   outline.holes.push(iconKitchenOutline(new THREE.Path(),l+.009,b+.009,r-l-.018,f-b-.018,.024));
  }
  const slab=new THREE.ExtrudeGeometry(outline,{depth:.05,bevelEnabled:false,curveSegments:8});
- iconWorktopUV(slab,h-.05,h);
+ iconWorktopUV(THREE,slab,h-.05,h);
  s.add('top',slab,k.laminate,0,0,h-.05);
 }
 
@@ -2284,7 +2297,7 @@ function iconLivingKitchen(context,frame,s,p) {
   iconKitchenDrawers(frame,k,firstSeam,ovenLeft,1,back,true,1);
   iconKitchenDrawers(frame,k,left,right,1,back,true,2);
   iconKitchenDrawers(frame,k,right,outerSeam,1,back,true,3);
-  iconKitchenDrawers(frame,k,outerSeam,w-end,2,back,true,4);
+  iconKitchenDrawers(frame,k,outerSeam,w-end,1,back,true,4);
   iconExtractorDrawerBoxes(frame,k,left,right,near);
   iconIslandOven(context,frame,s,p,k,(ovenLeft+ovenRight)/2,back);
   iconNyttig(context,frame,s,p,cx,back+.049,cy+(hob.box[3]-hob.box[1])/2);
@@ -2437,7 +2450,16 @@ function iconLivingProjector(context) {
  box('projector-wall-arm',[hub.x-.018,hub.y-.022,wallX-.019,hub.y+.022],2.729,.037,p.black);
  beam('projector-mount-brace',[wallX-.021,hub.y,2.593],[hub.x+.066,hub.y,2.736],.016,p.black);
  beam('projector-tilt-pivot',hub.toArray(),[hub.x,hub.y,2.739],.030,p.black);
- obstacle('projector-overhead',[lens.x-.01,hub.y-.232,wallX,hub.y+.232],2.48,2.792);
+ const appleY=hub.y+.31,appleZ=2.674;
+ box('projector-apple-tv-bracket',[wallX-.006,appleY-.053,wallX,appleY+.053],appleZ-.050,.100,p.black);
+ box('projector-apple-tv-cradle',[wallX-.041,appleY-.050,wallX-.006,appleY+.050],appleZ-.0525,.006,p.black);
+ const av=iconLivingShapes(context,{item:{id:'projector',facing:'+y'},point:(x,y,z)=>[wallX+x,appleY+y,appleZ+z]});
+ av.cushion('apple-tv-4k',-.0215,0,0,.031,.093,.093,.010,p.black);
+ av.cushion('apple-tv-indicator',-.0372,-.029,-.020,.0008,.002,.002,.0003,context.mats.lamp);
+ av.tube('apple-tv-hdmi',[[-.023,-.046,.011],[-.028,-.069,.011],[-.041,-.105,-.008],[-.075,-.153,-.017],
+  [hub.x+.16-wallX,-.210,hub.z-appleZ-.025]],.0028,p.black);
+ av.tube('apple-tv-power',[[-.019,.045,.015],[-.018,.058,.017],[-.012,.071,.020],[0,.077,.018]],.0025,p.black);
+ obstacle('projector-overhead',[lens.x-.01,hub.y-.232,wallX,appleY+.079],2.48,2.792);
  const assembly=new THREE.Group();assembly.name='living-room-projector';
  assembly.add(...group.children.slice(firstPart));group.add(assembly);
  return iconProjectorControl(context,assembly,wall);

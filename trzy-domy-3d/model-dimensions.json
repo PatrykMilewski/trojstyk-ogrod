@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-19.20",
+  "modelVersion": "2026-11-20.1",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1746,7 +1746,7 @@
     "proceduralCodeSha256": "023ebb5ef33b0fab0cf7f6069117e4867fdd5efe5a6d8284fb6acd62d8f1cf95",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "dedbf868ca446a18874c8f882848a59920e8d9ab12833f73284c22fd2a100119",
-    "runtimeSha256": "2646441ade7824d0c90ec7c853e7ee8fb6b92f504bc1274f82ac368d49106ae3"
+    "runtimeSha256": "6aa474079926f345cbc95696c9472d965efb16195f15c9e4c3a6ebf050e43c3a"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1796,7 +1796,8 @@
     "Dom /193: czarne żaluzje w kuchni, jedna wysuwana szuflada pod zlewem i obrazy na wybranych ścianach.",
     "Dom /193: dwie rozsunięte zasłony na szynie umieszczonej we wnęce okna kuchennego.",
     "Dom /193: fornir na wyspie i nowa aranżacja prywatnej łazienki na piętrze. Dom /190: odbicie lewo–prawo i dopasowanie podjazdu do garażu przy zachowaniu obu odstępów 5 m od drogi.",
-    "Dom /193: szerokie panele o rysunku miodowego dębu na skosie sufitu głównej sypialni 1.8."
+    "Dom /193: szerokie panele o rysunku miodowego dębu na skosie sufitu głównej sypialni 1.8.",
+    "Dom /193: blaty w ciemnobrązowym dekorze orzecha, wyspa 382,3 × 105 cm, otwierana szafka ze stacją robota i półkami przy wejściu do spiżarni oraz Apple TV przy projektorze."
   ],
   "contextParcels": [
     {
@@ -3635,7 +3636,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "f9c034af0f624589b4a41c39f3247fc00e8a9346945adfe0dfa0ece3064b4304",
+    "dataSha256": "cecf459b30504684774d78ef1f13101af26f9e2a5ce50272f97af0aae6ab4868",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,
