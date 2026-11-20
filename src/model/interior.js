@@ -1104,24 +1104,22 @@ function iconLoungeFabric(THREE,name,color,accent,stripes=0) {
  return linen;
 }
 
-function iconPersianRug(THREE,swatch) {
- // The supplied photograph ends within the lower border. Reflect a quadrant about the medallion.
- const {width,height,palette,pixels:encodedPixels}=swatch;
- const colors=atob(palette),pixels=atob(encodedPixels);
- const rgba=new Uint8Array(width*height*16);
- for(let y=0;y<height*2;y++)for(let x=0;x<width*2;x++){
-  const i=(y*width*2+x)*4,sourceX=Math.min(x,width*2-1-x),sourceY=Math.min(y,height*2-1-y);
-  const c=3*pixels.charCodeAt(sourceY*width+sourceX);
-  rgba[i]=colors.charCodeAt(c);rgba[i+1]=colors.charCodeAt(c+1);rgba[i+2]=colors.charCodeAt(c+2);rgba[i+3]=255;
+function iconRugMaterial(THREE,swatch) {
+ const {name,width,height,palette,pixels}=swatch;
+ const colors=atob(palette),indices=atob(pixels),rgba=new Uint8Array(width*height*4);
+ for(let i=0;i<indices.length;i++){
+  const index=indices.charCodeAt(i);
+  if(index===255)continue;
+  for(let channel=0;channel<3;channel++)rgba[4*i+channel]=colors.charCodeAt(index*3+channel);
+  rgba[4*i+3]=255;
  }
- const name='Carmine Persian floral wool, black and cream palmette border';
- const map=new THREE.DataTexture(rgba,width*2,height*2);
+ const map=new THREE.DataTexture(rgba,width,height);
  map.name=name;map.colorSpace=THREE.SRGBColorSpace;map.magFilter=THREE.LinearFilter;
  map.minFilter=THREE.LinearMipmapLinearFilter;map.generateMipmaps=true;map.anisotropy=4;map.needsUpdate=true;
- return new THREE.MeshStandardMaterial({map,roughness:.97,name});
+ return new THREE.MeshStandardMaterial({name,map,roughness:.96,alphaTest:.44});
 }
 
-function iconLivingAccentMaterials({THREE,data}) {
+function iconLivingAccentMaterials({THREE}) {
  const mix=(color,tone)=>[color[0]+tone,color[1]+tone*.88,color[2]+tone*.70];
  const walnut=iconFinishTexture(THREE,'Oiled walnut veneer',256,256,.46,(u0,v0)=>{
   const x=u0*256-.5,y=v0*256-.5;
@@ -1138,7 +1136,7 @@ function iconLivingAccentMaterials({THREE,data}) {
  };
  const pugStripe=fabric('Tomato and periwinkle alternating sewn panels',[201,61,41],[148,165,192],1);
  pugStripe.map.repeat.x=12;
- return {accentWalnut:walnut,persian:iconPersianRug(THREE,data.textiles.persianRug),
+ return {accentWalnut:walnut,
   powder:velvet('Powder blue velvet',[154,166,188],'#abb8cc'),barrelBlue:velvet('Slate blue velvet',[135,149,174],'#a1acc3'),
   burgundyStripe:fabric('Burgundy and ivory striped linen',[225,205,173],[104,44,37],4),
   oliveVelvet:velvet('Olive velvet',[103,100,65],'#958d69'),pugStripe,tomatoCloth:fabric('Tomato woven cotton',[201,61,41])};
@@ -1410,28 +1408,28 @@ function iconHorseshoeChair(THREE,frame,s,p) {
  iconVelvetBlock(THREE,s,'seat',cx,cy+.024,.324,w*.81,d*.775,.266,p.barrelBlue,0,.73);
 }
 
-function iconLivingRug(THREE,frame,s,p) {
- const {width:w,depth:d}=frame,field=d-.072;
- const body=s.cushion('woven',w/2,d/2,.0075,w,field,.015,.007,p.persian);
- const {position,uv}=body.geometry.attributes;
- for(let i=0;i<uv.count;i++)uv.setXY(i,position.getX(i)/w+.5,position.getY(i)/field+.5);
- const fibers=[],indices=[],tex=[];
- for(const side of [-1,1])for(let k=0;k<98;k++){
-  const x=(k+.5)*w/98,y=side*field/2;
-  const length=.025+.009*(.5+.5*Math.sin(k*38.1+side)),drift=.003*Math.sin(k*19.2);
-  for(let strand=0;strand<2;strand++){
-   const start=x+(strand-.5)*.005,end=start+drift+(strand-.5)*.011,idx=fibers.length/3;
-   fibers.push(start-.004,y-side*.002,.006,start+.004,y-side*.002,.006,
-    end+.0025,y+side*length,.003,end-.0025,y+side*length,.003);
-   tex.push(0,0,1,0,1,1,0,1);
-   if(side>0)indices.push(idx,idx+1,idx+2,idx,idx+2,idx+3);
-   else indices.push(idx,idx+2,idx+1,idx,idx+3,idx+2);
+function iconPhotoRug(context,frame) {
+ const {THREE}=context,{item,width:w,depth:d}=frame;
+ const swatch=context.data.textiles[item.id],s=iconLivingShapes(context,frame);
+ const material=iconRugMaterial(THREE,swatch),h=item.height;
+ const points=swatch.outline.map(([x,y])=>[(x+.5)/swatch.width,(y+.5)/swatch.height]);
+ const positions=[],uvs=[],indices=[];
+ for(let i=0;i<points.length;i++){
+  const [u,v]=points[i],next=2*((i+1)%points.length),start=2*i;
+  for(const z of [0,h]){
+   positions.push((u-.5)*w,(v-.5)*d,z);
+   uvs.push(u,v);
   }
+  indices.push(start,next,next+1,start,next+1,start+1);
  }
- const fringe=new THREE.BufferGeometry();
- fringe.setAttribute('position',new THREE.Float32BufferAttribute(fibers,3));
- fringe.setAttribute('uv',new THREE.Float32BufferAttribute(tex,2));fringe.setIndex(indices);fringe.computeVertexNormals();
- s.add('knotted-fringe',fringe,p.linen,0,d/2,0);
+ const edge=new THREE.BufferGeometry();
+ edge.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+ edge.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+ edge.setIndex(indices);edge.computeVertexNormals();
+ const binding=material.clone();
+ binding.side=THREE.DoubleSide;binding.alphaTest=0;
+ s.add('woven-edge',edge,binding,w/2,d/2,0);
+ s.add('woven-face',new THREE.PlaneGeometry(w,d),material,w/2,d/2,h);
 }
 
 function iconDiningCane(THREE) {
@@ -2744,7 +2742,6 @@ function iconLivingFurniture(context,frame) {
  else if(item.type==='sofa'||item.type==='ottoman')iconVelvetSectional(context.THREE,frame,s,p);
  else if(item.id.startsWith('kitchen-')||item.id==='hob')iconLivingKitchen(context,frame,s,p);
  else if(item.id==='media-console')iconLivingYoffers(context,frame,s);
- else if(item.id==='living-rug')iconLivingRug(context.THREE,frame,s,p);
  else if(item.id==='dining-table')iconMadoxTable(context.THREE,frame,s,p);
  else if(item.id==='coffee-table'){
   iconLivingCoffeeTable(context.THREE,s,p);
@@ -2799,6 +2796,22 @@ function iconUpperBed(frame,s,p) {
  s.cushion('turnback',w/2,.607,.651,w-.06,.24,.063,.028,p.ivory);
  s.cushion('throw',w/2,d-.34,.652,w-.055,.46,.055,.025,master?p.olive:item.room==='1.3'?p.indigo:p.sage);
  for(let i=0;i<3;i++)part('woven-stripe-'+i,[.06,d-.21+i*.021,w-.06,d-.202+i*.021],.680,.002,p.linen);
+}
+
+function iconHeadboardWings(context,frame,s,p) {
+ const {item,width:w,depth:d}=frame;
+ const bed=context.data.furniture.find(f=>f.id===item.support);
+ const wing=(w-(bed.box[2]-bed.box[0]))/2;
+ const panelWidth=wing-.002;
+ for(const [i,u] of [panelWidth/2,w-panelWidth/2].entries())
+  s.cushion('panel-'+i,u,d/2,item.height/2,panelWidth,d,item.height,.025,p.headcloth);
+}
+
+function iconBedFootPouf(frame,s,p) {
+ const {width:w,depth:d,item}=frame,h=item.height;
+ s.cushion('recessed-foot',w/2,d/2,.032,w-.12,d-.10,.064,.029,p.taupe);
+ s.cushion('upholstered-base',w/2,d/2,.16,w-.024,d-.024,.24,.09,p.olive);
+ s.cushion('seat',w/2,d/2,h-.065,w,d,.13,.061,p.olive);
 }
 
 function iconUpperDesk(frame,s,p) {
@@ -3079,6 +3092,8 @@ function iconUpperFurniture(context,frame) {
  if(item.type==='nightstand'||item.room==='1.5'&&!['laundry-basket','wall-cabinet','wall-shelves'].includes(item.type))return false;
  const p=['1.1','1.3','1.7','1.8'].includes(item.room)?iconBedroomOfficePalette(context):iconLivingPalette(context),s=iconLivingShapes(context,frame);
  if(item.type==='bed')iconUpperBed(frame,s,p);
+ else if(item.type==='headboard-wings')iconHeadboardWings(context,frame,s,p);
+ else if(item.type==='ottoman')iconBedFootPouf(frame,s,p);
  else if(item.type==='chair')iconUpperChair(frame,s,p);
  else if(item.type==='table')iconUpperDesk(frame,s,p);
  else if(item.room==='1.7')iconUpperDressing(context,frame,s,p);
@@ -3097,6 +3112,7 @@ function iconUpperFurniture(context,frame) {
 }
 
 function iconInteriorFurnitureObject(context, frame) {
+ if(frame.item.type==='rug' && context.data.textiles?.[frame.item.id])return iconPhotoRug(context,frame);
  if(frame.item.id.startsWith('office-under-stair-'))return iconOfficeFittedCabinet(context,frame);
  if(frame.item.type==='pet-bed')return iconPugBed(context,frame);
  if(iconGroundRoomFurniture(context,frame))return;
@@ -3989,19 +4005,6 @@ function iconPlayCubbies(context,{width:w,depth:d,item,part},s,p) {
  }
 }
 
-function iconPlayMat(context,{width:w,depth:d,part},s,p) {
- const {THREE}=context,paint=iconToyPaints(context),u=w*.34,v=d*.60,ink=.0175;
- s.cushion('woven-edge',w/2,d/2,.006,w,d,.012,.005,p.olive);
- s.cushion('woven-face',w/2,d/2,.013,w-.026,d-.026,.008,.003,p.linen);
- for(const [i,col] of [paint.clay,paint.honey,paint.lagoon].entries()){
-  const outer=.32-.063*i,inner=outer-.049;
-  s.add('rainbow-arc-'+i,new THREE.RingGeometry(inner,outer,40,1,0,Math.PI),col,u,v,ink);
-  for(const x of [u-outer,u+inner])
-   part('rainbow-foot-'+i+'-'+x,[x,v-.18,x+outer-inner,v],ink-.0002,.0002,col);
- }
- s.disc('sun',w*.79,d*.74,ink,.11,.11,.0004,paint.honey);
-}
-
 function iconWoodenTrain(context,{width:w,depth:d,part},s,p) {
  const {THREE}=context,paint=iconToyPaints(context);
  const radius=.164,left=radius+.012,right=w-left,mid=d/2;
@@ -4759,7 +4762,6 @@ const iconGroundRoomBuilders={
  'guest-sofa-bed':(c,f,s,p)=>iconGuestDaybed(f,s,p,c.THREE),
  'guest-wardrobe':(_,f,s,p)=>iconGuestWardrobe(f,s,p),
  'play-cubbies':iconPlayCubbies,
- 'play-mat':iconPlayMat,
  'play-train':iconWoodenTrain,
  'office-desk':iconStudyDesk,
  'office-chair':(c,f,s,p)=>iconStudyChair(f,s,p,c.THREE),

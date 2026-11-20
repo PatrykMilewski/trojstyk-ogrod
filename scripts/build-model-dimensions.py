@@ -81,6 +81,15 @@ content += section('Wyposażenie — rzut i pełny model', '<p>Rzut nie obejmuje
 content += section('Detale i przyjęte wymiary', table(['Element', 'Wymiary / parametry', 'Podstawa'], [
     [d['name'], '; '.join(f'{label}: {number(value)}' for label, value in zip(d['labels'], d['values'])), d['source']]
     for d in registry['details']]))
+content += '<div id="oczyszczalnia"></div>' + section('Oczyszczalnia /193 · wariant porównawczy', '''
+<p>Na północnym skrawku przed domem mieści się wariant dla pięciu mieszkańców. Przycisk „Instalacje” pokazuje podziemne elementy w przekroju.</p>
+<p><strong>Ustalenia planu.</strong> Zmiana MPZP 05029z przewiduje odprowadzenie ścieków do kanalizacji komunalnej. Przed budową sieci dopuszcza szczelne zbiorniki bezodpływowe z udokumentowanym wywozem ścieków. Rozsączu w gruncie nie wymienia. Przesunięcie urządzenia w inne miejsce tej samej działki nie zmienia zapisu. <a href="https://bip.zukowo.pl/api/files/108360">Uchwała IV/52/2006, § 1 ust. 2</a>.</p>
+''' + table(['Element', 'Wymiary i założenia modelu'], [
+    ['Zbiornik Kingspan BioDisc BA', 'Złoże obrotowe, 6 RLM, do 1,2 m³/d. Średnica 2,00 m, wysokość 2,16 m.'],
+    ['Pole tuneli MPI DrainTunel 150', 'Dwa rzędy po pięć modułów długości 1,20 m. Przerwa 1,00 m między rzędami. Obrys z deklami około 6,09 × 2,00 m.'],
+    ['Odstępy w rzucie', 'Zbiornik 5,12 m od domu i 2,10 m od granicy. Pole tuneli 2,11 m od domu, 3,42 m od granicy i 0,65 m od podjazdu.'],
+]) + '''<p>Dobór dziesięciu modułów zakłada pięć osób i dobrze przepuszczalny grunt. Nie wykonano testu infiltracji ani pomiaru najwyższego poziomu wód. Do oceny technicznej potrzebne są też rzędna odpływu z budynku, mapa przyłączy i studni, w tym u sąsiadów. Nad urządzeniami trzeba zachować dostęp serwisowy i zmienić fragment nasadzeń. Pokazane rzędne przewodów i wnętrze zbiornika są orientacyjne.</p>
+<p><a href="https://waterandsafestorage.kingspan.com/pl/p/biodisc-domowa-oczyszczalnia-sciekow/">Dane Kingspan BioDisc</a> · <a href="https://mpi.com.pl/wp-content/uploads/2023/03/Instrukcja-montazu-tunele-rozsaczajace-Draintunel-150-l.pdf#page=4">Wytyczne doboru tuneli MPI</a></p>''')
 content += section('Samochody w skali', table(['Pojazd / miejsce', 'Długość × szerokość × wysokość (m)'], [
     [c['id']+' · '+c['location'].replace('driveway-','podjazd /').replace('road-133','droga /133'),
      dimensions([c['measuredLength'],c['measuredWidth'],c['measuredHeight']])] for c in registry['cars']]))

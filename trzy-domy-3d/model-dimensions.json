@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-20.2",
+  "modelVersion": "2026-11-20.3",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1747,7 +1747,7 @@
     "proceduralCodeSha256": "ebe6b1b59597bf0ef62f392fe49c8dc23a7156a02b31560f9c23074baa27fc92",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "dedbf868ca446a18874c8f882848a59920e8d9ab12833f73284c22fd2a100119",
-    "runtimeSha256": "b4ddc3a0f392142aa877060ba5821ab69446eabf628694e086f03569a91585b0"
+    "runtimeSha256": "41570416db97f141eeed868bebaf8a3fe8c73bec1dcbad4cc330e6f9c016e659"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1799,7 +1799,8 @@
     "Dom /193: fornir na wyspie i nowa aranżacja prywatnej łazienki na piętrze. Dom /190: odbicie lewo–prawo i dopasowanie podjazdu do garażu przy zachowaniu obu odstępów 5 m od drogi.",
     "Dom /193: szerokie panele o rysunku miodowego dębu na skosie sufitu głównej sypialni 1.8.",
     "Dom /193: blaty w ciemnobrązowym dekorze orzecha, wyspa 382,3 × 105 cm, otwierana szafka ze stacją robota i półkami przy wejściu do spiżarni oraz Apple TV przy projektorze.",
-    "Dom /193: dwa przechodnie auta w garażu i pusty podjazd. Wyspa z sześcioma kolumnami po 60 cm, jedenastoma wysuwanymi szufladami i płytą pośrodku. Czarne gniazda w boku od okna. Wymiary kuchni na podłodze pod przyciskiem „Opisy”."
+    "Dom /193: dwa przechodnie auta w garażu i pusty podjazd. Wyspa z sześcioma kolumnami po 60 cm, jedenastoma wysuwanymi szufladami i płytą pośrodku. Czarne gniazda w boku od okna. Wymiary kuchni na podłodze pod przyciskiem „Opisy”.",
+    "Dom /193: cztery dywany, poszerzony zagłówek i dwie pufy. Przycisk „Instalacje” pokazuje porównawczy wariant oczyszczalni dla 5 osób z przodu działki."
   ],
   "contextParcels": [
     {
@@ -3565,7 +3566,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "91c2a5d1acd78d6270ce4e56062a2adc48f1ccefa03adf78a56b7a2200555416",
+    "dataSha256": "a84ae10c0d3e1272975e8ab6835afe675e2112a82e5130d0574b9f66971f7670",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,

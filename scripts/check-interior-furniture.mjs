@@ -1610,7 +1610,7 @@ test('the vestibule routes clear the new console, ottoman and fitted wardrobes',
   assert(sample(.31,.5)>200 && sample(.19,.5)<65);
 });
 
-test('powder blue modules and garden chaise carry two accent pillows above a carmine Persian carpet', () => {
+test('powder blue modules and garden chaise carry two accent pillows above the pink and yellow lounge rug', () => {
   const get = name => interior.group.getObjectByName(name);
   const cover=get('sofa-seat').material;
   const sample=(map,u,v)=>{
@@ -1640,19 +1640,34 @@ test('powder blue modules and garden chaise carry two accent pillows above a car
   assert(green[0]>green[2]+25 && green[1]>green[2]+25);
   const round=bounds(olive).getSize(new THREE.Vector3());
   assert(round.y>2*round.x*.8 && Math.abs(round.z-round.y)<.07, 'Olive pillow has a round face');
-  const rug=get('living-rug-woven'),map=rug.material.map;
-  const counts={carmine:0,black:0,cream:0,gold:0};
-  for(let x=0;x<100;x++)for(let y=0;y<100;y++){
-    const u=(x+.5)/100,v=(y+.5)/100,[r,g,b]=sample(map,u,v);
-    const edge=Math.min(u,1-u,v,1-v);
-    if(edge>.19 && r>g*1.70 && r>b*1.35)counts.carmine++;
-    if(edge<.13 && r<75 && g<68 && b<68)counts.black++;
-    if(edge<.16 && r>167 && g>135 && b>100)counts.cream++;
-    if(edge>.19 && r>145 && g>92 && b<g*.90)counts.gold++;
+  const map=get('living-rug-woven-face').material.map;
+  let pink=0,gold=0;
+  for(let x=0;x<50;x++)for(let y=0;y<50;y++){
+    const [r,g,b]=sample(map,(x+.5)/50,(y+.5)/50);
+    if(r>g+20 && b>g && g>120)pink++;
+    if(r>g+10 && g>b+45)gold++;
   }
-  assert(counts.carmine>950 && counts.black>350 && counts.cream>450 && counts.gold>200,JSON.stringify(counts));
-  const fringe=bounds(get('living-rug-knotted-fringe')),field=bounds(rug);
-  assert(fringe.min.y<field.min.y && fringe.max.y>field.max.y,'Fringe extends beyond both short ends');
+  assert(pink>500 && gold>500,'Both pink and golden bands occupy the living rug');
+});
+
+test('four photographic rugs fit the rooms, frame the bed and keep the terrace threshold free', () => {
+  for(const [id,w,d] of [['living-rug',2,3],['play-mat',1.2,1.8],['master-rug',3,2],['terrace-dog-rug',.95,1.60]]){
+    const footprint=itemBounds(id);
+    close(footprint.max.x-footprint.min.x,w,id+' width');
+    close(footprint.max.y-footprint.min.y,d,id+' depth');
+    assert(!interior.navigation.obstacles.some(o=>o.id==='furniture-'+id));
+    const {data:pixels}=interior.group.getObjectByName(id+'-woven-face').material.map.image;
+    if(id==='terrace-dog-rug')assert.equal(pixels[3],0,'The transparent corner follows the dog silhouette');
+  }
+  const bed=itemBounds('master-bed'),rug=itemBounds('master-rug');
+  const oak=bounds(interior.group.getObjectByName('upper-oak-finish'));
+  close(rug.min.z,oak.max.z,'Bedroom rug rests on the finished wood surface');
+  close(rug.max.z-oak.max.z,.012,'Bedroom rug face clears the flooring');
+  for(const side of ['left','right'])close(itemBounds('master-foot-pouf-'+side).min.z,rug.max.z,'Pouf rests on the rug');
+  close(bed.min.x-rug.min.x,.50,'Carpet visible at left of bed');
+  close(rug.max.x-bed.max.x,.50,'Carpet visible at right of bed');
+  const dog=itemBounds('terrace-dog-rug');
+  assert(dog.min.x>itemBounds('dining-right-1').max.x && dog.max.x<=7.901);
 });
 
 test('the private double vanity has two open inset basins and one orange segmented mirror', () => {
