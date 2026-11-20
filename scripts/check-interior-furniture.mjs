@@ -13,7 +13,8 @@ const [, garden, house] = JSON.parse(html.slice(start, html.indexOf(';\nconst la
 const { addIconInterior } = await load(await readFile(new URL('../src/model/interior.js', import.meta.url), 'utf8'));
 const { createWalkCollision } = await load(await readFile(new URL('../src/model/walk.js', import.meta.url), 'utf8'));
 const data = JSON.parse(await readFile(new URL('../trzy-domy-3d/interior-data.json', import.meta.url), 'utf8'));
-const interior = addIconInterior({ THREE, scene: new THREE.Scene(), house, data });
+const siteGate=garden.lines.find(l=>l.kind==='drive_gate');
+const interior = addIconInterior({ THREE, scene: new THREE.Scene(), house, data, siteGate });
 const furniture = new Map(data.furniture.map(item => [item.id, item]));
 const rooms = new Map(data.rooms.map(item => [item.id, item]));
 const close = (actual, expected, message, tolerance = 1e-5) => assert.ok(Math.abs(actual - expected) < tolerance, `${message}: ${actual} vs ${expected}`);
@@ -219,17 +220,31 @@ test('MUST battery, distribution board and three-phase charger clear equipment, 
   for(const suffix of ['fascia','charge-indicator','coiled-ev-cable','type-2-handle'])
     assert(interior.group.getObjectByName('garage-wallbox-'+suffix)?.isMesh);
   const garage=data.garageFitout;
-  for(const bay of garage.parkingBays)assert(charger.min.y-bay[3]>.70);
-  assert(charger.min.x-garage.workbench.footprint[2]>1);
-  assert(garage.bikes.every(b=>charger.min.x>b.center[0]+b.barWidth/2));
-  for(const id of ['garage-utility','garage-entry']){
+  const lastBike=garage.bikes.at(-1),bikeRear=lastBike.center[1]+lastBike.wheelbase/2+lastBike.wheelRadius;
+  assert(charger.min.y>bikeRear && charger.min.y-bikeRear<.40);
+  assert(charger.max.x<garage.parkingBays[0][0]);
+  // Charge-port and flexible lead envelope for a future left-rear-inlet EV sized like the parked hatchback.
+  const [w,s,e,n]=garage.parkingBays[0],car=garage.vehicles[0],mid=(w+e)/2,cy=(s+n)/2;
+  const vehicle=new THREE.Box3(new THREE.Vector3(mid-car.mirrorWidth/2,cy-car.length/2,0),
+   new THREE.Vector3(mid+car.mirrorWidth/2,cy+car.length/2,car.height));
+  const socket=new THREE.Vector3(mid-car.bodyWidth/2,cy+car.length*.36,.86);
+  const cord=[partCenter('garage-wallbox','cable-hook'),new THREE.Vector3(.90,4.84,.64),
+   new THREE.Vector3(1.14,4.78,.51),socket];
+  const connectedLead=new THREE.Box3().setFromPoints(cord).expandByScalar(.06);
+  assert(cord.slice(1).reduce((len,p,i)=>len+p.distanceTo(cord[i]),0)<1.5);
+  assert(connectedLead.max.y<n && vehicle.max.y<n);
+  const doorEdge=data.walls.find(wall=>wall.id==='garage-back').a[1]-.13;
+  assert(doorEdge-Math.max(vehicle.max.y,connectedLead.max.y)>.95);
+  assert(garage.workbench.footprint[1]-vehicle.max.y>.74);
+  assert(connectedLead.min.y>bikeRear);
+  for(const id of ['garage-pantry','garage-utility','garage-entry']){
     const pivot=interior.group.getObjectByName('hall-flush-'+id);
     for(let i=0;i<=30;i++){
       const pose=new THREE.Matrix4().makeRotationZ(pivot.userData.closedYaw+pivot.userData.swing*Math.PI*i/60);
       pose.setPosition(pivot.position);
       for(const part of pivot.children){
         const swept=bounds(part).applyMatrix4(pose);
-        for(const [name,box] of [['battery',battery],['board',board],['EV charger',charger]])
+        for(const [name,box] of [['battery',battery],['board',board],['EV charger',charger],['plugged car',vehicle],['connected lead',connectedLead]])
           assert(!swept.intersectsBox(box),name+' clears '+id+' at '+i*3+' degrees');
       }
     }
@@ -2103,4 +2118,77 @@ test('three seated adults occupy distinct sofa cushions and a fourth faces out o
     assert(!occupied.some(other=>other.intersectsBox(figure)),'Each person has a distinct seat');
     occupied.push(figure);
   }
+});
+
+
+function clearanceToRainPipe(cable,pipe){
+ const pos=cable.geometry.getAttribute('position'),line=new THREE.Line3();
+ const a=new THREE.Vector3(),b=new THREE.Vector3(),hit=new THREE.Vector3(),opposite=new THREE.Vector3();
+ pipe.updateMatrix();
+ const ends=[-.5,.5].map(f=>new THREE.Vector3(0,f*pipe.geometry.parameters.height,0).applyMatrix4(pipe.matrix));
+ const [c,d]=ends,pipeAxis=new THREE.Line3(c,d);
+ let closest=Infinity;
+ for(let i=0;i<pos.count;i+=8){
+  b.fromBufferAttribute(pos,i);opposite.fromBufferAttribute(pos,i+4);b.lerp(opposite,.5);
+  if(i){
+   line.set(a,b);
+   const ray=new THREE.Ray(a,b.clone().sub(a).normalize());
+   const squared=ray.distanceSqToSegment(c,d,hit);
+   const gap=a.distanceToSquared(hit)<=line.distanceSq()?Math.sqrt(squared):pipeAxis.closestPointToPoint(b,true,hit).distanceTo(b);
+   closest=Math.min(closest,gap);
+  }
+  a.copy(b);
+ }
+ return closest-.022-pipe.geometry.parameters.radiusTop;
+}
+
+test('dedicated exterior supplies reach the fitted gate drive, BioDisc, monobloc and all eleven luminaires',async()=>{
+ const module=async name=>load(await readFile(new URL('../src/model/'+name+'.js',import.meta.url),'utf8'));
+ const {createIndoorServices}=await module('indoor-services');
+ const {createWastewaterInstallation}=await module('wastewater');
+ const wastewater=createWastewaterInstallation(THREE);
+ const {createRainServices}=await module('rain-services'),rain=createRainServices(THREE,house,interior,data);
+ const services=createIndoorServices(THREE,interior,data,{wastewater,irrigationCablePath:rain.userData.irrigationCablePath}),power=services.getObjectByName('power-ground');
+ const physical=name=>interior.group.getObjectByName(name);
+ const {gate,controllerIn,controllerOut,heatPump}=interior.sitePower;
+ const drive=interior.group.worldToLocal(wastewater.getObjectByName('biodisc-drive-gland').getWorldPosition(new THREE.Vector3()));
+ for(const [route,terminal,device] of [
+  ['board-to-drive-gate',gate,'drive-gate-motor'],['board-to-biodisc-controller',controllerIn,'biodisc-controllerIn-gland'],
+  ['monobloc-mains-tail',heatPump,'utility-outdoor-unit-mains-gland']
+ ]){
+  const p=new THREE.Vector3(...power.getObjectByName(route).userData.to);
+  assert(p.distanceTo(new THREE.Vector3(...terminal))<.001);
+  assert(bounds(physical(device)).distanceToPoint(p)<.001,device);
+ }
+ const pumpCable=power.getObjectByName('irrigation-pump-cable');
+ assert.deepEqual(power.getObjectByName('board-to-irrigation-entry').userData.to,pumpCable.userData.from);
+ assert.deepEqual(pumpCable.userData.to,rain.getObjectByName('rain-irrigation-power-terminal').position.toArray());
+ assert.deepEqual(pumpCable.userData.to,rain.userData.irrigationTerminal);
+ const waterRoutes=rain.children.filter(p=>p.geometry?.type==='CylinderGeometry' &&
+  /^rain-(ground-|field-feed-|field-vent-return-|garden-outfall-|garden-inlet-|garden-standpipe|garden-underdrain-|field-air-|screened-overflow-|filtered-inlet-|irrigation-supply-)/.test(p.name));
+ const cableRuns=power.children.filter(p=>['gate','biodisc','monobloc','outdoorLights','irrigation'].includes(p.userData.circuit));
+ const conflicts=[];
+ for(const cable of cableRuns)for(const pipe of waterRoutes){
+  const clearance=clearanceToRainPipe(cable,pipe);
+  const inPumpShaft=cable.name==='irrigation-pump-cable'&&pipe.name.startsWith('rain-irrigation-supply-');
+  if(clearance<(inPumpShaft?.005:.10))conflicts.push([cable.name,pipe.name,clearance.toFixed(3)]);
+ }
+ assert.deepEqual(conflicts,[],'Exterior cable and water pipe walls keep 10 cm model clearance');
+ const line=power.getObjectByName('controller-to-biodisc-drive');
+ assert.deepEqual(line.userData.from,controllerOut);
+ assert(drive.distanceTo(new THREE.Vector3(...line.userData.to))<.001);
+ const gateWorld=new THREE.Vector3(...interior.localToWorld(gate));
+ assert(siteGate.points.some(p=>gateWorld.distanceTo(new THREE.Vector3(...p,gate[2]))<.36));
+ const rack=bounds(physical('drive-gate-rack')),pinion=bounds(physical('drive-gate-pinion'));
+ const travel=new THREE.Vector2(...siteGate.points[0]).distanceTo(new THREE.Vector2(...siteGate.points[1]));
+ assert(rack.min.x+travel<pinion.min.x && pinion.max.x<rack.max.x,'Drive stays engaged throughout the gate travel');
+ for(const id of ['board-to-monobloc','board-to-drive-gate','board-to-biodisc-controller','board-to-uplights','board-to-terrace-pendants','board-to-irrigation-entry']){
+  const {from,circuit}=power.getObjectByName(id).userData;
+  assert(bounds(physical('utility-distribution-board-gland-'+circuit)).distanceToPoint(new THREE.Vector3(...from))<.001);
+ }
+ assert.equal(interior.exteriorLights.terminals.length,11);
+ for(const lamp of interior.exteriorLights.terminals){
+  const {to}=power.getObjectByName('feed-'+lamp.id).userData;
+  assert.deepEqual(to,physical(lamp.id).position.toArray());
+ }
 });

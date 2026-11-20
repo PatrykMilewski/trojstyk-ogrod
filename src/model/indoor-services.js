@@ -560,8 +560,8 @@ function serviceRobotCabinet(groups,data,pipe,THREE,interior) {
 }
 
 function serviceElectricalPort(item,name) {
- const [,y0,x1,y1]=item.box,[u,v,h]=item.ports[name],z=(item.elevation||0)+h;
- return item.facing==='-x'?[x1-v,y0+u,z]:[x1-u,y1-v,z];
+ const [x0,y0,x1,y1]=item.box,[u,v,h]=item.ports[name],z=(item.elevation||0)+h;
+ return [...({'-x':[x1-v,y0+u],'+x':[x0+v,y1-u],'-y':[x1-u,y1-v],'+y':[x0+u,y0+v]}[item.facing]),z];
 }
 
 function servicePower(group,data,pipe,THREE,interior) {
@@ -594,13 +594,90 @@ function servicePower(group,data,pipe,THREE,interior) {
   [eastWall,inv[1],z],[eastWall,boardWall,z],[feed[0],boardWall,z],[feed[0],boardWall,feed[2]-.050],
   [feed[0],feed[1],feed[2]-.050],feed],ac,.019,{circuit:'inverter-ac'});
  const ev=port(board,'ev'),end=port(charger,'ac'),garageWall=data.walls.find(w=>w.id==='garage-back').a[1];
- const evWallX=eastWall+.028,evWallY=boardWall+.034,head=z+.064;
+ const evWallX=eastWall+.028,evWallY=boardWall+.034,head=z+.064,sideWall=.34;
  pipe(group,'distribution-board-to-wallbox',[ev,[ev[0],ev[1],ev[2]-.095],[ev[0],evWallY,ev[2]-.095],
-  [ev[0],evWallY,head],[evWallX,evWallY,head],[evWallX,garageWall,head],[end[0],garageWall,head],
-  [end[0],garageWall,end[2]-.070],[end[0],end[1],end[2]-.070],end],ac,.022,{circuit:'garage-ev',phases:charger.phases});
+  [ev[0],evWallY,head],[evWallX,evWallY,head],[evWallX,garageWall,head],[sideWall,garageWall,head],
+  [sideWall,end[1],head],[sideWall,end[1],end[2]-.070],[end[0],end[1],end[2]-.070],end],ac,.022,{circuit:'garage-ev',phases:charger.phases});
  const kitchen=port(board,'dishwasher'),lane=boardWall-.048;
  pipe(group,'distribution-board-to-dishwasher-socket',[kitchen,[kitchen[0],kitchen[1],kitchen[2]-.13],
   [kitchen[0],lane,kitchen[2]-.13],[kitchen[0],lane,.55],[plug[0],lane,.55],plug],ac,.016,{circuit:'dishwasher-ac'});
+}
+
+function serviceExteriorPower(THREE,group,data,pipe,interior,site) {
+ const equipment=interior?.sitePower;
+ if(!equipment)return;
+ const board=data.furniture.find(f=>f.id==='utility-distribution-board');
+ const color='#ffce68',wall=data.walls.find(w=>w.id==='kitchen-back').a[1];
+ const draw=(id,route,source,device)=>pipe(group,id,route,color,.022,{circuit:source,device});
+ function boardFeed(id,source,device,via,end,depth=-.54){
+  const pin=serviceElectricalPort(board,source),back=[pin[0],wall,pin[2]-.08];
+  draw(id,[pin,[pin[0],pin[1],back[2]],back,[back[0],back[1],depth],
+   ...via.map(([x,y])=>[x,y,depth]),end],source,device);
+ }
+ const {gate,heatPump,controllerIn,controllerOut}=equipment;
+ const wallEnd='utility-outdoor-unit-mains-gland';
+ const [,py,pz]=heatPump;
+ boardFeed('board-to-monobloc','monobloc',wallEnd,[[.23,wall],[.23,py]], [.23,py,pz]);
+ draw('monobloc-mains-tail',[[.23,py,pz],heatPump],'monobloc',wallEnd);
+ const [cx,cy]=controllerIn;
+ boardFeed('board-to-biodisc-controller','biodisc','biodisc-controllerIn-gland',[[cx-.20,wall],[cx-.20,cy],[cx,cy]],controllerIn);
+ if(site.wastewater){
+  const gland=site.wastewater.getObjectByName('biodisc-drive-gland');
+  const inHouse=v=>interior.group.worldToLocal(v).toArray();
+  const drive=inHouse(gland.getWorldPosition(new THREE.Vector3()));
+  const entry=inHouse(site.wastewater.localToWorld(new THREE.Vector3(.79,-.63,-.28)));
+  const [ox,oy]=controllerOut;
+  draw('controller-to-biodisc-drive',[controllerOut,[ox,oy,-.57],[ox+.55,oy,-.57],
+   [ox+.55,entry[1],-.57],[entry[0],entry[1],-.57],entry,[drive[0],drive[1],entry[2]],drive],'biodisc',gland.name);
+ }
+ if(gate){
+  const [gx,gy]=gate;
+  boardFeed('board-to-drive-gate','gate','drive-gate-motor',[[gx,wall],[gx,gy]],gate,-.65);
+ }
+ const cable=site.irrigationCablePath;
+ if(cable?.length){
+  const [entry]=cable;
+  boardFeed('board-to-irrigation-entry','irrigation','rain-tank-cable-entry',
+   [[7.94,wall],[7.94,18.8],[entry[0],18.8],[entry[0],entry[1]]],entry,-.99);
+  draw('irrigation-pump-cable',cable,'irrigation','rain-irrigation-power-terminal');
+ }
+ serviceExteriorLighting(interior.exteriorLights.terminals,board,wall,draw,boardFeed);
+}
+
+function serviceExteriorLighting(lamps,board,wall,draw,boardFeed) {
+ // Split to the two sides of the house at the first garage fitting. Each branch follows its facade.
+ const fixtures=lamps.filter(f=>!f.pendant),depth=-.82;
+ const tail=(f,via)=>draw('feed-'+f.id,via,'outdoorLights',f.id);
+ // Offset the two risers beside drainage pipes; short shallow tails return to the apertures.
+ const offsetX={'icon-exterior-uplight-terrace-0.61':.34,'icon-exterior-uplight-main-side-2.75':-.14};
+ const buried=f=>[f.point[0]+(offsetX[f.id]||0),f.point[1],depth];
+ const lampDrop=f=>{
+  const tee=buried(f),[x,y]=f.point;
+  tail(f,[tee,[tee[0],tee[1],-.19],[x,y,-.19],f.point]);
+ };
+ const byName=id=>fixtures.find(f=>f.id==='icon-exterior-uplight-'+id);
+ const start=byName('garage-0.51');
+ boardFeed('board-to-uplights','outdoorLights',start.id,[[.25,wall],[.25,start.point[1]],start.point],buried(start),depth);
+ lampDrop(start);
+ function branch(ids){
+  let prev=start;
+  for(const [id,corners] of ids){
+   const fixture=byName(id);
+   draw('branch-'+fixture.id,[buried(prev),...corners.map(p=>[...p,depth]),buried(fixture)],'outdoorLights',fixture.id);
+   lampDrop(fixture);prev=fixture;
+  }
+ }
+ branch([['main-side-2.75',[[-.34,-.34]]],['main-side-14.68',[]]]);
+ branch([['garage-6.51',[]],['front-wing-1.3',[[7.24,-.34],[7.24,3.87]]],['front-wing-4.21',[]],
+  ['wing-end-2.25',[[14.98,3.87]]],['wing-rear-4.24',[[14.98,13.05]]],['terrace-0.61',[[9.18,13.05]]]]);
+ const [first,second]=lamps.filter(f=>f.pendant);
+ const railZ=first.point[2]+.03,feed=serviceElectricalPort(board,'terraceLights');
+ const riser=[feed[0],wall,railZ];
+ draw('board-to-terrace-pendants',[feed,[feed[0],feed[1],feed[2]-.08],[feed[0],wall,feed[2]-.08],riser,
+  [8.46,wall,railZ],[8.46,first.point[1],railZ],[first.point[0],first.point[1],railZ]],'terraceLights',first.id);
+ const junction=[first.point[0],first.point[1],railZ];
+ draw('feed-'+first.id,[junction,first.point],'terraceLights',first.id);
+ draw('feed-'+second.id,[junction,[second.point[0],second.point[1],railZ],second.point],'terraceLights',second.id);
 }
 
 function serviceDrainBranch(group,pipe,name,waste,stack,slope,radius,fixture){
@@ -680,7 +757,7 @@ function serviceEthernet(THREE,levels,data,pipe) {
  }
 }
 
-export function createIndoorServices(THREE,interior,data) {
+export function createIndoorServices(THREE,interior,data,site={}) {
  const root=new THREE.Group();root.name='indoor-services-193';root.visible=false;
  const pipe=servicePen(THREE);
  const groups={};
@@ -697,5 +774,6 @@ export function createIndoorServices(THREE,interior,data) {
  serviceDishwasher(groups,data,pipe,THREE,interior);
  serviceRobotCabinet(groups,data,pipe,THREE,interior);
  servicePower(groups.power.ground,data,pipe,THREE,interior);
+ serviceExteriorPower(THREE,groups.power.ground,data,pipe,interior,site);
  return root;
 }

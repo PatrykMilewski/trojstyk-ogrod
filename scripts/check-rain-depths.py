@@ -7,6 +7,8 @@ from pathlib import Path
 
 import numpy as np
 from pyproj import Transformer
+from shapely.affinity import scale
+from shapely.geometry import LineString, Point, Polygon
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -71,9 +73,9 @@ def report(grid):
     result = {"assumedDatumEVRF2007M": datum, "pipeGroups": {}, "beds": []}
     deepest = None
     for name, routes in {
-        "SW including field": [*layout["west"], layout["feeds"][0]],
+        "SW planted bed to field chamber": [layout["gardenOutlet"]],
         "SE downpipes to tank": [*layout["east"], layout["eastTrunk"], layout["tankInlet"]],
-        "SE overflow and field pipes": [layout["overflow"], *layout["feeds"][1:]],
+        "SE overflow and shared field pipes": [layout["overflow"], *layout["feeds"]],
     }.items():
         pts = station_points(routes)
         invert = ground(pts[:, :2])-datum-pts[:, 2]+.065
@@ -84,7 +86,7 @@ def report(grid):
     depth, group, point = deepest
     result["deepestPipe"] = {"group": group, "iconPlanXYM": point.round(3).tolist(),
                              "invertDepthM": round(depth, 3), "excavationWith10cmM": round(depth+.10, 3)}
-    for key in ("westIn", "westOut", "eastIn", "eastOut"):
+    for key in ("eastIn", "eastOut"):
         x, y, z = layout[key]
         result[key+"FilterInvertDepthM"] = round(float(ground([[x, y]])[0])-datum-z+.065, 3)
     for bed, feed in zip(layout["fields"], layout["feeds"]):
@@ -97,6 +99,37 @@ def report(grid):
     w, d = tank["outside"]
     shell = ground(rectangle(x-w/2, y-d/2, w, d))-datum-tank["bottom"]
     result["tank"] = {"shellBottomDepthM": span(shell), "excavationWith10cmM": span(shell+.10)}
+    garden = layout["garden"]
+    ring = Polygon(garden["ring"])
+    gravel = scale(ring, .965, .965, origin=tuple(garden["pivot"]))
+    pipe = LineString([p[:2] for p in layout["underdrain"]])
+    assert gravel.covers(pipe.buffer(garden["drainRadius"]+.10)), "perforated pipe needs side gravel cover"
+    x0, y0, x1, y1 = ring.bounds
+    stations = [xy for xy in rectangle(x0, y0, x1-x0, y1-y0) if ring.covers(Point(xy))]
+    terrain = ground([*garden["ring"], *stations])-datum
+    carrier = station_points([*layout["west"], layout["spout"]])
+    carrier_clearance = datum+carrier[:, 2]-.065-ground(carrier[:, :2])
+    outfall = layout["gardenOutlet"]
+    chamber_inverts = [p[-1][2]-.065 for p in (outfall, layout["overflow"])]
+    high_water = max(feed[-1][2]+field["height"]/2 for feed, field in zip(layout["feeds"],layout["fields"]))
+    assert min(chamber_inverts)>high_water
+    assert layout["spout"][-1][2]-.065>garden["rim"]>garden["crest"]>garden["floor"]
+    assert min(carrier_clearance)>0
+    assert all(garden["linerBase"]<point[2]-garden["drainRadius"] and
+               point[2]+garden["drainRadius"]<garden["floor"]-garden["soilDepth"] for point in layout["underdrain"])
+    length = sum(math.dist(a[:2],b[:2]) for a,b in zip(outfall,outfall[1:]))
+    result["rainGarden"] = {
+        "footprintM2": round(ring.area,3), "pondDepthM": round(garden["pondDepth"],3),
+        "conservativeStorageM3": round(garden["storageM3"],3), "directRain30mmM3": round(ring.area*.030,3),
+        "existingTerrainEVRF2007M": span(terrain+datum),
+        "floorOverflowRimEVRF2007M": [round(datum+garden[k],3) for k in ("floor","crest","rim")],
+        "linerBaseExcavationM": span(terrain-garden["linerBase"]),
+        "facadeCollectorInvertAboveGroundM": span(carrier_clearance),
+        "inletInvertAbovePondCrestM": round(layout["spout"][-1][2]-.065-garden["crest"],3),
+        "underdrainStartsEndsEVRF2007M": [round(datum+p[2]-garden["drainRadius"],3) for p in layout["underdrain"]],
+        "gardenOutfallLengthM": round(length,3),
+        "gardenOutfallStartEndInvertEVRF2007M": [round(datum+outfall[i][2]-.065,3) for i in (0,-1)],
+        "fieldTopBelowLowerIncomingInvertM": round(min(chamber_inverts)-high_water,3)}
     return result
 
 

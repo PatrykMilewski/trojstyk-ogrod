@@ -177,7 +177,9 @@ test('all nine flush uplights follow the finished grade and share dusk, dawn and
  assert.equal(fixtures.length,9);
  assert(!interior.group.children.some(o=>o.name.includes('exterior-sconce')));
  batchStaticDetails(THREE,fixtures);
- const mats=fixtures.map(root=>root.getObjectByName('uplight-aperture').material);
+ const pendants=interior.group.children.filter(o=>o.name.startsWith('icon-terrace-pendant-'));
+ assert.equal(pendants.length,2);
+ const mats=[...fixtures.map(root=>root.getObjectByName('uplight-aperture').material),...pendants.map(root=>root.getObjectByName('pendant-diffuser').material)];
  const receivers=object('facade-garage').material.filter(m=>m.lightMap);
  assert.equal(receivers.length,2);
  for(const ground of [apron,...scene.children.filter(o=>o.name.startsWith('surface-'))])
@@ -187,6 +189,7 @@ test('all nine flush uplights follow the finished grade and share dusk, dawn and
  const viewport={clientWidth:400,clientHeight:400};
  const verify=on=>{
   assert.equal(circuit.isOn,on);
+  assert(pendants.every(root=>root.getObjectByName('terrace-downlight').visible===on));
   for(const surface of receivers)assert.equal(surface.lightMapIntensity,on?24:0);
   for(const diffuser of mats)assert.equal(diffuser.emissiveIntensity>0,on);
  };
@@ -208,6 +211,17 @@ test('all nine flush uplights follow the finished grade and share dusk, dawn and
   assert(circuit.toggleAt(new THREE.Vector2(0,0),camera),root.name);verify(!wasOn);
   circuit.update(-12);verify(!wasOn);
   assert(circuit.toggleAt(new THREE.Vector2(.06,0),camera,viewport),root.name+' near tap at 12 CSS pixels');verify(wasOn);
+ }
+ const rail=bounds(object('terrace-pendant-rail'));
+ for(const root of pendants){
+  const point=root.position;
+  assert(rail.distanceToPoint(point)<.001);
+  assert(point.z-.50>2.2 && point.x>10.20 && point.x<12.70 && point.y===15);
+  const diffuser=root.getObjectByName('pendant-diffuser');
+  camera.position.copy(root.localToWorld(new THREE.Vector3(0,-1.2,-1.15)));
+  camera.lookAt(diffuser.getWorldPosition(new THREE.Vector3()));camera.updateProjectionMatrix();
+  const before=circuit.isOn;
+  assert(circuit.toggleAt(new THREE.Vector2(0,0),camera,viewport));verify(!before);
  }
  circuit.update(14);verify(false);
  assert.equal(circuit.toggleAt(new THREE.Vector2(0,0),camera,viewport),false);verify(false);

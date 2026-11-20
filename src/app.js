@@ -76,9 +76,11 @@ function makeHouse(n) {
 }
 const suppliedLayout=JSON.parse(document.getElementById('default-layout').textContent);
 function currentHouseGeometry(layout) {
- const index=layout.objects.findIndex(o=>o.id==='dom-190');
- const original=suppliedLayout.objects.find(o=>o.id==='dom-190');
- if(index>=0&&JSON.stringify(layout.objects[index])===JSON.stringify(original))layout.objects[index]=makeHouse('190');
+ for(const id of ['190','193']){
+  const index=layout.objects.findIndex(o=>o.id===`dom-${id}`);
+  const original=suppliedLayout.objects.find(o=>o.id===`dom-${id}`);
+  if(index>=0&&JSON.stringify(layout.objects[index])===JSON.stringify(original))layout.objects[index]=makeHouse(id);
+ }
  return layout;
 }
 function initialState() {
@@ -276,6 +278,9 @@ function renderParcels() {
   const pos={'193':[-20,-22],'190':[-18,27],'191':[24,12]}[id];html+=label(...pos,`775/${id}`,1.1,'#758177','font-weight="bold"');
   for(const field of ['terraces','driveways','entries'])if(GEO[field]?.[id])html+=`<polygon points="${points(GEO[field][id])}" fill="${field==='terraces'?'#d9c4a3':'#d3d6ce'}" stroke="#b9bdb2" stroke-width=".025"/>`;
  }
+ const {surfaces,bowl}=GEO.garden193;
+ for(const p of surfaces)html+=`<polygon data-garden-surface="${esc(p.id)}" points="${points(p.ring)}" fill="${esc(p.color)}" stroke="#8c8777" stroke-width=".025"/>`;
+ html+=`<circle cx="${bowl.center[0]}" cy="${-bowl.center[1]}" r="${bowl.radius}" fill="#45473f"/>`;
  return html;
 }
 function personDrawing(x,y,angle=0,scale=1,color='#bd7658',pose='standing') {
@@ -625,7 +630,7 @@ function exportSvg() {
 async function importFile(event) {
  const file=event.target.files[0];event.target.value='';if(!file)return;
  if(file.size>2000000){toast('Plik jest za duży. Limit 2 MB.');return;}
- try{const next=validateImport(JSON.parse(await file.text()));commit(()=>{state=next;selection=null;});fit([state.fence]);toast('Układ został wczytany.');}catch(error){toast(error.message||'Nie można wczytać pliku.');}
+ try{const next=currentHouseGeometry(validateImport(JSON.parse(await file.text())));commit(()=>{state=next;selection=null;});fit([state.fence]);toast('Układ został wczytany.');}catch(error){toast(error.message||'Nie można wczytać pliku.');}
 }
 function updateCursor() {
  if(space)clearFenceHover();

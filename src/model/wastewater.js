@@ -139,6 +139,10 @@ function wastewaterTank(THREE, {part,pipe,ring}) {
     }
   }
   pipe('biodisc-shaft',[-.85,0,water+.09],[.85,0,water+.09],.046,'#d7e5c8',5);
+  // Dry gearmotor under the lid, with the transmission aligned to the existing rotor shaft.
+  part('biodisc-drive-motor',new THREE.BoxGeometry(.23,.21,.19),[.79,0,-.18],'#7d847b',5);
+  part('biodisc-drive-transmission',new THREE.BoxGeometry(.066,.09,water*-1-.20),[.82,0,(water+.09-.22)/2],'#57706d',5);
+  part('biodisc-drive-gland',new THREE.BoxGeometry(.044,.031,.043),[.79,-.115,-.16],'#c3b786',5);
   for (const x of [-.76,0,.76]) {
     part('biodisc-baffle',new THREE.BoxGeometry(.035,2*Math.sqrt(r*r-x*x)*.91,.96),
       [x,0,bottom+.66],'#7ba0a2',3,.56);

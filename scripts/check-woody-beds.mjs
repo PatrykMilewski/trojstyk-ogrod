@@ -26,7 +26,7 @@ export function checkWoodyPlanting(plan, model, register) {
     ...neighbors.surfaces.map(surface => surface.geometry)]
     .filter(geo => geo?.coordinates.length).map(geo => geo.coordinates);
   const excludedBeds = [...garden.polygons, ...neighbors.gardenAdditions.polygons]
-    .filter(p => ['shared_boundary', 'gravel', 'paving', 'path'].includes(p.kind))
+    .filter(p => ['shared_boundary', 'gravel', 'paving', 'path', 'flagstone'].includes(p.kind))
     .map(p => [p.ring, ...(p.holes || [])]);
   for (const plot of plan.parcels) {
     const boundary = neighbors.parcels[plot.id].coordinates;

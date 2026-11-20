@@ -56,7 +56,7 @@ test('each mapped bed contains rendered shrubs within its ground footprint', asy
   const {woodyRandom} = await load(await read('../src/model/tree-realism.js'));
   const {parcels} = JSON.parse(await read('../trzy-domy-3d/woodland-plan.json'));
   const {wastewaterServiceAccess193,createWastewaterSurface}=await load(await read('../src/model/wastewater.js'));
-  const {rainFieldFootprints193,rainServiceAccess193,rainTankFootprint193}=await load(await read('../src/model/rain-services.js'));
+  const {rainGardenFootprint193,rainFieldFootprints193,rainServiceAccess193,rainTankFootprint193}=await load(await read('../src/model/rain-services.js'));
   const {iconPlanPoint}=await load(await read('../src/model/roof-windows.js'));
   const marker='const [source,garden,house,neighbors]=';
   const [,garden,house,neighbors]=JSON.parse(html.slice(html.indexOf(marker)+marker.length,html.indexOf(';\nconst landscaping=')));
@@ -64,7 +64,7 @@ test('each mapped bed contains rendered shrubs within its ground footprint', asy
   const serviceAccess=[...wastewater,...rainServiceAccess193(house,iconPlanPoint)];
   const equipment=[
     ...wastewater.filter(item=>item.footprint).map(({id,footprint})=>({id,ring:footprint})),
-    rainTankFootprint193(house,iconPlanPoint), ...rainFieldFootprints193(house,iconPlanPoint)
+    rainGardenFootprint193(house,iconPlanPoint),rainTankFootprint193(house,iconPlanPoint), ...rainFieldFootprints193(house,iconPlanPoint)
   ];
   const planSvg=await read('../trzy-domy-3d/plan-kontrolny.svg');
   for(const id of ['distributor','vent-1','vent-2']){
@@ -75,7 +75,7 @@ test('each mapped bed contains rendered shrubs within its ground footprint', asy
   for(const label of ['Studzienka rozdzielcza','Wywiewki tuneli (1 i 2)'])assert(planSvg.includes(label));
   const trees=[...garden.trees,...neighbors.gardenAdditions.trees,...parcels.flatMap(p=>p.trees)];
   const paths=garden.polygons.filter(p=>['path','shared_path','paving','gravel'].includes(p.kind));
-  assert.deepEqual(equipment.map(e=>e.id).sort(),['field','rain-field-1','rain-field-2','rain-field-3','rain-tank','tank']);
+  assert.deepEqual(equipment.map(e=>e.id).sort(),['field','rain-field-2','rain-field-3','rain-garden','rain-tank','tank']);
   for(const item of equipment){
     assert(planSvg.includes('id="instalacja-193-'+item.id+'"'),'Missing installation on the control plan: '+item.id);
     for(const path of paths){

@@ -23,9 +23,10 @@ export function addIconInterior(options) {
  if(context.data.electrical)iconLoftElectrical(context);
  options.joinStory?.(options.THREE,context.group);
  const exteriorLights=iconExteriorLighting(context);
+ const sitePower=iconSitePowerEquipment(context,options.siteGate);
  const updateHallDoors=iconHallDoorMotion(context);
  const {group,navigation,data,world} = context;
- return {group,navigation,rooms:data.rooms,metadata:data.metadata,localToWorld:world,updateHallDoors,projector,appliances,officeWindow,exteriorLights,robotCabinet};
+ return {group,navigation,rooms:data.rooms,metadata:data.metadata,localToWorld:world,updateHallDoors,projector,appliances,officeWindow,exteriorLights,sitePower,robotCabinet};
 }
 
 const iconInteriorContains = (p,r)=>{let yes=false;for(let i=0,j=r.length-1;i<r.length;j=i++){const a=r[i],b=r[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;};
@@ -4812,18 +4813,18 @@ function iconPlantBoard(context,{width:w,depth:d,item,part},s,p) {
  for(const u of [0,w-.019])part('edge-'+u,[u,d-.035,u+.019,d-.004],0,h,p.enamel);
  for(const z of [0,h-.024])part('edge-'+z+'-rail',[.019,d-.035,w-.019,d],z,.024,p.enamel);
  iconPlantMark(context,s,'ROZDZIELNICA',w/2,d-.033,.586,.245,.047);
- const rows=[['WYŁ. GŁÓWNY','SPD'],['FALOWNIK','WALLBOX'],['ZMYWARKA','REZERWA']];
+ const rows=[['WYŁ. GŁÓWNY','SPD'],['FALOWNIK','WALLBOX'],['ZMYWARKA','TEREN']];
  for(const [i,labels] of rows.entries()){
   const z=.434-.165*i;
   part('din-rail-'+i,[.035,d-.036,w-.035,d-.028],z,.033,p.silver);
   for(const [j,label] of labels.entries()){
    const u=.046+j*.178;
-   const modules=label==='ZMYWARKA'?1:label==='REZERWA'?0:4;
+   const modules=label==='ZMYWARKA'?1:label==='TEREN'?6:4;
    for(let k=0;k<modules;k++){
-    const a=u+k*.031;
-    part('din-device-'+i+'-'+j+'-'+k,[a,d-.030,a+.029,d-.010],z-.019,.080,p.enamel);
+    const pitch=label==='TEREN'?.023:.031,a=u+k*pitch;
+    part('din-device-'+i+'-'+j+'-'+k,[a,d-.030,a+pitch-.002,d-.010],z-.019,.080,p.enamel);
     if(label==='WALLBOX'&&k===0)part('rcbo-test-button',[a+.007,d-.010,a+.022,d-.003],z+.041,.010,p.blue);
-    part('toggle-'+i+'-'+j+'-'+k,[a+.004,d-.010,a+.025,d-.001],z+.005,.025,label==='SPD'?p.red:p.black);
+    part('toggle-'+i+'-'+j+'-'+k,[a+.004,d-.010,a+pitch-.006,d-.001],z+.005,.025,label==='SPD'?p.red:p.black);
    }
    iconPlantMark(context,s,label,u+.062,d-.033,z-.042,.135,.022);
   }
@@ -4906,6 +4907,8 @@ function iconThermatecBadge(context,s) {
  s.add('wordmark',iconLabelPlane(context,.082,.445),print,1.025,.956,.725).castShadow=false;
 }
 
+const iconPumpMainsPin=[1.08,.555,.74];
+
 function iconPlantOutdoorUnit(context) {
  const spec=context.data.outdoorHeatPump;
  if(!spec)return;
@@ -4947,6 +4950,8 @@ function iconPlantOutdoorUnit(context) {
   line('insulated-line-'+i,[1.017,.556,foot+z],[1.017,0,foot+z],.026,mat.rotor);
   line('wall-collar-'+i,[1.017,.001,foot+z],[1.017,.019,foot+z],.043,mat.shell);
  }
+ const [u,v,h]=iconPumpMainsPin;
+ line('mains-gland',[u,v,h],[u,v+.028,h],.022,p.black);
  for(const mesh of group.children.slice(start))mesh.userData.furnitureId=spec.id;
  obstacle(spec.id,spec.box,0,top);
 }
@@ -5993,13 +5998,67 @@ function iconExteriorLightmaps({THREE,group,data},fittings){
  return [...replacements.values()];
 }
 
+function iconTerracePendants({THREE,group,box,mats},opal){
+ const y=15,fixtures=[];
+ // A fixed rail sits beneath the pergola blades and bears on the house and outer frames.
+ box('terrace-pendant-rail',[8.55,y-.025,14.75,y+.025],2.80,.06,mats.metal);
+ for(const [index,x] of [10.78,12.12].entries()){
+  const root=new THREE.Group();root.name='icon-terrace-pendant-'+(index+1);
+  root.position.set(x,y,2.80);group.add(root);
+  const cylinder=(name,a,b,h,z,material)=>{
+   const part=new THREE.Mesh(new THREE.CylinderGeometry(a,b,h,28).rotateX(Math.PI/2),material);
+   part.name=name;part.position.z=z;root.add(part);return part;
+  };
+  cylinder('pendant-canopy',.065,.065,.032,-.016,mats.metal);
+  cylinder('pendant-cord',.006,.006,.32,-.192,mats.metal);
+  cylinder('pendant-shade',.05,.17,.14,-.42,mats.metal);
+  const aperture=cylinder('pendant-diffuser',.158,.158,.008,-.492,opal);
+  const lamp=new THREE.SpotLight(0xffdaac,17,5.4,Math.PI*.30,.62,2);
+  lamp.name='terrace-downlight';lamp.visible=false;lamp.position.z=-.50;
+  lamp.target.position.z=-2.5;root.add(lamp,lamp.target);
+  fixtures.push({root,aperture,lamp});
+ }
+ return fixtures;
+}
+
+function iconSitePowerEquipment(context,gate){
+ const {THREE,group,data,mats}=context;
+ const housing=new THREE.Group();housing.name='exterior-electrical-equipment';group.add(housing);
+ const box=(...args)=>housing.add(context.box(...args));
+ const charger=data.furniture.find(f=>f.id==='garage-wallbox');
+ const [x0,y0,,y1]=charger.box;
+ box('ev-mount-spacer',[.48,y0+.061,x0,y1-.061],charger.elevation+.419,.392,mats.metal);
+ const pump=data.outdoorHeatPump;
+ const heatPump=iconInteriorFurnitureFrame(context,{...pump,room:'outdoors'}).point(...iconPumpMainsPin);
+ const garageSide=data.facades.find(f=>f.id==='facade-garage-side').a[0],y=1.58;
+ box('biodisc-controller',[garageSide,y-.14,garageSide+.14,y+.14],1.12,.34,mats.dark);
+ box('biodisc-controller-door',[garageSide+.14,y-.13,garageSide+.15,y+.13],1.13,.32,mats.garage);
+ const terminals={heatPump};
+ for(const [name,dy] of [['controllerIn',-.07],['controllerOut',.07]]){
+  const x=garageSide+.075;
+  box('biodisc-'+name+'-gland',[x-.016,y+dy-.016,x+.016,y+dy+.016],1.096,.024,mats.dark);
+  terminals[name]=[x,y+dy,1.096];
+ }
+ if(gate){
+  const ends=gate.points.map(p=>group.worldToLocal(new THREE.Vector3(...p,0)));
+  const [post,far]=ends.sort((a,b)=>b.x-a.x),x=post.x+.25,y=post.y+.24;
+  box('drive-gate-motor-foot',[x-.185,y-.125,x+.185,y+.125],.023,.08,mats.tile);
+  box('drive-gate-motor',[x-.155,y-.095,x+.155,y+.095],.103,.24,mats.metal);
+  box('drive-gate-rack',[far.x,post.y+.045,x+.13,post.y+.082],.165,.05,mats.metal);
+  box('drive-gate-pinion',[x-.041,post.y+.081,x+.041,y-.09],.159,.062,mats.dark);
+  terminals.gate=[x,y,.11];
+ }
+ return terminals;
+}
+
 function iconExteriorLighting(context){
  const {fittings,opal}=iconExteriorFittings(context);
- const pick=iconVisiblePick(context,fittings.map(f=>f.root)),center=new context.THREE.Vector3();
+ const pendants=iconTerracePendants(context,opal),all=[...fittings,...pendants];
+ const pick=iconVisiblePick(context,all.map(f=>f.root)),center=new context.THREE.Vector3();
  function pickNearAperture(ndc,camera,viewport){
   if(pick(ndc,camera))return true;
   if(!viewport)return false;
-  for(const {root,aperture} of fittings){
+  for(const {root,aperture} of all){
    aperture.getWorldPosition(center).project(camera);
    if(Math.abs(center.z)>1)continue;
    const dx=(ndc.x-center.x)*viewport.clientWidth/2,dy=(ndc.y-center.y)*viewport.clientHeight/2;
@@ -6010,9 +6069,11 @@ function iconExteriorLighting(context){
  let materials=[],night=null,on=false;
  function set(value){
   on=value;opal.emissiveIntensity=on?3.8:0;
+  for(const {lamp} of pendants)lamp.visible=on;
   for(const m of materials)m.lightMapIntensity=on?24:0;
  }
  return {
+  terminals:all.map(({root,lamp})=>({id:root.name,point:root.position.toArray(),pendant:!!lamp})),
   prepare(){materials=iconExteriorLightmaps(context,fittings);set(on);},
   update(elevation){const next=elevation<=-3;if(next!==night){night=next;set(night);}},
   toggleAt(ndc,camera,viewport){if(!night||!pickNearAperture(ndc,camera,viewport))return false;set(!on);return true;},

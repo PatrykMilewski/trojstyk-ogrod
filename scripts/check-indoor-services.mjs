@@ -353,7 +353,7 @@ test('battery DC and dedicated AC circuits reach the physical terminals and dish
  const inverter=equipment('utility-pv-inverter'),charger=equipment('garage-wallbox');
  const pin=(item,id)=>{
   const [u,v,h]=item.ports[id],[,,e,n]=item.box;
-  return [...(item.facing==='-x'?[e-v,item.box[1]+u]:[e-u,n-v]),(item.elevation||0)+h];
+  return [...(item.facing==='-x'?[e-v,item.box[1]+u]:item.facing==='+x'?[item.box[0]+v,n-u]:[e-u,n-v]),(item.elevation||0)+h];
  };
  const cord=at('dishwasher-power-cord');
  for(const [id,from,to] of [
@@ -374,7 +374,7 @@ test('battery DC and dedicated AC circuits reach the physical terminals and dish
  const garageDoor=data.walls.find(w=>w.id==='garage-back');
  const bay=data.garageFitout.parkingBays[1],radius=.022;
  for(const p of pipeCenterline(at('distribution-board-to-wallbox'))){
-  assert(p.y-radius>bay[3],'EV supply stays outside the parking bay');
+  assert(p.y-radius>bay[3]||p.x+radius<data.garageFitout.parkingBays[0][0],'EV supply stays outside the parking bays');
   for(const [s,e] of garageDoor.doors){
    if(Math.abs(p.y-garageDoor.a[1])<garageDoor.thickness/2+radius && p.z<2.1)
     assert(p.x<garageDoor.a[0]+s-radius||p.x>garageDoor.a[0]+e+radius,'wire avoids door opening');

@@ -39,7 +39,7 @@ def garden_services(house):
     repository = ROOT.parent if (ROOT.parent / "src/model").is_dir() else ROOT.parent / "trojstyk-pages-publish"
     script = """
 import {wastewaterServiceAccess193} from './src/model/wastewater.js';
-import {rainFieldFootprints193,rainServiceAccess193,rainTankFootprint193} from './src/model/rain-services.js';
+import {rainGardenFootprint193,rainFieldFootprints193,rainServiceAccess193,rainTankFootprint193} from './src/model/rain-services.js';
 import {iconPlanPoint} from './src/model/roof-windows.js';
 import {readFileSync} from 'node:fs';
 const house=JSON.parse(readFileSync(0,'utf8'));
@@ -48,7 +48,7 @@ console.log(JSON.stringify({
   access:[...wastewater,...rainServiceAccess193(house,iconPlanPoint)],
   footprints:[
     ...wastewater.filter(item=>item.footprint).map(({id,footprint})=>({id,ring:footprint})),
-    rainTankFootprint193(house,iconPlanPoint), ...rainFieldFootprints193(house,iconPlanPoint)
+    rainGardenFootprint193(house,iconPlanPoint), rainTankFootprint193(house,iconPlanPoint), ...rainFieldFootprints193(house,iconPlanPoint)
   ]
 }));
 """
@@ -174,7 +174,7 @@ def generate(plot, garden, site, house):
         inspection_beds = [surface(item).buffer(2.0 if item.get("id", "").startswith("rain-") else 1.3)
                            for item in services["access"]
                            if parcel_id == "193" and item.get("id") in ("tank", "distributor", "vent-1", "vent-2",
-                                                                         "rain-sw-filter", "rain-leaf-filter",
+                                                                         "rain-garden", "rain-leaf-filter",
                                                                          "rain-tank-inspection", "rain-field-inspection")]
         beds = design(parcel_id, parcel, free, existing, inspection_beds)
         parts = sorted(polygon_parts(beds), key=lambda p: -p.area)

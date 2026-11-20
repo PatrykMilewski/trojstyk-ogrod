@@ -12,8 +12,8 @@ export function bindIconServiceView({THREE,indoor,rain,wastewater,camera,control
     water:'Niebieski – zimna woda · czerwony – ciepła woda · malinowy – powrót cyrkulacji CWU',
     sewer:'Ochra – odpływy do oczyszczalni · turkus przy zbiorniku – odpływ po oczyszczeniu',
     ethernet:'Zielony – gniazda RJ45 w sześciu pokojach i garażu · żółty – rezerwa PoE na dachu · wszystkie przewody wracają do szafy w kotłowni',
-    power:'Złoty – obwody AC rozdzielnicy, falownika i wallboxa · koralowy i szaroniebieski – przewody DC magazynu · grafitowy – zmywarka',
-    rain:'Dwa spusty SW zasilają rozsącz w rabacie. Dwa spusty SE prowadzą do zbiornika z przelewem do dwóch pól w ogrodzie.'
+    power:'Złoty – zasilanie AC z rozdzielnicy: falownik, wallbox przy rowerach, zmywarka, brama, sterownik i napęd BioDisc, pompa ciepła, pompa ogrodowa, oprawy przy elewacji i lampy wiszące na tarasie · koralowy i szaroniebieski – magazyn DC · grafit – przewód zmywarki',
+    rain:'Dwa spusty SW zasilają ogród deszczowy przy garażu. Dwa wschodnie spusty prowadzą do zbiornika z pompą i kranem przy tarasie. Przelewy trafiają do dwóch pól pod trawnikiem.'
   };
   let active=false;
   function update(frame) {

@@ -182,7 +182,7 @@ const surfaceGroundProfiles = {
   road: 'asphalt', terrace: 'terrace', entry: 'pavers', driveway: 'pavers', entryPaving: 'pavers',
   conceptCanopyDeck: 'terrace', shared_boundary: 'grass', shared_path: 'pavers',
   sand: 'sand', podest: 'terrace', baza: 'terrace', gravel: 'gravel',
-  paving: 'pavers', path: 'pavers', planting: 'planting', lawn: 'grass',
+  paving: 'pavers', path: 'pavers', flagstone: 'stone', planting: 'planting', lawn: 'grass',
 };
 
 const surfaceGroundColors = {

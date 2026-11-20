@@ -207,7 +207,7 @@ test('the separate rain and wastewater networks clear each other in three dimens
   const wastewater=[...system.children,...field.children].filter(m=>
     /^(clarified-outlet-|building-inlet-|distribution-branch-|distribution-chamber$|drain-row-\d+-vent(?:$|-link-))/.test(m.name));
   const rainPipes=rain.children.filter(m=>m.geometry.type==='CylinderGeometry'&&
-    /^rain-(ground-|leaf-filter|screened-overflow|filtered-inlet|tank-inspection|field-(inspection|feed-|vent-return-|air-))/.test(m.name));
+    /^rain-(ground-|garden-outfall-|irrigation-supply-|leaf-filter|screened-overflow|filtered-inlet|tank-inspection|field-(inspection|feed-|vent-return-|air-))/.test(m.name));
   assert(rainPipes.some(mesh=>mesh.name.startsWith('rain-field-feed-')));
   assert(rainPipes.some(mesh=>mesh.name.startsWith('rain-field-vent-return-')));
   let closest=Infinity;
@@ -217,7 +217,7 @@ test('the separate rain and wastewater networks clear each other in three dimens
   assert(bays.length>0);
   const footprint=worldFieldRing(),rainTank=rainTankFootprint193(house,iconPlanPoint).ring;
   const bioDisc=wastewaterServiceAccess193().find(s=>s.id==='tank').footprint;
-  for(const [outline,minGap] of [[footprint,18.5],[bioDisc,23.2]]){
+  for(const [outline,minGap] of [[footprint,15],[bioDisc,21]]){
     assert.equal(clipping.intersection([outline],[rainTank]).length,0);
     assert(ringDistance(outline,rainTank)>minGap);
   }
@@ -264,7 +264,7 @@ test('tank boundary labels measure the lid edge and the rotated rain tank footpr
   const radius=part.geometry.boundingBox.max.x,boundary=neighbors.parcels['193'].coordinates[0];
   const [lid,body]=measureTankGaps(boundary,wastewater193.tankCenter,radius,footprint);
   assert.equal(lid.length.toFixed(2),'2.10');
-  assert.equal(body.length.toFixed(2),'7.90');
+  assert.equal(body.length.toFixed(2),'4.52');
   assert(close(clearance(body.start,footprint),0));
   for(const gap of [lid,body]){
     assert(close(clearance(gap.end,boundary),0));
