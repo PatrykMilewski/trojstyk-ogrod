@@ -78,27 +78,34 @@ function checkVehicles(neighbors, registry) {
 function checkDriveway193(source, garden, icon, neighbors, registry) {
   const [plot] = source.variants;
   assert.deepEqual(source.variants.map(v => v.id), ['aktualny']);
-  const gate = garden.lines.find(line => line.id === 'drive-gate-0' && line.kind === 'drive_gate').points;
+  const entrance = garden.lines.find(line => line.id === 'drive-gate-0' && line.kind === 'drive_gate');
+  const gate = entrance.points;
   const door = plot.gate;
   const midpoint = ([a, b]) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
   const distance = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
   const street = midpoint(gate), garage = midpoint(door);
   const [width, doorWidth, setback, pavedArea] = registry.details.find(d => d.id === 'driveway-193').values;
   const near = (a, b, name) => assert.ok(Math.abs(a - b) < 0.00001, name);
-  near(distance(...gate), width, 'Street gate width /193');
+  near(distance(...gate), width, 'Paved width at the road boundary /193');
+  near(distance(...entrance.slide.closed),width+.09,'Blade overlaps the receiving post /193');
+  near(distance(...entrance.slide.pocket),width+.09+entrance.slide.tailM,'Entire cantilever and tail fit in pocket /193');
   near(distance(...door), doorWidth, 'Garage door width /193');
-  near(distance(street, garage), setback, 'Distance from street gate to garage /193');
+  near(distance(street, garage), setback, 'Distance from road boundary to garage /193');
   assert.equal(+plot.areas.drivewayExtra.toFixed(3), pavedArea);
   assert.deepEqual(icon.metadata.matrix, registry.placementPins['193'].matrix);
   assert.deepEqual(icon.metadata.translation, registry.placementPins['193'].translation);
   const road = source.edges.find(edge => edge.road && gate.every(([x,y]) =>
     Math.abs(edge.n[0] * x + edge.n[1] * y - edge.c) < 0.00001 &&
     distance(edge.a, [x,y]) + distance([x,y], edge.b) < edge.length + 0.00001));
-  assert.ok(road, 'Gate lies on the road frontage of /193');
+  assert.ok(road, 'Paved entrance meets the road frontage of /193');
+  for (const [x,y] of [...entrance.slide.closed,...entrance.slide.pocket]) {
+    near(Math.abs(road.n[0]*x+road.n[1]*y-road.c),.24,'Gate track setback');
+    assert.ok(distance(road.a,[x,y])+distance([x,y],road.b)<road.length+.035,'Entire track fits the road frontage');
+  }
   assert(!neighbors.cars.some(c => c.location === 'driveway-193'));
   const lateral = ((door[1][0] - door[0][0]) * (street[0] - garage[0]) +
     (door[1][1] - door[0][1]) * (street[1] - garage[1])) / doorWidth;
-  near(lateral, 0, 'Street gate lines up with garage door /193');
+  near(lateral, 0, 'Road entrance lines up with garage door /193');
 }
 
 function checkDimensions(model, registry) {
@@ -117,7 +124,7 @@ function checkDimensions(model, registry) {
   const woodyFile = readFileSync(resolve(root, 'trzy-domy-3d', registry.woodyPlanting.dataFile));
   const woodyData = JSON.parse(woodyFile);
   const planSvg = readFileSync(resolve(root, 'trzy-domy-3d/plan-kontrolny.svg'), 'utf8');
-  checkIconGardenPaths(garden, editor, registry, planSvg);
+  checkIconGardenPaths(garden, editor, registry, planSvg, neighbors.gardenAdditions);
   assert.ok(planSvg.includes(`data-woodland-sha256="${hash(woodyFile)}"`), '2D plan must use the current planting geometry');
   assert.deepEqual(model.woodyPlantings, woodyData, 'Published planting plan and rendered beds differ');
   checkWoodyPlanting(woodyData, model.data, registry.woodyPlanting);

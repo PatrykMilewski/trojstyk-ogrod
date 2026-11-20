@@ -266,9 +266,10 @@ const surfaceTurfColors = {
 function surfaceProfileFor(object, material, key, index, hasVinylTexture) {
   const {name, parent, geometry} = object;
   if (!material.isMeshStandardMaterial || material.map || material.transparent) return null;
-  if (material.userData.surfaceProfile === 'smoothPaint') return null;
+  if (['smoothPaint', 'blackGlazing'].includes(material.userData.surfaceProfile)) return null;
+  if (material.userData.surfaceProfile === 'facade') return 'facade';
   const color = material.color.getHexString();
-  if (object.userData.parcel === '193' && (name === 'surface-driveway' || name === 'surface-entry')) return 'graniteFan';
+  if (object.userData.parcel === '193' && ['surface-driveway', 'surface-entry', 'surface-street-walk'].includes(name)) return 'graniteFan';
   if (name === 'icon-granite-curb-193') return 'graniteCurb';
   if (/^(parcel|context)-grass-/.test(name)) return 'grass';
   if (/^(parcel|context)-soil-/.test(name)) return 'soil';
@@ -278,7 +279,7 @@ function surfaceProfileFor(object, material, key, index, hasVinylTexture) {
 
   if (name === 'hot-tub-blue-water') return 'water';
   if (name === 'in-ground-trampoline-mat') return 'rubber';
-  if (name === 'boundary-fence-boards' || (key === 'timber' && parent.name.startsWith('shared-wicket-'))) return 'charred';
+  if (name === 'boundary-fence-boards' || (key === 'timber' && (parent.userData.kind === 'shared-wicket' || parent.userData.kind === 'street-wicket'))) return 'charred';
   if (parent.name === 'shared-red-sauna') return name === 'sauna-roof-no-eaves' ? 'paneledRoof' : 'redWood';
   if (key === 'garage' || name === 'garage-sectional-door') return 'garage';
   const movingDoor = parent.userData.kind === 'walk-door' || parent.parent?.userData.kind === 'walk-door';
@@ -422,6 +423,7 @@ function applyBarkScan(material, textures) {
 }
 
 const scannedSurfaces = {
+  iconCharredBoards: {tile: [2.8, 1.18], tint: 0xffffff, roughness: .88, bump: .0016, gain: 1},
   grass: {metres: 2, tint: 0xa0e4a1},
   planting: {metres: 1.3, tint: 0xd3bba3},
   gravel: {metres: 2.25, tint: 0xeee3cf},
@@ -436,11 +438,11 @@ async function loadSurfaceScans(THREE, scans, anisotropy) {
     const loaded = await Promise.all(images.map(url => loader.loadAsync(url)));
     const [map, bumpMap] = loaded;
     for (const texture of loaded) {
-      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.wrapS = texture.wrapT = type === 'iconCharredBoards' ? THREE.MirroredRepeatWrapping : THREE.RepeatWrapping;
       texture.anisotropy = anisotropy;
     }
     map.colorSpace = THREE.SRGBColorSpace;
-    if (type === 'kitchenWorktopSmokedWalnut') map.wrapS = map.wrapT = THREE.MirroredRepeatWrapping;
+    if (type === 'kitchenWorktopSmokedWalnut' || type === 'kitchenFrontVeneer') map.wrapS = map.wrapT = THREE.MirroredRepeatWrapping;
     textures.set(type, bumpMap ? {map, bumpMap} : {map});
   }));
   return textures;
@@ -452,29 +454,34 @@ export async function applyRealisticSurfaces({THREE, scene, mats, renderer, scan
   const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   const textures = await loadSurfaceScans(THREE, scans, anisotropy);
   const hasVinylTexture = textures.has('virginOakVinyl');
-  const worktopScan = textures.get('kitchenWorktopSmokedWalnut')?.map;
   scene.traverse(object => {
     if (!object.isMesh || !object.geometry?.getAttribute('position')) return;
     if (object.isInstancedMesh && object.name.endsWith('-trunks') && textures.has('bark')) {
       applyBarkScan(object.material, textures.get('bark'));
       return;
     }
-    if (object.material.userData?.surfaceProfile === 'kitchenWorktopSmokedWalnut') {
-      if (worktopScan && object.material.map !== worktopScan) {
-        object.material.map = worktopScan;
+    const profile = object.material.userData?.surfaceProfile;
+    if (profile === 'kitchenWorktopSmokedWalnut' || profile === 'kitchenFrontVeneer') {
+      const scan = textures.get(profile)?.map;
+      if (scan && object.material.map !== scan) {
+        object.material.map = scan;
         object.material.color.setHex(0xffffff);
         object.material.needsUpdate = true;
       }
       return;
     }
     const originals = Array.isArray(object.material) ? object.material : [object.material];
-    const types = originals.map((material, i) => surfaceProfileFor(object, material, keys.get(material), i, hasVinylTexture));
+    const iconCladding = textures.has('iconCharredBoards') && (object.parent.name === 'icon-193-interior' || object.name.startsWith('garden-pier-'));
+    const types = originals.map((material, i) => {
+      const type = surfaceProfileFor(object, material, keys.get(material), i, hasVinylTexture);
+      return iconCladding && type === 'facade' ? 'iconCharredBoards' : type;
+    });
     const type = types.find(Boolean);
     if (!type) return;
     const angle = /^surface-(driveway|entry|terrace)$/.test(object.name) ? siteRotation : 0;
-    const projectionType = types.includes('facade') ? 'facade' : type;
+    const projectionType = types.find(t => t === 'facade' || t === 'iconCharredBoards') ?? type;
     const metres = scans[projectionType] && scannedSurfaces[projectionType].metres;
-    const tile = metres ? [metres, metres] : surfaceProfiles[projectionType].tile;
+    const tile = metres ? [metres, metres] : (surfaceProfiles[projectionType] ?? scannedSurfaces[projectionType]).tile;
     object.geometry = surfaceProjectGeometry(THREE, object, tile, angle);
     const replacements = originals.map((material, i) => {
       const type = types[i];

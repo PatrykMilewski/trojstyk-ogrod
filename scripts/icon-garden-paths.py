@@ -6,9 +6,9 @@ import random
 from pathlib import Path
 
 from shapely.geometry import LineString, Point, Polygon, shape
-from shapely.ops import nearest_points, unary_union
+from shapely.ops import nearest_points, substring, unary_union
 
-from woodland_plan import polygon_parts, sources, surface
+from woodland_plan import garden_services, polygon_parts, sources, surface
 
 
 PALETTE = ('#dfdacb', '#d5cfc0', '#e4dfd2', '#dbd5c6', '#d2cdbf')
@@ -78,8 +78,65 @@ def flagstones(route_id, start, end, free, seed):
                         minGapM=min(gaps), maxGapM=max(gaps))
 
 
+def set_sliding_gate(garden, plot):
+    gate = next(line for line in garden['lines'] if line['kind'] == 'drive_gate')
+    a,b = gate['points']
+    length = math.dist(a,b)
+    ux,uy = (b[0]-a[0])/length,(b[1]-a[1])/length
+    nx,ny = -uy,ux
+    if not shape(plot['driveway']).covers(Point((a[0]+b[0])/2+nx,(a[1]+b[1])/2+ny)):
+        nx,ny = -nx,-ny
+    def point(u,v):
+        return [a[0]+ux*u+nx*v, a[1]+uy*u+ny*v]
+    gate.pop('swing',None)
+    width,tail=length+.09,2.65
+    travel=length+.18
+    closed=[point(-.045,.24),point(-.045+width,.24)]
+    pocket=[point(-.045+travel,.24),point(-.045+travel+width+tail,.24)]
+    gate['slide']=dict(closed=closed,pocket=pocket,tailM=tail)
+
+
+
+def add_street_entry(plot, garden, house):
+    set_sliding_gate(garden,plot)
+    width, distance_to_drive = 1.2, .25
+    drive = plot['driveway']['coordinates'][0]
+    road = LineString(next(l['points'] for l in garden['lines'] if l['kind'] == 'drive_gate'))
+    ux, uy = [(b-a)/road.length for a,b in zip(*road.coords)]
+    drive_edge = LineString([drive[-2],drive[-3]])
+    street = drive_edge.coords[0]
+    rear = drive_edge.interpolate(width).coords[0]
+    def offset(point, metres):
+        return [point[0]-ux*metres, point[1]-uy*metres]
+    front = [offset(street,s) for s in (width+distance_to_drive,distance_to_drive)]
+    walk = Polygon([*front, street, rear, offset(rear,width+distance_to_drive)])
+    services = garden_services(house)
+    assert all(walk.disjoint(surface(o)) for o in services['access'] + services['footprints'])
+    if not any(l['kind'] == 'street_wicket' for l in garden['lines']):
+        fence = next(l for l in garden['lines'] if l['kind'] == 'parcel_fence'
+                     and all(LineString(l['points']).distance(Point(p)) < 1e-5 for p in front))
+        line = LineString(fence['points'])
+        lo, hi = sorted(line.project(Point(p)) for p in front)
+        i = garden['lines'].index(fence)
+        garden['lines'][i:i+1] = [
+            {**fence, 'points': list(substring(line,0,lo).coords)},
+            {**fence, 'id': fence['id']+'-street', 'points': list(substring(line,hi,line.length).coords)}]
+        garden['lines'].append(dict(id='street-wicket-193', kind='street_wicket', name='Furtka wejściowa /193',
+                                    points=front, width=.055, height=1.6, z=0))
+    garden['polygons'] = [p for p in garden['polygons'] if p['id'] != 'street-walk-193']
+    lawn_area = 0
+    for lawn in (p for p in garden['polygons'] if p['kind'] == 'lawn'):
+        clipped = surface(lawn).difference(walk)
+        lawn.update(ring=list(clipped.exterior.coords), holes=[list(r.coords) for r in clipped.interiors])
+        lawn_area += clipped.area
+    garden['polygons'].append(dict(id='street-walk-193', kind='paving', name='Szara kostka granitowa od furtki',
+                                   ring=list(walk.exterior.coords), holes=[], color='#b9b9b5', z=.035))
+    garden['metadata']['areasM2'].update(lawn=lawn_area, streetWalk=walk.area)
+    return garden
+
+
 def build_paths(plot, garden, house):
-    retained = [p for p in garden['polygons'] if p['id'] != 'kitchen-pad'
+    retained = [p for p in garden['polygons'] if p['id'] not in ('kitchen-pad', 'shared-path')
                 and not p['id'].startswith(('private-path', 'private-lawn', 'flagstone-'))]
     regions = {p['id']:surface(p) for p in retained}
     private = shape(plot['garden']).difference(regions['shared-zone'])
@@ -114,7 +171,7 @@ def build_paths(plot, garden, house):
     garden['labels'] = [o for o in garden['labels'] if o['text'] != 'Kuchnia ogrodowa']
     garden['metadata']['areasM2'].update(lawn=lawn.area, privatePaths=stone_area.area, kitchenPaving=0)
     garden['metadata']['flagstoneRoutes'] = details
-    return garden
+    return add_street_entry(plot, garden, house)
 
 
 def sync_editor(path, plot, garden):
@@ -130,8 +187,10 @@ def sync_editor(path, plot, garden):
         editor.setdefault(key, {})['193'] = [project(xy) for xy in plot[feature]['coordinates'][0][:-1]]
     fire = next(item for item in garden['circles'] if item['id']=='fire-bowl')
     editor['garden193'] = dict(surfaces=[dict(id=p['id'], color=p['color'], ring=[project(xy) for xy in p['ring'][:-1]])
-        for p in garden['polygons'] if p['kind']=='flagstone' or p['id']=='fire-gravel'],
+        for p in garden['polygons'] if p['kind']=='flagstone' or p['id'] in ('fire-gravel','street-walk-193')],
         bowl=dict(center=project(fire['center']), radius=fire['radius']))
+    slide = next(line['slide'] for line in garden['lines'] if line['kind']=='drive_gate')
+    editor['garden193']['driveGate'] = {k:list(map(project,slide[k])) for k in ('closed','pocket')}
     path.write_text(json.dumps(editor, ensure_ascii=False) + '\n')
 
 

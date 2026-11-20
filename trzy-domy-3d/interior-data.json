@@ -339,7 +339,7 @@
         {
           "id": "garage-pantry",
           "hinge": "start",
-          "opensTo": "left",
+          "opensTo": "right",
           "flushFace": "right",
           "leftFinish": "wall",
           "rightFinish": "garage"
@@ -347,7 +347,7 @@
         {
           "id": "garage-utility",
           "hinge": "end",
-          "opensTo": "left",
+          "opensTo": "right",
           "flushFace": "right",
           "leftFinish": "wall",
           "rightFinish": "garage"
@@ -816,7 +816,7 @@
       "Upper slope follows unchanged exterior roof; interior roof finish thickness and installation void estimated.",
       "The 0.90 m doorway to the private bathroom occupies local x=10.00–10.90 m along the suite partition. Its approximate position is fitted to the traced plan and the junction with the hall wall.",
       "Eight roof windows on the mirrored attic plan have matching openings through the outer roof and the interior lining 45 mm below it. Window centres were digitised from the drawing; glazing size is an estimate. The living room has a solid roof.",
-      "Door handing and the two opposing pocket doors in the main suite follow the catalogue floor plans. Values describe the original plan before the site mirror. The main entry, vestibule glass door, concealed pantry front and terrace slider open on approach. Individual paint colours, hardware and pocket tracks are visual design assumptions.",
+      "The plant room door and the garage-side pantry door swing into the garage. The concealed kitchen-side pantry door swings into the kitchen. Other door handing and the two opposing pocket doors in the main suite follow the catalogue floor plans. Values describe the original plan before the site mirror. The main entry, vestibule glass door, concealed pantry front and terrace slider open on approach. Individual paint colours, hardware and pocket tracks are visual design assumptions.",
       "Furniture inventory records approximate source footprints and front direction; beds face from head to foot. Dimensions are visual traces, typically uncertain by15–30cm, not product or execution dimensions.",
       "Room2 upper partition beside the void is solid; the hall alone has a guardrail. Laundry entry is through the side hall; its rear partition is solid as drawn.",
       "Ground main-side glazing traced to y9.23–12.23m; terrace glazing traced to y13.90–16.60m. These refine openings only, preserving the exterior envelope.",

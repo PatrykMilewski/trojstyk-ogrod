@@ -70,10 +70,12 @@ function graniteCurbBlocks(edges) {
   return blocks;
 }
 
-export function createIconGraniteCurbs(THREE,plot,gate) {
+export function createIconGraniteCurbs(THREE,plot,gate,streetWalk) {
   const drive=plot.driveway.coordinates[0], entry=plot.entry.coordinates[0], building=plot.house.coordinates[0];
-  const edges=[...graniteExposedEdges(drive,[building,entry,gate.points],()=>.045),
+  const walk=streetWalk?.ring ?? [];
+  const edges=[...graniteExposedEdges(drive,[building,entry,gate.points,walk],()=>.045),
     ...graniteExposedEdges(entry,[building,drive,gate.points],iconEntryGrade193(entry))];
+  if(walk.length)edges.push(...graniteExposedEdges(walk,[drive,walk.slice(0,2)],()=>.045));
   const positions=[], colors=[];
   // Stop short of the sliding gate rail and both posts across its full opening.
   for (const edge of edges) {

@@ -11,7 +11,7 @@ const marker = 'const [source,garden,house,neighbors]=';
 const start = html.indexOf(marker) + marker.length;
 const [, garden, house] = JSON.parse(html.slice(start, html.indexOf(';\nconst landscaping=', start)));
 const { addIconInterior } = await load(await readFile(new URL('../src/model/interior.js', import.meta.url), 'utf8'));
-const { createWalkCollision } = await load(await readFile(new URL('../src/model/walk.js', import.meta.url), 'utf8'));
+const { createWalkCollision, mergeInteriorNavigation } = await load(await readFile(new URL('../src/model/walk.js', import.meta.url), 'utf8'));
 const data = JSON.parse(await readFile(new URL('../trzy-domy-3d/interior-data.json', import.meta.url), 'utf8'));
 const siteGate=garden.lines.find(l=>l.kind==='drive_gate');
 const interior = addIconInterior({ THREE, scene: new THREE.Scene(), house, data, siteGate });
@@ -65,6 +65,23 @@ test('rendered bed heads and sofa backs follow publisher orientation', () => {
   }
   assert(bounds(interior.group.getObjectByName(data.projection.wall)).max.x < itemBounds('coffee-table').min.x);
   assert(itemBounds('coffee-table').max.x < itemBounds('sofa').min.x);
+});
+
+test('the master bed has a continuous ikat cushion framed by a cognac bolster and matching side arches',()=>{
+  const get=id=>interior.group.getObjectByName(id);
+  const centre=get('master-bed-head-pad-0'),bolster=get('master-bed-headboard');
+  const cushion=bounds(centre),top=bounds(bolster);
+  close(cushion.max.x-cushion.min.x,2,'Ikat cushion spans the mattress');
+  assert(Math.abs(cushion.max.z-top.min.z)<.008,'Stacked pads meet at the upholstered seam');
+  for(const part of [bolster,get('master-headboard-wings-panel-0'),get('master-headboard-wings-panel-1')]){
+    assert.equal(part.geometry.type,'ExtrudeGeometry');
+    assert.equal(part.material,get('master-bed-frame').material);
+  }
+  const {image,repeat}=centre.material.map;
+  assert(repeat.x>repeat.y,'The pattern repeats across the headboard');
+  const reds=image.data.filter((value,index)=>index%4===0);
+  assert(reds.some(value=>value>140)&&reds.filter(value=>value<80).length>reds.length*.6);
+  assert.match(get('master-bed-duvet').material.name,/warm white cotton/);
 });
 
 test('the custom MADOX-style table seats six around a 135 × 78 cm closed walnut top', () => {
@@ -191,7 +208,7 @@ test('plant equipment fits room 0.3, with both service sides reachable around it
   }
   const get=name=>interior.group.getObjectByName(name);
   assert(get('utility-network-rack-perforated-door-insert').material.alphaMap);
-  assert.equal(parts('utility-network-rack').filter(o=>o.name.startsWith('utility-network-rack-rj45-')).length,28);
+  assert.equal(parts('utility-network-rack').filter(o=>o.name.startsWith('utility-network-rack-rj45-')).length,32);
   for(let i=0;i<4;i++)close(bounds(get('utility-hrv-air-duct-'+i)).max.z,2.8,'Four duct runs meet ceiling',.002);
   close(itemBounds('dhw-cylinder').min.z,.008,'Vessel plinth rests on tiled floor');
   close(itemBounds('utility-softener').min.z,.008,'Softener base rests on tiled floor');
@@ -237,6 +254,10 @@ test('MUST battery, distribution board and three-phase charger clear equipment, 
   assert(doorEdge-Math.max(vehicle.max.y,connectedLead.max.y)>.95);
   assert(garage.workbench.footprint[1]-vehicle.max.y>.74);
   assert(connectedLead.min.y>bikeRear);
+  const garageBox=([x0,y0,x1,y1],height)=>new THREE.Box3(new THREE.Vector3(x0,y0,0),new THREE.Vector3(x1,y1,height));
+  const obstructions=[['battery',battery],['board',board],['EV charger',charger],['plugged car',vehicle],['connected lead',connectedLead],
+    ['workbench',garageBox(garage.workbench.footprint,garage.workbench.upperCabinetTop)],
+    ...garage.parkingBays.map((bay,i)=>['parking bay '+(i+1),garageBox(bay,garage.vehicles[i].height)])];
   for(const id of ['garage-pantry','garage-utility','garage-entry']){
     const pivot=interior.group.getObjectByName('hall-flush-'+id);
     for(let i=0;i<=30;i++){
@@ -244,7 +265,7 @@ test('MUST battery, distribution board and three-phase charger clear equipment, 
       pose.setPosition(pivot.position);
       for(const part of pivot.children){
         const swept=bounds(part).applyMatrix4(pose);
-        for(const [name,box] of [['battery',battery],['board',board],['EV charger',charger],['plugged car',vehicle],['connected lead',connectedLead]])
+        for(const [name,box] of obstructions)
           assert(!swept.intersectsBox(box),name+' clears '+id+' at '+i*3+' degrees');
       }
     }
@@ -505,7 +526,7 @@ test('the kitchen tower beside the pantry houses the Qrevo and opens without blo
   assert.equal(visible(dockTarget),door,'Closed door conceals the tanks');
   assert(!aim([mid,front-.78,1.34],target),'Pantry wall prevents clicking through from behind');
   assert(!aim([mid,front+.12,1.5],target),'Leaf cannot sweep through the viewer');
-  assert(aim(eye,target) && robotCabinet.isOpen,'The visible yellow door opens on click');
+  assert(aim(eye,target) && robotCabinet.isOpen,'The visible veneered door opens on click');
   assert.notDeepEqual(obstacle.ring,closed,'Walk collision follows the real door');
   assert.equal(visible(dockTarget),get('kitchen-robot-curv-dock-shell'));
   for(const z of [.15,.50,.85])for(const x of [mid-.229,mid,mid+.229])
@@ -1115,13 +1136,24 @@ test('Samsung columns preserve product envelopes, removable shelves, drawers and
   close(counter.max.x,furniture.get('kitchen-tall').box[0],'Perimeter counter meets the first column');
 });
 
-test('every kitchen cabinet and concealed pantry door has the same matte yellow slab front', () => {
+test('light oak fronts share continuous grain, attached bar pulls and a handleless robot cabinet', async () => {
   const get=id=>interior.group.getObjectByName(id);
   const aisle=parts('kitchen-island').filter(o=>o.name.includes('-working-drawer-'));
   assert.equal(aisle.length,10);
-  const portal=get('kitchen-pantry-closed-leaf'),yellow=portal.material;
-  assert.equal(yellow.color.getHex(),0xe5c368);
-  assert(yellow.roughness>=.6 && !yellow.map);
+  const veneer=get('kitchen-pantry-closed-leaf').material;
+  assert.equal(veneer.userData.surfaceProfile,'kitchenFrontVeneer');
+  const bytes=await readFile(new URL('../src/model/surface-scans/kitchen_front_veneer.webp',import.meta.url));
+  assert.equal(bytes.toString('ascii',8,12),'WEBP');
+  const source='data:image/webp;base64,'+bytes.toString('base64'),scan=new THREE.Texture();
+  class Loader{async loadAsync(url){assert.equal(url,source);return scan;}}
+  const scene=new THREE.Group(),sample=get('kitchen-pantry-closed-leaf').clone();
+  sample.material=veneer.clone();scene.add(sample);
+  const {applyRealisticSurfaces}=await load(await readFile(new URL('../src/model/surface-realism.js',import.meta.url),'utf8'));
+  await applyRealisticSurfaces({THREE:{...THREE,TextureLoader:Loader},scene,mats:{},
+    renderer:{capabilities:{getMaxAnisotropy:()=>4}},scans:{kitchenFrontVeneer:[source]}});
+  assert.equal(sample.material.map,scan);
+  assert.equal(scan.wrapS,THREE.MirroredRepeatWrapping);
+  assert.equal(scan.wrapT,THREE.MirroredRepeatWrapping);
   const perimeter=['kitchen-pantry','kitchen-back','kitchen-tall'].flatMap(parts).filter(o=>
     /-(closed-leaf|left-front|right-front|dishwasher-front|front-\d-\d|crown-\d|upper-\d|fridge|freezer)$/.test(o.name));
   assert.equal(perimeter.length,28);
@@ -1129,11 +1161,31 @@ test('every kitchen cabinet and concealed pantry door has the same matte yellow 
     const face=bounds(door);
     close(face.max.y-face.min.y,.021,'Unframed 21 mm slab door');
     assert.equal(door.geometry.type,'BoxGeometry');
-    assert.equal(door.material,yellow,door.name);
+    assert.equal(door.material,veneer,door.name);
+    const {uv,normal,position}=door.geometry.attributes;
+    for(let i=0;i<position.count;i++)if(Math.abs(normal.getY(i))>.99){
+      close(uv.getX(i),(position.getX(i)+door.position.x)/.48,'Adjacent fronts match across the grain');
+      close(uv.getY(i),(position.getZ(i)+door.position.z)/(.48*632/383),'Vertical grain continues across drawer seams');
+    }
   }
   const grip=bounds(get('kitchen-island-working-pull-2-0')),drawer=bounds(get('kitchen-island-working-drawer-2-0'));
-  close(grip.max.y,drawer.min.y,'Grip bears on upper edge of drawer');
-  close(grip.max.z,drawer.max.z,'Top edge grip');
+  close(grip.max.y,drawer.min.y-.024,'Finger clearance behind the rail');
+  assert.equal(get('kitchen-pantry-robot-pull'),undefined);
+  assert(get('kitchen-robot-cabinet-door').getObjectByName('kitchen-pantry-left-front'));
+  close(grip.max.z,drawer.max.z-.028,'Clear of the upper reveal');
+  for(const [id,axis] of [['kitchen-island-working-pull-2-0','x'],['kitchen-pantry-leaf-pull','z']]){
+    const pull=get(id);
+    assert.equal(pull.material.color.getHex(),0xa5987e);
+    assert.deepEqual(pull.children.map(o=>Math.round(o.position[axis]*1000)),[-64,64]);
+    for(const foot of pull.children){
+      assert.equal(foot.material,pull.material);
+      const b=bounds(foot).translate(pull.position),rail=bounds(pull);
+      if(axis==='x'){
+        close(b.max.y,drawer.min.y,'Mount meets the drawer');
+        close(b.min.y,rail.max.y,'Mount meets the pull');
+      }
+    }
+  }
   assert(grip.min.y<drawer.min.y-.018);
 });
 
@@ -1176,7 +1228,7 @@ test('six equal columns frame a centered hob with a low rail support and eleven 
       const front=bounds(frontMesh),pull=bounds(part(oven?'oven-tray-pull':'working-pull-'+id));
       close(front.max.x-front.min.x,.595,'595 mm face on a 600 mm column');
       close((front.max.x+front.min.x)/2,center,'Mirror-symmetric front grid');
-      close((pull.max.x+pull.min.x)/2,center,'Centered edge grip');close(pull.max.y,front.min.y,'Aisle-facing grip');
+      close((pull.max.x+pull.min.x)/2,center,'Centered pull');close(pull.max.y,front.min.y-.024,'Aisle-facing grip');
       close(front.min.z,row===0?.122:.497,'Aligned horizontal seams');
       for(const side of ['floor','back','left','right']){
         const mesh=part('drawer-box-'+id+'-'+side),box=bounds(mesh);
@@ -2168,7 +2220,34 @@ function checkTankFeeder(pumpSupply,rain,sewageAccess){
  }
 }
 
-test('dedicated exterior supplies reach the fitted gate drive, BioDisc, monobloc and all eleven luminaires',async()=>{
+test('the cantilever gate slides behind the fixed fence and fully clears the driveway',()=>{
+ const mesh=name=>interior.group.getObjectByName('drive-gate-'+name);
+ const leaf=mesh('sliding-leaf'),rack=mesh('toothed-rack'),gear=mesh('pinion');
+ const walk=mergeInteriorNavigation([{parcel:'193',navigation:interior.navigation}]);
+ const blocker=walk.obstacles.find(o=>o.id==='193:drive-gate-barrier');
+ const plan=p=>interior.group.worldToLocal(new THREE.Vector3(...p,0));
+ const [a,b]=siteGate.points.map(plan),closedX=leaf.position.x;
+ const controller=mesh('motor').getWorldPosition(new THREE.Vector3()),camera=new THREE.PerspectiveCamera(55,1,.01,100);
+ camera.up.set(0,1,0);camera.position.copy(controller).add(new THREE.Vector3(0,0,2));camera.lookAt(controller);
+ assert(interior.driveGate.toggleAt(new THREE.Vector2(),camera));
+ const now=performance.now();
+ for(const fraction of [0,.25,.5,.75,1]){
+  interior.driveGate.update(now+12000*fraction);
+  const ring=blocker.ring.map(plan);
+  close(leaf.position.x,closedX+6.08*fraction,'Opening stroke',.003);
+  assert(ring.every(p=>p.y>a.y+.18 && p.y<a.y+.30),'Gate stays on its parallel track');
+  close(Math.min(...ring.map(p=>p.x)),leaf.position.x,'Collision follows nose');
+  const rackBox=bounds(rack).translate(leaf.position);
+  assert(rackBox.min.x<gear.position.x-.05&&rackBox.max.x>gear.position.x+.05,'Pinion stays on the rack');
+ }
+ assert(leaf.position.x>b.x+.10 && mesh('receiver').position.x<a.x,'Full clear opening');
+ const end=plan(siteGate.slide.pocket[1]);
+ close(Math.max(...blocker.ring.map(p=>plan(p).x)),end.x,'Tail fits the declared pocket');
+ assert(interior.driveGate.toggleAt(new THREE.Vector2(),camera));
+ interior.driveGate.update(performance.now()+12500);close(leaf.position.x,closedX,'Closed again');
+});
+
+test('dedicated exterior supplies reach the fitted gate drive, BioDisc, monobloc and all nine luminaires',async()=>{
  const module=async name=>load(await readFile(new URL('../src/model/'+name+'.js',import.meta.url),'utf8'));
  const {createIndoorServices}=await module('indoor-services');
  const {createWastewaterInstallation,wastewaterServiceAccess193}=await module('wastewater');
@@ -2177,6 +2256,15 @@ test('dedicated exterior supplies reach the fitted gate drive, BioDisc, monobloc
  const services=createIndoorServices(THREE,interior,data,{wastewater,irrigationCablePath:rain.userData.irrigationCablePath}),power=services.getObjectByName('power-ground');
  const physical=name=>interior.group.getObjectByName(name);
  const {gate,controllerIn,controllerOut,heatPump}=interior.sitePower;
+ const [west,south,east,north]=data.rooms.find(room=>room.id==='0.3').box;
+ const panel=bounds(physical('biodisc-controller')),display=bounds(physical('biodisc-controller-display'));
+ assert(panel.min.x>west && panel.max.x<east && panel.min.y>=south-.001 && display.max.y<north);
+ assert(display.min.y>=panel.max.y && display.min.z>1.4,'Alarm faces into the boiler room at eye level');
+
+ const label=physical('biodisc-controller-label'),plate=bounds(label),door=bounds(physical('biodisc-controller-door'));
+ assert.equal(label.material.name,'BioDisc · Sterownik oczyszczalni');
+ assert(plate.min.y>door.max.y && plate.min.y-door.max.y<.005 && plate.max.z<display.min.z);
+ assert(plate.min.x>door.min.x && plate.max.x<door.max.x && plate.min.z>door.min.z);
  const drive=interior.group.worldToLocal(wastewater.getObjectByName('biodisc-drive-gland').getWorldPosition(new THREE.Vector3()));
  for(const [route,terminal,device] of [
   ['board-to-drive-gate',gate,'drive-gate-motor'],['board-to-biodisc-controller',controllerIn,'biodisc-controllerIn-gland'],
@@ -2191,9 +2279,14 @@ test('dedicated exterior supplies reach the fitted gate drive, BioDisc, monobloc
  checkTankFeeder(pumpSupply,rain,wastewaterServiceAccess193());
  wastewater.updateMatrixWorld(true);
  const siteToPlan=interior.group.matrixWorld.clone().invert();
+ const gateFoundation=bounds(physical('drive-gate-roller-foundation'));
  wastewater.traverse(mesh=>{
   if(mesh.geometry?.type==='CylinderGeometry'){
+   mesh.geometry.computeBoundingBox();
+   const pipeBox=mesh.geometry.boundingBox.clone().applyMatrix4(siteToPlan.clone().multiply(mesh.matrixWorld));
+   assert(!gateFoundation.intersectsBox(pipeBox),'Gate foundation clears '+mesh.name);
    assert(clearanceToPipe(pumpSupply,mesh,siteToPlan)>.10,'Pump feeder clears '+mesh.name);
+   assert(clearanceToPipe(power.getObjectByName('board-to-drive-gate'),mesh,siteToPlan)>.10,'Gate feeder clears '+mesh.name);
   }
  });
  assert.deepEqual(pumpCable.userData.to,rain.getObjectByName('rain-irrigation-power-terminal').position.toArray());
@@ -2215,16 +2308,11 @@ test('dedicated exterior supplies reach the fitted gate drive, BioDisc, monobloc
  for(const pipe of wastewater.children.filter(o=>/^(building-inlet-|clarified-outlet-)/.test(o.name))){
   assert(clearanceToPipe(line,pipe,siteToPlan)>.10,'BioDisc motor cable clears '+pipe.name);
  }
- const gateWorld=new THREE.Vector3(...interior.localToWorld(gate));
- assert(siteGate.points.some(p=>gateWorld.distanceTo(new THREE.Vector3(...p,gate[2]))<.36));
- const rack=bounds(physical('drive-gate-rack')),pinion=bounds(physical('drive-gate-pinion'));
- const travel=new THREE.Vector2(...siteGate.points[0]).distanceTo(new THREE.Vector2(...siteGate.points[1]));
- assert(rack.min.x+travel<pinion.min.x && pinion.max.x<rack.max.x,'Drive stays engaged throughout the gate travel');
  for(const id of ['board-to-monobloc','board-to-drive-gate','board-to-biodisc-controller','board-to-uplights','board-to-terrace-pendants','board-to-irrigation-entry']){
   const {from,circuit}=power.getObjectByName(id).userData;
   assert(bounds(physical('utility-distribution-board-gland-'+circuit)).distanceToPoint(new THREE.Vector3(...from))<.001);
  }
- assert.equal(interior.exteriorLights.terminals.length,11);
+ assert.equal(interior.exteriorLights.terminals.length,9);
  for(const lamp of interior.exteriorLights.terminals){
   const {to}=power.getObjectByName('feed-'+lamp.id).userData;
   assert.deepEqual(to,physical(lamp.id).position.toArray());

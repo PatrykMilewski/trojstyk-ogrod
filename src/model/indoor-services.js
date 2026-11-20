@@ -100,10 +100,10 @@ function serviceHeatingLegs(bands,pitch) {
  return legs;
 }
 
-function serviceHeatingCoil(legs,base) {
+function serviceHeatingCoil(legs,base,startHigh) {
  const path=[],z=base-.055;
  for(const [i,leg] of legs.entries()){
-  const down=i%2===1,start=down?leg.high:leg.low,end=down?leg.low:leg.high;
+  const down=(i%2===1)!==startHigh,start=down?leg.high:leg.low,end=down?leg.low:leg.high;
   if(i&&path.at(-1)[1]!==start){
    const [x,y]=path.at(-1),longerOnLeft=down?y>start:y<start;
    const seam=(leg.left+(longerOnLeft?x:leg.x))/2;
@@ -115,25 +115,39 @@ function serviceHeatingCoil(legs,base) {
 }
 
 function serviceHeatingLeads(coil,port,base,tailXs=[]) {
- const [px,py,index]=port;
+ const [px,py,index,face,alongY]=port;
  return [coil[0],coil.at(-1)].map(([x,y,z],side)=>{
   const feedZ=base+(side?.38:.55),dropX=px+(side?1:-1)*iconHeatingPortSpacing/4;
-  const dropY=py-.075,laneY=py-.22-(2*index+side)*.032,tailX=tailXs[side]??x;
+  const dropY=py+face*.075,laneY=py+face*(.22+(2*index+side)*.032),tailX=tailXs[side]??x;
   const fanZ=base-.135,crossZ=base-.172,tailZ=base-.10;
-  return [[px,py,feedZ],[dropX,dropY,feedZ],[dropX,dropY,fanZ],[dropX,laneY,fanZ],
+  if(alongY){
+   const shaftY=py+(side?1:-1)*iconHeatingPortSpacing/4,shaftX=px+face*.075;
+   const fanX=px+face*(.22+(2*index+side)*.032),busY=6.05+(2*index+side)*.032;
+   return [[px,py,feedZ],[px,py,feedZ-.042],[shaftX,shaftY,feedZ-.072],[shaftX,shaftY,fanZ],[fanX,shaftY,fanZ],
+    [fanX,shaftY,crossZ],[fanX,busY,crossZ],[tailX,busY,crossZ],[tailX,busY,tailZ],
+    [tailX,y,tailZ],...(tailX===x?[]:[[x,y,tailZ]]),[x,y,z]];
+  }
+  return [[px,py,feedZ],[px,py,feedZ-.042],[dropX,dropY,feedZ-.072],[dropX,dropY,fanZ],[dropX,laneY,fanZ],
    [dropX,laneY,crossZ],[tailX,laneY,crossZ],[tailX,laneY,tailZ],[tailX,y,tailZ],...(tailX===x?[]:[[x,y,tailZ]]),[x,y,z]];
  });
 }
 
+// Pairs of rails in accessible wall cabinets. Each room belongs to its nearest service zone.
 const iconHeatingManifolds={
- ground:{x:5.235,y:8.35,capacity:9},
- upper:{x:6.35,y:8.06,capacity:8}
+ ground:[
+  {x:5.35,y:8.318,face:-1,location:'Kotłownia · pod rozdzielnicą',lining:[-0.122, 0.61, 0.85],finish:'#e9e3d7',rooms:['0.1','0.2','0.3','0.4']},
+  {x:9.28,y:9.204,face:-1,location:'Pod schodami · od strony holu',lining:[-0.21, 0.57, 2.12],finish:'#c77d59',rooms:['0.5','0.6','0.7','0.8','0.9']}
+ ],
+ upper:[
+  {x:6.374,y:5.72,face:1,alongY:true,location:'Pralnia · przy wejściu od holu',lining:[-0.16, 0.435, 0.82],finish:'#e9e3d7',rooms:['1.1','1.2','1.3','1.4']},
+  {x:12.79,y:4.64,face:1,location:'Garderoba · pod skosem między szafami',lining:[-0.49, 0.75, 0.79],finish:'#e9e3d7',rooms:['1.5','1.6','1.7','1.8']}
+ ]
 };
-const iconHeatingPortSpacing=.051,iconHeatingBankSpacing=.52;
+const iconHeatingPortSpacing=.051;
 
-function serviceHeatingPort(level,index) {
- const {x,y,capacity}=iconHeatingManifolds[level],bank=Math.floor(index/capacity);
- return [x+bank*iconHeatingBankSpacing+(index%capacity+.5)*iconHeatingPortSpacing,y,index];
+function serviceHeatingPort(manifold,index) {
+ const offset=(index+.5)*iconHeatingPortSpacing;
+ return [manifold.x+(manifold.alongY?0:offset),manifold.y+(manifold.alongY?offset:0),index,manifold.face,manifold.alongY];
 }
 
 // Keep the long room tails in separate lanes and inside the same strip of slab as their loop.
@@ -153,9 +167,11 @@ function serviceHeatingTailLanes(data,circuits) {
 }
 
 function serviceHeatingCircuits(data,level) {
- const circuits=[],base=data.levels[level];
+ const circuits=[],base=data.levels[level],manifolds=iconHeatingManifolds[level];
  const length=path=>path.reduce((sum,p,i)=>i?sum+Math.hypot(...p.map((v,k)=>v-path[i-1][k])):sum,0);
  for(const room of data.rooms.filter(r=>r.id[0]===(level==='ground'?'0':'1'))){
+  const bank=manifolds.findIndex(m=>m.rooms.includes(room.id)),manifold=manifolds[bank];
+  const firstPort=circuits.filter(c=>c.bank===bank).length;
   const pitch=room.id==='0.1'?.25:['0.7','1.2','1.6'].includes(room.id)?.12:.18;
   const legs=serviceHeatingLegs(serviceHeatingBands(data,room),pitch);
   const weights=[0];
@@ -167,11 +183,16 @@ function serviceHeatingCircuits(data,level) {
     const target=weights.at(-1)*i/count;
     let end=start+1;
     while(end<legs.length-(count-i)&&Math.abs(weights[end+1]-target)<Math.abs(weights[end]-target))end++;
-    const coil=serviceHeatingCoil(legs.slice(start,end),base);
-    const port=serviceHeatingPort(level,circuits.length+proposed.length);
-    const [supply,back]=serviceHeatingLeads(coil,port,base);
-    if(length(coil)+length(supply)+length(back)>89.5)break;
-    proposed.push({room:room.id,pitch,coil});start=end;
+    const port=serviceHeatingPort(manifold,firstPort+proposed.length);
+    const turns=legs.slice(start,end);
+    const options=[false,true].map(startHigh=>{
+     const coil=serviceHeatingCoil(turns,base,startHigh);
+     const [supply,back]=serviceHeatingLeads(coil,port,base);
+     return {coil,length:length(coil)+length(supply)+length(back)};
+    });
+    const shortest=options[0].length<=options[1].length?options[0]:options[1];
+    if(shortest.length>89.5)break;
+    proposed.push({room:room.id,pitch,bank,port,coil:shortest.coil});start=end;
    }
    if(start===legs.length){circuits.push(...proposed);break;}
   }
@@ -180,15 +201,17 @@ function serviceHeatingCircuits(data,level) {
  return circuits;
 }
 
-function serviceHeatingCircuit(THREE,group,pipe,circuit,index,port,bank) {
- const {room,pitch,coil}=circuit,base=coil[0][2]+.055;
+function serviceHeatingCircuit(THREE,group,pipe,circuit,index) {
+ const {room,pitch,coil,port,bank}=circuit,base=coil[0][2]+.055;
  const [supply,back]=serviceHeatingLeads(coil,port,base,circuit.tailXs),branch='floor-'+room+'-'+index;
  const lengthOf=points=>serviceRoundedPath(THREE,points.map(p=>new THREE.Vector3(...p)))
   .reduce((length,p,i,path)=>length+(i?p.distanceTo(path[i-1]):0),0);
  const activeLength=lengthOf(coil),length=activeLength+lengthOf(supply)+lengthOf(back);
- pipe(group,branch+'-supply',supply,iconServiceColors.floor,.012);
- pipe(group,branch,coil,iconServiceColors.floor,.015,{kind:'heating-loop',room,pitch,bank,activeLength,length});
- pipe(group,branch+'-return',back,iconServiceColors.return,.012);
+ const hue=(index*137.508+(group.userData.level==='upper'?71:0))%360;
+ const loopColor=`hsl(${hue.toFixed(2)},${index%2?70:88}%,${index%3===0?70:58}%)`;
+ pipe(group,branch+'-supply',supply,iconServiceColors.floor,.012,{loopColor,bank,room,rail:'supply'});
+ pipe(group,branch,coil,iconServiceColors.floor,.015,{kind:'heating-loop',room,pitch,bank,loopColor,activeLength,length});
+ pipe(group,branch+'-return',back,iconServiceColors.floor,.012,{loopColor,bank,room,rail:'return'});
 }
 
 function servicePlanOutline(THREE,group,data,level) {
@@ -253,28 +276,31 @@ function serviceOutlineLines(THREE,group,base,name='service-plan',opacity=.68) {
 function serviceUnderfloor(THREE,levels,data,pipe) {
  for(const level of ['ground','upper']){
   const upper=level==='upper',base=data.levels[level],group=levels[level];
-  const {x,y,capacity}=iconHeatingManifolds[level],spacing=iconHeatingPortSpacing;
   const circuits=serviceHeatingCircuits(data,level);
+  group.userData.cabinets=iconHeatingManifolds[level];
   servicePlanOutline(THREE,group,data,level);
   serviceHeatingFurniture(THREE,group,data,level);
-  for(let i=0;i<circuits.length;i+=capacity){
-   const bank=i/capacity,n=Math.min(capacity,circuits.length-i);
-   const cx=x+bank*iconHeatingBankSpacing;
-   for(const [color,barZ] of [[iconServiceColors.floor,.55],[iconServiceColors.return,.38]]){
-    const z=base+barZ,rail='manifold-'+bank+'-'+barZ;
-    pipe(group,rail,[[cx,y,z],[cx+n*spacing,y,z]],color,.033,{ports:n,bank});
-    const fromX=5.11-(barZ===.55?.13:0),feedY=8.17-(barZ===.55?.05:0);
-    const pump=[[fromX,8.25,.8],[fromX,feedY,.73]];
-    const riserX=6.35-(barZ===.55?.055:0);
-    if(bank){
-     pipe(group,rail+'-feed',[[cx-iconHeatingBankSpacing+capacity*spacing,y,z],[cx,y,z]],color,.022);
-    }else if(upper){
-     pipe(levels.ground,'upper-heating-riser-'+barZ,[...pump,[riserX,feedY,.73],[riserX,7.84,.73],[riserX,7.84,2.8]],color,.022);
-     pipe(group,rail+'-feed',[[riserX,7.84,2.8],[riserX,7.84,z],[cx,7.84,z],[cx,y,z]],color,.022);
-    }else pipe(group,rail+'-feed',[...pump,[cx,feedY,z],[cx,y,z]],color,.022);
+  for(const [side,color,barZ] of [[0,iconServiceColors.floor,.55],[1,iconServiceColors.return,.38]]){
+   const sourceX=4.98+.13*side,feedY=8.12+.05*side,riserX=6.295+.055*side;
+   const mainZ=base-.24-.06*side,header=[sourceX,feedY,mainZ];
+   const source=[sourceX,8.25,.80],riser=[riserX,7.84,mainZ];
+   if(upper){
+    const underRiser=[riserX,7.84,data.levels.ground-.24-.06*side];
+    const split=[riserX,7.84,data.levels.groundCeiling];
+    pipe(levels.ground,'upper-heating-riser-'+barZ,[underRiser,split],color,.022);
+    pipe(group,'upper-heating-riser-head-'+barZ,[split,riser],color,.022);
+   }else{
+    pipe(group,'heating-primary-'+barZ,[source,[sourceX,feedY,.73],header],color,.025);
+    pipe(group,'upper-heating-feed-'+barZ,[header,[riserX,feedY,mainZ],riser],color,.022);
    }
-   for(let k=0;k<n;k++)serviceHeatingCircuit(THREE,group,pipe,circuits[i+k],i+k,serviceHeatingPort(level,i+k),bank);
+   for(const [bank,{x,y,alongY}] of iconHeatingManifolds[level].entries()){
+    const n=circuits.filter(c=>c.bank===bank).length,rail='manifold-'+bank+'-'+barZ;
+    const z=base+barZ,start=upper?riser:header,valveOffset=.062+.024*side,feedX=x-(alongY?0:valveOffset),feedY=y-(alongY?valveOffset:0);
+    pipe(group,rail+'-feed',[start,[start[0],feedY,mainZ],[feedX,feedY,mainZ],[feedX,feedY,z],[x,y,z]],color,.022,{bank,rail:side?'primary-return':'primary-supply'});
+    pipe(group,rail,[[x,y,z],[x+(alongY?0:n*iconHeatingPortSpacing),y+(alongY?n*iconHeatingPortSpacing:0),z]],color,.033,{ports:n,bank});
+   }
   }
+  circuits.forEach((c,i)=>serviceHeatingCircuit(THREE,group,pipe,c,i));
  }
 }
 
@@ -620,14 +646,14 @@ function serviceExteriorPower(THREE,group,data,pipe,interior,site) {
  boardFeed('board-to-monobloc','monobloc',wallEnd,[[.23,wall],[.23,py]], [.23,py,pz]);
  draw('monobloc-mains-tail',[[.23,py,pz],heatPump],'monobloc',wallEnd);
  const [cx,cy]=controllerIn;
- boardFeed('board-to-biodisc-controller','biodisc','biodisc-controllerIn-gland',[[cx-.20,wall],[cx-.20,cy],[cx,cy]],controllerIn);
+ boardFeed('board-to-biodisc-controller','biodisc','biodisc-controllerIn-gland',[[cx,wall],[cx,cy]],controllerIn,-.24);
  if(site.wastewater){
   const gland=site.wastewater.getObjectByName('biodisc-drive-gland');
   const inHouse=v=>interior.group.worldToLocal(v).toArray();
   const drive=inHouse(gland.getWorldPosition(new THREE.Vector3()));
   const entry=inHouse(site.wastewater.localToWorld(new THREE.Vector3(.79,-.63,-.28)));
   const [ox,oy]=controllerOut,buried=-.57;
-  draw('controller-to-biodisc-drive',[controllerOut,[ox,oy,buried],[entry[0],oy,buried],
+  draw('controller-to-biodisc-drive',[controllerOut,[ox,oy,buried],[ox,1.65,buried],[entry[0],1.65,buried],
    [entry[0],entry[1],buried],entry,[drive[0],drive[1],entry[2]],drive],'biodisc',gland.name);
  }
  if(gate){
@@ -649,9 +675,8 @@ function serviceExteriorLighting(lamps,board,wall,draw,boardFeed) {
  // Split to the two sides of the house at the first garage fitting. Each branch follows its facade.
  const fixtures=lamps.filter(f=>!f.pendant),depth=-.82;
  const tail=(f,via)=>draw('feed-'+f.id,via,'outdoorLights',f.id);
- // Approach these two recessed fittings from outside the adjacent drainage pipes.
+ // Approach the side fitting from outside the adjacent drainage pipe.
  const offsets={
-  'icon-exterior-uplight-wing-rear-4.24':[0,.25,-.19],
   'icon-exterior-uplight-main-side-2.75':[-.20,0,.015]
  };
  const buried=f=>{
@@ -676,7 +701,7 @@ function serviceExteriorLighting(lamps,board,wall,draw,boardFeed) {
  }
  branch([['main-side-2.75',[[-.34,-.34]]],['main-side-14.68',[]]]);
  branch([['garage-6.51',[]],['front-wing-1.3',[[7.24,-.34],[7.24,3.87]]],['front-wing-4.21',[]],
-  ['wing-end-2.25',[[14.98,3.87]]],['wing-rear-4.24',[[14.98,13.30]]],['terrace-0.61',[[8.84,13.30]]]]);
+  ['wing-end-2.25',[[14.98,3.87]]]]);
  const [first,second]=lamps.filter(f=>f.pendant);
  const railZ=first.point[2]+.03,feed=serviceElectricalPort(board,'terraceLights');
  const riser=[feed[0],wall,railZ];
@@ -722,6 +747,28 @@ export function createEthernetOutlets(THREE,data) {
  return group;
 }
 
+function serviceIntercom(groups,interior,data,pipe) {
+ const system=interior?.intercom;if(!system)return;
+ const rack=data.furniture.find(f=>f.id==='utility-network-rack'),[west,south,,front]=rack.box;
+ const rackY=front-.048,z=rack.elevation;
+ for(const [index,id] of ['street','monitor'].entries()){
+  const port=9+index,i=port-1,end=system.terminals[id],[x,y]=end;
+  const panel=[west+.104+i*.034,rackY,z+.295],sw=[west+.104+i*.024,rackY,z+.211];
+  const info={outlet:'intercom-'+id,port,poe:true},route=[panel,[panel[0],south+.06,panel[2]],[panel[0],south+.06,-.20]];
+  if(id==='street')route.push([.64,south+.06,-.20],[.64,.25,-.20],[.64,.25,-.62],[.64,y,-.62],[x,y,-.62]);
+  else route.push([6.51,south+.06,-.20],[6.51,y,-.20],[6.51,y,end[2]]);
+  pipe(groups.ethernet.ground,'lan-intercom-'+id+'-patch',[sw,[sw[0],rackY+.026,sw[2]+.02],
+   [panel[0],rackY+.026,panel[2]-.02],panel],'#78ace7',.009,info);
+  pipe(groups.ethernet.ground,'lan-intercom-'+id+'-kabel',[...route,end],'#84e58c',.018,info);
+ }
+ const wall=data.walls.find(w=>w.id==='garage-hall'),socket=data.electrical.points.find(p=>p.room==='0.3'&&p.type==='socket');
+ const [sx,sy,sz]=[wall.a[0]-wall.thickness/2,socket.alongM,socket.heightM];
+ const inlet=[west+.418,south+.044,z+.206];
+ pipe(groups.power.ground,'rack-switch-poe-mains',[[sx,sy,sz],[sx-.07,sy,sz],[sx-.07,sy,z-.025],
+  [inlet[0],sy,z-.025],[inlet[0],inlet[1],z-.025],inlet],iconServiceColors.cable,.012,
+  {device:'utility-network-rack-ethernet-switch',circuit:'rack-poe',voltage:230});
+}
+
 function serviceEthernet(THREE,levels,data,pipe) {
  const rack=data.furniture.find(f=>f.id==='utility-network-rack'),[west,,,front]=rack.box;
  const roof=soilVentRoofPosition193(data.levels);
@@ -736,7 +783,7 @@ function serviceEthernet(THREE,levels,data,pipe) {
   const i=port-1;
   const upper=!room||room.startsWith('1.'),color=room?'#84e58c':'#e8d15b',meta={port,room:room??'dach',outlet:id};
   const run=(group,part,points)=>pipe(group,'lan-'+id+'-'+part,points,color,part==='patch'?.009:.029,meta);
-  const rackX=west+.104+i*.037,panel=[rackX,rackY,rack.elevation+.295];
+  const rackX=west+.104+i*.034,panel=[rackX,rackY,rack.elevation+.295];
   const switchPort=sw(i),shaftX=6.23+i*.020,shaftY=6.72;
   run(levels.ground,'patch',[switchPort,[switchPort[0],rackY+.026,switchPort[2]+.02],[rackX,rackY+.026,panel[2]-.02],panel]);
   const behind=[rackX,front-.26,panel[2]],z=(upper?data.levels.upper:0)-.205;
@@ -774,6 +821,7 @@ export function createIndoorServices(THREE,interior,data,site={}) {
   for(const level of ['ground','upper'])groups[name][level]=serviceGroup(THREE,group,name+'-'+level,level);
  }
  serviceEthernet(THREE,groups.ethernet,data,pipe);
+ serviceIntercom(groups,interior,data,pipe);
  serviceUnderfloor(THREE,groups.underfloor,data,pipe);
  servicePump(groups['heat-pump'].ground,data,pipe);
  serviceWater(groups.water,data,pipe);

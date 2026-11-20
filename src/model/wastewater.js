@@ -4,7 +4,7 @@ export const wastewater193 = {
   tankDiameter: 1.995, tankHeight: 2.66, serviceMargin: 1.015, inletInvert: -.950, outletInvert: -1.035, residents: 5, capacityPE: 6, capacityM3Day: 1.2,
   rows: 2, modulesPerRow: 5, moduleLength: 1.20, moduleWidth: .50, moduleHeight: .36,
   clearBetweenRows: 1, endCapDepth: .043, fieldCenter: [-5.10,.41], fieldAngleDeg: -90,
-  distributor: [2.75,3.78], outletSlope: .01, inletSlope: .02, fieldBase: -1.35,
+  distributor: [0,3.55], chamberDrop: .045, outletSlope: .01, inletSlope: .02, fieldBase: -1.35,
   status: 'Wariant warunkowy. Do potwierdzenia możliwość przyłączenia do kanalizacji i warunki gruntowo-wodne.'
 };
 
@@ -21,11 +21,11 @@ const wastewaterCoverShoulder193={radiusFactor:.76,height:.245,rimFactor:1.003};
 const wastewaterRunLength = wastewater193.moduleLength*wastewater193.modulesPerRow;
 const wastewaterRowOffsets = Array.from({length:wastewater193.rows},(_,i)=>
   (i-(wastewater193.rows-1)/2)*(wastewater193.moduleWidth+wastewater193.clearBetweenRows));
-// Sealed laterals turn past the far end caps into the planting strip beside the field.
+// Separate sealed air lines cross below the driveway and rise in the corner planting bed.
 const ventCapY193=-wastewaterRunLength/2-wastewater193.endCapDepth;
 const ventRoutes193=[
-  [[wastewaterRowOffsets[0],ventCapY193],[-.75,-3.31],[-.41,-3.65],[2.40,-3.65],[2.72,-3.33],[2.72,.18]],
-  [[wastewaterRowOffsets[1],ventCapY193],[.75,-3.18],[.93,-3.36],[1.70,-3.36],[2.00,-3.06],[2.00,1.54],[2.30,1.84],[2.72,1.84]]
+  [[wastewaterRowOffsets[0],ventCapY193],[-.75,-10.80],[1.94,-13.49]],
+  [[wastewaterRowOffsets[1],ventCapY193],[.75,-11.75],[3.15,-14.15]]
 ];
 const ventEnds193=ventRoutes193.map(route=>route.at(-1));
 const ventServiceRadius193=.38;
@@ -36,10 +36,21 @@ function wastewaterTankLocal193([x,y]) {
   return [x-cx,cy-y];
 }
 
-// The walking route turns around the field and reaches the north side of the lid.
+// One metre of clear lawn leads along the fence, then turns towards the lid from the parcel corner.
 function wastewaterApproach193() {
-  return [[7.65,-.48],[8.55,-.48],[8.55,1.30],[15.15,1.30],[15.15,-1.04],
-    [16.05,-1.04],[16.05,2.20],[7.65,2.20]].map(wastewaterTankLocal193);
+  return [[1.393,-4.12],[1.93,-3.583],[1.93,1.236],[.995,.293],[.285,.997],[2.075,2.802],
+    [2.93,2.45],[2.93,-3.79],[2.784,-4.144],[1.954,-4.974],[1.60,-5.12],[-2.90,-5.12],[-2.90,-4.12]];
+}
+
+function wastewaterLidPlanters193(world) {
+  const bearings=[...Array.from({length:14},(_,i)=>-161+i*13.15),...Array.from({length:5},(_,i)=>81+i*13.25)];
+  const screen=bearings.map((angle,i)=>[angle,1.58+.035*Math.sin(i*2.4),.35+.025*Math.cos(i*1.7),1.45+.18*Math.sin(i*1.9)]);
+  // Narrower portable specimens flank the distributor while keeping the hatch itself uncovered.
+  screen.push([145,1.72,.276,1.25],[152,1.85,.157,1.02],[179,1.84,.162,1.05],[186,1.71,.262,1.27]);
+  return screen.map(([degrees,distance,radius,height])=>{
+    const a=degrees*Math.PI/180;
+    return {center:world([distance*Math.cos(a),distance*Math.sin(a)]),radius,height};
+  });
 }
 
 export function wastewaterServiceAccess193() {
@@ -53,9 +64,10 @@ export function wastewaterServiceAccess193() {
     const l=wastewaterRunLength/2+wastewater193.endCapDepth+margin;
     return [[-w,-l],[w,-l],[w,l],[-w,l]].map(wastewaterFieldPoint).map(world);
   };
+  const lidPlanters=wastewaterLidPlanters193(world);
   const radius=wastewater193.tankDiameter/2;
   return [
-    {id:'tank',ring:circle([0,0],radius+wastewater193.serviceMargin).map(world),footprint:circle([0,0],radius).map(world)},
+    {id:'tank',lidPlanters,ring:circle([0,0],radius+wastewater193.serviceMargin).map(world),plantingRing:circle([0,0],radius+1.53).map(world),footprint:circle([0,0],radius).map(world)},
     {id:'distributor',ring:circle(wastewaterDistributor,.75).map(world)},
     {id:'field',ring:fieldOutline(.80),footprint:fieldOutline(0)},
     ...ventEnds193.map((p,i)=>({id:'vent-'+(i+1),ring:circle(wastewaterFieldPoint(p),ventServiceRadius193).map(world)})),
@@ -78,8 +90,8 @@ function wastewaterInlet() {
 }
 
 function wastewaterOutlet() {
-  const route=[[15.60,-2.97],[15.60,-3.31],[15.15,-3.76],[14.95,-3.76],
-    [14.50,-3.31],[14.50,.13]].map(wastewaterTankLocal193);
+  const route=[[15.60,-2.97],[15.60,-3.31],[15.25,-3.66],[14.95,-3.66],
+    [14.05,-2.76]].map(wastewaterTankLocal193);
   return wastewaterGravityPipe([...route,wastewaterDistributor],
     wastewater193.outletInvert,wastewater193.outletSlope);
 }
@@ -206,7 +218,7 @@ export function createWastewaterInstallation(THREE) {
   fieldDraw.pipe('distribution-chamber',[offset,y,invert-.18],[offset,y,.04],.20,'#346d70',5);
   fieldDraw.ring('distributor-cover',offset,y,.095,.20,'#9ed5bf',6);
   const inletY = wastewaterRunLength/2+wastewater193.endCapDepth;
-  const feed=wastewaterGravityPipe([[offset,y],[.32,y],[0,y-.32],[0,y-.40]],invert-.015,.02);
+  const feed=wastewaterGravityPipe([[offset,y],[offset,y-.18]],invert-wastewater193.chamberDrop,.02);
   for(let i=1;i<feed.length;i++)fieldDraw.pipe('distribution-feed-'+i,feed[i-1],feed[i],radius,'#70c9b3',4);
   for(const [index,x] of wastewaterRowOffsets.entries()) {
     const [,splitY,splitZ]=feed.at(-1), bend=.14, side=Math.sign(x);
@@ -236,8 +248,11 @@ function wastewaterMulchSurfaces(THREE,tank,field,material) {
     place(parent,shape,id);
   }
   const r=wastewater193.tankDiameter/2;
-  pad(tank,'biodisc',0,0,r+wastewater193.serviceMargin+.035,r-.006);
-  pad(field,'distributor',...wastewater193.distributor,.79,.214);
+  const soil=new THREE.Shape();
+  soil.absarc(0,0,r+wastewater193.serviceMargin+.035,0,Math.PI*2,false);
+  hole(soil,0,0,r-.006);
+  hole(soil,...wastewaterDistributor,.214);
+  place(tank,soil,'biodisc');
   for(const [i,[x,y]] of ventEnds193.entries())pad(field,'vent-'+i,x,y,ventServiceRadius193+.015,.051);
 }
 
@@ -246,7 +261,7 @@ export function createWastewaterSurface(THREE,plantingMaterial) {
   group.name = 'wastewater-surface-193';
   group.position.set(...wastewater193.tankCenter,0);
   group.rotation.z = wastewater193.angleDeg*Math.PI/180;
-  const plastic = new THREE.MeshStandardMaterial({color:'#54624d',roughness:.83});
+  const plastic = new THREE.MeshStandardMaterial({color:'#35432d',roughness:.90});
   const trim = new THREE.MeshStandardMaterial({color:'#39453c',roughness:.8});
   function turned(name,x,y,profile,material,parent=group) {
     const points = profile.map(([radius,z])=>new THREE.Vector2(radius,z));

@@ -450,10 +450,10 @@ test('terracotta faces and ceiling stay within the ground hall and both conceale
   }
 });
 
-test('all thirteen panel doors use their plan handing, room finishes and usable walking openings on the correct floor', async () => {
+test('all thirteen panel doors use their specified handing, room finishes and usable walking openings on the correct floor', async () => {
   const {createWalkCollision}=await load(await readFile(new URL('../src/model/walk.js',import.meta.url),'utf8'));
   const expected=[
-    ['garage-pantry',1,0,1],['garage-utility',-1,0,1],['garage-entry',1,1,0],
+    ['garage-pantry',1,0,-1],['garage-utility',-1,0,-1],['garage-entry',1,1,0],
     ['ground-bath',-1,0,1],['playroom',-1,1,0],['office',1,0,1],
     ['bedroom-one',-1,0,-1],['family-bath',1,1,0],['bedroom-two',-1,-1,0],
     ['laundry',1,-1,0],['private-bath',1,1,0],['dressing',-1,-1,0],['main-bedroom',1,-1,0],

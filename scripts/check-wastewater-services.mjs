@@ -66,7 +66,9 @@ test('the downhill clarified pipe reaches the distributor and equally feeds both
   assert(close(end.x,axis[0].x)&&close(end.y,axis[0].y)&&end.z>axis[0].z&&end.z<axis[1].z);
   const feed=field.children.filter(mesh=>mesh.name.startsWith('distribution-feed-'));
   const feedStart=axisEnds(feed[0])[0];
-  assert(close(feedStart.x,end.x)&&close(feedStart.y,end.y)&&close(end.z-feedStart.z,.015));
+  assert(close(feedStart.x,end.x)&&close(feedStart.y,end.y)&&close(end.z-feedStart.z,.045));
+  const hatch=field.worldToLocal(new THREE.Vector3(end.x,end.y,0));
+  assert(close(hatch.x,0)&&hatch.y>3.25&&hatch.y<3.80,'hatch centred between the tunnel inlets and tank');
   const split=gradedPipes(feed,.02);
   let firstInvert;
   for(const row of [0,1]){
@@ -120,7 +122,7 @@ test('the tunnel footprint is entirely inside /193, away from structures, vehicl
   assert.equal(field.children.filter(m=>/-tunnel-[1-5]$/.test(m.name)).length,10);
 });
 
-test('the front-corner tank and parallel front-boundary rows preserve the service ring and the driveway approach',()=>{
+test('the front-corner tank and parallel front-boundary rows preserve the service ring and access from the nearest corner',()=>{
   const tankPlan=system.position.clone().applyMatrix4(siteToPlan);
   const fieldPlan=field.getWorldPosition(new THREE.Vector3()).applyMatrix4(siteToPlan);
   assert(Math.hypot(tankPlan.x-15.60,tankPlan.y+1.99)<.02);
@@ -144,7 +146,19 @@ test('the front-corner tank and parallel front-boundary rows preserve the servic
   assert(ringDistance(tank,worldFieldRing())>wastewater193.serviceMargin);
   for(const tree of [...garden.trees,...woods.trees])assert(clearance(tree.center,tank)>3);
   const access=wastewaterServiceAccess193(),approach=access.at(-1).ring;
-  assert(clipping.intersection([approach],hard.driveway.coordinates).length);
+  const boundary=neighbors.parcels['193'].coordinates[0];
+  assert.equal(clipping.difference([approach],[boundary]).length,0);
+  assert.equal(clipping.intersection([approach],hard.driveway.coordinates).length,0);
+  const nearest=boundary.reduce((q,p)=>Math.hypot(p[0]-system.position.x,p[1]-system.position.y)<
+    Math.hypot(q[0]-system.position.x,q[1]-system.position.y)?p:q);
+  const direction=new THREE.Vector2(nearest[0]-system.position.x,nearest[1]-system.position.y).normalize();
+  const toCorner=(distance,side)=>[system.position.x+distance*direction.x-side*direction.y,
+    system.position.y+distance*direction.y+side*direction.x];
+  const passage=[toCorner(1.05,-.49),toCorner(3.32,-.49),toCorner(3.32,.49),toCorner(1.05,.49)];
+  assert.equal(clipping.difference([passage],[approach]).length,0,'The corner-side opening is a continuous metre-wide walk');
+  const lawn=[[9.62,2.14],[13.39,2.14],[13.39,3.10],[9.62,3.10]].map(([x,y])=>
+    xy(new THREE.Vector3(x,y,0).applyMatrix4(planToSite)));
+  assert(clipping.intersection([lawn],[approach]).length,'The path joins the lawn by the windows');
   assert(clipping.intersection([approach],[access[0].ring]).length);
   for(const item of access.filter(item=>['field','distributor','vent-1','vent-2'].includes(item.id)))
     assert.equal(clipping.intersection([approach],[item.footprint??item.ring]).length,0,item.id);
@@ -169,6 +183,11 @@ test('actual BioDisc lid, rim, distribution hatch and vent cowls clear the parce
     assert.equal(clipping.difference([outline],[boundary]).length,0,name+' must lie inside /193');
     const gap=clearance(xy(center),boundary)-radius;
     assert(gap>=minGap,name+' outer edge '+gap+' m from boundary');
+    if(name.startsWith('vent-cowl-')){
+      const markedBedCenter=[-18.3,5.1];
+      assert(Math.hypot(center.x-markedBedCenter[0],center.y-markedBedCenter[1])<1.6,
+        name+' must stay in the marked shrub bed across the driveway');
+    }
     if(name==='biodisc-lid-seam'){
       const nearCorner=boundary.slice(0,-1).filter((p,i)=>clearance(xy(center),[p,boundary[i+1]])-radius<2.03);
       assert.equal(nearCorner.length,2,'lid reaches both setback lines at the marked corner');
@@ -255,9 +274,20 @@ test('the section outline meets the physical shoulder of the BioDisc lid',()=>{
   assert(close(.31-bottom,wastewater193.tankHeight));
 });
 
+test('the cleared shrub strip and the service turnaround are continuous lawn',()=>{
+  const beds=woods.beds.map(b=>[b.ring,...b.holes]);
+  for(const [left,right,near,far] of [[1.88,3.55,.05,3.55],[4.62,5.76,3.90,5.54]]){
+    const lawn=[[left,near],[right,near],[right,far],[left,far]]
+      .map(([x,y])=>xy(field.localToWorld(new THREE.Vector3(x,y,0))));
+    for(const bed of beds)assert.equal(clipping.intersection([lawn],bed).length,0);
+    for(const bed of garden.polygons.filter(p=>p.kind==='planting'))
+      assert.equal(clipping.intersection([lawn],[bed.ring,...bed.holes||[]]).length,0);
+  }
+});
+
 test('the level mulch collars meet the shrub beds and leave every service opening clear',()=>{
-  const soilMeshes=['biodisc','distributor','vent-0','vent-1'].map(id=>surface.getObjectByName('wastewater-mulch-'+id));
-  const ventRings=soilMeshes.slice(2).map(mesh=>mesh.geometry.parameters.shapes.getPoints(40)
+  const soilMeshes=['biodisc','vent-0','vent-1'].map(id=>surface.getObjectByName('wastewater-mulch-'+id));
+  const ventRings=soilMeshes.slice(1).map(mesh=>mesh.geometry.parameters.shapes.getPoints(40)
     .map(({x,y})=>xy(mesh.localToWorld(new THREE.Vector3(x,y,0)))));
   assert.equal(clipping.intersection(...ventRings.map(ring=>[ring])).length,0);
   const beds=woods.beds.map(b=>[b.ring,...b.holes]);
@@ -265,13 +295,13 @@ test('the level mulch collars meet the shrub beds and leave every service openin
     const shape=mesh.geometry.parameters.shapes;
     const outline=shape.getPoints(40).map(({x,y})=>xy(mesh.localToWorld(new THREE.Vector3(x,y,0))));
     assert(beds.some(bed=>clipping.intersection([outline],bed).length),mesh.name);
-    assert.equal(shape.holes.length,1);
+    assert.equal(shape.holes.length,mesh.name==='wastewater-mulch-biodisc'?2:1);
     assert(mesh.position.z>.032+.001+.043*1.14&&mesh.position.z<.09);
   }
-  for(const [i,id] of ['biodisc-service-lid','distributor-hatch','tunnel-vent-0','tunnel-vent-1'].entries()){
+  for(const id of ['biodisc-service-lid','distributor-hatch','tunnel-vent-0','tunnel-vent-1']){
     const point=surface.getObjectByName(id).getWorldPosition(new THREE.Vector3()).setZ(1);
     const down=new THREE.Raycaster(point,new THREE.Vector3(0,0,-1));
-    assert.equal(down.intersectObject(soilMeshes[i]).length,0,id);
+    assert.equal(down.intersectObjects(soilMeshes,false).length,0,id);
   }
 });
 

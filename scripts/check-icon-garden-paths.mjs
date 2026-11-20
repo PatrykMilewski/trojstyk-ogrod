@@ -67,13 +67,55 @@ function checkFootfalls(route, run, row, lawn) {
   return [dx,dy];
 }
 
-export function checkIconGardenPaths(garden, editor, registry, controlPlan) {
+function checkStreetEntry(garden, editor, world, controlPlan) {
+  const streetWalk = garden.polygons.find(p => p.id === 'street-walk-193');
+  const [a,b,c,d,e] = streetWalk.ring;
+  const gate = garden.lines.find(p => p.kind === 'street_wicket');
+  close(gate.height, 1.6);
+  assert.deepEqual(gate.points,[a,b]);
+  close(distance(a,b),1.2); close(distance(c,d),1.2);
+  close(distance(b,c),.25); close(distance(d,e),1.45); close(distance(a,e),1.2);
+  assert(controlPlan.includes('id="street-walk-193"') && controlPlan.includes('id="street-wicket-193"'));
+  const drive = editor.driveways['193'].map(world); drive.push(drive[0]);
+  for (const corner of [c,d]) close(edgeDistance(corner,drive),0);
+  const fence = garden.lines.filter(l => l.kind === 'parcel_fence');
+  for (const p of [a,b]) close(Math.min(...fence.map(l => edgeDistance(p,l.points))),0);
+  for (let t=.05; t<1; t+=.05) {
+    const p=[a[0]+t*(b[0]-a[0]), a[1]+t*(b[1]-a[1])];
+    assert(fence.every(l => edgeDistance(p,l.points)>.05), 'No fixed fence across the entrance');
+  }
+}
+
+function checkOtherGardens(additions, editor, world, controlPlan) {
+  assert(!additions.polygons.some(p => ['shared_path','path'].includes(p.kind)), 'Only individual footfalls pave garden routes');
+  const mapped = new Map(editor.gardenStones.map(p => [p.id,p]));
+  for (const parcel of ['190','191','shared']) {
+    const stones = additions.polygons.filter(p => p.parcel === parcel && p.kind === 'flagstone');
+    assert(stones.length > 20, 'Missing garden path on ' + parcel);
+    for (const [i,stone] of stones.entries()) {
+      assert.equal(stone.height, .035);
+      assert(controlPlan.includes(`id="${stone.id}"`));
+      if (parcel !== 'shared') {
+        const ring = mapped.get(stone.id).ring;
+        assert.equal(ring.length, stone.ring.length-1);
+        ring.forEach((point,k) => close(distance(world(point),stone.ring[k]), 0));
+      }
+      for (const previous of stones.slice(0,i)) {
+        assert.deepEqual(clipping.intersection([stone.ring],[previous.ring]), [], stone.id + ' overlaps ' + previous.id);
+      }
+    }
+  }
+}
+
+export function checkIconGardenPaths(garden, editor, registry, controlPlan, additions) {
   assert(!garden.objects.some(o => o.kind === 'grill'));
-  assert(!garden.polygons.some(p => p.kind === 'path' || p.id === 'kitchen-pad'));
+  assert(!garden.polygons.some(p => ['path','shared_path'].includes(p.kind) || p.id === 'kitchen-pad'));
   assert.equal(garden.metadata.areasM2.kitchenPaving, 0);
   const {sharedRotation: [[a,b],[c,d]], sharedTranslation: [tx,ty]} = garden.metadata;
   const world = ([x,y]) => [a*x + b*y + tx, c*x + d*y + ty];
   const lawn = garden.polygons.filter(p => p.kind === 'lawn').map(p => [p.ring, ...p.holes]);
+  checkStreetEntry(garden, editor, world, controlPlan);
+  checkOtherGardens(additions, editor, world, controlPlan);
   const stones = garden.polygons.filter(p => p.kind === 'flagstone');
   const published = id => registry.details.find(row => row.id === id).values;
   const widths = [], lengths = [];

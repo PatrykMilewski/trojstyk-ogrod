@@ -58,11 +58,37 @@ test('all exterior faces and convex corners have one visible cladding layer',()=
    const own=hits(object(f.id),origin,d,.205);if(!own.length)continue;
    const all=opaque.flatMap(m=>hits(m,origin,d,.205).map(h=>({name:m.name,material:Array.isArray(m.material)?m.material[h.face.materialIndex].color.getHexString():m.material.color.getHexString()})));
    const unique=[...new Map(all.map(h=>[h.name+'|'+h.material,h])).values()];
-   assert.equal(unique.length,1,`${f.id} ${u},${z}: ${JSON.stringify(unique)}`);assert.equal(unique[0].material,'343b35',f.id);checked++;
+   assert.equal(unique.length,1,`${f.id} ${u},${z}: ${JSON.stringify(unique)}`);assert.equal(unique[0].material,f.id==='facade-garden'&&z>=.30?'121314':'343b35',f.id);checked++;
   }
  }
  assert(checked>1000);
 });
+test('garden recess shares the exterior timber scan while its black glazing trim stays smooth',async()=>{
+ const boards=object('garden-gable').material[1],frame=object('facade-garden').material[1];
+ assert.equal(boards.userData.surfaceProfile,'facade');
+ assert.equal(object('garden-gable-reveal-0').material,boards);
+ assert.equal(frame.userData.surfaceProfile,'blackGlazing');
+ for(const name of ['living-slider-head','garden-gable-opening-0-frame-1','facade-garden-opening-0-frame-1','garden-upper-triangle-mullion-3.1']){
+  assert.equal(object(name).material,frame,name);
+ }
+ assert.equal(object('garden-window-transom').material[1],frame);
+ const {applyRealisticSurfaces}=await load(await readFile(new URL('../src/model/surface-realism.js',import.meta.url),'utf8'));
+ const group=new THREE.Group();group.name='icon-193-interior';
+ const reveal=object('garden-gable-reveal-0').clone(),band=object('garden-window-transom').clone();
+ group.add(reveal,band);
+ const images=await Promise.all(['.webp','-relief.webp'].map(async suffix=>{
+  const bytes=await readFile(new URL('../src/model/surface-scans/icon_charred_boards'+suffix,import.meta.url));
+  assert.equal(bytes.toString('ascii',8,12),'WEBP');
+  return 'data:image/webp;base64,'+bytes.toString('base64');
+ }));
+ class Loader{async loadAsync(url){assert(images.includes(url));return new THREE.Texture();}}
+ await applyRealisticSurfaces({THREE:{...THREE,TextureLoader:Loader},scene:group,mats:{},
+  renderer:{capabilities:{getMaxAnisotropy:()=>4}},scans:{iconCharredBoards:images}});
+ assert.equal(reveal.material.name,'iconCharredBoards');
+ assert(reveal.material.map && reveal.material.bumpMap && reveal.geometry.getAttribute('uv'));
+ assert.equal(band.material[1],frame);
+});
+
 test('living-room transom is flush with both windows with no shelf or front wall band',()=>{
  const band=object('garden-window-transom'),glass=bounds(object('garden-gable-glass-0'));
  for(const x of [.8,1.1,3,4.25,7.5,7.7])for(const z of [2.4,2.6,2.79,2.9,3.15]){
@@ -111,7 +137,7 @@ test('the exterior wall changes finish at exactly 300 mm and preserves every ful
    const low=sample(u,.299),high=sample(u,.301);
    if(face.openings.some(o=>o.bottom===0&&u>o.start&&u<o.end)){assert.equal(low.length,0);continue;}
    assert.equal(wall.material[low[0].face.materialIndex].name,'Black porcelain plinth');
-   assert.equal(wall.material[high[0].face.materialIndex].color.getHexString(),'343b35');
+   assert.equal(wall.material[high[0].face.materialIndex].color.getHexString(),face.id==='facade-garden'?'121314':'343b35');
    assert.notEqual(low[0].face.materialIndex,high[0].face.materialIndex);
   }
  }
@@ -169,12 +195,13 @@ test('the rear deck stays level between the piers and its threshold discharges i
   for(const mesh of [deck,sill,drain])assert.equal(at(mesh,x,y).length,0,`clear frame, pier, wall and adjoining deck at ${x},${y}`);
 });
 
-test('all nine flush uplights follow the finished grade and share dusk, dawn and tap controls after batching',async()=>{
+test('all seven flush uplights follow the finished grade and share dusk, dawn and tap controls after batching',async()=>{
  const {batchStaticInteriorDetails,batchStaticDetails}=await load(await readFile(new URL('../src/model/static-detail-batches.js',import.meta.url),'utf8'));
  const circuit=interior.exteriorLights,apron=object('icon-basalt-apron');
  circuit.prepare();batchStaticInteriorDetails(THREE,interior.group);
  const fixtures=interior.group.children.filter(o=>o.name.startsWith('icon-exterior-uplight-'));
- assert.equal(fixtures.length,9);
+ assert.equal(fixtures.length,7);
+ for(const id of ['wing-rear-4.24','terrace-0.61'])assert(!interior.group.getObjectByName('icon-exterior-uplight-'+id));
  assert(!interior.group.children.some(o=>o.name.includes('exterior-sconce')));
  batchStaticDetails(THREE,fixtures);
  const pendants=interior.group.children.filter(o=>o.name.startsWith('icon-terrace-pendant-'));
@@ -244,8 +271,7 @@ test('grazing light crosses the storey joint on each aligned timber plane and fa
  }
  for(const [lower,upper,x,y,nx,ny] of [
   ['facade-garage','front-gable',6.51,0,0,-1],['facade-front-wing','upper-front-wing',11.11,4.21,0,-1],
-  ['facade-wing-end','wing-gable',14.64,6.46,1,0],['facade-main-side','upper-main-side',0,2.75,-1,0],
-  ['facade-wing-rear','upper-rear-wing',12.74,12.71,0,1],['facade-terrace','upper-terrace-side',8.5,13.32,1,0]
+  ['facade-wing-end','wing-gable',14.64,6.46,1,0],['facade-main-side','upper-main-side',0,2.75,-1,0]
  ]){
   const at=z=>irradianceAt(lower,x,y,z,nx,ny);
   assert(at(.09)<3&&at(.72)>at(1.89)&&at(1.89)>at(2.4),lower+' has a single ground-originating beam');
@@ -255,6 +281,8 @@ test('grazing light crosses the storey joint on each aligned timber plane and fa
   assert(above>shoulder&&shoulder>tail&&tail>0,upper+' fades gradually');
   assert(!object(upper).material[0].lightMap,'inside face remains unlit');
  }
+ for(const [id,x,y,nx,ny] of [['facade-wing-rear',12.74,12.71,0,1],['facade-terrace',8.5,13.32,1,0]])
+  assert.equal(irradianceAt(id,x,y,.72,nx,ny),0,'No baked uplight beside the terrace table');
  for(const id of ['front-gable-glass-0','wing-gable-glass-0','garden-gable-glass-0'])
   assert.equal(object(id).material.lightMap,null,'transparent glazing receives no facade bake');
  for(const id of ['garden-gable','upper-garage-side'])

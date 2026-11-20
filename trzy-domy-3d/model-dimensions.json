@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-20.14",
+  "modelVersion": "2026-11-20.21",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1060,9 +1060,9 @@
       "id": "driveway-193",
       "name": "Wjazd do garażu /193",
       "labels": [
-        "Brama wjazdowa (m)",
+        "Wjazd w granicy działki (m)",
         "Brama garażowa (m)",
-        "Odległość między środkami bram (m)",
+        "Od granicy działki do bramy garażowej (m)",
         "Podjazd z dojściem (m²)"
       ],
       "values": [
@@ -1071,7 +1071,7 @@
         5,
         31.888
       ],
-      "source": "Pomiar z geometrii aktualnego modelu"
+      "source": "Pomiar z geometrii modelu. Samonośna brama przesuwna ma światło 5,90 m. Od jej płaszczyzny do garażu jest 4,76 m, a na otwarcie skrzydła z przeciwwagą przewidziano 8,78 m wzdłuż ogrodzenia po stronie przeciwnej do furtki."
     }
   ],
   "trees": [
@@ -1676,7 +1676,7 @@
         "bodyCentroidMovementLengthM": 4.531846050174537,
         "relativeReflectionDeterminant": -1,
         "matrixDeterminant": 1,
-        "upperBoundaryOptimalityGapM": 0.00005379068285904509,
+        "upperBoundaryOptimalityGapM": 5.379068285904509e-05,
         "northTieBreakOptimalityGapM": 0,
         "globalMapNorthOptimalityGapM": 0,
         "activeSetbacks": [
@@ -1785,11 +1785,11 @@
   "sharedAreaM2": 156.18903025919093,
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
-    "inputsSha256": "908f885d773afe0297fde5a5c0b333409cb6465c5c4e1bbd7b04252037a956a6",
-    "proceduralCodeSha256": "4165e83f1267111f748c85887ffbfb7b536c715c9e644ca410d9450ec0e543fc",
+    "inputsSha256": "d4df80b8de3b82126033c4dbed254e9fdec12e1416e1aed920a4473e7a34d4fd",
+    "proceduralCodeSha256": "ce18885d610536d274aceca6edfa3c734c9f7e8b2a581fde682fa2a4665a8149",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
-    "planSha256": "834cc5ae90fcb9b19e4e8d77331b34fc975426a6dc2f30dfa14c828ab895a5c0",
-    "runtimeSha256": "623ebdf80a75271a3b26d2dc6feae59c374c2380b4c42142ee9031a9da6c201b"
+    "planSha256": "d145ef3d51bd9a06a07328a2f09708d9ed55712449a7a86612779fc827b78ad8",
+    "runtimeSha256": "30903598344585107cf9645c8e46757e36b9ea6a82731ff017312e9daaa984db"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1853,7 +1853,14 @@
     "Dom /193: obwody zewnętrzne, wallbox przy rowerach, lampy wiszące na tarasie, zbiornik z pompą po wschodniej stronie tarasu, ogród deszczowy przy garażu i dwie ścieżki z płaskich kamieni.",
     "Dom /193: boczny zbiornik przy /190, osobna zagłębiona niecka deszczowa wśród krzewów oraz dwa rzędy mniejszych kamieni układanych na mijankę.",
     "Dom /193: BioDisc w narożniku przy garażu, tunele równolegle do ogrodzenia, zbiornik deszczówki przy końcu tarasu i dwa równoległe pola skrzynek pod trawnikiem.",
-    "Dom /193: szara kostka granitowa w łuki na podjeździe i dojściu do wejścia, granitowe obrzeża i rewizja deszczówki w rabacie przy ścieżce."
+    "Dom /193: szara kostka granitowa w łuki na podjeździe i dojściu do wejścia, granitowe obrzeża i rewizja deszczówki w rabacie przy ścieżce.",
+    "Działka /193: dwie wywiewki tuneli w rabacie za podjazdem przy ściętym narożniku. Odstępy od najbliższej granicy, mierzone od krawędzi daszków, wynoszą 3,23 i 3,59 m.",
+    "Dom /193: kuchenne fronty z pionowym fornirem w ciepłym brązie i kremowymi uchwytami. W sypialni na poddaszu koniakowa rama łóżka i obły zagłówek z ciemnooliwową, wzorzystą wstawką.",
+    "Furtka uliczna i granitowe dojście na /193, większy trawnik przy BioDisc, studzienka przy rozgałęzieniu tuneli, siedem opraw elewacyjnych i cztery rozdzielacze z osobnymi kolorami pętli.",
+    "Dom /193 ma jasne dębowe fronty z satynowymi uchwytami, bezuchwytową szafkę robota, deskowaną wnękę salonu, czarne obramowanie szyb i automatyczną dwuskrzydłową bramę. Sterownik BioDisc znajduje się w kotłowni, a pokrywę osłaniają krzewy. Ogrody trzech działek i trójstyk łączą ścieżki z płaskich kamieni.",
+    "Dom /193 ma samonośną bramę przesuwną, wideodomofon na furtce z monitorem w wiatrołapie oraz cztery rozdzielacze z otwieranymi rewizjami. Po zmianie tras 27 pętli ma łącznie 1794,8 m, w tym 300,86 m dojść.",
+    "Dom /193: podpis sterownika BioDisc w kotłowni, drzwi kotłowni i spiżarni otwierane na zewnątrz pomieszczeń, posadzki w osobnych widokach pętli ogrzewania i niskie krzewy wokół pokrywy BioDisc.",
+    "Dom /193: wysoki, gęsty pierścień krzewów osłania pokrywę BioDisc. Jedno dojście do klapy prowadzi od narożnika działki."
   ],
   "contextParcels": [
     {
@@ -2805,7 +2812,7 @@
         "min": [
           -2.4000000953674316,
           -0.9750000238418579,
-          -1.4305114759416426e-8
+          -1.4305114759416426e-08
         ],
         "max": [
           2.4000000953674316,
@@ -2840,7 +2847,7 @@
         "min": [
           -2.299999952316284,
           -0.925000011920929,
-          7.152557379708213e-9
+          7.152557379708213e-09
         ],
         "max": [
           2.299999952316284,
@@ -2875,7 +2882,7 @@
         "min": [
           -2.299999952316284,
           -0.925000011920929,
-          7.152557379708213e-9
+          7.152557379708213e-09
         ],
         "max": [
           2.299999952316284,
@@ -2910,7 +2917,7 @@
         "min": [
           -2.299999952316284,
           -0.925000011920929,
-          7.152557379708213e-9
+          7.152557379708213e-09
         ],
         "max": [
           2.299999952316284,
@@ -3619,7 +3626,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "4f73700fb6652150a0b55aa0ea9014fe03413dfcb3b2595c2b0f79e904d27d70",
+    "dataSha256": "74bab3218610978b336ebc1c8261ed25c78340682d0e585445b36967133b0a59",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,

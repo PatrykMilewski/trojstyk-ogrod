@@ -3,6 +3,7 @@ const shrubProfiles = [
   {name:'snowberry', tint:'#8ead87', height:1.23, width:.82, lean:.68, tips:3},
   {name:'dogwood', tint:'#839f68', height:1.64, width:1.03, lean:.53, tips:4},
   {name:'ninebark', tint:'#a08373', height:1.52, width:.94, lean:.64, tips:3},
+  {name:'potted-holly', tint:'#79945e', lean:.90, tips:7, stems:48, crownDrop:.26},
 ];
 
 // The shared alpha cutout preserves gaps between the leaves even at walking distance.
@@ -62,10 +63,11 @@ function shrubSpecimen(THREE,profile,random) {
       indices.push(start+j,start+next,start+3+j,start+next,start+3+next,start+3+j);
     }
   }
-  for(let stem=0;stem<13;stem++) {
-    const radial=Math.sqrt((stem+.25)/13);
+  const stems=profile.stems??13;
+  for(let stem=0;stem<stems;stem++) {
+    const radial=Math.sqrt((stem+.25)/stems);
     const angle=stem*goldenAngle+random()*.26;
-    const height=.94-.54*radial**1.7+.11*random();
+    const height=.94-(profile.crownDrop??.54)*radial**1.7+.11*random();
     const endRadius=radial*.92*profile.lean;
     stemSegment([0,0,0],[Math.cos(angle)*endRadius,Math.sin(angle)*endRadius,.92*height*.82],.009);
     for(let j=0;j<profile.tips;j++) {
@@ -124,42 +126,62 @@ function sampleWoodyBed(bed,random,surfaceClearance,serviceAccess,borderShrubs,p
 
 function plantInspectionBorders(beds,serviceAccess,surfaceClearance,placements) {
   const planted=placements.flat();
-  let count=0;
+  const borders=[];
   for(const vent of serviceAccess.filter(area=>['vent-1','vent-2','distributor','tank'].includes(area.id))){
     const center=vent.ring.reduce(([x,y],[vx,vy])=>[x+vx/vent.ring.length,y+vy/vent.ring.length],[0,0]);
     const neighbors=planted.filter(p=>Math.hypot(p.x-center[0],p.y-center[1])<3);
     const tank=vent.id==='tank', distributor=vent.id==='distributor';
-    const distances=tank?[2.36,2.45,2.54]:distributor?[1.12,1.23,1.34]:[.78,.87,.97];
-    const maximumGap=tank?2.16:distributor?1.0:.63;
+    const distances=tank?[3.18,3.02,3.37,3.57]:distributor?[1.12,1.23,1.34]:[.78,.87,.97];
+    const maximumGap=tank?3.0:distributor?1.0:.63;
     for(const distance of distances)for(let step=0;step<36;step++){
       const angle=step*Math.PI/18,x=center[0]+distance*Math.cos(angle),y=center[1]+distance*Math.sin(angle);
-      let radius=Math.min(.40,Math.max(...beds.map(bed=>surfaceClearance(x,y,bed)))-.03);
+      let radius=Math.min(tank?.68:.40,Math.max(...beds.map(bed=>surfaceClearance(x,y,bed)))-.03);
       for(const area of serviceAccess)radius=Math.min(radius,-surfaceClearance(x,y,area)-.03);
       for(const p of neighbors)radius=Math.min(radius,Math.hypot(x-p.x,y-p.y)-p.radius-.06);
       if(radius<Math.max(.23,distance-maximumGap))continue;
-      const shrub={x,y,radius,height:.42,angle,tone:.93};
+      const height=tank?.85+.33*Math.cos(angle*3)**2:.42;
+      const shrub={x,y,radius,height,angle,tone:.93};
       placements[0].push(shrub);neighbors.push(shrub);planted.push(shrub);
-      count++;
+      borders.push(shrub);
     }
   }
-  return count;
+  return borders;
+}
+
+function addLidPlanters(THREE,group,plants,planters) {
+  if(!planters.length)return;
+  const potHeight=.34,exposedRim=.33,mulchTop=.084;
+  const pot=new THREE.CylinderGeometry(.174,.145,potHeight,16);
+  pot.rotateX(Math.PI/2);
+  const containers=new THREE.InstancedMesh(pot,new THREE.MeshStandardMaterial({color:'#544c3e',roughness:.98}),planters.length);
+  containers.name='biodisc-portable-pots';
+  const matrix=new THREE.Matrix4();
+  for(const [i,{center:[x,y],radius,height}] of planters.entries()) {
+    const width=Math.min(1,radius/.32);
+    matrix.makeScale(width,width,1).setPosition(x,y,mulchTop+exposedRim-potHeight/2);
+    containers.setMatrixAt(i,matrix);
+    plants.push({x,y,radius,height:height-exposedRim,z:mulchTop+exposedRim,angle:i*2.4,tone:.92+.06*Math.sin(i)});
+  }
+  containers.castShadow=containers.receiveShadow=true;
+  group.add(containers);
 }
 
 export function createWoodyBeds(THREE,parcels,{surfaceClearance,woodyRandom,serviceAccess=[]}) {
   const group=new THREE.Group(), profiles=shrubProfiles, placements=profiles.map(()=>[]);
+  const plantingAccess=serviceAccess.map(area=>area.plantingRing?{...area,ring:area.plantingRing}:area);
   group.name='woody-beds';
   const shapes=[],stats={},base=.068;
-  for(const {id,beds,trees} of parcels) {
+  for(const {id,beds,trees,lidPlanters=[]} of parcels) {
     const random=woodyRandom(937+Number(id)), phase=random()*Math.PI*2;
-    const firstBorder=placements[0].length;
-    let shrubs=id==='193'?plantInspectionBorders(beds,serviceAccess,surfaceClearance,placements):0;
-    const borderShrubs=placements[0].slice(firstBorder);
+    const borderShrubs=id==='193'?plantInspectionBorders(beds,plantingAccess,surfaceClearance,placements):[];
+    addLidPlanters(THREE,group,placements[4],lidPlanters);
+    let shrubs=borderShrubs.length+lidPlanters.length;
     for(const bed of beds) {
       const path=ring=>ring.map(([x,y])=>new THREE.Vector2(x,y));
       const shape=new THREE.Shape(path(bed.ring));
       shape.holes=(bed.holes||[]).map(h=>new THREE.Path(path(h)));
       shapes.push(shape);
-      shrubs+=sampleWoodyBed(bed,random,surfaceClearance,id==='193'?serviceAccess:[],borderShrubs,(x,y,gap)=>{
+      shrubs+=sampleWoodyBed(bed,random,surfaceClearance,id==='193'?plantingAccess:[],borderShrubs,(x,y,gap)=>{
         const drift=Math.sin(x*.44+phase)+.65*Math.sin(y*.62-phase)+.43*Math.sin((x+y)*.53);
         const interior=Math.min(1,gap/1.2), scale=.82+.30*random();
         const species=gap<.66?0:drift<-.98?3:drift<.08?1:drift<.61?0:2;
@@ -182,8 +204,8 @@ export function createWoodyBeds(THREE,parcels,{surfaceClearance,woodyRandom,serv
     const profile=profiles[i], geometry=shrubSpecimen(THREE,profile,woodyRandom(37922+i));
     const foliage=new THREE.InstancedMesh(geometry,leafMaterial,plants.length);
     foliage.name='woody-shrub-'+profile.name;
-    plants.forEach(({x,y,radius,height,angle,tone},index)=>{
-      transform.position.set(x,y,base); transform.rotation.z=angle;
+    plants.forEach(({x,y,radius,height,angle,tone,z=base},index)=>{
+      transform.position.set(x,y,z); transform.rotation.z=angle;
       transform.scale.set(radius,radius,height); transform.updateMatrix();
       foliage.setMatrixAt(index,transform.matrix);
       foliage.setColorAt(index,color.set(profile.tint).multiplyScalar(tone));

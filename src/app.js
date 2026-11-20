@@ -227,7 +227,8 @@ function walkwayHandles() {
 function walkwayDrawing() {
  const w=state.walkway;if(!w)return '';
  const area=walkwayGeometry();
- return `<g data-walkway="true" style="cursor:move"><path d="${multiPath(area)}" fill="#c8bd9f" fill-opacity=".48" stroke="#8b7957" stroke-width=".04" stroke-dasharray=".15 .1" fill-rule="evenodd"/>${walkwayPeople()}<circle cx="${w.x}" cy="${-w.y}" r=".25" fill="#8b7957" stroke="#fffdf8" stroke-width=".05"/>${label(w.x,w.y+.5,`Chodnik · ${number(w.width)} m`,.3,'#665431','paint-order="stroke" stroke="#fffdf8" stroke-width=".1"')}</g>`;
+ const stones=sharedGardenStones(walkwayBranches(),w.width).map(s=>`<polygon points="${points(s.ring)}" fill="${s.color}" stroke="#938e7f" stroke-width=".018"/>`).join('');
+ return `<g data-walkway="true" style="cursor:move"><path d="${multiPath(area)}" fill="transparent" stroke="#8b7957" stroke-width=".04" stroke-dasharray=".15 .1" fill-rule="evenodd"/><g clip-path="url(#walkway-fence)">${stones}</g>${walkwayPeople()}<circle cx="${w.x}" cy="${-w.y}" r=".25" fill="#8b7957" stroke="#fffdf8" stroke-width=".05"/>${label(w.x,w.y+.5,`Przejście · ${number(w.width)} m`,.3,'#665431','paint-order="stroke" stroke="#fffdf8" stroke-width=".1"')}</g>`;
 }
 function compute() {
  const zone=polygon(state.fence),total=Math.abs(ringArea(state.fence));
@@ -245,7 +246,7 @@ function compute() {
  const walkway=walkwayGeometry(),walkwayArea=polygonArea(walkway);
  const walkwayOverlap=walkway.length&&union.length?polygonArea(pc.intersection(walkway,union)):0;
  const violations=[];
- if(walkwayOverlap>.05)violations.push(`Wirtualny chodnik nakłada się na elementy: ${formatArea(walkwayOverlap)}.`);
+ if(walkwayOverlap>.05)violations.push(`Ścieżka z płaskich kamieni nakłada się na elementy: ${formatArea(walkwayOverlap)}.`);
  if(polygonArea(outside)>.01)violations.push(`${number(polygonArea(outside))} m² wspólnej części poza trzema działkami.`);
  if(shares.find(s=>s.id==='193').area/total>.50001)violations.push('Udział /193 przekracza 50%.');
  if(houseCollision>.01)violations.push(`Wspólna część nachodzi na dom: ${formatArea(houseCollision)}.`);
@@ -264,7 +265,7 @@ function renderMetrics(metrics) {
  $('total-area').textContent=number(metrics.total);
  $('shares').innerHTML=metrics.shares.map(s=>`<tr><td><span class="dot" style="background:${COLORS[s.id]}"></span>/${s.id}</td><td>${number(s.area)}</td><td>${number(s.area/metrics.total*100)}%</td></tr>`).join('');
  $('sharebar').innerHTML=metrics.shares.map(s=>`<span style="width:${s.area/metrics.total*100}%;background:${COLORS[s.id]}"></span>`).join('');
- const rows=[['Chodnik wirtualny (osobno)',formatArea(metrics.walkwayArea)],['Zagospodarowane (bez powtórzeń)',formatArea(metrics.occupied)],['Wolne w obrębie płotu',formatArea(metrics.free)],['Cały obwód',`${number(metrics.perimeter)} m`],['Płot stały',`${number(metrics.fenceLength)} m`],['Otwory bram / furtek',`${number(metrics.gateLength)} m`]];
+ const rows=[['Rezerwa przejścia',formatArea(metrics.walkwayArea)],['Zagospodarowane (bez powtórzeń)',formatArea(metrics.occupied)],['Wolne w obrębie płotu',formatArea(metrics.free)],['Cały obwód',`${number(metrics.perimeter)} m`],['Płot stały',`${number(metrics.fenceLength)} m`],['Otwory bram / furtek',`${number(metrics.gateLength)} m`]];
  $('metrics').innerHTML=rows.map(([a,b])=>`<div class="statline"><span>${a}</span><b>${b}</b></div>`).join('');
  $('warnings').innerHTML=metrics.violations.map(s=>`<div class="warning bad">${esc(s)}</div>`).join('');
  $('parcel-balance').innerHTML=metrics.shares.map(s=>`<div class="statline"><span>/${s.id} cała działka</span><b>${formatArea(s.parcelArea)}</b></div><div class="statline"><span>/${s.id} prywatne</span><b>${formatArea(s.parcelArea-s.area)}</b></div>`).join('');
@@ -278,8 +279,10 @@ function renderParcels() {
   const pos={'193':[-20,-22],'190':[-18,27],'191':[24,12]}[id];html+=label(...pos,`775/${id}`,1.1,'#758177','font-weight="bold"');
   for(const field of ['terraces','driveways','entries'])if(GEO[field]?.[id])html+=`<polygon points="${points(GEO[field][id])}" fill="${field==='terraces'?'#d9c4a3':'#d3d6ce'}" stroke="#b9bdb2" stroke-width=".025"/>`;
  }
- const {surfaces,bowl}=GEO.garden193;
- for(const p of surfaces)html+=`<polygon data-garden-surface="${esc(p.id)}" points="${points(p.ring)}" fill="${esc(p.color)}" stroke="#8c8777" stroke-width=".025"/>`;
+ const {surfaces,bowl,driveGate}=GEO.garden193;
+ for(const p of [...surfaces,...(GEO.gardenStones||[])])html+=`<polygon data-garden-surface="${esc(p.id)}" points="${points(p.ring)}" fill="${esc(p.color)}" stroke="#8c8777" stroke-width=".025"/>`;
+ html+=worldLine(...driveGate.closed,'#a04e2e',.09);
+ html+=worldLine(...driveGate.pocket,'#a04e2e',.045,'stroke-dasharray=".15 .10"');
  html+=`<circle cx="${bowl.center[0]}" cy="${-bowl.center[1]}" r="${bowl.radius}" fill="#45473f"/>`;
  return html;
 }
@@ -387,7 +390,7 @@ function fenceDrawing() {
 function draw() {
  const svg=$('board');svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`);
  const metrics=lastMetrics;
- let content=`<defs><pattern id="grid" width="1" height="1" patternUnits="userSpaceOnUse"><path d="M1 0H0V1" fill="none" stroke="#879684" stroke-opacity=".16" stroke-width=".02"/></pattern><pattern id="outside" width=".5" height=".5" patternUnits="userSpaceOnUse"><path d="M0 .5L.5 0" stroke="#ad3934" stroke-width=".06"/></pattern></defs><rect x="-2100" y="-2100" width="4200" height="4200" fill="#f5f2e9"/>`;
+ let content=`<defs><clipPath id="walkway-fence"><polygon points="${points(state.fence)}"/></clipPath><pattern id="grid" width="1" height="1" patternUnits="userSpaceOnUse"><path d="M1 0H0V1" fill="none" stroke="#879684" stroke-opacity=".16" stroke-width=".02"/></pattern><pattern id="outside" width=".5" height=".5" patternUnits="userSpaceOnUse"><path d="M0 .5L.5 0" stroke="#ad3934" stroke-width=".06"/></pattern></defs><rect x="-2100" y="-2100" width="4200" height="4200" fill="#f5f2e9"/>`;
  content+=renderParcels();content+=`<rect x="-2100" y="-2100" width="4200" height="4200" fill="url(#grid)" pointer-events="none"/>`;
  content+=`<polygon data-zone="true" points="${points(state.fence)}" fill="#fffdf8" fill-opacity=".38"/>`;
  if(metrics?.outside.length)content+=`<path d="${multiPath(metrics.outside)}" fill="url(#outside)" fill-rule="evenodd" pointer-events="none"/>`;
@@ -418,7 +421,7 @@ function inspector() {
  const pane=$('inspector'),o=findSelected();
  if(selection?.type==='walkway'&&state.walkway){
   const w=state.walkway;
-  pane.innerHTML=`<h2>Wirtualny chodnik</h2><div class="fields">${field('Szerokość · m','pathWidth',w.width,{min:.2,max:10})}${field('Skrzyżowanie X · m','pathX',w.x)}${field('Skrzyżowanie Y · m','pathY',w.y)}</div><p class="quiet">Środkowa kropka przesuwa skrzyżowanie. Białe kropki na trzech odnogach wyginają je w płynne łuki. Odnogi automatycznie łączą go z furtkami. Obrys jest przycięty do płotu. Pole chodnika liczone osobno, bez dodawania do zagospodarowania — to wirtualna rezerwa przejścia. Furtki zachowują własną szerokość.</p>`;return;
+  pane.innerHTML=`<h2>Ścieżka z płaskich kamieni</h2><div class="fields">${field('Szerokość · m','pathWidth',w.width,{min:.2,max:10})}${field('Skrzyżowanie X · m','pathX',w.x)}${field('Skrzyżowanie Y · m','pathY',w.y)}</div><p class="quiet">Przeciągnij środkową kropkę, aby przesunąć skrzyżowanie, albo białą kropkę, aby wygiąć odnogę. Kamienie podążają za trasą do furtek. Linia przerywana wyznacza rezerwę przejścia uwzględnioną w bilansie osobno.</p>`;return;
  }
  if(selection?.type==='vertex') {
   const p=state.fence[selection.index];if(!p){selection=null;return inspector();}
@@ -436,7 +439,7 @@ function inspector() {
  pane.innerHTML=`<h2>${esc(o.name)}</h2>${rotationButtons}<div class="fields">${field('Nazwa','name',o.name,{type:'text',full:true})}${field('X · m','x',o.x,{disabled})}${field('Y · m','y',o.y,{disabled})}${field(o.shape==='circle'?'Średnica · m':'Szerokość · m','w',o.w,{min:.2,max:100,disabled})}${o.shape==='circle'?'':field('Głębokość · m','h',o.h,{min:.2,max:100,disabled})}${o.shape==='rounded'?field('Zaokrąglenie · m','radius',o.radius||1.4,{min:.2,max:100,disabled}):''}${cornerControls(o)}${o.parts?.some(p=>p.kind==='podest')?field('Podest: szerokość od ściany · m','deck',o.parts.find(p=>p.kind==='podest').w,{min:.2,max:10,disabled})+field('Podest: długość wzdłuż ściany · m','deckLength',o.parts.find(p=>p.kind==='podest').h,{min:.2,max:100,disabled}):''}${field('Obrót · °','angle',o.angle,{min:-360,max:360,step:5,disabled})}<label class="full check"><input type="checkbox" data-field="locked" ${o.locked?'checked':''}>Zablokuj przesuwanie</label>${o.kind==='hustawka'?field('Rezerwa szer. · m','safetyW',o.safetyW||3,{min:.2,max:100})+field('Rezerwa długość · m','safetyH',o.safetyH||7,{min:.2,max:100}):''}</div><p class="quiet">Ślad elementu: ${formatArea(polygonArea(footprint(o)))}. We wspólnej części: ${formatArea(polygonArea(pc.intersection(footprint(o),polygon(state.fence))))}.</p><div class="row"><button data-action="duplicate">Powiel</button><button data-action="delete" class="danger" ${o.locked?'disabled':''}>Usuń</button></div>`;
 }
 function renderList() {
- $('object-list').innerHTML=[...state.objects.map(o=>({type:'object',id:o.id,name:o.name,detail:`${o.locked?'▣ ':''}${number(polygonArea(footprint(o)),1)} m²`})),...(state.walkway?[{type:'walkway',id:'walkway',name:'Wirtualny chodnik',detail:formatArea(polygonArea(walkwayGeometry()))}]:[]),...state.gates.map(g=>({type:'gate',id:g.id,name:g.name,detail:`${number(gateInfo(g).width,2)} m`}))].map(o=>`<button class="object-row ${selection?.id===o.id?'selected':''}" data-select="${esc(o.id)}" data-type="${o.type}"><span>${esc(o.name)}</span><span>${o.detail}</span></button>`).join('');
+ $('object-list').innerHTML=[...state.objects.map(o=>({type:'object',id:o.id,name:o.name,detail:`${o.locked?'▣ ':''}${number(polygonArea(footprint(o)),1)} m²`})),...(state.walkway?[{type:'walkway',id:'walkway',name:'Ścieżka z płaskich kamieni',detail:formatArea(polygonArea(walkwayGeometry()))}]:[]),...state.gates.map(g=>({type:'gate',id:g.id,name:g.name,detail:`${number(gateInfo(g).width,2)} m`}))].map(o=>`<button class="object-row ${selection?.id===o.id?'selected':''}" data-select="${esc(o.id)}" data-type="${o.type}"><span>${esc(o.name)}</span><span>${o.detail}</span></button>`).join('');
 }
 function render({panel=true}={}) {
  try{lastMetrics=compute();renderMetrics(lastMetrics);}catch(e){toast('Nie udało się przeliczyć geometrii. Cofnij ostatnią zmianę.');console.error(e);}

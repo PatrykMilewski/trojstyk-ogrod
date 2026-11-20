@@ -627,17 +627,18 @@ export function setupWalk({ THREE, scene, house, neighbors, camera, controls, re
   }
   function enter(preferred, direction) {
     if (active && !preferred) return;
-    const point = preferred ?? startView?.position ?? [controls.target.x, controls.target.y];
+    const initial = !preferred && (typeof startView === 'function' ? startView() : startView);
+    const point = preferred ?? initial?.position ?? [controls.target.x, controls.target.y];
     const spawnCollision = navigation ? walkInteriorCollision(collision, navigation, point[2] ?? 0, point[2] ?? 0) : collision;
     const spawn = [...spawnCollision.safeSpawn(point.slice(0, 2)), point[2] ?? 0];
-    const facing = direction ?? (!preferred && startView ? [startView.target[0] - point[0], startView.target[1] - point[1]] : null);
+    const facing = direction ?? (initial ? [initial.target[0] - point[0], initial.target[1] - point[1]] : null);
     view.face(facing ? new THREE.Vector3(facing[0], facing[1], 0) : camera.getWorldDirection(new THREE.Vector3()));
     if (frame !== null) cancelAnimationFrame(frame);
     motion.reset(navigation ? spawn : spawn.slice(0, 2)); perspective.position.set(...motion.getState().position); active = true; controls.enabled = false;
     showPosture(); input.clear(); gyro.enter(); panel.hidden = false; document.body.classList.add('walk-mode');
     button.setAttribute('aria-pressed', 'true'); button.textContent = 'Wyjdź ze spaceru';
     shortcutButton?.setAttribute('aria-pressed', 'true');
-    resize(); view.updateLook(); onCameraChange(perspective); canvas.focus({ preventScroll: true });
+    resize(); view.look(0, initial?.pitch ?? 0); onCameraChange(perspective); canvas.focus({ preventScroll: true });
     last = performance.now(); frame = requestAnimationFrame(tick);
   }
   function exit() {

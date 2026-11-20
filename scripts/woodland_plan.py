@@ -11,7 +11,7 @@ from shapely.geometry import GeometryCollection, LineString, Point, Polygon, box
 from shapely.ops import unary_union
 
 ROOT = Path(__file__).resolve().parent
-TARGET = 0.3075
+TARGET_SHARE = {"190": .3075, "191": .3075, "193": .301}
 # Order matches consecutive cadastral edges. Deeper beds face the open garden edges.
 EDGE_WEIGHTS = {
     "190": (1.15, 1.2, .85, .65, .72),
@@ -46,6 +46,9 @@ const house=JSON.parse(readFileSync(0,'utf8'));
 const wastewater=wastewaterServiceAccess193();
 console.log(JSON.stringify({
   rainWoody:rainGardenCanopies193(house,iconPlanPoint),
+  frontLawns:[[9.62,2.14,13.39,3.10],[10.55,-.52,14.05,1.15],[14.40,2.22,16.04,3.36]]
+    .map(([x0,y0,x1,y1])=>[[x0,y0],[x1,y0],[x1,y1],[x0,y1]].map(([x,y])=>
+      iconPlanPoint(house.metadata,x,y,0).slice(0,2))),
   access:[...wastewater,...rainServiceAccess193(house,iconPlanPoint)],
   footprints:[
     ...wastewater.filter(item=>item.footprint).map(({id,footprint})=>({id,ring:footprint})),
@@ -98,6 +101,7 @@ def occupied(plot, garden, site):
         fixed += [Point(c["center"]).buffer(4.2) for c in collection["circles"] if c["kind"] == "firepit"]
         fixed += [LineString(line["points"]).buffer(1.25) for line in collection["lines"]
                   if line["kind"] in ("wicket", "drive_gate")]
+    fixed += [LineString(line["slide"]["pocket"]).buffer(.62) for line in garden["lines"] if "slide" in line]
     fixed += [LineString(gate["points"]).buffer(1.25) for gate in site["vehicleGates"]]
     return unary_union(fixed + figures(garden, site))
 
@@ -128,7 +132,7 @@ def design(parcel_id, parcel, free, existing, inspection_beds, rain_credit):
         return unary_union([p for p in polygon_parts(smooth.union(narrow)) if p.area >= 3.5])
 
     lo, hi = 0, 12
-    target = parcel.area * TARGET - rain_credit
+    target = parcel.area * TARGET_SHARE[parcel_id] - rain_credit
     if beds(hi).area < target:
         raise ValueError(f"Insufficient available planting area on /{parcel_id}")
     for _ in range(24):
@@ -164,6 +168,7 @@ def new_trees(beds, parcel, obstacles, existing, infrastructure):
 def generate(plot, garden, site, house):
     obstacles = occupied(plot, garden, site)
     services = garden_services(house)
+    front_lawn = unary_union([Polygon(ring).buffer(.015) for ring in services["frontLawns"]])
     service = unary_union([surface(item) for item in services["access"]])
     infrastructure = unary_union([surface(item) for item in services["footprints"]])
     existing = garden["trees"] + site["gardenAdditions"]["trees"]
@@ -173,7 +178,7 @@ def generate(plot, garden, site, house):
     result = []
     for parcel_id in EDGE_WEIGHTS:
         parcel = shape(site["parcels"][parcel_id])
-        excluded = obstacles.union(service) if parcel_id == "193" else obstacles
+        excluded = unary_union([obstacles, service, front_lawn]) if parcel_id == "193" else obstacles
         free = parcel.buffer(-.4, join_style="mitre").difference(excluded)
         # A plantable border around the openings joins the front beds; free already excludes working space.
         inspection_beds = [surface(item).buffer(2.0 if item.get("id", "").startswith("rain-") else 1.3)
@@ -192,11 +197,14 @@ def generate(plot, garden, site, house):
         assert abs(drawn.area - sum(p.area for p in parts)) < 1e-7
         assert drawn.intersection(rain_union).area < 1e-7
         total = drawn.area + rain_union.area
-        assert .305 <= total / parcel.area <= .31
+        assert .30 <= total / parcel.area <= .31
         result.append(dict(id=parcel_id, boundary=list(parcel.exterior.coords), beds=polygons,
                            areaM2=parcel.area, plantedAreaM2=total, rainGardenCanopies=rain_woody,
                            rainGardenWoodyM2=rain_union.area,
                            trees=new_trees(drawn, parcel, excluded, existing, infrastructure)))
+        if parcel_id == "193":
+            lid = next(item for item in services["access"] if item["id"] == "tank")
+            result[-1]["lidPlanters"] = lid["lidPlanters"]
     return dict(parcels=result)
 
 

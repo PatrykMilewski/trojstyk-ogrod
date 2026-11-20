@@ -135,8 +135,9 @@ test('radiant loops and leads stay on their storey, connect to a port and includ
    for(const [i,lead] of [feed,back].entries()){
     const bar=group.getObjectByName('manifold-'+bank+'-'+(i===0?.55:.38));
     const [x,y,z]=lead.userData.from;
-    assert(x>bar.userData.from[0]&&x<bar.userData.to[0]);
-    assert(Math.abs(y-bar.userData.from[1])<1e-8&&Math.abs(z-bar.userData.from[2])<1e-8);
+    const p=new THREE.Vector3(x,y,z),a=new THREE.Vector3(...bar.userData.from),b=new THREE.Vector3(...bar.userData.to);
+    const t=p.clone().sub(a).dot(b.clone().sub(a))/a.distanceToSquared(b);
+    assert(t>0&&t<1&&a.lerp(b,t).distanceTo(p)<1e-8);
    }
    for(const path of paths)for(let i=1;i<path.length;i++){
     const a=path[i-1],b=path[i],steps=Math.ceil(a.distanceTo(b)/.06);
@@ -154,6 +155,174 @@ test('radiant loops and leads stay on their storey, connect to a port and includ
   }
  }
  assert.deepEqual([...served].sort(),data.rooms.map(r=>r.id).sort());
+});
+
+test('each zoned manifold has both primary connections and the pantry has a dedicated pair of ports',()=>{
+ const network=endpointNetwork(at('underfloor'),name=>/^(manifold-|heating-primary-|upper-heating-)/.test(name));
+ for(const [level,ports] of [['ground',[9,6]],['upper',[7,5]]]){
+  const group=at('underfloor-'+level);
+  for(const [bank,count] of ports.entries()){
+   for(const [barZ,otherZ] of [[.55,.38],[.38,.55]]){
+    const rail=group.getObjectByName('manifold-'+bank+'-'+barZ);
+    assert.equal(rail.userData.ports,count);
+    assert(network(at('heating-primary-'+barZ).userData.from,rail.userData.from));
+    assert(!network(at('heating-primary-'+otherZ).userData.from,rail.userData.from));
+   }
+  }
+ }
+ const ground=at('underfloor-ground'),loops=ground.children.filter(o=>o.userData.kind==='heating-loop');
+ const pantry=loops.filter(o=>o.userData.room==='0.2');
+ assert.equal(pantry.length,1);
+ const bounds=data.rooms.find(room=>room.id==='0.2').box;
+ for(const p of pipeCenterline(pantry[0]))assert(inside(p.x,p.y,bounds));
+ for(const side of ['supply','return']){
+  const ports=loops.map(o=>ground.getObjectByName(o.name+'-'+side).userData.from.join(','));
+  assert.equal(new Set(ports).size,loops.length);
+ }
+});
+
+test('four fitted heating cabinets open in the furnished house with installations hidden',async()=>{
+ const {createHeatingCabinets}=await load(await read('../src/model/heating-cabinets.js'));
+ const source=await read('../src/model/interior.js');
+ const {addIconInterior,iconVisiblePick}=await load(source+'\nexport {iconVisiblePick};');
+ const marker='const [source,garden,house,neighbors]=';
+ const [, , house]=JSON.parse(html.slice(html.indexOf(marker)+marker.length,html.indexOf(';\nconst landscaping=')));
+ const scene=new THREE.Scene(),interior=addIconInterior({THREE,scene,house,data});
+ const cabinets=createHeatingCabinets(THREE,model,roots=>iconVisiblePick({THREE,scene},roots));
+ interior.group.add(cabinets.group);scene.updateMatrixWorld(true);
+ assert.equal(model.visible,false);
+ const camera=new THREE.PerspectiveCamera(50,1.3,.02,100);camera.up.set(0,0,1);
+ for(const [level,bank,n] of [['ground',0,9],['ground',1,6],['upper',0,7],['upper',1,5]]){
+  const root=cabinets.group.getObjectByName('heating-cabinet-'+level+'-'+bank);
+  const panel=root.getObjectByName('painted-access-panel'),hardware=root.getObjectByName('manifold-hardware');
+  const tails=cabinets.group.getObjectByName(root.name+'-connections');
+  const eye=root.localToWorld(new THREE.Vector3(.19,.86,1.05));
+  camera.position.copy(eye);
+  function tap(){
+   camera.lookAt(panel.getWorldPosition(new THREE.Vector3()));camera.updateMatrixWorld(true);
+   return cabinets.toggleAt(new THREE.Vector2(0,0),camera);
+  }
+  assert.equal(hardware.visible,false);
+  assert(tap(),root.name+' can be reached from inside the furnished room');
+  assert(hardware.visible&&tails.visible&&root.userData.open);
+  assert.equal(tails.children.length,2*n+2);
+  assert.equal(hardware.children.filter(child=>child.name.startsWith('flowmeter-')).length,n);
+  assert.equal(hardware.children.filter(child=>/^return-valve-\d+$/.test(child.name)).length,n);
+  for(const pipe of tails.children){
+   const route=at('underfloor-'+level).getObjectByName(pipe.userData.route);
+   const terminal=route.userData.rail.startsWith('primary')?route.userData.to:route.userData.from;
+   assert(new THREE.Vector3(...pipe.userData.terminal).distanceTo(new THREE.Vector3(...terminal))<1e-4,pipe.name);
+  }
+  assert(tap(),root.name+' open leaf can be closed');
+  assert(!hardware.visible&&!tails.visible&&!root.userData.open);
+ }
+});
+
+test('single-level heating shows its finished floor and loops, preserves the walk camera, and restores the normal view',async()=>{
+ const {addIconInterior}=await load(await read('../src/model/interior.js'));
+ const marker='const [source,garden,house,neighbors]=',start=html.indexOf(marker)+marker.length;
+ const [,,house]=JSON.parse(html.slice(start,html.indexOf(';\nconst landscaping=',start)));
+ const interior=addIconInterior({THREE,scene:new THREE.Scene(),house,data});
+ interior.group.add(model);
+ const floorSources=['ground-floor','upper-oak-finish'].map(name=>interior.group.getObjectByName(name));
+ for(const source of floorSources)source.material=source.material.clone();
+ floorSources.forEach(source=>source.material.map=new THREE.Texture());
+ const {bindIconServiceView}=await load(await read('../src/model/service-view.js'));
+ const groups=new THREE.Group(),camera=new THREE.OrthographicCamera(-10,10,10,-10,.1,200);
+ const mockElement=()=>Object.assign(new EventTarget(),{parentElement:{},setAttribute(){}});
+ const elements=Object.fromEntries(['installations','installation-note','service-system','service-floor','service-key'].map(id=>[id,mockElement()]));
+ const system=elements['service-system'],floor=elements['service-floor'];
+ system.value='all';floor.value='both';
+ const originalDocument=globalThis.document;
+ try{
+  globalThis.document={getElementById:id=>elements[id]};
+  const state={active:false},moves=[],angles=[];
+  let frames=0,viewer;
+  const walk={getState:()=>state,look:(yaw,pitch)=>angles.push([yaw,pitch]),enter(position){
+   moves.push(position);
+   state.floorHeightM=position[2];
+   state.position=[position[0],position[1],position[2]+1.7];
+   viewer.cameraChanged();
+  }};
+  const filter=(element,value)=>{element.value=value;element.dispatchEvent(new Event('change'));};
+  viewer=bindIconServiceView({THREE,interior,indoor:model,rain:groups,wastewater:new THREE.Group(),camera,
+   controls:{target:new THREE.Vector3(),update(){frames++;}},walk,refresh(){}});
+  const shown=(object)=>{for(let p=object;p;p=p.parent)if(!p.visible)return false;return true;};
+  elements.installations.dispatchEvent(new Event('click'));
+  const loops=at('underfloor').children.flatMap(storey=>storey.children.filter(o=>o.userData.kind==='heating-loop'));
+  const pipes=loop=>[at(loop.name+'-supply'),loop,at(loop.name+'-return')];
+  const originalGeometry=new Map(loops.map(loop=>[loop,loop.geometry]));
+  const defaultMaterials=new Map(loops.flatMap(loop=>pipes(loop).map(mesh=>[mesh,mesh.material])));
+  system.value='underfloor';system.dispatchEvent(new Event('change'));
+  const colors=new Set();
+  for(const loop of loops){
+   const color=loop.material.color.getHexString();
+   assert(!colors.has(color),loop.name);
+   colors.add(color);
+   for(const mesh of pipes(loop))assert.equal(mesh.material.color.getHexString(),color);
+  }
+  assert.match(elements['service-key'].textContent,/Spiżarnia/);
+  for(const [level,other,source] of [['upper','ground',floorSources[1]],['ground','upper',floorSources[0]]]){
+   filter(floor,level);
+   const plan=at('heating-floor-plan-'+level),base=at('heating-plan-'+source.name);
+   assert(shown(base)&&!shown(at('heating-floor-plan-'+other)));
+   assert.equal(base.geometry,source.geometry);
+   assert.equal(base.material.map,source.material.map);
+   assert(base.material.transparent&&!base.material.depthTest&&base.material.opacity===1);
+   for(const tile of data.rooms.filter(r=>r.finish==='tile'&&nameOfFloor({room:r.id})===level)){
+    const finish=at('heating-plan-finish-'+tile.id);
+    assert(shown(finish)&&plan.children.includes(finish));
+    assert.equal(finish.geometry,interior.group.getObjectByName('finish-'+tile.id).geometry);
+    assert(finish.renderOrder>base.renderOrder&&finish.renderOrder<at('service-plan-'+level).renderOrder);
+   }
+   assert(!shown(at('service-floor-backdrop-'+level)));
+   for(const loop of loops)assert.equal(shown(loop),loop.parent.userData.level===level);
+  }
+  const ground=viewer.walkStart();
+  state.active=true;walk.enter(ground.position);
+  const orbitFrames=frames;
+  assert(shown(floorSources[0])&&!shown(at('heating-floor-plan-ground')));
+  filter(floor,'upper');
+  assert.equal(moves.length,2);
+  assert.equal(state.floorHeightM,data.levels.upper);
+  assert(angles.at(-1)[1]<0);
+  assert(!shown(at('heating-floor-plan-upper'))&&shown(floorSources[1]));
+  for(const loop of loops.filter(l=>l.parent.userData.level==='upper')){
+   assert(shown(loop)&&loop.material.depthTest);
+   assert.notEqual(loop.geometry,originalGeometry.get(loop));
+   assert(loop.geometry.boundingBox.min.z>data.levels.upper+.023);
+  }
+  assert(!shown(at('service-plan-upper'))&&!shown(at('service-furnishings-upper')));
+  const upper=viewer.walkStart();
+  for(const view of [ground,upper]){
+   assert(interior.navigation.ceilingHeight(view.position)>view.position[2]+1.7);
+   assert(interior.navigation.floors.some(f=>f.z===view.position[2]&&inPolygon(view.position[0],view.position[1],f.ring)));
+   assert(!interior.navigation.obstacles.some(o=>o.minZ<view.position[2]+1.7&&o.maxZ>view.position[2]+.025&&inPolygon(view.position[0],view.position[1],o.ring)));
+  }
+  filter(system,'water');filter(system,'underfloor');
+  assert.equal(moves.length,2,'selecting heating on the occupied storey preserves the walker position');
+  assert.equal(frames,orbitFrames,'changing filters during the walk leaves the orbit camera alone');
+  state.active=false;viewer.cameraChanged();
+  assert.equal(frames,orbitFrames+1);
+  assert(shown(at('service-plan-upper'))&&shown(at('service-furnishings-upper')));
+  for(const [loop,geometry] of originalGeometry)assert.equal(loop.geometry,geometry);
+  assert(shown(at('heating-floor-plan-upper'))&&!shown(at('heating-floor-plan-ground')));
+  elements.installations.dispatchEvent(new Event('click'));
+  assert(!shown(at('heating-floor-plan-upper'))&&shown(floorSources[1]));
+  elements.installations.dispatchEvent(new Event('click'));
+  assert(shown(at('heating-floor-plan-upper')));
+  filter(floor,'both');
+  assert(!shown(at('heating-floor-plan-ground'))&&!shown(at('heating-floor-plan-upper')));
+  assert(loops.every(shown));
+  filter(system,'all');
+  for(const [mesh,material] of defaultMaterials){
+   assert.equal(mesh.material,material);assert.equal(material.color.getHexString(),'e57850');
+  }
+ }finally{
+  elements.installations.dispatchEvent(new Event('click'));
+  if(originalDocument===undefined)delete globalThis.document;
+  else globalThis.document=originalDocument;
+ }
 });
 
 test('parallel manifold drops, supply and return tails keep at least the rendered pipe diameter apart',()=>{
@@ -175,7 +344,8 @@ test('parallel manifold drops, supply and return tails keep at least the rendere
     segments.push({axis,lo,hi,cross,name:mesh.name});
    }
   }
-  assert(segments.length>100);
+  const leads=at('underfloor-'+level).children.filter(o=>o.userData.loopColor&&/-(supply|return)$/.test(o.name));
+  for(const lead of leads)assert(segments.filter(s=>s.name===lead.name).length>=2,lead.name);
  }
 });
 
@@ -403,4 +573,46 @@ test('robot cabinet has a capped cold-water takeoff and a trapped drain returnin
  }
  const oldData={...data,furniture:data.furniture.map(f=>f===cabinet?{...f,robotCabinet:null}:f)};
  assert.equal(createIndoorServices(THREE,null,oldData).getObjectByName('robot-drain'),undefined);
+});
+
+test('the fixed street camera and vestibule monitor are powered PoE endpoints with a working local video feed',async()=>{
+ const marker='const [source,garden,house,neighbors]=',start=html.indexOf(marker)+marker.length;
+ const [,garden,house]=JSON.parse(html.slice(start,html.indexOf(';\nconst landscaping=',start)));
+ const lines=garden.lines;
+ const [hinge,closedEnd]=lines.find(row=>row.kind==='street_wicket').points;
+ const wicket={hinge,closedEnd,swingDirection:-1};
+ const {addIconInterior}=await load(await read('../src/model/interior.js'));
+ const scene=new THREE.Scene(),interior=addIconInterior({THREE,scene,house,data,siteWicket:wicket});
+ const intercom=interior.intercom,overlay=createIndoorServices(THREE,interior,data);
+ scene.updateMatrixWorld(true);
+ const view=new THREE.PerspectiveCamera(56,1,.01,300);view.up.set(0,0,1);
+ function click(root){
+  view.position.copy(root.localToWorld(new THREE.Vector3(0,-.60,0)));
+  view.lookAt(root.localToWorld(new THREE.Vector3(0,-.03,0)));
+  assert(intercom.toggleAt(new THREE.Vector2(),view));
+ }
+ assert.equal(intercom.active,false);click(intercom.station);assert(intercom.active);
+ const screen=intercom.monitor.getObjectByName('intercom-monitor-screen'),previous={};
+ const renderer={target:previous,autoClear:false,setRenderTarget(t){this.target=t;},getRenderTarget(){return this.target;},
+  render(s,c){assert.equal(c,intercom.camera);assert.equal(s,scene);assert(!screen.visible);assert(this.target.isWebGLRenderTarget);}};
+ intercom.updateFeed(renderer,1000,view);
+ assert.equal(renderer.target,previous);assert(!renderer.autoClear);assert(screen.visible&&screen.material.map.isRenderTargetTexture);
+ click(intercom.monitor);assert(!intercom.active);assert.equal(screen.material.map,null);
+ click(intercom.monitor);assert(intercom.active);
+ for(const [index,id] of ['street','monitor'].entries()){
+  const run=overlay.getObjectByName('lan-intercom-'+id+'-kabel'),patch=overlay.getObjectByName('lan-intercom-'+id+'-patch');
+  assert.equal(run.userData.port,9+index);assert(run.userData.poe);
+  assert.deepEqual(run.userData.from,patch.userData.to);
+  assert.deepEqual(run.userData.to,intercom.terminals[id]);
+  const terminal=scene.getObjectByName('intercom-'+id+'-rj45');
+  assert(interior.group.worldToLocal(terminal.getWorldPosition(new THREE.Vector3())).distanceTo(new THREE.Vector3(...run.userData.to))<1e-5);
+  for(const [device,end] of [[1,'from'],[2,'to']]){
+   const jack=scene.getObjectByName('utility-network-rack-rj45-'+device+'-'+(8+index));
+   assert(new THREE.Box3().setFromObject(jack).expandByScalar(1e-5).containsPoint(new THREE.Vector3(...interior.localToWorld(patch.userData[end]))));
+  }
+ }
+ const power=overlay.getObjectByName('rack-switch-poe-mains'),socket=scene.getObjectByName('utility-network-rack-switch-power-inlet');
+ assert(new THREE.Box3().setFromObject(socket).containsPoint(new THREE.Vector3(...interior.localToWorld(power.userData.to))));
+ const offset=intercom.station.position.distanceTo(new THREE.Vector3(...closedEnd,1.48));assert(offset<.08);
+ assert.equal(intercom.station.parent,scene,'Street station stays on the fixed latch post as the wicket swings');
 });
