@@ -60,7 +60,9 @@ function checkVehicles(neighbors, registry) {
   assert.deepEqual(neighbors.vehicleTypes, registry.vehicleTypes);
   assert.deepEqual(neighbors.cars, registry.carPlacements);
   assert.equal(neighbors.cars.length, registry.cars.length);
-  for (const parcel of ['190', '191', '193']) {
+  assert.equal(neighbors.cars.filter(car => car.location === 'road-133').length, 2);
+  assert.equal(neighbors.cars.length, 4);
+  for (const parcel of ['190', '191']) {
     assert.equal(neighbors.cars.filter(car => car.location === 'driveway-' + parcel).length, 1, 'One car per driveway /' + parcel);
   }
   for (const car of registry.cars) {
@@ -92,12 +94,10 @@ function checkDriveway193(source, garden, icon, neighbors, registry) {
     Math.abs(edge.n[0] * x + edge.n[1] * y - edge.c) < 0.00001 &&
     distance(edge.a, [x,y]) + distance([x,y], edge.b) < edge.length + 0.00001));
   assert.ok(road, 'Gate lies on the road frontage of /193');
-  const car = neighbors.cars.find(c => c.location === 'driveway-193');
-  for (const p of [street, car.position]) {
-    const lateral = ((door[1][0] - door[0][0]) * (p[0] - garage[0]) +
-      (door[1][1] - door[0][1]) * (p[1] - garage[1])) / doorWidth;
-    near(lateral, 0, 'Street gate and car line up with garage door /193');
-  }
+  assert(!neighbors.cars.some(c => c.location === 'driveway-193'));
+  const lateral = ((door[1][0] - door[0][0]) * (street[0] - garage[0]) +
+    (door[1][1] - door[0][1]) * (street[1] - garage[1])) / doorWidth;
+  near(lateral, 0, 'Street gate lines up with garage door /193');
 }
 
 function checkDimensions(model, registry) {

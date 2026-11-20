@@ -1095,7 +1095,7 @@ test('a single 595 mm built-in oven has a separate bay facing the work aisle bes
   const world=p=>new THREE.Vector3(...interior.localToWorld([p.x,p.y,0]));
   const forward=world(hobCenter).sub(world(sinkCenter)).normalize(),right=forward.cross(new THREE.Vector3(0,0,1));
   assert(world(center).sub(world(hobCenter)).dot(right)>.60,'Oven is to the viewer’s right when facing the island from the sink');
-  close(hob.min.x-(center.x+.595/2),.0205,'18 mm divider and 2.5 mm oven fitting clearance');
+  close(hob.min.x-(center.x+.595/2),.2025,'Oven fits the adjacent 60 cm column outside the shared hob bay');
   close(ovenTop-rail.min.z,.595,'Oven has full 595 mm height');
   close(glass.max.x-glass.min.x+.05,.595,'Full-sized 595 mm front including 25 mm jambs');
   assert(ovenTop<hob.min.z-.06 && handle.max.y<glass.min.y && handle.min.y>island.box[1]);
@@ -1107,29 +1107,38 @@ test('a single 595 mm built-in oven has a separate bay facing the work aisle bes
   }
 });
 
-test('two full-width drawers under the hob match the neighboring fronts and clear the extractor', () => {
-  const get=id=>interior.group.getObjectByName(id),hob=bounds(get('hob-glass'));
+test('six equal columns frame a centered hob with a low rail support and eleven usable island drawers', () => {
+  const get=id=>interior.group.getObjectByName(id),island=furniture.get('kitchen-island'),hob=bounds(get('hob-glass'));
+  const [x0,y0,x1,y1]=island.box,mid=(x1+x0)/2;
+  close(hob.min.x+hob.max.x,2*mid,'Hob centered across the island');
+  close(hob.min.y+hob.max.y,y0+y1,'Hob centered front to back');
   const equipment=['hob-blower','hob-chassis','kitchen-island-nyttig-coupling','kitchen-island-nyttig-riser',
-    'kitchen-island-nyttig-plinth-duct'].map(id=>bounds(get(id)));
-  for(let row=0;row<2;row++){
-    const part=(type,module)=>get('kitchen-island-working-'+type+'-'+module+'-'+row);
-    const front=bounds(part('drawer',2)),neighbor=bounds(part('drawer',3)),pull=bounds(part('pull',2));
-    close(front.min.x,hob.min.x+.0025,'Front spans the bay up to the side reveal');
-    close(front.max.x,hob.max.x-.0025,'Front spans the bay up to the side reveal');
-    for(const side of ['min','max'])for(const axis of ['y','z'])
-      close(front[side][axis],neighbor[side][axis],'Faces and horizontal reveals line up');
-    assert.equal(part('pull',2).material,part('pull',3).material);
-    close(pull.max.x-pull.min.x,.145,'Matching 145 mm edge grip');
-    close((pull.min.x+pull.max.x)/2,(front.min.x+front.max.x)/2,'Pull centered on the full-width front');
-    close(pull.max.y,front.min.y,'Grip sits on the aisle-facing edge');
-    close(pull.max.z,front.max.z,'Grip aligns with the top of each front');
-    for(const side of ['floor','back','left','right']){
-      const box=bounds(get('kitchen-island-extractor-drawer-box-'+row+'-'+side));
-      assert(box.min.z>=front.min.z && box.max.z<front.max.z && box.min.x>front.min.x && box.max.x<front.max.x);
-      assert(equipment.every(obstacle=>!box.intersectsBox(obstacle)),'The drawer clears the hob and all duct sections');
-      if(side==='floor'){
-        close(box.min.y,front.max.y,'Drawer box sits against its front');
-        close(box.max.y-box.min.y,.40,'Reduced 400 mm box depth');
+    'kitchen-island-nyttig-plinth-duct','kitchen-island-oven-enamel-floor'].map(id=>bounds(get(id)));
+  const spine=bounds(get('kitchen-island-side-3'));
+  assert(spine.max.z<equipment[0].min.z && equipment.every(item=>!spine.intersectsBox(item)));
+  for(let i=0;i<6;i++){
+    const center=mid+(i-2.5)*.60,oven=i===1,paired=i===2||i===3;
+    for(let row=0;row<(oven?1:2);row++){
+      const id=i+'-'+row,part=type=>get('kitchen-island-'+type);
+      const drawer=part('pullout-'+id),frontMesh=part(oven?'oven-tray-drawer':'working-drawer-'+id);
+      assert.equal(frontMesh.parent,drawer);
+      const front=bounds(frontMesh),pull=bounds(part(oven?'oven-tray-pull':'working-pull-'+id));
+      close(front.max.x-front.min.x,.595,'595 mm face on a 600 mm column');
+      close((front.max.x+front.min.x)/2,center,'Mirror-symmetric front grid');
+      close((pull.max.x+pull.min.x)/2,center,'Centered edge grip');close(pull.max.y,front.min.y,'Aisle-facing grip');
+      close(front.min.z,row===0?.122:.497,'Aligned horizontal seams');
+      for(const side of ['floor','back','left','right']){
+        const mesh=part('drawer-box-'+id+'-'+side),box=bounds(mesh);
+        assert.equal(mesh.parent,drawer);
+        assert(box.max.z<front.max.z && box.min.x>front.min.x && box.max.x<front.max.x);
+        for(const fraction of [0,.25,.50,.75,1]){
+          const projected=box.clone().translate(new THREE.Vector3(0,-((paired?.40:.50)-.01)*fraction,0));
+          assert(equipment.every(e=>!projected.intersectsBox(e)),'Drawer clears the hob, oven and duct over its stroke');
+        }
+        if(side==='floor'){
+          close(box.min.y,front.max.y,'Floor meets the inside face');
+          close(box.max.y-box.min.y,paired?.40:.50,'Box depth');
+        }
       }
     }
   }
@@ -1160,37 +1169,34 @@ test('TÄCKNAN glass, four marked zones and open grilles sit over a dedicated NY
   close(riser.max.x-riser.min.x,.22,'Riser width');close(riser.max.y-riser.min.y,.055,'Riser depth');
   assert(oven.max.x<riser.min.x && riser.min.z<riser.max.z && outlet.min.y<riser.min.y);
   const cutHeight=glass.max.z-outlet.min.z;assert(cutHeight>=.849 && cutHeight<=.935);
-  for(const id of ['kitchen-island-body','kitchen-island-cabinet-left','kitchen-island-cabinet-divider','kitchen-island-cabinet-right'])
-    assert(!bounds(get(id)).intersectsBox(riser),id+' clears the recirculation duct');
+  for(const mesh of parts('kitchen-island').filter(part=>/-(side-\d|support-\d|body)$/.test(part.name)))
+    assert(!bounds(mesh).intersectsBox(riser),mesh.name+' clears the recirculation duct');
 });
 
-test('white covered socket is set into a real worktop opening well away from the hob', () => {
-  const get = id => interior.group.getObjectByName('kitchen-island-'+id);
-  const top = get('top'), bezel = get('socket-bezel'), lid = get('socket-lid'), housing = get('socket-housing');
-  const slab = bounds(top), rim = bounds(bezel), flap = bounds(lid), casing = bounds(housing);
-  close(rim.max.z,slab.max.z,'Bezel flush with laminate');
-  close(flap.max.z,rim.max.z-.0003,'Lid sits inside the bezel');
-  assert(rim.min.x<flap.min.x && rim.max.x>flap.max.x && rim.min.y<flap.min.y && rim.max.y>flap.max.y);
-  assert.equal(lid.material,bezel.material);
-  assert.match(lid.material.name,/White brushed aluminium/);
-  assert(casing.max.z<flap.min.z && casing.min.z<slab.min.z);
-  const hob=bounds(interior.group.getObjectByName('hob-glass'));
-  const sideWall=data.facades.find(w=>w.id==='facade-main-side'),window=sideWall.openings[0];
-  assert.equal(sideWall.a[0],0);
-  assert(rim.min.y>=window.start&&rim.max.y<=window.end);
-  close(rim.max.x-rim.min.x,.12,'120 mm opening along the island');
-  close(rim.max.y-rim.min.y,.27,'270 mm opening across the island');
-  close(rim.min.x-slab.min.x,.26,'260 mm of worktop to window-side end');
-  close(rim.min.y-slab.min.y,.175,'175 mm to the near working edge');
-  close(hob.min.x-rim.max.x,1.445,'Clear counter between socket and hob');
-  const center = flap.getCenter(new THREE.Vector3()), ray = new THREE.Raycaster();
-  ray.set(new THREE.Vector3(center.x,center.y,1.1),new THREE.Vector3(0,0,-1));
-  for(const obj of [top,bezel,lid]){
-    obj.updateMatrix();obj.matrixWorld.copy(obj.matrix);
-  }
-  assert.equal(ray.intersectObject(top,false).length,0,'Worktop has a cut-out below the lid');
-  assert.equal(ray.intersectObject(bezel,false).length,0,'Bezel surrounds a separate moving lid');
-  assert(ray.intersectObject(lid,false).length>0,'Closed cover occupies the opening');
+test('black recessed twin socket opens on the window-side panel, leaving the top continuous', () => {
+  const get=id=>interior.group.getObjectByName('kitchen-island-'+id);
+  const panel=get('waterfall-left'),slab=get('top'),lid=get('socket-lid'),bezel=get('socket-bezel');
+  const rim=bounds(bezel),face=bounds(panel).min.x;
+  close(face,2.10,'Window-side end');close(rim.min.x,face,'Flush side mount');
+  close(rim.max.y-rim.min.y,.270,'270 mm wide');close(rim.max.z-rim.min.z,.120,'120 mm high');
+  assert.equal(lid.material,bezel.material);assert.equal(lid.material.color.getHex(),0x232323);
+  assert(bounds(get('socket-housing')).max.x<face+.07);
+  const center=rim.getCenter(new THREE.Vector3()),point=interior.localToWorld([face,center.y,center.z]);
+  const camera=new THREE.PerspectiveCamera(45,1,.01,10);
+  camera.up.set(0,0,1);camera.position.set(...interior.localToWorld([face-.8,center.y,center.z]));
+  camera.lookAt(...point);camera.updateMatrixWorld();interior.group.updateWorldMatrix(true,true);
+  const ray=new THREE.Raycaster();ray.setFromCamera({x:0,y:0},camera);
+  assert.equal(ray.intersectObject(panel,false).length,0,'Cutout in the waterfall');
+  assert(ray.intersectObject(lid,false).length>0);
+  assert(interior.appliances.toggleAt({x:0,y:0},camera));interior.appliances.update(performance.now()+500);
+  assert(lid.rotation.y>Math.PI/2);
+  assert(get('socket-outlet--0.06')&&get('socket-outlet-0.06'));
+  camera.lookAt(...interior.localToWorld([face,center.y-.133,center.z]));camera.updateMatrixWorld();
+  assert(interior.appliances.toggleAt({x:0,y:0},camera));interior.appliances.update(performance.now()+500);
+  close(lid.rotation.y,0,'Retracts with another tap');
+  const above=interior.localToWorld([face+.32,slab.position.y+.31,1.15]);
+  ray.set(new THREE.Vector3(...above),new THREE.Vector3(0,0,-1));
+  assert(ray.intersectObject(slab,false).length,'No residual hole on the countertop');
 });
 
 test('the black Magnifica Evo sits near the worktop end with access to its tank, wand and controls',()=>{
@@ -1267,14 +1273,13 @@ test('the 70 cm single bowl is let into the worktop below the full-width mosaic'
   assert.equal(ray.intersectObjects(interior.group.children,true)[0].object.name,'kitchen-back-glazed-tiles');
 });
 
-test('the island ends one existing drawer cabinet earlier on the fridge side', () => {
+test('the symmetrical cabinet layout preserves the shortened fridge-side end and the passage', () => {
   const get=id=>interior.group.getObjectByName('kitchen-island-'+id);
-  const slab=bounds(get('top')),drawer=bounds(get('working-drawer-4-0'));
+  const slab=bounds(get('top')),drawer=bounds(get('working-drawer-5-0')),first=bounds(get('working-drawer-0-0'));
   close(slab.min.x,2.10,'Window-side end stays anchored');
   close(6.45-slab.max.x,.527,'One 527 mm fridge-side cabinet removed');
-  close(drawer.min.x,5.3455,'Neighboring drawer stays at its original seam');
-  close(drawer.max.x-drawer.min.x,.522,'Neighboring cabinet retains a 522 mm front');
-  close(slab.max.x-drawer.max.x,.0555,'End panel and reveal beside the retained cabinet');
+  close(slab.max.x-drawer.max.x,.114,'End allowance with a half reveal');
+  close(first.min.x-slab.min.x,slab.max.x-drawer.max.x,'Matching end panels at both ends');
   const walk=createWalkCollision(interior.navigation.obstacles.filter(o=>o.minZ<1.85 && o.maxZ>.04));
   const acrossEnd=x=>[9.90,11.75].map(y=>interior.localToWorld([x,y]).slice(0,2));
   assert(!walk.pathBlocked(...acrossEnd(6.25)),'Walk past the fridge end in the released floor area');
@@ -1304,7 +1309,7 @@ test('the smoked walnut laminate follows the 382.3 × 105 cm island, its folded 
   close(slab.max.y-slab.min.y,1.05,'Island depth');
   close(slab.max.z,.96,'Island height');
   close(slab.min.y,10.35,'Working edge retained');
-  for(const fixture of [hob,get('kitchen-island-socket-bezel'),get('kitchen-island-oven-enamel-back')]){
+  for(const fixture of [hob,get('kitchen-island-oven-enamel-back')]){
     const b=bounds(fixture);
     assert(b.min.x>slab.min.x && b.max.x<slab.max.x && b.min.y>slab.min.y && b.max.y<slab.max.y);
   }
@@ -1767,6 +1772,35 @@ test('both moving doors clear a continuous kitchen–pantry–garage walking rou
     }
   }
   interior.updateHallDoors(null);
+});
+
+test('every island drawer opens and closes on its own visible front after static batching', async () => {
+  const scene=new THREE.Scene(),model=addIconInterior({THREE,scene,house,data}),{group,appliances}=model;
+  const {batchStaticInteriorDetails}=await load(await readFile(new URL('../src/model/static-detail-batches.js',import.meta.url),'utf8'));
+  batchStaticInteriorDetails(THREE,group);
+  const camera=new THREE.PerspectiveCamera(62,1,.03,100);
+  camera.up.set(0,0,1);
+  const world=xyz=>group.localToWorld(new THREE.Vector3(...xyz));
+  const get=id=>group.getObjectByName('kitchen-island-'+id);
+  function tap(eye,target){
+    camera.position.copy(world(eye));camera.lookAt(world(target));
+    return appliances.toggleAt({x:0,y:0},camera);
+  }
+  for(let column=0;column<6;column++)for(let row=0;row<(column===1?1:2);row++){
+    const suffix=column+'-'+row,front=bounds(get(column===1?'oven-tray-drawer':'working-drawer-'+suffix));
+    const x=(front.min.x+front.max.x)/2,z=(front.min.z+front.max.z)/2,eye=[x,9.55,1.57];
+    const drawer=get('pullout-'+suffix),runner=get('telescoping-slides-'+suffix);
+    const obstacle=model.navigation.obstacles.find(o=>o.id===drawer.name),closed=structuredClone(obstacle.ring);
+    const travel=column===2||column===3?-.39:-.49;
+    assert(!tap([x,10.10,1.57],[x,front.min.y,z]),'Opening stroke protects the walker');
+    assert(tap(eye,[x,front.min.y,z]),drawer.name+' opens from the aisle');
+    appliances.update(performance.now()+400);
+    close(drawer.position.y,travel,'Runner stroke');close(runner.position.y,travel/2,'Middle rail stroke');
+    assert.notDeepEqual(obstacle.ring,closed);
+    assert(tap(eye,[x,front.min.y+travel,z]),drawer.name+' closes on its extended front');
+    appliances.update(performance.now()+400);
+    close(drawer.position.y,0,'Returns flush');assert.deepEqual(obstacle.ring,closed);
+  }
 });
 
 test('the full-height sink drawer slides around the fixed waste and leaves a walkable aisle', async () => {

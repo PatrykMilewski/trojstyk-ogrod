@@ -830,7 +830,7 @@
     ],
     "furnitureSources": {
       "user-plant": "Proposed equipment for room 0.3, with an outdoor air-source unit on the blank garage side and an indicative PV inverter. Equipment sizes, pipe and duct terminations and mounting positions are visual design allowances. Final selection, sizing, routing and service clearances require installer design.",
-      "ikea-tacknan": "IKEA TÄCKNAN 296.125.04 with NYTTIG 806.231.27. https://www.ikea.com/pl/pl/p/taecknan-plyta-ind-zint-okap-z-zest-d-pochla-ikea-300-czarny-s29612504/",
+      "ikea-tacknan": "IKEA TÄCKNAN 296.125.04 with NYTTIG 806.231.27. Assembly drawings AA-2584343-5 pp. 12, 15–16, 36–37 and AA-2633399-2 p. 5. https://www.ikea.com/pl/pl/p/taecknan-plyta-ind-zint-okap-z-zest-d-pochla-ikea-300-czarny-s29612504/",
       "ground-plan": "work/sources/icon-parter-zwykly.jpg, publisher original ground floor, rooms 0.1–0.9",
       "beliani-madox": "Custom 135 × 78 × 75 cm table based on the closed 120 × 75 cm Beliani MADOX. The dark-walnut finish, 2 cm top and 64 cm exposed legs follow the reference. https://www.beliani.pl/stol-do-jadalni-ciemne-drewno-rozkladany-120-150-x-75-cm-madox.html",
       "user-dining": "Six individual chairs around the custom MADOX-style table. Chair forms and dimensions are design allowances.",
@@ -1148,16 +1148,16 @@
       ],
       "facing": "+y",
       "source": "ground-plan",
+      "approximation": "Custom joinery. The two central 600 mm front columns share a 1200 mm bay with a low divider and 400 mm drawer boxes. IKEA illustrates an 800 mm METOD cabinet. The outlet is recessed into the plinth to suit the centered hob.",
+      "cabinetry": {
+        "moduleWidthsM": [0.60, 0.60, 0.60, 0.60, 0.60, 0.60],
+        "ovenColumn": 1,
+        "extractorColumns": [2, 3]
+      },
       "height": 0.96,
       "socket": {
-        "center": [
-          0.32,
-          0.31
-        ],
-        "size": [
-          0.12,
-          0.27
-        ]
+        "centerYZ": [0.68, 0.75],
+        "size": [0.27, 0.12]
       }
     },
     {
@@ -1165,10 +1165,10 @@
       "type": "hob",
       "room": "0.4",
       "box": [
-        3.925,
-        10.43,
-        4.725,
-        10.945
+        3.6115,
+        10.6175,
+        4.4115,
+        11.1325
       ],
       "facing": "+y",
       "source": "ikea-tacknan",
@@ -2364,7 +2364,7 @@
   },
   "garageFitout": {
     "unit": "m",
-    "source": "Concept storage layout. Parking rectangles are checked in the clear inside the double garage door.",
+    "source": "Rozmieszczenie koncepcyjne. Oba auta są ustawione przodem do bramy, na środku stanowisk. Wymiary pojazdów pochodzą z rysunków producentów.",
     "parkingBays": [
       [
         1.06,
@@ -2413,6 +2413,32 @@
         "wheelbase": 1.05,
         "wheelRadius": 0.341,
         "paint": "#516d74"
+      }
+    ],
+    "vehicles": [
+      {
+        "id": "garage-opel-astra-k-2018",
+        "model": "Opel Astra K 2018",
+        "bodyStyle": "hatchback",
+        "paint": "biały",
+        "length": 4.37,
+        "bodyWidth": 1.809,
+        "mirrorWidth": 2.042,
+        "height": 1.485,
+        "wheelbase": 2.662,
+        "source": "https://www.vauxhall.co.uk/content/dam/vauxhall/Home/PDFs/Cars/astra/price_guides/GML_10935891_Astra_Spec_PG_1_April_2018-1522319331.pdf"
+      },
+      {
+        "id": "garage-audi-a5-avant-2024",
+        "model": "Audi A5 Avant 2024",
+        "bodyStyle": "kombi",
+        "paint": "czarny metalik",
+        "length": 4.829,
+        "bodyWidth": 1.86,
+        "mirrorWidth": 2.099,
+        "height": 1.46,
+        "wheelbase": 2.892,
+        "source": "https://emea-dam.audi.com/adobe/assets/urn%3Aaaid%3Aaem%3A976ed668-781c-41b8-8bb8-73463191c7a1/original/as/A5%20Avant.pdf"
       }
     ]
   },

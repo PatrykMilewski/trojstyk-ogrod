@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-20.1",
+  "modelVersion": "2026-11-20.2",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -16,7 +16,7 @@
     "Pomiary obwiedni zapisano do 0,000001 m wyłącznie dla kontroli numerycznej modelu, nie jako dokładność projektu wykonawczego.",
     "Nie wolno automatycznie nadpisywać rejestru podczas budowania. Zmiana skali, geometrii lub ustawienia wymaga porównania, ponownego pomiaru i jawnej zmiany wersji.",
     "Na /190 odbicie lewo–prawo zachowuje środek rezerwy katalogowej 15,50 × 17,66 m. Rezerwa jest już 5 m od obu przyległych krawędzi drogi. Maksymalne przesunięcie na azymut siatkowy 45° wynosi 0 m.",
-    "Na każdym podjeździe jest dokładnie jeden samochód; dwa samochody na drodze /133.",
+    "Po jednym samochodzie na podjazdach /190 i /191, dwa na drodze /133. Podjazd /193 wolny. W garażu /193 stoją dwa auta.",
     "Elewacja /41 skierowana ku /191: jedno lewe górne okno, 1,6 × 1,3 m, parapet 3,15 m.",
     "Symulacja słońca: czas Europe/Warsaw, współrzędne użytkownika i poprawka północy siatkowej EPSG:2177. Teren modelu pozostaje płaski; przeszkody spoza modelu i refrakcja pominięte.",
     "Mapy Geoportalu są nieruchomymi podkładami we właściwym układzie współrzędnych; cienie na ortofotomapie nie są cieniami symulowanymi. NMT pokazano barwami, bez deformacji sceny.",
@@ -61,7 +61,8 @@
     "PVGIS 5.3 · połać południowo-zachodnia": "https://re.jrc.ec.europa.eu/api/v5_3/PVcalc?lat=54.4321&lon=18.4407&peakpower=1&loss=14&angle=44.86&aspect=43.89&raddatabase=PVGIS-SARAH3&outputformat=json",
     "PVGIS 5.3 · połać południowo-wschodnia": "https://re.jrc.ec.europa.eu/api/v5_3/PVcalc?lat=54.4321&lon=18.4407&peakpower=1&loss=14&angle=44.86&aspect=-46.11&raddatabase=PVGIS-SARAH3&outputformat=json",
     "Opel Astra K hatchback · wymiary nadwozia MY2018": "https://www.vauxhall.co.uk/content/dam/vauxhall/Home/PDFs/Cars/astra/price_guides/GML_10935891_Astra_Spec_PG_1_April_2018-1522319331.pdf",
-    "Roborock Qrevo Curv 2 Pro – ustawienie stacji, sekcja B3": "https://support.roborock.com/hc/en-us/article_attachments/51127863799065"
+    "Roborock Qrevo Curv 2 Pro – ustawienie stacji, sekcja B3": "https://support.roborock.com/hc/en-us/article_attachments/51127863799065",
+    "Audi A5 Avant · rysunek wymiarowy 06/2024": "https://emea-dam.audi.com/adobe/assets/urn%3Aaaid%3Aaem%3A976ed668-781c-41b8-8bb8-73463191c7a1/original/as/A5%20Avant.pdf"
   },
   "houses": [
     {
@@ -1742,11 +1743,11 @@
   "sharedAreaM2": 156.18903025919093,
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
-    "inputsSha256": "ffff3a71a4e703d74ed4743e94c3381b1f7a958872a426d523b8ee370438c5c8",
-    "proceduralCodeSha256": "023ebb5ef33b0fab0cf7f6069117e4867fdd5efe5a6d8284fb6acd62d8f1cf95",
+    "inputsSha256": "5aa5b42c0b297314a6e5341c7b32e9070523c716b82b169b99fd00d3bc9dce06",
+    "proceduralCodeSha256": "ebe6b1b59597bf0ef62f392fe49c8dc23a7156a02b31560f9c23074baa27fc92",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "dedbf868ca446a18874c8f882848a59920e8d9ab12833f73284c22fd2a100119",
-    "runtimeSha256": "6aa474079926f345cbc95696c9472d965efb16195f15c9e4c3a6ebf050e43c3a"
+    "runtimeSha256": "b4ddc3a0f392142aa877060ba5821ab69446eabf628694e086f03569a91585b0"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1797,7 +1798,8 @@
     "Dom /193: dwie rozsunięte zasłony na szynie umieszczonej we wnęce okna kuchennego.",
     "Dom /193: fornir na wyspie i nowa aranżacja prywatnej łazienki na piętrze. Dom /190: odbicie lewo–prawo i dopasowanie podjazdu do garażu przy zachowaniu obu odstępów 5 m od drogi.",
     "Dom /193: szerokie panele o rysunku miodowego dębu na skosie sufitu głównej sypialni 1.8.",
-    "Dom /193: blaty w ciemnobrązowym dekorze orzecha, wyspa 382,3 × 105 cm, otwierana szafka ze stacją robota i półkami przy wejściu do spiżarni oraz Apple TV przy projektorze."
+    "Dom /193: blaty w ciemnobrązowym dekorze orzecha, wyspa 382,3 × 105 cm, otwierana szafka ze stacją robota i półkami przy wejściu do spiżarni oraz Apple TV przy projektorze.",
+    "Dom /193: dwa przechodnie auta w garażu i pusty podjazd. Wyspa z sześcioma kolumnami po 60 cm, jedenastoma wysuwanymi szufladami i płytą pośrodku. Czarne gniazda w boku od okna. Wymiary kuchni na podłodze pod przyciskiem „Opisy”."
   ],
   "contextParcels": [
     {
@@ -2658,44 +2660,6 @@
       }
     },
     {
-      "id": "car-193-0",
-      "kind": "sedan",
-      "position": [
-        -15.463299193728043,
-        11.890417204306667,
-        0.055
-      ],
-      "angleRad": -0.759762754784372,
-      "location": "driveway-193",
-      "footprint": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -17.76789114334978,
-              12.803916490424992
-            ],
-            [
-              -14.4328937485259,
-              9.63566896592222
-            ],
-            [
-              -13.158707244106306,
-              10.976917918188343
-            ],
-            [
-              -16.493704638930183,
-              14.145165442691116
-            ],
-            [
-              -17.76789114334978,
-              12.803916490424992
-            ]
-          ]
-        ]
-      }
-    },
-    {
       "id": "car-road-190",
       "kind": "sedan",
       "position": [
@@ -2839,41 +2803,6 @@
         0.055
       ],
       "angleRad": -2.3193429127766985,
-      "units": "metres",
-      "upAxis": "z",
-      "lengthAxis": "x"
-    },
-    {
-      "id": "car-193-0",
-      "kind": "sedan",
-      "location": "driveway-193",
-      "sceneObjectName": "car-193-0",
-      "nominalDimensions": {
-        "length": 4.6,
-        "width": 1.85,
-        "height": 1.48
-      },
-      "measuredLocalBounds": {
-        "min": [
-          -2.299999952316284,
-          -0.925000011920929,
-          7.152557379708213e-9
-        ],
-        "max": [
-          2.299999952316284,
-          0.925000011920929,
-          1.4800000190734863
-        ]
-      },
-      "measuredLength": 4.599999904632568,
-      "measuredWidth": 1.850000023841858,
-      "measuredHeight": 1.480000011920929,
-      "groundPosition": [
-        -15.463299193728043,
-        11.890417204306667,
-        0.055
-      ],
-      "angleRad": -0.759762754784372,
       "units": "metres",
       "upAxis": "z",
       "lengthAxis": "x"
@@ -3636,7 +3565,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "cecf459b30504684774d78ef1f13101af26f9e2a5ce50272f97af0aae6ab4868",
+    "dataSha256": "91c2a5d1acd78d6270ce4e56062a2adc48f1ccefa03adf78a56b7a2200555416",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,
@@ -3730,7 +3659,12 @@
     "garageBays": {
       "count": 2,
       "widthM": 2.5,
-      "lengthM": 5
+      "lengthM": 5,
+      "occupiedBy": [
+        "garage-opel-astra-k-2018",
+        "garage-audi-a5-avant-2024"
+      ],
+      "walkThroughVehicles": true
     }
   },
   "florydaInterior": {

@@ -141,7 +141,8 @@ if 'interior' in registry:
         screen, bays = interior['projection'], interior['garageBays']
         content += section('Wyposażenie domu /193', table(['Element', 'Wymiar w modelu'], [
             ['Obraz na białej ścianie malowanej farbą projekcyjną', dimensions([screen['widthM'], screen['heightM']]) + ' m (' + number(screen['diagonalInches']) + '″)'],
-            ['Wolne stanowiska w garażu', str(bays['count']) + ' stanowiska po ' + dimensions([bays['widthM'], bays['lengthM']]) + ' m'],
+            ['Stanowiska w garażu', str(bays['count']) + ' stanowiska po ' + dimensions([bays['widthM'], bays['lengthM']]) + ' m. W trybie spaceru można przejść przez oba auta.'],
+            *[[car['model'] + ' · ' + car['paint'], dimensions([car['length'], car['bodyWidth'], car['height']]) + ' m. Szerokość z lusterkami ' + number(car['mirrorWidth']) + ' m.'] for car in model['garageFitout']['vehicles']],
             ['Drzwi przechodnie w spacerze', 'Szklane skrzydło wiatrołapu i ukryty front kuchenny']]))
 if 'florydaInterior' in registry:
     content += section('Wnętrze Willa Floryda 6 /190', '<p>Ściany, otwory i wyposażenie odtworzono z rzutów MG Projekt. Wysokości pochodzą z przekroju; położenia ścian i mebli odczytane z rastra są przybliżone. Dom, wnętrze i przeszklenia odbito lewo–prawo względem wersji 2026-11-19.18. Środek rezerwy pozostał na miejscu.</p>' + table(['Element', 'Wartość'], [

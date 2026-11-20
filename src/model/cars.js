@@ -142,6 +142,8 @@ function addCarBody(context, group, length, width, height, paint, suv) {
 
 export function addCars({ THREE, scene, placements = [], dimensionsByKind = {} }) {
   const paints = ['#6e8f96', '#d4d7ce', '#a87355', '#465f77', '#c7b287'];
+  const fixedPaints = new Map([['car-190-0', paints[0]], ['car-191-0', paints[1]],
+    ['car-road-190', paints[3]], ['car-road-191', paints[4]]]);
   const context = createCarContext(THREE);
   return placements.map((placement, index) => {
     const { id, kind, position, angleRad = 0, location } = placement;
@@ -151,7 +153,7 @@ export function addCars({ THREE, scene, placements = [], dimensionsByKind = {} }
     const dimensions = dimensionsByKind[kind] || { length: suv ? 4.8 : 4.6, width: suv ? 1.95 : 1.85, height: suv ? 1.70 : 1.48 };
     const group = new THREE.Group();
     group.name = id;
-    addCarBody(context, group, dimensions.length, dimensions.width, dimensions.height, paints[index % paints.length], suv);
+    addCarBody(context, group, dimensions.length, dimensions.width, dimensions.height, fixedPaints.get(id) ?? paints[index % paints.length], suv);
     group.updateMatrixWorld(true);
     const bounds = new THREE.Box3().setFromObject(group, true);
     const size = bounds.getSize(new THREE.Vector3());
