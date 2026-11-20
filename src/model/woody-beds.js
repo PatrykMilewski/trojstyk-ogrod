@@ -121,6 +121,26 @@ function sampleWoodyBed(bed,random,surfaceClearance,serviceAccess,plant) {
   return count;
 }
 
+function plantVentBorders(beds,serviceAccess,surfaceClearance,placements) {
+  const planted=placements.flat();
+  let count=0;
+  for(const vent of serviceAccess.filter(area=>area.id==='vent-1'||area.id==='vent-2')){
+    const center=vent.ring.reduce(([x,y],[vx,vy])=>[x+vx/vent.ring.length,y+vy/vent.ring.length],[0,0]);
+    const neighbors=planted.filter(p=>Math.hypot(p.x-center[0],p.y-center[1])<3);
+    for(let step=0;step<12;step++){
+      const angle=step*Math.PI/6,x=center[0]+.85*Math.cos(angle),y=center[1]+.85*Math.sin(angle);
+      let radius=Math.min(.40,Math.max(...beds.map(bed=>surfaceClearance(x,y,bed)))-.03);
+      for(const area of serviceAccess)radius=Math.min(radius,-surfaceClearance(x,y,area)-.03);
+      for(const p of neighbors)radius=Math.min(radius,Math.hypot(x-p.x,y-p.y)-p.radius-.06);
+      if(radius<.26)continue;
+      const shrub={x,y,radius,height:.42,angle,tone:.93};
+      placements[0].push(shrub);neighbors.push(shrub);planted.push(shrub);
+      count++;
+    }
+  }
+  return count;
+}
+
 export function createWoodyBeds(THREE,parcels,{surfaceClearance,woodyRandom,serviceAccess=[]}) {
   const group=new THREE.Group(), profiles=shrubProfiles, placements=profiles.map(()=>[]);
   group.name='woody-beds';
@@ -142,6 +162,7 @@ export function createWoodyBeds(THREE,parcels,{surfaceClearance,woodyRandom,serv
         placements[species].push({x,y,radius,height,angle:random()*Math.PI*2,tone:.83+random()*.31});
       });
     }
+    if(id==='193')shrubs+=plantVentBorders(beds,serviceAccess,surfaceClearance,placements);
     stats[id]={beds:beds.length,shrubs,trees:trees.length};
   }
   group.userData.parcels=stats;

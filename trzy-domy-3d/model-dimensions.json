@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-20.7",
+  "modelVersion": "2026-11-20.8",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1744,10 +1744,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "5aa5b42c0b297314a6e5341c7b32e9070523c716b82b169b99fd00d3bc9dce06",
-    "proceduralCodeSha256": "74d6e603448d012b5a27f4ddc902397548f19764a906500ae7a35ab0a93c15b5",
+    "proceduralCodeSha256": "998fe56619935ddf998748d51b26bd26d164ba72b543d43c7e0f8e455a73a39d",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
-    "planSha256": "23801bf1e5984d876b16a4d6935e864716613fb211dc9afa508a0e74f03bcc43",
-    "runtimeSha256": "1e5df8293633d64695e6a0da8b6f698316443dc3bb076009dfa12f5c13a3f6db"
+    "planSha256": "e83538a8d82a8a788fc2f7655de79ba713c631b0fc041f98856326de93ea545c",
+    "runtimeSha256": "a65e187e9c67e4e18bd832b0a63c7cb3977fd59d21e91a2fd6e7f0b80997ee66"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1804,7 +1804,8 @@
     "Dom /193: instalacje wewnętrzne w przekroju obu kondygnacji, rynny ukryte i oddzielna retencja deszczówki. Pokrywa i wentylacja oczyszczalni widoczne na trawniku. Zlew centralny w ciągu szafek 60 + 60 + 80 + 60 + 60 cm.",
     "Dom /193: podłogówka pod zabudowami i schodami, niskie prowadzenie rur pompy ciepła, cyrkulacja CWU i odpływy obu urządzeń w pralni. Zbiornik deszczówki przy bocznej rabacie, rewizje w trawniku i otwarte koryta rynien.",
     "Dom /193: zbiornik przy północno-wschodniej ścianie, rozdzielone pola deszczówki i oczyszczalni z dostępem od rabat, zlicowane rynny z rewizjami, wywiewka dachowa, zmywarka i sieć Ethernet z rezerwą PoE na dachu.",
-    "Dom /193: BioDisc i pole tuneli za domem, przebudowany kolektor, indygo na drzwiach wejściowych oraz kremowy dywan 200 × 300 cm w błękitną kratkę."
+    "Dom /193: BioDisc i pole tuneli za domem, przebudowany kolektor, indygo na drzwiach wejściowych oraz kremowy dywan 200 × 300 cm w błękitną kratkę.",
+    "Dom /193: BioDisc i tunele wracają na pierwotne miejsce przy garażu, z rewizją i wywiewkami w rabacie. Rozsącz deszczówki w trzech grupach pod centralnym trawnikiem."
   ],
   "contextParcels": [
     {

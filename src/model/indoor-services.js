@@ -393,7 +393,7 @@ function serviceWater(levels,data,pipe) {
  }
 }
 
-const iconSewerExit=[7.20,17.09,-.466385123];
+const iconSewerExit=[8.74235626,4.20878006,-.716596133];
 
 function soilVentRoofPosition193(levels) {
  const x=4.70,y=7.77,pitch=(levels.ridge-levels.eave)/4.25;
@@ -452,8 +452,8 @@ function serviceSewerVent(group,data,pipe) {
 
 function serviceSewer(levels,data,pipe) {
  serviceSewerVent(levels.upper,data,pipe);
- const slope=.022,[ex,ey,ez]=iconSewerExit,levelAtY=y=>ez+(ey-y)*slope;
- const taps=[...new Set(iconWetGroups.map(c=>c.stack[1]))].sort((a,b)=>a-b);
+ const slope=.022,[ex,ey,ez]=iconSewerExit,levelAtY=y=>ez+(y-ey)*slope;
+ const taps=[...new Set(iconWetGroups.map(c=>c.stack[1]))].sort((a,b)=>b-a);
  pipe(levels.ground,'collector-to-exterior',[...taps.map(y=>[ex,y,levelAtY(y)]),iconSewerExit],iconServiceColors.sewer,.055);
  const done=new Set();
  for(const cluster of iconWetGroups){

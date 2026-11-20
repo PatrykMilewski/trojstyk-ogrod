@@ -191,8 +191,8 @@ test('all sanitary fixtures connect to gravity drainage and the appropriate wate
   assert(drain.userData.from[2]>drain.userData.to[2],item.id);
  }
  const header=at('collector-to-exterior').userData;
- assert.deepEqual(header.to.slice(0,2),[7.20,17.09]);
- assert(Math.abs((header.from[2]-header.to[2])/(header.to[1]-header.from[1])-.022)<1e-6);
+ assert.deepEqual(header.to,[8.74235626,4.20878006,-.716596133]);
+ assert(Math.abs((header.from[2]-header.to[2])/(header.from[1]-header.to[1])-.022)<1e-6);
 });
 
 function endpointNetwork(layer,include){

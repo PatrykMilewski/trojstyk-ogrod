@@ -23,6 +23,14 @@ const siteToPlan=planToSite.clone().invert();
 function axisEnds(mesh) {
   return [-.5,.5].map(f=>mesh.localToWorld(new THREE.Vector3(0,f*mesh.geometry.parameters.height,0)));
 }
+function pipeWallClearance(first,second){
+  const [a,b]=axisEnds(first),[c,d]=axisEnds(second);
+  const ray=new THREE.Ray(a,b.clone().sub(a).normalize()),projected=new THREE.Vector3();
+  const distance=Math.sqrt(ray.distanceSqToSegment(c,d,projected));
+  const axes=a.distanceTo(projected)<=a.distanceTo(b)?distance:
+    new THREE.Line3(c,d).closestPointToPoint(b,true,projected).distanceTo(b);
+  return axes-first.geometry.parameters.radiusTop-second.geometry.parameters.radiusTop;
+}
 function gradedPipes(meshes,slope){
   let previous;
   for(const mesh of meshes){
@@ -34,7 +42,7 @@ function gradedPipes(meshes,slope){
   return previous;
 }
 
-test('the rear domestic collector connects to the real wall penetration and discharges by gravity into the BioDisc',async()=>{
+test('the garage-side domestic collector connects to the real wall penetration and discharges by gravity into the BioDisc',async()=>{
   const data=JSON.parse(await read('../trzy-domy-3d/interior-data.json'));
   const {createIndoorServices}=await load(await read('../src/model/indoor-services.js'));
   const collector=createIndoorServices(THREE,null,data).getObjectByName('collector-to-exterior');
@@ -51,7 +59,8 @@ test('the rear domestic collector connects to the real wall penetration and disc
 test('the downhill clarified pipe reaches the distributor and equally feeds both end caps',()=>{
   const outlet=system.children.filter(m=>m.name.startsWith('clarified-outlet-'));
   assert(outlet.length>1);
-  assert(close(axisEnds(outlet[0])[0].z-.055,wastewater193.outletInvert));
+  const socket=axisEnds(system.getObjectByName('biodisc-outlet-socket'))[1];
+  assert(socket.distanceTo(axisEnds(outlet[0])[0])<1e-6);
   const end=gradedPipes(outlet,.01);
   const chamber=field.getObjectByName('distribution-chamber'),axis=axisEnds(chamber);
   assert(close(end.x,axis[0].x)&&close(end.y,axis[0].y)&&end.z>axis[0].z&&end.z<axis[1].z);
@@ -94,8 +103,8 @@ function worldFieldRing(){
 test('the tunnel footprint is entirely inside /193, away from structures, vehicles and tree trunks',()=>{
   const ring=worldFieldRing();
   assert.equal(clipping.difference([ring],neighbors.parcels['193'].coordinates).length,0);
-  assert(ringDistance(ring,neighbors.parcels['193'].coordinates[0])>4.3);
-  for(const [key,gap] of [['house',9.5],['terrace',8.1],['driveway',27.6],['entry',20]]){
+  assert(ringDistance(ring,neighbors.parcels['193'].coordinates[0])>3.4);
+  for(const [key,gap] of [['house',2.1],['terrace',6.3],['driveway',.63],['entry',.63]]){
     const polygon=hard[key].coordinates;
     assert.equal(clipping.intersection([ring],polygon).length,0,key);
     assert(ringDistance(ring,polygon[0])>gap,key);
@@ -107,21 +116,22 @@ test('the tunnel footprint is entirely inside /193, away from structures, vehicl
   assert.equal(field.children.filter(m=>/-tunnel-[1-5]$/.test(m.name)).length,10);
 });
 
-test('the entire tank, field and distributor lie beyond the garden terrace with a reachable tank lid',()=>{
-  const rear=Math.max(...hard.terrace.coordinates[0].map(([x,y])=>
-    new THREE.Vector3(x,y,0).applyMatrix4(siteToPlan).y));
+test('the tank and tunnels occupy the original garage-side site, with service access from the driveway',()=>{
+  const tankPlan=system.position.clone().applyMatrix4(siteToPlan);
+  const fieldPlan=field.getWorldPosition(new THREE.Vector3()).applyMatrix4(siteToPlan);
+  assert(Math.hypot(tankPlan.x-13.279,tankPlan.y+1.904)<.02);
+  assert(Math.hypot(fieldPlan.x-12.181,fieldPlan.y-1.097)<.02);
   const circle=(centre,r)=>Array.from({length:96},(_,i)=>[centre.x+r*Math.cos(i*Math.PI/48),centre.y+r*Math.sin(i*Math.PI/48)]);
   const tank=circle(system.position,wastewater193.tankDiameter/2);
   const cap=surface.getObjectByName('distributor-hatch'),centre=cap.getWorldPosition(new THREE.Vector3());
   const chamber=circle(centre,.22);
   for(const outline of [tank,chamber,worldFieldRing()]){
-    assert(outline.every(([x,y])=>new THREE.Vector3(x,y,0).applyMatrix4(siteToPlan).y>rear));
     assert.equal(clipping.difference([outline],neighbors.parcels['193'].coordinates).length,0);
   }
-  assert(ringDistance(tank,hard.house.coordinates[0])>5.4);
-  assert(ringDistance(tank,hard.terrace.coordinates[0])>4);
-  assert(ringDistance(tank,neighbors.parcels['193'].coordinates[0])>4.9);
-  assert(ringDistance(tank,worldFieldRing())>6.4);
+  assert(ringDistance(tank,hard.house.coordinates[0])>5.1);
+  assert(ringDistance(tank,hard.terrace.coordinates[0])>9.4);
+  assert(ringDistance(tank,neighbors.parcels['193'].coordinates[0])>2.0);
+  assert(ringDistance(tank,worldFieldRing())>1.0);
   for(const tree of [...garden.trees,...woods.trees])assert(clearance(tree.center,tank)>3);
   const access=wastewaterServiceAccess193(),approach=access.at(-1).ring;
   assert(clipping.intersection([approach],hard.driveway.coordinates).length);
@@ -136,11 +146,32 @@ test('vent openings and the distributor align with the accessible surface fittin
     ['distribution-chamber','distributor-hatch']]){
     const a=centre(field.getObjectByName(sub)), b=centre(surface.getObjectByName(cap));
     assert(close(a.x,b.x)&&close(a.y,b.y));
-    const pad=Array.from({length:24},(_,i)=>[a.x+.50*Math.cos(i*Math.PI/12),a.y+.50*Math.sin(i*Math.PI/12)]);
+    const r=cap.startsWith('tunnel-')?.375:.50;
+    const pad=Array.from({length:24},(_,i)=>[a.x+r*Math.cos(i*Math.PI/12),a.y+r*Math.sin(i*Math.PI/12)]);
     assert.equal(clipping.difference([pad],...access.map(g=>[g.ring])).length,0);
     if(cap.startsWith('tunnel-')){
-      const bedGap=Math.min(...woods.beds.map(bed=>clearance(xy(a),bed.ring)));
-      assert(bedGap>=1&&bedGap<1.1);
+      const approach=access.find(item=>item.id==='approach');
+      assert.equal(clipping.intersection([pad],[approach.ring]).length,0);
+      assert.equal(clipping.intersection([pad],[worldFieldRing()]).length,0);
+    }
+  }
+});
+
+test('each tunnel vents through its far end cap and drains condensation back from a separate shrub-bed riser',()=>{
+  for(const row of [1,2]){
+    const prefix='drain-row-'+row, vent=field.getObjectByName(prefix+'-vent');
+    const lateral=field.children.filter(mesh=>mesh.name.startsWith(prefix+'-vent-link-'));
+    const end=gradedPipes(lateral,-.01);
+    assert(end.distanceTo(axisEnds(vent)[0])<1e-6);
+    const cap=field.getObjectByName(prefix+'-end-cap'), start=field.worldToLocal(axisEnds(lateral[0])[0]);
+    assert(close(start.x,cap.position.x)&&close(start.y,cap.position.y-wastewater193.endCapDepth));
+    assert(start.z-.055>cap.position.z&&start.z+.055<cap.position.z+wastewater193.moduleHeight);
+    const otherPipes=[
+      ...system.children.filter(m=>m.name.startsWith('building-inlet-')||m.name.startsWith('clarified-outlet-')),
+      ...field.children.filter(m=>m.name.startsWith('drain-row-'+(3-row)+'-vent'))
+    ];
+    for(const mesh of [...lateral,vent])for(const other of otherPipes){
+      assert(pipeWallClearance(mesh,other)>.10,mesh.name+' near '+other.name);
     }
   }
 });
@@ -151,18 +182,14 @@ test('the separate rain and wastewater networks clear each other in three dimens
   const data=JSON.parse(await read('../trzy-domy-3d/interior-data.json'));
   const rain=createRainServices(THREE,house,{group},data);
   rain.updateMatrixWorld(true);
-  const wastewater=system.children.filter(m=>m.name.startsWith('clarified-outlet')||m.name.startsWith('building-inlet-'));
+  const wastewater=[...system.children,...field.children].filter(m=>
+    /^(clarified-outlet-|building-inlet-|distribution-branch-|distribution-chamber$|drain-row-\d+-vent(?:$|-link-))/.test(m.name));
   const rainPipes=rain.children.filter(m=>m.geometry.type==='CylinderGeometry'&&
-    /rain-(ground-|leaf-filter|screened-overflow|filtered-inlet|tank-inspection|field-inspection)/.test(m.name));
+    /^rain-(ground-|leaf-filter|screened-overflow|filtered-inlet|tank-inspection|field-(inspection|feed-|vent-return-|air-))/.test(m.name));
+  assert(rainPipes.some(mesh=>mesh.name.startsWith('rain-field-feed-')));
+  assert(rainPipes.some(mesh=>mesh.name.startsWith('rain-field-vent-return-')));
   let closest=Infinity;
-  for(const wet of wastewater)for(const storm of rainPipes){
-    const [a,b]=axisEnds(wet),[c,d]=axisEnds(storm);
-    const ray=new THREE.Ray(a,b.clone().sub(a).normalize()), projected=new THREE.Vector3();
-    const distance=Math.sqrt(ray.distanceSqToSegment(c,d,projected));
-    const axes=a.distanceTo(projected)<=a.distanceTo(b)?distance:
-      new THREE.Line3(c,d).closestPointToPoint(b,true,projected).distanceTo(b);
-    closest=Math.min(closest,axes-wet.geometry.parameters.radiusTop-storm.geometry.parameters.radiusTop);
-  }
+  for(const wet of wastewater)for(const storm of rainPipes)closest=Math.min(closest,pipeWallClearance(wet,storm));
   assert(closest>.10,'least pipe wall clearance '+closest);
   const bays=rain.children.filter(m=>/^rain-crate-\d/.test(m.name));
   assert(bays.length>0);
@@ -186,7 +213,7 @@ test('the section outline meets the physical shoulder of the BioDisc lid',()=>{
 });
 
 test('the level mulch finishes join the shrub beds and leave every service opening clear',()=>{
-  const soilMeshes=['biodisc','inspection-strip'].map(id=>surface.getObjectByName('wastewater-mulch-'+id));
+  const soilMeshes=['biodisc','distributor','vent-0','vent-1'].map(id=>surface.getObjectByName('wastewater-mulch-'+id));
   const areas=woods.beds.map(b=>[b.ring,...b.holes]);
   for(const mesh of soilMeshes){
     const shape=mesh.geometry.parameters.shapes;
@@ -197,6 +224,6 @@ test('the level mulch finishes join the shrub beds and leave every service openi
   for(const [i,id] of ['biodisc-service-lid','distributor-hatch','tunnel-vent-0','tunnel-vent-1'].entries()){
     const point=surface.getObjectByName(id).getWorldPosition(new THREE.Vector3()).setZ(1);
     const down=new THREE.Raycaster(point,new THREE.Vector3(0,0,-1));
-    assert.equal(down.intersectObject(soilMeshes[i===0?0:1]).length,0,id);
+    assert.equal(down.intersectObject(soilMeshes[i]).length,0,id);
   }
 });

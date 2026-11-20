@@ -35,20 +35,27 @@ def sources(model):
     return next(v for v in source["variants"] if v["id"] == "aktualny"), garden, site, house
 
 
-def service_access(house):
+def garden_services(house):
     repository = ROOT.parent if (ROOT.parent / "src/model").is_dir() else ROOT.parent / "trojstyk-pages-publish"
     script = """
 import {wastewaterServiceAccess193} from './src/model/wastewater.js';
-import {rainServiceAccess193} from './src/model/rain-services.js';
+import {rainFieldFootprints193,rainServiceAccess193} from './src/model/rain-services.js';
 import {iconPlanPoint} from './src/model/roof-windows.js';
 import {readFileSync} from 'node:fs';
 const house=JSON.parse(readFileSync(0,'utf8'));
-console.log(JSON.stringify([...wastewaterServiceAccess193(),...rainServiceAccess193(house,iconPlanPoint)]));
+const wastewater=wastewaterServiceAccess193();
+console.log(JSON.stringify({
+  access:[...wastewater,...rainServiceAccess193(house,iconPlanPoint)],
+  footprints:[
+    ...wastewater.filter(item=>item.footprint).map(({id,footprint})=>({id,ring:footprint})),
+    ...rainFieldFootprints193(house,iconPlanPoint)
+  ]
+}));
 """
     result = subprocess.run(["node", "--no-warnings", "--input-type=module", "-e", script],
                             cwd=repository, input=json.dumps({"metadata": house["metadata"]}),
                             text=True, capture_output=True, check=True)
-    return unary_union([surface(item) for item in json.loads(result.stdout)])
+    return json.loads(result.stdout)
 
 
 def surface(item):
@@ -100,7 +107,7 @@ def polygon_parts(g):
     return [p for member in getattr(g, "geoms", []) for p in polygon_parts(member)]
 
 
-def design(parcel_id, parcel, free, existing):
+def design(parcel_id, parcel, free, existing, inspection_beds):
     points = list(parcel.exterior.coords)
     edges = [LineString([a, b]) for a, b in zip(points, points[1:])]
     weights = EDGE_WEIGHTS[parcel_id]
@@ -110,7 +117,7 @@ def design(parcel_id, parcel, free, existing):
 
     def beds(width):
         perimeter = [edge.buffer(width * weight) for edge, weight in zip(edges, weights)]
-        raw = free.intersection(unary_union(perimeter + tree_beds))
+        raw = free.intersection(unary_union(perimeter + tree_beds + inspection_beds))
         # Remove unplantable slivers and round clipped corners before measuring.
         smooth = raw.buffer(-.35, quad_segs=5).buffer(.35, quad_segs=5).intersection(raw)
         return unary_union([p for p in polygon_parts(smooth) if p.area >= 3.5])
@@ -128,7 +135,7 @@ def design(parcel_id, parcel, free, existing):
     return beds(hi)
 
 
-def new_trees(beds, parcel, obstacles, existing):
+def new_trees(beds, parcel, obstacles, existing, infrastructure):
     # Select separated understory trees with their whole crowns inside the beds.
     safe = beds.buffer(-1.5).intersection(parcel.buffer(-2.1)).difference(obstacles.buffer(.5))
     min_x, min_y, max_x, max_y = safe.bounds if not safe.is_empty else (0, 0, 0, 0)
@@ -137,9 +144,11 @@ def new_trees(beds, parcel, obstacles, existing):
     neighbors = [Point(t["center"]) for t in existing]
     result = []
     for height, radius in [(4.8, 1.45), (4.3, 1.3), (3.9, 1.2)]:
-        if not points:
+        # Modelled root clearance measured from the nearest tank or infiltration field edge.
+        options = [p for p in points if infrastructure.is_empty or p.distance(infrastructure) > max(3, 2 * radius)]
+        if not options:
             break
-        point = max(points, key=lambda p: min(p.distance(q) for q in neighbors))
+        point = max(options, key=lambda p: min(p.distance(q) for q in neighbors))
         if min(point.distance(q) for q in neighbors) < 5.2:
             break
         neighbors.append(point)
@@ -149,14 +158,22 @@ def new_trees(beds, parcel, obstacles, existing):
 
 def generate(plot, garden, site, house):
     obstacles = occupied(plot, garden, site)
-    service = service_access(house)
+    services = garden_services(house)
+    service = unary_union([surface(item) for item in services["access"]])
+    infrastructure = unary_union([surface(item) for item in services["footprints"]])
     existing = garden["trees"] + site["gardenAdditions"]["trees"]
+    for tree in existing:
+        if Point(tree["center"]).distance(infrastructure) <= max(3, 2 * tree["crownRadius"]):
+            raise ValueError(f'Underground equipment conflicts with the tree at {tree["center"]}')
     result = []
     for parcel_id in EDGE_WEIGHTS:
         parcel = shape(site["parcels"][parcel_id])
         excluded = obstacles.union(service) if parcel_id == "193" else obstacles
         free = parcel.buffer(-.4, join_style="mitre").difference(excluded)
-        beds = design(parcel_id, parcel, free, existing)
+        # A plantable border around the openings joins the front beds; free already excludes working space.
+        inspection_beds = [surface(item).buffer(1.3) for item in services["access"]
+                           if parcel_id == "193" and item.get("id") in ("tank", "distributor", "vent-1", "vent-2")]
+        beds = design(parcel_id, parcel, free, existing, inspection_beds)
         parts = sorted(polygon_parts(beds), key=lambda p: -p.area)
         polygons = [dict(ring=list(p.exterior.coords), holes=[list(h.coords) for h in p.interiors]) for p in parts]
         drawn = unary_union([surface(p) for p in polygons])
@@ -166,7 +183,7 @@ def generate(plot, garden, site, house):
         assert .305 <= drawn.area / parcel.area <= .31
         result.append(dict(id=parcel_id, boundary=list(parcel.exterior.coords), beds=polygons,
                            areaM2=parcel.area, plantedAreaM2=drawn.area,
-                           trees=new_trees(drawn, parcel, excluded, existing)))
+                           trees=new_trees(drawn, parcel, excluded, existing, infrastructure)))
     return dict(parcels=result)
 
 
