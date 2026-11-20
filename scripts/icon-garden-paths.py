@@ -41,28 +41,41 @@ def stone_ring(rng, center, direction, width, length):
 
 def flagstones(route_id, start, end, free, seed):
     line = LineString([start, end])
-    count = round(line.length/.65)
-    pitch = line.length/count
+    first_center = .30
+    count = 2 * round((line.length - first_center) / .60)
+    pitch = (line.length - 2*first_center) / (count-1)
+    row_spacing = .34
     dx, dy = (end.x - start.x)/line.length, (end.y - start.y)/line.length
     rng = random.Random(seed)
     stones, gaps = [], []
     for i in range(count):
-        mid = line.interpolate((i+.5)*pitch)
-        offset = rng.uniform(-.035, .035)
+        mid = line.interpolate(first_center + i*pitch)
+        left = i % 2 == 0
+        offset = row_spacing / 2 if left else -row_spacing / 2
         center = Point(mid.x - dy*offset, mid.y + dx*offset)
-        ring = stone_ring(rng, center, (dx, dy), rng.uniform(.50,.61), rng.uniform(.41,.49))
-        clipped = ring.intersection(free)
-        assert clipped.geom_type == 'Polygon' and clipped.area > .84*ring.area
+        # Keep enough flat stone under the entire foot even at the irregular corners.
+        sole = Polygon([(center.x + dx*v - dy*u, center.y + dy*v + dx*u)
+                        for u, v in [(-.055,-.14), (.055,-.14), (.055,.14), (-.055,.14)]])
+        for _ in range(100):
+            ring = stone_ring(rng, center, (dx, dy), rng.uniform(.28, .33), rng.uniform(.38, .44))
+            if ring.covers(sole) and free.covers(ring):
+                break
+        else:
+            raise ValueError(f'No full stone fits step {i+1} on {route_id}')
         if stones:
-            gaps.append(clipped.distance(surface(stones[-1])))
+            gaps.append(ring.distance(surface(stones[-1])))
         stones.append(dict(id=f'flagstone-{route_id}-{i+1:02d}', kind='flagstone', route=route_id,
+                           row='left' if left else 'right', center=list(center.coords[0]),
                            name='Kamień do paleniska' if route_id == 'fire' else 'Kamień do furtki trójstyku',
-                           ring=list(clipped.exterior.coords), holes=[], z=.006, height=.035,
+                           ring=list(ring.exterior.coords), holes=[], z=.006, height=.035,
                            color=rng.choice(PALETTE)))
-    assert min(gaps) >= .12 and max(gaps) < .34
-    assert start.distance(surface(stones[0])) < .25 and end.distance(surface(stones[-1])) < .25
-    return stones, dict(id=route_id, ends=list(line.coords), lengthM=line.length,
-                        count=count, stepM=pitch, minGapM=min(gaps), maxGapM=max(gaps))
+    stride = math.hypot(pitch, row_spacing)
+    assert .57 <= 2*pitch <= .63 and min(gaps) > .01
+    assert start.distance(surface(stones[0])) < .30 and end.distance(surface(stones[-1])) < .30
+    return stones, dict(id=route_id, ends=list(line.coords), lengthM=line.length, count=count,
+                        firstCenterM=first_center, stepM=pitch, sameRowPitchM=2*pitch,
+                        rowSpacingM=row_spacing, footfallM=stride,
+                        minGapM=min(gaps), maxGapM=max(gaps))
 
 
 def build_paths(plot, garden, house):
@@ -83,6 +96,9 @@ def build_paths(plot, garden, house):
     for name, terrace_x, end, seed in routes:
         run, measurements = flagstones(name, terrace_point(house, terrace, terrace_x), end,
                                        available.buffer(-.035), seed)
+        landing = fire if name == 'fire' else wicket
+        assert all(terrace.distance(surface(stone)) < .45 for stone in run[:2])
+        assert all(landing.distance(surface(stone)) < .45 for stone in run[-2:])
         stones.extend(run)
         details.append(measurements)
     stone_area = unary_union([surface(p) for p in stones])

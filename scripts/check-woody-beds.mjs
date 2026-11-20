@@ -30,7 +30,7 @@ export function checkWoodyPlanting(plan, model, register) {
     .map(p => [p.ring, ...(p.holes || [])]);
   for (const plot of plan.parcels) {
     const boundary = neighbors.parcels[plot.id].coordinates;
-    const beds = plot.beds.map(b => [b.ring, ...b.holes]);
+    const beds = [...plot.beds, ...(plot.rainGardenCanopies || [])].map(b => [b.ring, ...(b.holes || [])]);
     assert.ok(beds.length > 0, 'Missing planted area on /' + plot.id);
     const planted = polygonClipping.union(...beds);
     const plantedArea = area(planted), plotArea = area([boundary]);

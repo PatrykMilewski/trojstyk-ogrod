@@ -636,9 +636,10 @@ function serviceExteriorPower(THREE,group,data,pipe,interior,site) {
  }
  const cable=site.irrigationCablePath;
  if(cable?.length){
-  const [entry]=cable;
+  const [entry]=cable,wing=data.facades.find(f=>f.id==='facade-wing-end').a[0];
+  const approachY=entry[1]-.65;
   boardFeed('board-to-irrigation-entry','irrigation','rain-tank-cable-entry',
-   [[7.94,wall],[7.94,18.8],[entry[0],18.8],[entry[0],entry[1]]],entry,-.99);
+   [[wing-.21,wall],[wing-.21,approachY],[entry[0],approachY],[entry[0],entry[1]]],entry,-.99);
   draw('irrigation-pump-cable',cable,'irrigation','rain-irrigation-power-terminal');
  }
  serviceExteriorLighting(interior.exteriorLights.terminals,board,wall,draw,boardFeed);
@@ -648,12 +649,18 @@ function serviceExteriorLighting(lamps,board,wall,draw,boardFeed) {
  // Split to the two sides of the house at the first garage fitting. Each branch follows its facade.
  const fixtures=lamps.filter(f=>!f.pendant),depth=-.82;
  const tail=(f,via)=>draw('feed-'+f.id,via,'outdoorLights',f.id);
- // Offset the two risers beside drainage pipes; short shallow tails return to the apertures.
- const offsetX={'icon-exterior-uplight-terrace-0.61':.34,'icon-exterior-uplight-main-side-2.75':-.14};
- const buried=f=>[f.point[0]+(offsetX[f.id]||0),f.point[1],depth];
+ // Approach these two recessed fittings from outside the adjacent drainage pipes.
+ const offsets={
+  'icon-exterior-uplight-wing-rear-4.24':[0,.25,-.19],
+  'icon-exterior-uplight-main-side-2.75':[-.20,0,.015]
+ };
+ const buried=f=>{
+  const [dx,dy]=offsets[f.id]||[0,0];
+  return [f.point[0]+dx,f.point[1]+dy,depth];
+ };
  const lampDrop=f=>{
-  const tee=buried(f),[x,y]=f.point;
-  tail(f,[tee,[tee[0],tee[1],-.19],[x,y,-.19],f.point]);
+  const tee=buried(f),[x,y]=f.point,turnZ=offsets[f.id]?.[2]??-.19;
+  tail(f,[tee,[tee[0],tee[1],turnZ],[x,y,turnZ],f.point]);
  };
  const byName=id=>fixtures.find(f=>f.id==='icon-exterior-uplight-'+id);
  const start=byName('garage-0.51');
@@ -669,7 +676,7 @@ function serviceExteriorLighting(lamps,board,wall,draw,boardFeed) {
  }
  branch([['main-side-2.75',[[-.34,-.34]]],['main-side-14.68',[]]]);
  branch([['garage-6.51',[]],['front-wing-1.3',[[7.24,-.34],[7.24,3.87]]],['front-wing-4.21',[]],
-  ['wing-end-2.25',[[14.98,3.87]]],['wing-rear-4.24',[[14.98,13.05]]],['terrace-0.61',[[9.18,13.05]]]]);
+  ['wing-end-2.25',[[14.98,3.87]]],['wing-rear-4.24',[[14.98,13.30]]],['terrace-0.61',[[8.84,13.30]]]]);
  const [first,second]=lamps.filter(f=>f.pendant);
  const railZ=first.point[2]+.03,feed=serviceElectricalPort(board,'terraceLights');
  const riser=[feed[0],wall,railZ];

@@ -181,7 +181,7 @@ function walkSupport(point, navigation, ceiling, connectedRamps = new Set(), air
   const rampHeights = navigation.ramps.map(ramp => ({ ramp, z: walkRampHeight(point, ramp) }))
     .filter(({ ramp, z }) => z !== null && z <= airborneCeiling &&
       (z <= ceiling + 1e-7 || connectedRamps.has(ramp.id))).map(({ z }) => z);
-  return Math.max(0, ...floorHeights, ...rampHeights);
+  return Math.max(navigation.terrainHeight?.(point) ?? 0, ...floorHeights, ...rampHeights);
 }
 
 function walkCeilingMove(navigation, start, end, head) {
@@ -571,10 +571,28 @@ export function mergeInteriorNavigation(interiors) {
     ceilingHeight: point => Math.min(Infinity, ...sources.map(({ navigation }) => navigation.ceilingHeight?.(point) ?? Infinity)) };
 }
 
-export function setupWalk({ THREE, scene, house, neighbors, camera, controls, renderer, requestDraw, onCameraChange, button, shortcutButton, interior, interiors, startView }) {
+function walkTerrainSampler(THREE, meshes) {
+  const surfaces = meshes.map(mesh => {
+    mesh.updateWorldMatrix(true, false);
+    return {mesh, bounds: new THREE.Box3().setFromObject(mesh)};
+  });
+  const ray = new THREE.Raycaster(undefined, new THREE.Vector3(0, 0, -1));
+  return ([x, y]) => {
+    for (const {mesh, bounds} of surfaces) {
+      if (x < bounds.min.x || x > bounds.max.x || y < bounds.min.y || y > bounds.max.y) continue;
+      ray.ray.origin.set(x, y, bounds.max.z + 1);
+      const [hit] = ray.intersectObject(mesh, false);
+      if (hit) return hit.point.z;
+    }
+    return 0;
+  };
+}
+
+export function setupWalk({ THREE, scene, house, neighbors, camera, controls, renderer, requestDraw, onCameraChange, button, shortcutButton, interior, interiors, startView, terrainMeshes = [] }) {
   const view = createWalkView(THREE, requestDraw, scene), perspective = view.camera;
   const sources = interiors ?? [{ parcel: '193', navigation: interior?.navigation }];
   const navigation = mergeInteriorNavigation(sources);
+  if (navigation && terrainMeshes.length) navigation.terrainHeight = walkTerrainSampler(THREE, terrainMeshes);
   const navigableParcels = new Set(sources.filter(item => item.navigation).map(item => item.parcel));
   const footprints = walkHouseFootprints(house, neighbors).filter(item => !navigableParcels.has(item.parcel));
   const collision = createWalkCollision(footprints), motion = createWalkMotion(collision, navigation);

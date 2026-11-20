@@ -122,18 +122,19 @@ function sampleWoodyBed(bed,random,surfaceClearance,serviceAccess,borderShrubs,p
   return count;
 }
 
-function plantVentBorders(beds,serviceAccess,surfaceClearance,placements) {
+function plantInspectionBorders(beds,serviceAccess,surfaceClearance,placements) {
   const planted=placements.flat();
   let count=0;
-  for(const vent of serviceAccess.filter(area=>area.id==='vent-1'||area.id==='vent-2')){
+  for(const vent of serviceAccess.filter(area=>['vent-1','vent-2','distributor'].includes(area.id))){
     const center=vent.ring.reduce(([x,y],[vx,vy])=>[x+vx/vent.ring.length,y+vy/vent.ring.length],[0,0]);
     const neighbors=planted.filter(p=>Math.hypot(p.x-center[0],p.y-center[1])<3);
-    for(const distance of [.78,.87,.97])for(let step=0;step<36;step++){
+    const distributor=vent.id==='distributor';
+    for(const distance of distributor?[1.12,1.23,1.34]:[.78,.87,.97])for(let step=0;step<36;step++){
       const angle=step*Math.PI/18,x=center[0]+distance*Math.cos(angle),y=center[1]+distance*Math.sin(angle);
       let radius=Math.min(.40,Math.max(...beds.map(bed=>surfaceClearance(x,y,bed)))-.03);
       for(const area of serviceAccess)radius=Math.min(radius,-surfaceClearance(x,y,area)-.03);
       for(const p of neighbors)radius=Math.min(radius,Math.hypot(x-p.x,y-p.y)-p.radius-.06);
-      if(radius<Math.max(.23,distance-.63))continue;
+      if(radius<Math.max(.23,distance-(distributor?1.0:.63)))continue;
       const shrub={x,y,radius,height:.42,angle,tone:.93};
       placements[0].push(shrub);neighbors.push(shrub);planted.push(shrub);
       count++;
@@ -149,7 +150,7 @@ export function createWoodyBeds(THREE,parcels,{surfaceClearance,woodyRandom,serv
   for(const {id,beds,trees} of parcels) {
     const random=woodyRandom(937+Number(id)), phase=random()*Math.PI*2;
     const firstBorder=placements[0].length;
-    let shrubs=id==='193'?plantVentBorders(beds,serviceAccess,surfaceClearance,placements):0;
+    let shrubs=id==='193'?plantInspectionBorders(beds,serviceAccess,surfaceClearance,placements):0;
     const borderShrubs=placements[0].slice(firstBorder);
     for(const bed of beds) {
       const path=ring=>ring.map(([x,y])=>new THREE.Vector2(x,y));

@@ -13,7 +13,7 @@ export function bindIconServiceView({THREE,indoor,rain,wastewater,camera,control
     sewer:'Ochra – odpływy do oczyszczalni · turkus przy zbiorniku – odpływ po oczyszczeniu',
     ethernet:'Zielony – gniazda RJ45 w sześciu pokojach i garażu · żółty – rezerwa PoE na dachu · wszystkie przewody wracają do szafy w kotłowni',
     power:'Złoty – zasilanie AC z rozdzielnicy: falownik, wallbox przy rowerach, zmywarka, brama, sterownik i napęd BioDisc, pompa ciepła, pompa ogrodowa, oprawy przy elewacji i lampy wiszące na tarasie · koralowy i szaroniebieski – magazyn DC · grafit – przewód zmywarki',
-    rain:'Dwa spusty SW zasilają ogród deszczowy przy garażu. Dwa wschodnie spusty prowadzą do zbiornika z pompą i kranem przy tarasie. Przelewy trafiają do dwóch pól pod trawnikiem.'
+    rain:'Dwa spusty SW zasilają zagłębiony ogród deszczowy przy garażu. Osobny układ od strony /190 zbiera wodę do zbiornika z pompą. Jego przelew zasila dwa pola pod trawnikiem.'
   };
   let active=false;
   function update(frame) {

@@ -39,12 +39,13 @@ def garden_services(house):
     repository = ROOT.parent if (ROOT.parent / "src/model").is_dir() else ROOT.parent / "trojstyk-pages-publish"
     script = """
 import {wastewaterServiceAccess193} from './src/model/wastewater.js';
-import {rainGardenFootprint193,rainFieldFootprints193,rainServiceAccess193,rainTankFootprint193} from './src/model/rain-services.js';
+import {rainGardenCanopies193,rainGardenFootprint193,rainFieldFootprints193,rainServiceAccess193,rainTankFootprint193} from './src/model/rain-services.js';
 import {iconPlanPoint} from './src/model/roof-windows.js';
 import {readFileSync} from 'node:fs';
 const house=JSON.parse(readFileSync(0,'utf8'));
 const wastewater=wastewaterServiceAccess193();
 console.log(JSON.stringify({
+  rainWoody:rainGardenCanopies193(house,iconPlanPoint),
   access:[...wastewater,...rainServiceAccess193(house,iconPlanPoint)],
   footprints:[
     ...wastewater.filter(item=>item.footprint).map(({id,footprint})=>({id,ring:footprint})),
@@ -107,7 +108,7 @@ def polygon_parts(g):
     return [p for member in getattr(g, "geoms", []) for p in polygon_parts(member)]
 
 
-def design(parcel_id, parcel, free, existing, inspection_beds):
+def design(parcel_id, parcel, free, existing, inspection_beds, rain_credit):
     points = list(parcel.exterior.coords)
     edges = [LineString([a, b]) for a, b in zip(points, points[1:])]
     weights = EDGE_WEIGHTS[parcel_id]
@@ -123,7 +124,7 @@ def design(parcel_id, parcel, free, existing, inspection_beds):
         return unary_union([p for p in polygon_parts(smooth) if p.area >= 3.5])
 
     lo, hi = 0, 12
-    target = parcel.area * TARGET
+    target = parcel.area * TARGET - rain_credit
     if beds(hi).area < target:
         raise ValueError(f"Insufficient available planting area on /{parcel_id}")
     for _ in range(24):
@@ -176,16 +177,21 @@ def generate(plot, garden, site, house):
                            if parcel_id == "193" and item.get("id") in ("tank", "distributor", "vent-1", "vent-2",
                                                                          "rain-garden", "rain-leaf-filter",
                                                                          "rain-tank-inspection", "rain-field-inspection")]
-        beds = design(parcel_id, parcel, free, existing, inspection_beds)
+        rain_woody = services['rainWoody'] if parcel_id == '193' else []
+        rain_union = unary_union([surface(item) for item in rain_woody])
+        beds = design(parcel_id, parcel, free, existing, inspection_beds, rain_union.area)
         parts = sorted(polygon_parts(beds), key=lambda p: -p.area)
         polygons = [dict(ring=list(p.exterior.coords), holes=[list(h.coords) for h in p.interiors]) for p in parts]
         drawn = unary_union([surface(p) for p in polygons])
         assert drawn.is_valid and drawn.difference(free).area < 1e-7
         assert drawn.intersection(obstacles).area < 1e-7 and drawn.difference(parcel).area < 1e-7
         assert abs(drawn.area - sum(p.area for p in parts)) < 1e-7
-        assert .305 <= drawn.area / parcel.area <= .31
+        assert drawn.intersection(rain_union).area < 1e-7
+        total = drawn.area + rain_union.area
+        assert .305 <= total / parcel.area <= .31
         result.append(dict(id=parcel_id, boundary=list(parcel.exterior.coords), beds=polygons,
-                           areaM2=parcel.area, plantedAreaM2=drawn.area,
+                           areaM2=parcel.area, plantedAreaM2=total, rainGardenCanopies=rain_woody,
+                           rainGardenWoodyM2=rain_union.area,
                            trees=new_trees(drawn, parcel, excluded, existing, infrastructure)))
     return dict(parcels=result)
 

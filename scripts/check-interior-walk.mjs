@@ -18,6 +18,17 @@ const moveTo = (motion, x, y) => {
   motion.move(1, 0, Math.hypot(dx, dy) / 2.2, Math.atan2(dx, dy));
 };
 
+test('walking descends into the rain garden and returns to lawn height', () => {
+  const motion = motionFor({obstacles: [], floors: [], ramps: [],
+    terrainHeight: ([x]) => Math.min(0, Math.max(-.36, Math.abs(x) - 1))});
+  motion.reset([-2, 0]);
+  moveTo(motion, 0, 0);
+  assert.equal(motion.getState().floorHeightM, -.36);
+  assert(Math.abs(motion.getState().position[2] - 1.34) < 1e-8);
+  moveTo(motion, 2, 0);
+  assert.equal(motion.getState().floorHeightM, 0);
+});
+
 test('grounded idle skips physics until a move, jump or external relocation', () => {
   let ceilingQueries = 0;
   const motion = motionFor({ ...navigation, ceilingHeight: () => { ceilingQueries++; return Infinity; } });

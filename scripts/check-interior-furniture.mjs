@@ -2121,25 +2121,42 @@ test('three seated adults occupy distinct sofa cushions and a fourth faces out o
 });
 
 
-function clearanceToRainPipe(cable,pipe){
- const pos=cable.geometry.getAttribute('position'),line=new THREE.Line3();
- const a=new THREE.Vector3(),b=new THREE.Vector3(),hit=new THREE.Vector3(),opposite=new THREE.Vector3();
+function cableCenterline(cable){
+ const positions=cable.geometry.getAttribute('position'),points=[];
+ for(let i=0;i<positions.count;i+=8){
+  const a=new THREE.Vector3().fromBufferAttribute(positions,i),opposite=new THREE.Vector3().fromBufferAttribute(positions,i+4);
+  points.push(a.lerp(opposite,.5));
+ }
+ return points;
+}
+function clearanceToPipe(cable,pipe,pipeFrame){
+ const hit=new THREE.Vector3();
  pipe.updateMatrix();
- const ends=[-.5,.5].map(f=>new THREE.Vector3(0,f*pipe.geometry.parameters.height,0).applyMatrix4(pipe.matrix));
- const [c,d]=ends,pipeAxis=new THREE.Line3(c,d);
+ const matrix=pipeFrame?pipeFrame.clone().multiply(pipe.matrixWorld):pipe.matrix;
+ const [c,d]=[-.5,.5].map(f=>new THREE.Vector3(0,f*pipe.geometry.parameters.height,0).applyMatrix4(matrix));
+ const pipeAxis=new THREE.Line3(c,d),points=cableCenterline(cable);
  let closest=Infinity;
- for(let i=0;i<pos.count;i+=8){
-  b.fromBufferAttribute(pos,i);opposite.fromBufferAttribute(pos,i+4);b.lerp(opposite,.5);
-  if(i){
-   line.set(a,b);
-   const ray=new THREE.Ray(a,b.clone().sub(a).normalize());
-   const squared=ray.distanceSqToSegment(c,d,hit);
-   const gap=a.distanceToSquared(hit)<=line.distanceSq()?Math.sqrt(squared):pipeAxis.closestPointToPoint(b,true,hit).distanceTo(b);
-   closest=Math.min(closest,gap);
-  }
-  a.copy(b);
+ for(let i=1;i<points.length;i++){
+  const a=points[i-1],b=points[i],ray=new THREE.Ray(a,b.clone().sub(a).normalize());
+  const squared=ray.distanceSqToSegment(c,d,hit);
+  const gap=a.distanceToSquared(hit)<=a.distanceToSquared(b)?Math.sqrt(squared):pipeAxis.closestPointToPoint(b,true,hit).distanceTo(b);
+  closest=Math.min(closest,gap);
  }
  return closest-.022-pipe.geometry.parameters.radiusTop;
+}
+
+function checkTankFeeder(pumpSupply,rain){
+ const tank=bounds(rain.getObjectByName('rain-tank-shell'));
+ const footprint=data.exterior.ground,tankY=tank.getCenter(new THREE.Vector3()).y;
+ const eastWall=data.facades.find(f=>f.id==='facade-wing-end');
+ assert(tank.min.x>Math.max(...footprint.map(([x])=>x)) && tankY>=eastWall.a[1] && tankY<=eastWall.b[1],
+  'Tank lies beside the actual house wing');
+ const clearance=tank.clone().expandByScalar(.10+.022),points=cableCenterline(pumpSupply),hit=new THREE.Vector3();
+ for(let i=1;i<points.length;i++){
+  const a=points[i-1],b=points[i],ray=new THREE.Ray(a,b.clone().sub(a).normalize());
+  assert(!clearance.containsPoint(a) && (!ray.intersectBox(clearance,hit)||a.distanceToSquared(hit)>a.distanceToSquared(b)),
+   'Complete buried feeder stays outside tank walls up to the shaft lead-in');
+ }
 }
 
 test('dedicated exterior supplies reach the fitted gate drive, BioDisc, monobloc and all eleven luminaires',async()=>{
@@ -2160,8 +2177,16 @@ test('dedicated exterior supplies reach the fitted gate drive, BioDisc, monobloc
   assert(p.distanceTo(new THREE.Vector3(...terminal))<.001);
   assert(bounds(physical(device)).distanceToPoint(p)<.001,device);
  }
- const pumpCable=power.getObjectByName('irrigation-pump-cable');
- assert.deepEqual(power.getObjectByName('board-to-irrigation-entry').userData.to,pumpCable.userData.from);
+ const pumpCable=power.getObjectByName('irrigation-pump-cable'),pumpSupply=power.getObjectByName('board-to-irrigation-entry');
+ assert.deepEqual(pumpSupply.userData.to,pumpCable.userData.from);
+ checkTankFeeder(pumpSupply,rain);
+ wastewater.updateMatrixWorld(true);
+ const siteToPlan=interior.group.matrixWorld.clone().invert();
+ wastewater.traverse(mesh=>{
+  if(mesh.geometry?.type==='CylinderGeometry'){
+   assert(clearanceToPipe(pumpSupply,mesh,siteToPlan)>.10,'Pump feeder clears '+mesh.name);
+  }
+ });
  assert.deepEqual(pumpCable.userData.to,rain.getObjectByName('rain-irrigation-power-terminal').position.toArray());
  assert.deepEqual(pumpCable.userData.to,rain.userData.irrigationTerminal);
  const waterRoutes=rain.children.filter(p=>p.geometry?.type==='CylinderGeometry' &&
@@ -2169,7 +2194,7 @@ test('dedicated exterior supplies reach the fitted gate drive, BioDisc, monobloc
  const cableRuns=power.children.filter(p=>['gate','biodisc','monobloc','outdoorLights','irrigation'].includes(p.userData.circuit));
  const conflicts=[];
  for(const cable of cableRuns)for(const pipe of waterRoutes){
-  const clearance=clearanceToRainPipe(cable,pipe);
+  const clearance=clearanceToPipe(cable,pipe);
   const inPumpShaft=cable.name==='irrigation-pump-cable'&&pipe.name.startsWith('rain-irrigation-supply-');
   if(clearance<(inPumpShaft?.005:.10))conflicts.push([cable.name,pipe.name,clearance.toFixed(3)]);
  }

@@ -217,7 +217,7 @@ test('the separate rain and wastewater networks clear each other in three dimens
   assert(bays.length>0);
   const footprint=worldFieldRing(),rainTank=rainTankFootprint193(house,iconPlanPoint).ring;
   const bioDisc=wastewaterServiceAccess193().find(s=>s.id==='tank').footprint;
-  for(const [outline,minGap] of [[footprint,15],[bioDisc,21]]){
+  for(const [outline,minGap] of [[footprint,2.20],[bioDisc,5.5]]){
     assert.equal(clipping.intersection([outline],[rainTank]).length,0);
     assert(ringDistance(outline,rainTank)>minGap);
   }
@@ -264,7 +264,7 @@ test('tank boundary labels measure the lid edge and the rotated rain tank footpr
   const radius=part.geometry.boundingBox.max.x,boundary=neighbors.parcels['193'].coordinates[0];
   const [lid,body]=measureTankGaps(boundary,wastewater193.tankCenter,radius,footprint);
   assert.equal(lid.length.toFixed(2),'2.10');
-  assert.equal(body.length.toFixed(2),'4.52');
+  assert.equal(body.length.toFixed(2),'1.14');
   assert(close(clearance(body.start,footprint),0));
   for(const gap of [lid,body]){
     assert(close(clearance(gap.end,boundary),0));

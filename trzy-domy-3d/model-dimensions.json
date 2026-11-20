@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-20.11",
+  "modelVersion": "2026-11-20.12",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -937,14 +937,14 @@
     },
     {
       "id": "flagstones-193",
-      "name": "Pojedyncze płyty z jasnego kamienia w trawniku /193",
+      "name": "Jasne płyty kamienne w dwóch rzędach na przemian /193",
       "values": [
-        0.502,
-        0.602,
-        0.416,
-        0.485,
+        0.281,
+        0.33,
+        0.381,
+        0.44,
         0.035,
-        4.139
+        4.382
       ],
       "labels": [
         "najmniejsza szerokość m",
@@ -960,18 +960,24 @@
       "id": "flagstones-193-fire",
       "name": "Dojście z tarasu /193 do paleniska",
       "values": [
-        13,
+        28,
         8.714,
-        0.67,
-        0.189,
-        0.263
+        0.301,
+        0.09,
+        0.142,
+        0.34,
+        0.454,
+        0.601
       ],
       "labels": [
         "liczba płyt",
         "długość dojścia m",
-        "rozstaw wzdłuż osi m",
+        "przesunięcie wzdłuż ścieżki między rzędami m",
         "najmniejszy odstęp między płytami m",
-        "największy odstęp między płytami m"
+        "największy odstęp między płytami m",
+        "odległość między osiami rzędów m",
+        "krok po przekątnej m",
+        "rozstaw środków w jednym rzędzie m"
       ],
       "source": "model"
     },
@@ -979,18 +985,24 @@
       "id": "flagstones-193-wicket",
       "name": "Dojście z tarasu /193 do furtki trójstyku",
       "values": [
-        10,
+        20,
         6.506,
-        0.651,
-        0.189,
-        0.216
+        0.311,
+        0.078,
+        0.145,
+        0.34,
+        0.461,
+        0.622
       ],
       "labels": [
         "liczba płyt",
         "długość dojścia m",
-        "rozstaw wzdłuż osi m",
+        "przesunięcie wzdłuż ścieżki między rzędami m",
         "najmniejszy odstęp między płytami m",
-        "największy odstęp między płytami m"
+        "największy odstęp między płytami m",
+        "odległość między osiami rzędów m",
+        "krok po przekątnej m",
+        "rozstaw środków w jednym rzędzie m"
       ],
       "source": "model"
     },
@@ -1773,11 +1785,11 @@
   "sharedAreaM2": 156.18903025919093,
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
-    "inputsSha256": "77e6b30b0fda73b612d3f3cd850f5011a06dae5520d8d68a4cd1db6b52142e88",
-    "proceduralCodeSha256": "4bf3cae6c9bcaed7a1ce1c02e325843d5c5455ded1ddd5dfb19501935763991a",
+    "inputsSha256": "908f885d773afe0297fde5a5c0b333409cb6465c5c4e1bbd7b04252037a956a6",
+    "proceduralCodeSha256": "a7f54412f55da723624e783b549647b3939da79828ed8af445e38d1fe219256c",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
-    "planSha256": "d3c755f52cfeefe5836700ae6290d86e339540a6f5cc485baecd0905cfb8272b",
-    "runtimeSha256": "0ed5fa5a22a99f7db01e9ef7d6f80d1e9b3812d7df563d173869a8c580ba6202"
+    "planSha256": "f3fac157a0646487715637df1d7f20139abcb08eb8db051ee1d652f6f75b7822",
+    "runtimeSha256": "a8d25f195208eb4b3209c047f2434e8c0a4263eee74181e8dc35d6120d1fc1f2"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1838,7 +1850,8 @@
     "Dom /193: BioDisc i tunele wracają na pierwotne miejsce przy garażu, z rewizją i wywiewkami w rabacie. Rozsącz deszczówki w trzech grupach pod centralnym trawnikiem.",
     "Dom /193: wspólne przejście dachowe PoE i DN110, Ethernet w garażu, rozdzielnica, magazyn MUST, wallbox trójfazowy, zbiornik deszczówki na południu i korekta wywiewek BioDisc.",
     "Dom /193: deszczówka SE i osobny rozsącz SW, wymiary od granicy, zmywarka pod ekspresem, rezerwa przyłączy stacji robota, spiżarnia gospodarcza i cztery osoby w salonie.",
-    "Dom /193: obwody zewnętrzne, wallbox przy rowerach, lampy wiszące na tarasie, zbiornik z pompą po wschodniej stronie tarasu, ogród deszczowy przy garażu i dwie ścieżki z płaskich kamieni."
+    "Dom /193: obwody zewnętrzne, wallbox przy rowerach, lampy wiszące na tarasie, zbiornik z pompą po wschodniej stronie tarasu, ogród deszczowy przy garażu i dwie ścieżki z płaskich kamieni.",
+    "Dom /193: boczny zbiornik przy /190, osobna zagłębiona niecka deszczowa wśród krzewów oraz dwa rzędy mniejszych kamieni układanych na mijankę."
   ],
   "contextParcels": [
     {
