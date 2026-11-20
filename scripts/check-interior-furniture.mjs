@@ -1615,7 +1615,7 @@ test('the vestibule routes clear the new console, ottoman and fitted wardrobes',
   assert(sample(.31,.5)>200 && sample(.19,.5)<65);
 });
 
-test('powder blue modules and garden chaise carry two accent pillows above the pink and yellow lounge rug', () => {
+test('powder blue modules and garden chaise carry two accent pillows above the cream and blue grid rug', () => {
   const get = name => interior.group.getObjectByName(name);
   const cover=get('sofa-seat').material;
   const sample=(map,u,v)=>{
@@ -1646,13 +1646,13 @@ test('powder blue modules and garden chaise carry two accent pillows above the p
   const round=bounds(olive).getSize(new THREE.Vector3());
   assert(round.y>2*round.x*.8 && Math.abs(round.z-round.y)<.07, 'Olive pillow has a round face');
   const map=get('living-rug-woven-face').material.map;
-  let pink=0,gold=0;
-  for(let x=0;x<50;x++)for(let y=0;y<50;y++){
-    const [r,g,b]=sample(map,(x+.5)/50,(y+.5)/50);
-    if(r>g+20 && b>g && g>120)pink++;
-    if(r>g+10 && g>b+45)gold++;
-  }
-  assert(pink>500 && gold>500,'Both pink and golden bands occupy the living rug');
+  const blue=([r,g,b])=>b>r+38 && b>g+18;
+  const stripeCount=colors=>colors.filter((color,i)=>blue(color) && (!i || !blue(colors[i-1]))).length;
+  const line=(count,coord)=>Array.from({length:count},(_,i)=>sample(map,...coord((i+.5)/count)));
+  const across=line(180,u=>[u,.52]),along=line(270,v=>[.38,v]);
+  assert.equal(stripeCount(across),6,'Six irregular blue warp lines');
+  assert.equal(stripeCount(along),9,'Nine irregular blue weft lines');
+  assert(across.filter(([r,g,b])=>r>205 && g>195 && b<g-12).length>135,'Cream pile dominates the field');
 });
 
 test('four photographic rugs fit the rooms, frame the bed and keep the terrace threshold free', () => {

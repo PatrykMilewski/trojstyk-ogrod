@@ -17,6 +17,9 @@ system.updateMatrixWorld(true);surface.updateMatrixWorld(true);
 const field=system.getObjectByName('wastewater-tunnel-field'), hard=source.variants[0];
 const xy=v=>v.toArray().slice(0,2);
 const close=(a,b)=>Math.abs(a-b)<1e-6;
+const {matrix:[[a,b],[c,d]],translation:[tx,ty],dimensions}=house.metadata;
+const planToSite=new THREE.Matrix4().set(-a,b,0,a*dimensions.width+tx,-c,d,0,c*dimensions.width+ty,0,0,1,0,0,0,0,1);
+const siteToPlan=planToSite.clone().invert();
 function axisEnds(mesh) {
   return [-.5,.5].map(f=>mesh.localToWorld(new THREE.Vector3(0,f*mesh.geometry.parameters.height,0)));
 }
@@ -30,6 +33,20 @@ function gradedPipes(meshes,slope){
   }
   return previous;
 }
+
+test('the rear domestic collector connects to the real wall penetration and discharges by gravity into the BioDisc',async()=>{
+  const data=JSON.parse(await read('../trzy-domy-3d/interior-data.json'));
+  const {createIndoorServices}=await load(await read('../src/model/indoor-services.js'));
+  const collector=createIndoorServices(THREE,null,data).getObjectByName('collector-to-exterior');
+  const exit=new THREE.Vector3(...collector.userData.to).applyMatrix4(planToSite);
+  const raw=system.children.filter(m=>m.name.startsWith('building-inlet-'));
+  assert(raw.length>0);
+  assert(exit.distanceTo(axisEnds(raw[0])[0])<1e-6,'indoor and outdoor ends meet in world coordinates');
+  const inlet=gradedPipes(raw,.02);
+  const expected=system.localToWorld(new THREE.Vector3(0,-.98,wastewater193.inletInvert+.055));
+  assert(inlet.distanceTo(expected)<1e-6);
+  assert(close(wastewater193.inletInvert-wastewater193.outletInvert,.085));
+});
 
 test('the downhill clarified pipe reaches the distributor and equally feeds both end caps',()=>{
   const outlet=system.children.filter(m=>m.name.startsWith('clarified-outlet-'));
@@ -52,7 +69,8 @@ test('the downhill clarified pipe reaches the distributor and equally feeds both
     assert(close(terminal.x,foot.x)&&close(terminal.y,foot.y));
     assert(terminal.z-.055>foot.z&&terminal.z+.055<foot.z+wastewater193.moduleHeight);
   }
-  assert(-wastewater193.fieldBase-wastewater193.moduleHeight<=1.20);
+  const cover=-wastewater193.fieldBase-wastewater193.moduleHeight;
+  assert(cover>=.30&&cover<=1.20-.15);
 });
 
 function clearance(point,ring){
@@ -89,6 +107,28 @@ test('the tunnel footprint is entirely inside /193, away from structures, vehicl
   assert.equal(field.children.filter(m=>/-tunnel-[1-5]$/.test(m.name)).length,10);
 });
 
+test('the entire tank, field and distributor lie beyond the garden terrace with a reachable tank lid',()=>{
+  const rear=Math.max(...hard.terrace.coordinates[0].map(([x,y])=>
+    new THREE.Vector3(x,y,0).applyMatrix4(siteToPlan).y));
+  const circle=(centre,r)=>Array.from({length:96},(_,i)=>[centre.x+r*Math.cos(i*Math.PI/48),centre.y+r*Math.sin(i*Math.PI/48)]);
+  const tank=circle(system.position,wastewater193.tankDiameter/2);
+  const cap=surface.getObjectByName('distributor-hatch'),centre=cap.getWorldPosition(new THREE.Vector3());
+  const chamber=circle(centre,.22);
+  for(const outline of [tank,chamber,worldFieldRing()]){
+    assert(outline.every(([x,y])=>new THREE.Vector3(x,y,0).applyMatrix4(siteToPlan).y>rear));
+    assert.equal(clipping.difference([outline],neighbors.parcels['193'].coordinates).length,0);
+  }
+  assert(ringDistance(tank,hard.house.coordinates[0])>5.4);
+  assert(ringDistance(tank,hard.terrace.coordinates[0])>4);
+  assert(ringDistance(tank,neighbors.parcels['193'].coordinates[0])>4.9);
+  assert(ringDistance(tank,worldFieldRing())>6.4);
+  for(const tree of [...garden.trees,...woods.trees])assert(clearance(tree.center,tank)>3);
+  const access=wastewaterServiceAccess193(),approach=access.at(-1).ring;
+  assert(clipping.intersection([approach],hard.driveway.coordinates).length);
+  assert(clipping.intersection([approach],[access[0].ring]).length);
+  for(const geo of [hard.house,hard.terrace])assert.equal(clipping.intersection([approach],geo.coordinates).length,0);
+});
+
 test('vent openings and the distributor align with the accessible surface fittings',()=>{
   const access=wastewaterServiceAccess193();
   const centre=m=>m.getWorldPosition(new THREE.Vector3());
@@ -107,9 +147,7 @@ test('vent openings and the distributor align with the accessible surface fittin
 
 test('the separate rain and wastewater networks clear each other in three dimensions',async()=>{
   const {createRainServices}=await load(await read('../src/model/rain-services.js'));
-  const {matrix:[[a,b],[c,d]],translation:[x,y],dimensions}=house.metadata;
-  const group=new THREE.Group();
-  group.matrix.set(-a,b,0,a*dimensions.width+x,-c,d,0,c*dimensions.width+y,0,0,1,0,0,0,0,1);
+  const group=new THREE.Group();group.matrix.copy(planToSite);
   const data=JSON.parse(await read('../trzy-domy-3d/interior-data.json'));
   const rain=createRainServices(THREE,house,{group},data);
   rain.updateMatrixWorld(true);
@@ -136,6 +174,15 @@ test('the separate rain and wastewater networks clear each other in three dimens
     assert.equal(clipping.intersection([footprint],[ring]).length,0);
     assert(ringDistance(footprint,ring)>5);
   }
+});
+
+test('the section outline meets the physical shoulder of the BioDisc lid',()=>{
+  const ring=system.getObjectByName('biodisc-service-cover-outline'),lid=surface.getObjectByName('biodisc-service-lid');
+  const origin=ring.localToWorld(new THREE.Vector3(ring.geometry.parameters.radius,0,1));
+  const hit=new THREE.Raycaster(origin,new THREE.Vector3(0,0,-1)).intersectObject(lid)[0];
+  assert(hit&&Math.abs(hit.point.z-ring.position.z)<.002);
+  const bottom=system.getObjectByName('biodisc-base').position.z;
+  assert(close(.31-bottom,wastewater193.tankHeight));
 });
 
 test('the level mulch finishes join the shrub beds and leave every service opening clear',()=>{

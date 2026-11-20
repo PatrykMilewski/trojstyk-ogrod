@@ -35,17 +35,19 @@ test('each mapped bed contains rendered shrubs within its ground footprint', asy
   const three = Buffer.from(imports.three.split(',')[1], 'base64').toString();
   const THREE = await load(three.replaceAll("'three/core'", `'${imports['three/core']}'`));
   const {createWoodyBeds} = await load(await read('../src/model/woody-beds.js'));
-  const {surfaceClearance} = await load(await read('../src/model/garden-plantings.js'));
+  const {createGardenPlantings,surfaceClearance} = await load(await read('../src/model/garden-plantings.js'));
   const {woodyRandom} = await load(await read('../src/model/tree-realism.js'));
   const {parcels} = JSON.parse(await read('../trzy-domy-3d/woodland-plan.json'));
   const {wastewaterServiceAccess193}=await load(await read('../src/model/wastewater.js'));
   const {rainServiceAccess193}=await load(await read('../src/model/rain-services.js'));
   const {iconPlanPoint}=await load(await read('../src/model/roof-windows.js'));
   const marker='const [source,garden,house,neighbors]=';
-  const [,,house]=JSON.parse(html.slice(html.indexOf(marker)+marker.length,html.indexOf(';\nconst landscaping=')));
+  const [,garden,house]=JSON.parse(html.slice(html.indexOf(marker)+marker.length,html.indexOf(';\nconst landscaping=')));
   const serviceAccess=[...wastewaterServiceAccess193(),...rainServiceAccess193(house,iconPlanPoint)];
+  // GEOS and Three.js evaluate the same shared bed/clearance edges at different floating-point precision.
+  const stableRing=ring=>ring.map(p=>p.map(v=>Math.round(v*1e8)/1e8));
   for(const bed of parcels.find(p=>p.id==='193').beds)for(const access of serviceAccess){
-    const overlap=clipping.intersection([bed.ring,...bed.holes],[access.ring]);
+    const overlap=clipping.intersection([bed.ring,...bed.holes].map(stableRing),[stableRing(access.ring)]);
     for(const polygon of overlap)for(const ring of polygon){
       const [ox,oy]=ring[0];
       const twiceArea=ring.slice(1).reduce((sum,[x,y],i)=>
@@ -72,4 +74,18 @@ test('each mapped bed contains rendered shrubs within its ground footprint', asy
     }
   }
   assert.equal(occupied.size, beds.length);
+  // The hose passes through the original front flower bed as well as the newer woody planting plan.
+  const approach=wastewaterServiceAccess193().at(-1);
+  const flowers=createGardenPlantings(THREE,garden,serviceAccess,[]);
+  const radii={grass:.43,shrub:.39,salvia:.28,coneflower:.28,achillea:.28};
+  assert(flowers.children.length>0);
+  for(const mesh of flowers.children){
+    const radius=radii[mesh.name.slice('garden-'.length)];
+    for(let i=0;i<mesh.count;i++){
+      mesh.getMatrixAt(i,matrix);
+      matrix.decompose(position,orientation,scale);
+      assert(surfaceClearance(position.x,position.y,approach)<-radius*scale.x,
+        'Flower bed obstructs the wastewater service hose');
+    }
+  }
 });

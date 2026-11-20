@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-20.6",
+  "modelVersion": "2026-11-20.7",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1744,10 +1744,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "5aa5b42c0b297314a6e5341c7b32e9070523c716b82b169b99fd00d3bc9dce06",
-    "proceduralCodeSha256": "a1b1e56271fb1359be54de092fe627afeccd503db6b37cf470e3b1eddf70492b",
+    "proceduralCodeSha256": "74d6e603448d012b5a27f4ddc902397548f19764a906500ae7a35ab0a93c15b5",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
-    "planSha256": "e5043877d71f823155b1db57d7c0f76b24711e17bae15bb34f7dc240b65f14dd",
-    "runtimeSha256": "e3acd4686a2a83b85246ecc9bc86716e5b234a48c262118bb3f2d52be48773f0"
+    "planSha256": "23801bf1e5984d876b16a4d6935e864716613fb211dc9afa508a0e74f03bcc43",
+    "runtimeSha256": "1e5df8293633d64695e6a0da8b6f698316443dc3bb076009dfa12f5c13a3f6db"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1803,7 +1803,8 @@
     "Dom /193: cztery dywany, poszerzony zagłówek i dwie pufy. Przycisk „Instalacje” pokazuje porównawczy wariant oczyszczalni dla 5 osób z przodu działki.",
     "Dom /193: instalacje wewnętrzne w przekroju obu kondygnacji, rynny ukryte i oddzielna retencja deszczówki. Pokrywa i wentylacja oczyszczalni widoczne na trawniku. Zlew centralny w ciągu szafek 60 + 60 + 80 + 60 + 60 cm.",
     "Dom /193: podłogówka pod zabudowami i schodami, niskie prowadzenie rur pompy ciepła, cyrkulacja CWU i odpływy obu urządzeń w pralni. Zbiornik deszczówki przy bocznej rabacie, rewizje w trawniku i otwarte koryta rynien.",
-    "Dom /193: zbiornik przy północno-wschodniej ścianie, rozdzielone pola deszczówki i oczyszczalni z dostępem od rabat, zlicowane rynny z rewizjami, wywiewka dachowa, zmywarka i sieć Ethernet z rezerwą PoE na dachu."
+    "Dom /193: zbiornik przy północno-wschodniej ścianie, rozdzielone pola deszczówki i oczyszczalni z dostępem od rabat, zlicowane rynny z rewizjami, wywiewka dachowa, zmywarka i sieć Ethernet z rezerwą PoE na dachu.",
+    "Dom /193: BioDisc i pole tuneli za domem, przebudowany kolektor, indygo na drzwiach wejściowych oraz kremowy dywan 200 × 300 cm w błękitną kratkę."
   ],
   "contextParcels": [
     {
@@ -3569,7 +3570,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "ee14deba4d6c2d1af69036e4f59dadbde05119f3cbce4757f0bec41b554c6a54",
+    "dataSha256": "b00cdb29738a9bd009ed3998823c4064691da0446da1ae0cbbe5e6d9348e2ebf",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,

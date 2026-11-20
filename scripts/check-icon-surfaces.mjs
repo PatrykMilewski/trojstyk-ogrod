@@ -499,6 +499,20 @@ test('all thirteen panel doors use their plan handing, room finishes and usable 
   interior.updateHallDoors(null);
 });
 
+test('both exposed faces of the main entrance door match the indigo stair steel',()=>{
+  interior.updateHallDoors(null);interior.group.updateMatrixWorld(true);
+  const leaf=object('entry-main-door-leaf'),stair=object('stair-lower-folded-flight');
+  const ray=new THREE.Raycaster();
+  for(const side of [-1,1]){
+    ray.set(new THREE.Vector3(...interior.localToWorld([7.4,4.45+side*.55,1.35])),
+      new THREE.Vector3(0,-side,0).transformDirection(interior.group.matrix));
+    assert.equal(ray.intersectObjects(interior.group.children,true)[0].object,leaf);
+    assert.notEqual(object('entry-main-pull-'+side).material,leaf.material);
+  }
+  assert.equal(leaf.material,stair.material);assert.equal(leaf.material.color.getHex(),0x414a89);
+  assert.notEqual(object('facade-front-wing-opening-0-frame-1').material,leaf.material);
+});
+
 test('bespoke front, glass, pantry and garden leaves carry their hardware and clear their fixed neighbours', () => {
   const route=[
     ['front-entry-door','entry-main-door-leaf','entry-main-pull-1',[7.4,4.45],[0,1]],

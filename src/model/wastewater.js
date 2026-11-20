@@ -1,10 +1,10 @@
-// Local XY follows the front garden; world XY is easting/northing relative to the parcel model origin.
+// Tank-local +Y points into the rear garden. World XY is easting/northing relative to the site origin.
 export const wastewater193 = {
-  tankCenter: [-8.337,18.526], angleDeg: -43.5,
-  tankDiameter: 1.995, tankHeight: 2.56, outletInvert: -.935, residents: 5, capacityPE: 6, capacityM3Day: 1.2,
+  tankCenter: [.274988513,-10.454065338], tankPlanCenter: [-1.80,24.30], angleDeg: -133.5311992803774,
+  tankDiameter: 1.995, tankHeight: 2.66, serviceMargin: 1.015, inletInvert: -.950, outletInvert: -1.035, residents: 5, capacityPE: 6, capacityM3Day: 1.2,
   rows: 2, modulesPerRow: 5, moduleLength: 1.20, moduleWidth: .50, moduleHeight: .36,
-  clearBetweenRows: 1, endCapDepth: .043, fieldCenter: [32.75,-8], fieldAngleDeg: 80,
-  distributorOffset: 3.90, outletSlope: .01, fieldBase: -1.50,
+  clearBetweenRows: 1, endCapDepth: .043, fieldCenter: [-7.096863052,6.550660186], fieldAngleDeg: 170.0311992803774,
+  distributorOffset: 3.90, outletSlope: .01, inletSlope: .02, fieldBase: -1.35,
   status: 'Wariant warunkowy. Do potwierdzenia możliwość przyłączenia do kanalizacji i warunki gruntowo-wodne.'
 };
 
@@ -17,11 +17,32 @@ function wastewaterFieldPoint(point) {
   return wastewaterXY(point,wastewater193.fieldCenter,wastewater193.fieldAngleDeg);
 }
 
+const wastewaterCoverShoulder193={radiusFactor:.76,height:.245};
 const wastewaterRunLength = wastewater193.moduleLength*wastewater193.modulesPerRow;
 const wastewaterRowOffsets = Array.from({length:wastewater193.rows},(_,i)=>
   (i-(wastewater193.rows-1)/2)*(wastewater193.moduleWidth+wastewater193.clearBetweenRows));
 const wastewaterVentY = -wastewaterRunLength/2+.19;
 const wastewaterDistributor = wastewaterFieldPoint([0,wastewater193.distributorOffset]);
+
+function wastewaterTankLocal193([x,y]) {
+  const [cx,cy]=wastewater193.tankPlanCenter;
+  return [cx-x,y-cy];
+}
+
+// A grass maintenance strip reaches the lid from the driveway around the heat pump and tree crowns.
+const wastewaterHosePath193=[[1.20,-1.75],[-1.10,-1.10],[-1.10,2.60],[-1.60,4],[-1.60,18],[-1.80,23.30]];
+function wastewaterApproach193() {
+  const normals=wastewaterHosePath193.slice(1).map(([x,y],i)=>{
+    const [ax,ay]=wastewaterHosePath193[i],length=Math.hypot(x-ax,y-ay);
+    return [(ay-y)/length,(x-ax)/length];
+  });
+  const side=sign=>wastewaterHosePath193.map(([x,y],i)=>{
+    const a=normals[Math.max(0,i-1)],b=normals[Math.min(i,normals.length-1)];
+    const offset=sign*.45/(1+a[0]*b[0]+a[1]*b[1]);
+    return wastewaterTankLocal193([x+offset*(a[0]+b[0]),y+offset*(a[1]+b[1])]);
+  });
+  return [...side(1),...side(-1).reverse()];
+}
 
 export function wastewaterServiceAccess193() {
   const world = p=>wastewaterXY(p,wastewater193.tankCenter,wastewater193.angleDeg);
@@ -33,18 +54,29 @@ export function wastewaterServiceAccess193() {
   const halfWidth = Math.max(...wastewaterRowOffsets)+wastewater193.moduleWidth/2+margin;
   const halfLength = wastewaterRunLength/2+wastewater193.endCapDepth+margin;
   const field = [[-halfWidth,-halfLength],[halfWidth,-halfLength],[halfWidth,halfLength],[-halfWidth,halfLength]];
-  return [circle([0,0],wastewater193.tankDiameter/2+.55),circle(wastewaterDistributor,.75),
-    field.map(wastewaterFieldPoint)].map(ring=>({ring:ring.map(world)}));
+  return [circle([0,0],wastewater193.tankDiameter/2+wastewater193.serviceMargin),circle(wastewaterDistributor,.75),
+    field.map(wastewaterFieldPoint),wastewaterApproach193()].map(ring=>({ring:ring.map(world)}));
 }
 
-function wastewaterOutletInverts() {
-  const points = [[0,.98],[0,1.57],[.48,2.05],[14.90,2.05],[16.05,.90],[19.90,.90],
-    [24.45,-3.65],[25.30,-3.65],wastewaterDistributor];
-  let z = wastewater193.outletInvert;
+function wastewaterGravityPipe(points,startInvert,slope) {
+  let z=startInvert;
   return points.map(([x,y],i)=>{
-    if(i) z-=wastewater193.outletSlope*Math.hypot(x-points[i-1][0],y-points[i-1][1]);
-    return [x,y,z];
+    if(i)z-=slope*Math.hypot(x-points[i-1][0],y-points[i-1][1]);
+    return [x,y,z+.055];
   });
+}
+
+function wastewaterInlet() {
+  const fromHouse=[[7.20,17.09],[7.20,17.41],[10.65,20.86],[10.65,22.75],[9.20,24.20],
+    [2.90,24.20],[1.05,22.35],[-1.04,22.35],[-1.80,23.11],[-1.80,23.32]];
+  const fromTank=fromHouse.reverse().map(wastewaterTankLocal193);
+  return wastewaterGravityPipe(fromTank,wastewater193.inletInvert,-wastewater193.inletSlope).reverse();
+}
+
+function wastewaterOutlet() {
+  const [x,y]=wastewaterDistributor;
+  return wastewaterGravityPipe([[0,.98],[0,1.10],[-.65,1.75],[x+y-1.75,1.75],[x,y]],
+    wastewater193.outletInvert,wastewater193.outletSlope);
 }
 
 function wastewaterFieldGroup(THREE,parent) {
@@ -85,12 +117,13 @@ function wastewaterDrawing(THREE, group) {
 }
 
 function wastewaterTank(THREE, {part,pipe,ring}) {
-  const r = wastewater193.tankDiameter / 2, bottom = -2.25;
-  const top = bottom + wastewater193.tankHeight, water = wastewater193.outletInvert;
+  const r = wastewater193.tankDiameter / 2, bottom = wastewater193.inletInvert-1.40;
+  const water = wastewater193.outletInvert;
   const floor = part('biodisc-base',new THREE.CircleGeometry(r,64),[0,0,bottom],'#163f4b',1);
   floor.userData.dimensionM = wastewater193.tankDiameter;
-  const shell = new THREE.CylinderGeometry(r,r*.94,2.345,64,1,true,-Math.PI*.38,Math.PI*1.38);
-  part('biodisc-cutaway-shell',shell,[0,0,bottom+2.345/2],'#256775',2,.54).rotation.x = Math.PI/2;
+  const shellHeight=.095-bottom;
+  const shell = new THREE.CylinderGeometry(r,r*.94,shellHeight,64,1,true,-Math.PI*.38,Math.PI*1.38);
+  part('biodisc-cutaway-shell',shell,[0,0,bottom+shellHeight/2],'#256775',2,.54).rotation.x = Math.PI/2;
   part('biodisc-liquid-surface',new THREE.CircleGeometry(r*.94,64),[0,0,water],'#52989b',3,.7);
   for (const [stage,start] of [[1,-.65],[2,.055]]) {
     for (let i=0;i<10;i++) {
@@ -103,10 +136,12 @@ function wastewaterTank(THREE, {part,pipe,ring}) {
   pipe('biodisc-shaft',[-.85,0,water+.09],[.85,0,water+.09],.046,'#d7e5c8',5);
   for (const x of [-.76,0,.76]) {
     part('biodisc-baffle',new THREE.BoxGeometry(.035,2*Math.sqrt(r*r-x*x)*.91,.96),
-      [x,0,-1.59],'#7ba0a2',3,.56);
+      [x,0,bottom+.66],'#7ba0a2',3,.56);
   }
+  pipe('biodisc-inlet-socket',[0,-.98,wastewater193.inletInvert+.055],[0,-.91,wastewater193.inletInvert+.055],.062,'#d58d63',4);
+  pipe('biodisc-outlet-socket',[0,.91,water+.055],[0,.98,water+.055],.062,'#53b5aa',4);
   ring('biodisc-cover-rim',0,0,.095,r,'#98ead2',6);
-  ring('biodisc-service-cover-outline',0,0,top,r*.77,'#69aa98',6);
+  ring('biodisc-service-cover-outline',0,0,wastewaterCoverShoulder193.height,r*wastewaterCoverShoulder193.radiusFactor,'#69aa98',6);
 }
 
 function wastewaterTunnels(THREE,{part,pipe}) {
@@ -154,10 +189,10 @@ export function createWastewaterInstallation(THREE) {
   function pipeRun(name,points,color) {
     for (let i=1;i<points.length;i++) draw.pipe(name+'-'+i,points[i-1],points[i],.055,color,4);
   }
-  pipeRun('building-inlet',[[6.11,-4.54,-.72],[1.28,-4.54,-.79],[0,-3.26,-.82],[0,-.98,-.85]],'#d58d63');
-  const outlet = wastewaterOutletInverts();
-  pipeRun('clarified-outlet',outlet.map(([x,y,z])=>[x,y,z+.055]),'#53b5aa');
-  const y = wastewater193.distributorOffset, invert = outlet.at(-1)[2], radius = .055;
+  pipeRun('building-inlet',wastewaterInlet(),'#d58d63');
+  const outlet = wastewaterOutlet();
+  pipeRun('clarified-outlet',outlet,'#53b5aa');
+  const radius=.055, y=wastewater193.distributorOffset, invert=outlet.at(-1)[2]-radius;
   fieldDraw.pipe('distribution-chamber',[0,y,invert-.18],[0,y,.04],.20,'#346d70',5);
   fieldDraw.ring('distributor-cover',0,y,.095,.20,'#9ed5bf',6);
   const inletY = wastewaterRunLength/2+wastewater193.endCapDepth;
@@ -183,7 +218,7 @@ function wastewaterMulchSurfaces(THREE,tank,field,material) {
     mesh.position.z=z;mesh.receiveShadow=true;parent.add(mesh);
   }
   const aroundTank=new THREE.Shape(),r=wastewater193.tankDiameter/2;
-  aroundTank.absarc(0,0,r+.55,0,Math.PI*2,false);
+  aroundTank.absarc(0,0,r+wastewater193.serviceMargin,0,Math.PI*2,false);
   hole(aroundTank,0,0,r-.006);
   place(tank,aroundTank,'biodisc');
 
@@ -215,7 +250,7 @@ export function createWastewaterSurface(THREE,plantingMaterial) {
     part.castShadow=true;part.receiveShadow=true;parent.add(part);
   }
   const r=wastewater193.tankDiameter/2;
-  turned('biodisc-service-lid',0,0,[[r,0],[r,.09],[r*.96,.12],[r*.76,.245],[r*.3,.30],[.001,.31]],plastic);
+  turned('biodisc-service-lid',0,0,[[r,0],[r,.09],[r*.96,.12],[r*wastewaterCoverShoulder193.radiusFactor,wastewaterCoverShoulder193.height],[r*.3,.30],[.001,.31]],plastic);
   turned('biodisc-lid-seam',0,0,[[r*.988,.086],[r*1.003,.09],[r*1.003,.106],[r*.98,.11]],trim);
   const field=wastewaterFieldGroup(THREE,group);
   const mulch=plantingMaterial??new THREE.MeshStandardMaterial({color:'#685847',roughness:.99});

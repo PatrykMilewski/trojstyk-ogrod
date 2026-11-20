@@ -43,6 +43,7 @@ function iconInteriorSetup({THREE,scene,house,data,cutRoof=geometry=>geometry}) 
  const navigation = {obstacles:[],floors:[],ramps:[],entry:world([data.entry.position[0],data.entry.position[1]+.59,0]),entryDirection:[M[0][1],M[1][1]]};
  const material = (color,extra={}) => new THREE.MeshStandardMaterial({color,roughness:.78,side:THREE.DoubleSide,...extra});
  const mats = {wall:material('#e9e3d7'),ceiling:material('#ede8de'),oak:material('#b4936e'),tile:material('#bfb9ac'),dark:material('#343b35'),wood:material('#8a684b'),linen:material('#d9d0bd'),sofa:material('#c2bda9'),counter:material('#d1c8b7'),white:material('#f1ede5'),metal:material('#2f3534',{metalness:.45,roughness:.35}),glass:material('#b9d1ce',{transparent:true,opacity:.16,depthWrite:false,roughness:.08}),rug:material('#a99e86'),lamp:material('#fff0cd',{emissive:'#ffdf99',emissiveIntensity:.7})};
+ mats.indigoSteel=material('#414a89',{name:'Indigo powder-coated steel',roughness:.53,metalness:.32});
  mats.hall=material('#c77d59',{name:'Hall smooth terracotta paint',roughness:.92});
  mats.pantry=material('#e7d4a8',{name:'Pantry pale straw mineral paint',roughness:.92});
  mats.garage=material('#abb8a6',{name:'Garage sage mineral paint',roughness:.92});
@@ -544,8 +545,8 @@ function iconEntryReturn(context) {
  for(const [start,count,finish] of [[0,6,1],[6,6,2],[12,12,0],[24,6,1],[30,6,0]])geometry.addGroup(start,count,finish);
  mesh(geometry,[mats.vestibule,mats.garage,mats.wall],'entry-garage-jamb-return');
  obstacle('entry-garage-jamb-return',[innerX,cornerY,cornerX,backY],0,top);
- const x0=cornerX+door.start,x1=cornerX+door.end,y=cornerY+wallDepth/2,finish=iconLivingPalette(context);
- box('entry-main-door-leaf',[x0+.006,y-.027,x1-.006,y+.027],.008,door.top-.014,finish.espresso);
+ const x0=cornerX+door.start,x1=cornerX+door.end,y=cornerY+wallDepth/2;
+ box('entry-main-door-leaf',[x0+.006,y-.027,x1-.006,y+.027],.008,door.top-.014,mats.indigoSteel);
  for(const sign of [-1,1]){
   const face=y+sign*.085,pull=x1-.14;
   for(const z of [.78,1.29])beam('entry-main-pull-mount-'+sign+'-'+z,[pull,y+sign*.027,z],[pull,face,z],.012,mats.metal);
@@ -747,7 +748,7 @@ function iconInteriorStairs(context) {
  const {THREE,data,box,floor,navigation,world,rail,obstacle}=context;
  const s=data.stairs,[sx,sy,ex,ey]=s.box,steps=s.rises/2-1,run=steps*s.tread,half=s.floorHeight/2;
  const rise=s.floorHeight/s.rises,turn=sy+run,guardHeight=1.12;
- const steel=new THREE.MeshStandardMaterial({name:'Indigo powder-coated folded steel',color:'#414a89',roughness:.53,metalness:.32,side:THREE.DoubleSide});
+ const steel=context.mats.indigoSteel;
  const screen=iconPerforatedGuardMaterial(THREE,steel);
  for(const [flight,x,y,dir,base] of [['lower',sx,sy,1,0],['upper',ex-s.width,turn,-1,half]]){
   const profile=iconFoldedStairFlight(context,flight,x,s.width,y,dir,base,steps,s.tread,rise,steel);
