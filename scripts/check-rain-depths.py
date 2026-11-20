@@ -77,8 +77,12 @@ def report(grid):
         "SE tank overflow and field pipes": [layout["overflow"], *layout["feeds"]],
     }.items():
         pts = station_points(routes)
-        invert = ground(pts[:, :2])-datum-pts[:, 2]+.065
-        result["pipeGroups"][name] = {"invertDepthM": span(invert), "excavationWith10cmM": span(invert+.10)}
+        terrain = ground(pts[:, :2])
+        invert = terrain-datum-pts[:, 2]+.065
+        cover = invert-.13
+        assert np.all(cover > 0), f"{name} protrudes above NMT"
+        result["pipeGroups"][name] = {"terrainEVRF2007M": span(terrain), "topCoverM": span(cover),
+                                      "invertDepthM": span(invert), "excavationWith10cmM": span(invert+.10)}
         i = int(np.argmax(invert))
         if deepest is None or invert[i] > deepest[0]:
             deepest = (float(invert[i]), name, pts[i, :2])
@@ -91,13 +95,19 @@ def report(grid):
     for bed, feed in zip(layout["fields"], layout["feeds"]):
         terrain = ground(rectangle(bed["x"], bed["y"], bed["width"], bed["depth"]))
         center_depth = terrain-datum-feed[-1][2]
-        result["beds"].append({"topCoverM": span(center_depth-bed["height"]/2),
+        cover = center_depth-bed["height"]/2
+        assert np.all(cover > 0), "Crate roof protrudes above NMT"
+        result["beds"].append({"terrainEVRF2007M": span(terrain), "topCoverM": span(cover),
                                "excavationWith10cmM": span(center_depth+bed["height"]/2+.10)})
     tank = layout["tank"]
     x, y = tank["center"]
     w, d = tank["outside"]
-    shell = ground(rectangle(x-w/2, y-d/2, w, d))-datum-tank["bottom"]
-    result["tank"] = {"shellBottomDepthM": span(shell), "excavationWith10cmM": span(shell+.10)}
+    terrain = ground(rectangle(x-w/2, y-d/2, w, d))
+    shell = terrain-datum-tank["bottom"]
+    roof_cover = terrain-datum-tank["top"]
+    assert np.all(roof_cover > 0), "Tank shell protrudes above NMT"
+    result["tank"] = {"terrainEVRF2007M": span(terrain), "topCoverM": span(roof_cover),
+                      "shellBottomDepthM": span(shell), "excavationWith10cmM": span(shell+.10)}
     garden = layout["garden"]
     ring = Polygon(garden["ring"])
     bottom = np.array([p for tri in garden["triangles"] for p in tri])

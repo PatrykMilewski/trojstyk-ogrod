@@ -2,10 +2,10 @@
 const rainOutlets193 = [
   [.075,.36], [.075,16.84], [14.19,4.285], [8.68,12.635]
 ];
-const rainTank193 = {center:[16.80,6], outside:[1.50,3.50], wall:.08, usableM3:6};
+const rainTank193 = {center:[16.70,16.70], outside:[1.50,3.50], wall:.08, usableM3:6};
 const [rainTankX193,rainTankY193]=rainTank193.center;
-const rainFilter193=[16.3,3.68],fieldInspection193=[13.35,24.60];
-const fieldVent193=[13.85,24.60],hoseTap193=[15.94,9.5];
+const rainFilter193=[16.20,14.10],fieldInspection193=[13.35,24.60];
+const fieldVent193=[13.85,24.60],hoseTap193=[15.82,17.95];
 // Survey-plan cross sections: garden edges, gravelly planted floor, and the saddle between the two bowls.
 const rainGardenSections193=[
   [-.5,-6.31,-6.05,.069],[-.12,-6.73,-5.8,-.12],[.45,-7.05,-5.98,-.23],[1.25,-7.17,-6.23,-.19],
@@ -20,8 +20,8 @@ const rainGardenShrubs193=[[-6.67,.61,.30],[-6.62,2.74,.34],[-6.65,3.73,.41],[-6
   [-5.89,6.04,.47],[-6.54,6.75,.45],[-5.69,7.51,.44],[-6.54,8.25,.34]];
 const rainField193 = {unit:.80, height:.66, unitNetM3:.405,
   strips:[
-    {x:8.4,y:24.6,columns:4,rows:2,feed:[fieldInspection193,[12.95,25],[11.20,25]]},
-    {x:4.6,y:29.4,columns:2,rows:4,feed:[fieldInspection193,[13.35,26.90],[10.45,29.8],[5.80,29.80]]}
+    {x:8.4,y:22.2,columns:4,rows:2,feed:[fieldInspection193,[13.35,24.4],[12.35,23.4],[11.2,23.4]]},
+    {x:8.4,y:26.0,columns:4,rows:2,feed:[fieldInspection193,[13.35,25.4],[12.35,26.4],[11.2,26.4]]}
   ]};
 
 const rainGutter193 = {outletDepth:.125, slope:.003, socketDrop:.12};
@@ -91,16 +91,16 @@ export function rainHydraulics193() {
   const [swFront,swRear,seFront,seRear]=rainOutlets193;
   const west=[rainGrade193([swFront,[-.22,.36],[-.22,4.12],[-1.22,5.12],[-5.69,5.12]],-.145,.010),
     rainGrade193([swRear,[-.65,16.84],[-.65,8.92],[-1.73,7.84],[-5.72,7.84]],-.150,.008)];
-  const tee=[15.54,3.68],eastRoutes=[
-    [seFront,[14.19,3.36],[15.22,3.36],tee],
-    [seRear,[8.90,12.97],[14.93,12.97],[15.54,12.36],tee]];
+  const tee=[16.20,13.40],eastRoutes=[
+    [seFront,[14.19,3.36],[15.22,3.36],[16.20,4.34],tee],
+    [seRear,[9.04,12.995],[15.795,12.995],tee]];
   const lengths=eastRoutes.map(rainLength193),fall=Math.max(...lengths)*.012;
   const east=eastRoutes.map((points,i)=>rainGrade193(points,-.47,fall/lengths[i]));
   const eastTrunk=rainGrade193([tee,rainFilter193],east[0].at(-1)[2],.012);
   const eastIn=eastTrunk.at(-1),eastOut=[...rainFilter193,eastIn[2]-.08];
   const tankInlet=rainGrade193([rainFilter193,[rainFilter193[0],rainTankY193-1.75]],eastOut[2],.012);
   const overflowZ=tankInlet.at(-1)[2]-.12;
-  const overflow=rainGrade193([[rainTankX193,rainTankY193+1.75],[16.80,19.80],[13.35,23.25],fieldInspection193],overflowZ,.015);
+  const overflow=rainGrade193([[rainTankX193,rainTankY193+1.75],[16.70,20.45],[13.35,23.80],fieldInspection193],overflowZ,.015);
   const level=overflow.at(-1)[2]-.48;
   const feeds=rainField193.strips.map(strip=>rainGrade193(strip.feed,level,.012));
   const {outside:[w,d],wall,usableM3}=rainTank193,waterLevel=overflowZ-.065;
@@ -158,7 +158,7 @@ export function rainServiceAccess193(house,project) {
     [x-w/2-margin,y-d/2-margin,x+w/2+margin,y+d/2+margin],
     ...rainField193.strips.map(({x,y,columns,rows})=>[x-margin,y-margin,
       x+columns*rainField193.unit+margin,y+rows*rainField193.unit+margin]),
-    [15.58,8.30,16.40,9.95],[15.97,3.30,16.88,8.90],[13.00,24.03,14.30,25.13]
+    [15.55,13.57,16.76,18.50],[13.00,24.03,14.30,25.13]
   ];
   return [rainGardenFootprint193(house,project),rainGardenSpillFootprint193(house,project),...areas.map(bounds=>({ring:rainPlanRing193(house,project,bounds)})),
     ...rainCovers193.map(([id,x,y,r])=>({id:'rain-'+id,
@@ -263,7 +263,7 @@ function rainIrrigation193(draw,layout,info) {
   info.irrigationTerminal=terminal;
   info.irrigationCablePath=[[lid[0],y-1.97,-.38],[terminal[0],y-1.85,-.38],
     [terminal[0],y,-.38],terminal];
-  const water=[[...lid,base+.42],[...lid,-.66],[x-.50,y,-.66],[x-.50,8.70,-.66],
+  const water=[[...lid,base+.42],[...lid,-.66],[x-.50,y,-.66],[x-.50,hoseTap193[1]-.26,-.66],
     [...hoseTap193,-.66],[...hoseTap193,.66],[hoseTap193[0]-.15,hoseTap193[1],.66],
     [hoseTap193[0]-.15,hoseTap193[1],.59]];
   for(let i=1;i<water.length;i++)draw.pipe('irrigation-supply-'+i,water[i-1],water[i],.016,'lip');
@@ -430,9 +430,9 @@ function rainOutletSocket(THREE,index,eave) {
 }
 
 function rainMulch193(THREE,group,plantingMaterial) {
-  const outlines=[[[15.85,3.23],[16.62,3.12],[16.99,3.74],[17.62,4.55],[17.76,5.59],
-    [17.75,6.42],[17.22,7.10],[16.81,8.23],[16.36,9.38],[15.80,9.82],[15.73,9.22],
-    [16.05,8.1],[16.30,7.22],[16.53,6.22],[16.50,5.22],[15.90,4.36],[15.76,3.70]],
+  const outlines=[[[15.70,13.70],[16.15,13.43],[16.68,13.64],[16.77,14.25],
+    [17.54,15.65],[17.76,16.37],[17.75,17.15],[17.18,17.70],[16.43,18.26],
+    [15.72,18.30],[15.70,17.65],[16.38,16.80],[16.09,15.38],[15.70,14.52]],
     [[12.73,24.27],[13.03,23.96],[13.73,24.02],[14.27,24.27],[14.26,24.91],[13.86,25.21],
     [13.18,25.24],[12.83,24.97]]];
   const material=plantingMaterial??new THREE.MeshStandardMaterial({color:'#725d44',roughness:.99});

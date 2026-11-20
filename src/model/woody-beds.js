@@ -125,16 +125,18 @@ function sampleWoodyBed(bed,random,surfaceClearance,serviceAccess,borderShrubs,p
 function plantInspectionBorders(beds,serviceAccess,surfaceClearance,placements) {
   const planted=placements.flat();
   let count=0;
-  for(const vent of serviceAccess.filter(area=>['vent-1','vent-2','distributor'].includes(area.id))){
+  for(const vent of serviceAccess.filter(area=>['vent-1','vent-2','distributor','tank'].includes(area.id))){
     const center=vent.ring.reduce(([x,y],[vx,vy])=>[x+vx/vent.ring.length,y+vy/vent.ring.length],[0,0]);
     const neighbors=planted.filter(p=>Math.hypot(p.x-center[0],p.y-center[1])<3);
-    const distributor=vent.id==='distributor';
-    for(const distance of distributor?[1.12,1.23,1.34]:[.78,.87,.97])for(let step=0;step<36;step++){
+    const tank=vent.id==='tank', distributor=vent.id==='distributor';
+    const distances=tank?[2.36,2.45,2.54]:distributor?[1.12,1.23,1.34]:[.78,.87,.97];
+    const maximumGap=tank?2.16:distributor?1.0:.63;
+    for(const distance of distances)for(let step=0;step<36;step++){
       const angle=step*Math.PI/18,x=center[0]+distance*Math.cos(angle),y=center[1]+distance*Math.sin(angle);
       let radius=Math.min(.40,Math.max(...beds.map(bed=>surfaceClearance(x,y,bed)))-.03);
       for(const area of serviceAccess)radius=Math.min(radius,-surfaceClearance(x,y,area)-.03);
       for(const p of neighbors)radius=Math.min(radius,Math.hypot(x-p.x,y-p.y)-p.radius-.06);
-      if(radius<Math.max(.23,distance-(distributor?1.0:.63)))continue;
+      if(radius<Math.max(.23,distance-maximumGap))continue;
       const shrub={x,y,radius,height:.42,angle,tone:.93};
       placements[0].push(shrub);neighbors.push(shrub);planted.push(shrub);
       count++;

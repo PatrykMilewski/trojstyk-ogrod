@@ -393,7 +393,7 @@ function serviceWater(levels,data,pipe) {
  }
 }
 
-const iconSewerExit=[8.74235626,4.20878006,-.716596133];
+const iconSewerExit=[8.74235626,4.20878006,-.6798043083901801];
 
 function soilVentRoofPosition193(levels) {
  const x=4.70,y=7.77,pitch=(levels.ridge-levels.eave)/4.25;
@@ -626,9 +626,9 @@ function serviceExteriorPower(THREE,group,data,pipe,interior,site) {
   const inHouse=v=>interior.group.worldToLocal(v).toArray();
   const drive=inHouse(gland.getWorldPosition(new THREE.Vector3()));
   const entry=inHouse(site.wastewater.localToWorld(new THREE.Vector3(.79,-.63,-.28)));
-  const [ox,oy]=controllerOut;
-  draw('controller-to-biodisc-drive',[controllerOut,[ox,oy,-.57],[ox+.55,oy,-.57],
-   [ox+.55,entry[1],-.57],[entry[0],entry[1],-.57],entry,[drive[0],drive[1],entry[2]],drive],'biodisc',gland.name);
+  const [ox,oy]=controllerOut,buried=-.57;
+  draw('controller-to-biodisc-drive',[controllerOut,[ox,oy,buried],[entry[0],oy,buried],
+   [entry[0],entry[1],buried],entry,[drive[0],drive[1],entry[2]],drive],'biodisc',gland.name);
  }
  if(gate){
   const [gx,gy]=gate;
@@ -636,10 +636,10 @@ function serviceExteriorPower(THREE,group,data,pipe,interior,site) {
  }
  const cable=site.irrigationCablePath;
  if(cable?.length){
-  const [entry]=cable,wing=data.facades.find(f=>f.id==='facade-wing-end').a[0];
-  const approachY=entry[1]-.65;
+  const [entry]=cable,wing=data.facades.find(f=>f.id==='facade-wing-end');
+  const insideX=wing.a[0]-.21,exitY=wing.b[1]-.32;
   boardFeed('board-to-irrigation-entry','irrigation','rain-tank-cable-entry',
-   [[wing-.21,wall],[wing-.21,approachY],[entry[0],approachY],[entry[0],entry[1]]],entry,-.99);
+   [[insideX,wall],[insideX,exitY],[entry[0],exitY],[entry[0],entry[1]]],entry,-.99);
   draw('irrigation-pump-cable',cable,'irrigation','rain-irrigation-power-terminal');
  }
  serviceExteriorLighting(interior.exteriorLights.terminals,board,wall,draw,boardFeed);

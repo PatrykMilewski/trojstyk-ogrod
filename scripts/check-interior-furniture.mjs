@@ -2129,12 +2129,9 @@ function cableCenterline(cable){
  }
  return points;
 }
-function clearanceToPipe(cable,pipe,pipeFrame){
+function clearanceToAxis(points,c,d){
  const hit=new THREE.Vector3();
- pipe.updateMatrix();
- const matrix=pipeFrame?pipeFrame.clone().multiply(pipe.matrixWorld):pipe.matrix;
- const [c,d]=[-.5,.5].map(f=>new THREE.Vector3(0,f*pipe.geometry.parameters.height,0).applyMatrix4(matrix));
- const pipeAxis=new THREE.Line3(c,d),points=cableCenterline(cable);
+ const pipeAxis=new THREE.Line3(c,d);
  let closest=Infinity;
  for(let i=1;i<points.length;i++){
   const a=points[i-1],b=points[i],ray=new THREE.Ray(a,b.clone().sub(a).normalize());
@@ -2142,27 +2139,39 @@ function clearanceToPipe(cable,pipe,pipeFrame){
   const gap=a.distanceToSquared(hit)<=a.distanceToSquared(b)?Math.sqrt(squared):pipeAxis.closestPointToPoint(b,true,hit).distanceTo(b);
   closest=Math.min(closest,gap);
  }
- return closest-.022-pipe.geometry.parameters.radiusTop;
+ return closest;
 }
 
-function checkTankFeeder(pumpSupply,rain){
+function clearanceToPipe(cable,pipe,pipeFrame){
+ pipe.updateMatrix();
+ const matrix=pipeFrame?pipeFrame.clone().multiply(pipe.matrixWorld):pipe.matrix;
+ const [c,d]=[-.5,.5].map(f=>new THREE.Vector3(0,f*pipe.geometry.parameters.height,0).applyMatrix4(matrix));
+ return clearanceToAxis(cableCenterline(cable),c,d)-.022-pipe.geometry.parameters.radiusTop;
+}
+
+function checkTankFeeder(pumpSupply,rain,sewageAccess){
  const tank=bounds(rain.getObjectByName('rain-tank-shell'));
- const footprint=data.exterior.ground,tankY=tank.getCenter(new THREE.Vector3()).y;
  const eastWall=data.facades.find(f=>f.id==='facade-wing-end');
- assert(tank.min.x>Math.max(...footprint.map(([x])=>x)) && tankY>=eastWall.a[1] && tankY<=eastWall.b[1],
-  'Tank lies beside the actual house wing');
+ assert(tank.min.x>eastWall.a[0] && tank.min.y>eastWall.b[1],'Tank lies beyond the rear corner of the wing');
  const clearance=tank.clone().expandByScalar(.10+.022),points=cableCenterline(pumpSupply),hit=new THREE.Vector3();
  for(let i=1;i<points.length;i++){
   const a=points[i-1],b=points[i],ray=new THREE.Ray(a,b.clone().sub(a).normalize());
   assert(!clearance.containsPoint(a) && (!ray.intersectBox(clearance,hit)||a.distanceToSquared(hit)>a.distanceToSquared(b)),
    'Complete buried feeder stays outside tank walls up to the shaft lead-in');
  }
+ const sitePoints=points.map(p=>interior.group.localToWorld(p.clone()).setZ(0));
+ for(const {id,ring} of sewageAccess){
+  const boundary=ring.map(([x,y])=>new THREE.Vector3(x,y,0));
+  for(const [i,point] of boundary.entries()){
+   assert(clearanceToAxis(sitePoints,point,boundary[(i+1)%boundary.length])>.022,'Rain pump feeder clears wastewater '+id);
+  }
+ }
 }
 
 test('dedicated exterior supplies reach the fitted gate drive, BioDisc, monobloc and all eleven luminaires',async()=>{
  const module=async name=>load(await readFile(new URL('../src/model/'+name+'.js',import.meta.url),'utf8'));
  const {createIndoorServices}=await module('indoor-services');
- const {createWastewaterInstallation}=await module('wastewater');
+ const {createWastewaterInstallation,wastewaterServiceAccess193}=await module('wastewater');
  const wastewater=createWastewaterInstallation(THREE);
  const {createRainServices}=await module('rain-services'),rain=createRainServices(THREE,house,interior,data);
  const services=createIndoorServices(THREE,interior,data,{wastewater,irrigationCablePath:rain.userData.irrigationCablePath}),power=services.getObjectByName('power-ground');
@@ -2179,7 +2188,7 @@ test('dedicated exterior supplies reach the fitted gate drive, BioDisc, monobloc
  }
  const pumpCable=power.getObjectByName('irrigation-pump-cable'),pumpSupply=power.getObjectByName('board-to-irrigation-entry');
  assert.deepEqual(pumpSupply.userData.to,pumpCable.userData.from);
- checkTankFeeder(pumpSupply,rain);
+ checkTankFeeder(pumpSupply,rain,wastewaterServiceAccess193());
  wastewater.updateMatrixWorld(true);
  const siteToPlan=interior.group.matrixWorld.clone().invert();
  wastewater.traverse(mesh=>{
@@ -2188,6 +2197,7 @@ test('dedicated exterior supplies reach the fitted gate drive, BioDisc, monobloc
   }
  });
  assert.deepEqual(pumpCable.userData.to,rain.getObjectByName('rain-irrigation-power-terminal').position.toArray());
+ assert(cableCenterline(pumpCable).at(-1).distanceTo(rain.getObjectByName('rain-irrigation-power-terminal').position)<.001);
  assert.deepEqual(pumpCable.userData.to,rain.userData.irrigationTerminal);
  const waterRoutes=rain.children.filter(p=>p.geometry?.type==='CylinderGeometry' &&
   /^rain-(ground-|field-feed-|field-vent-return-|garden-outfall-|garden-inlet-|garden-standpipe|garden-underdrain-|field-air-|screened-overflow-|filtered-inlet-|irrigation-supply-)/.test(p.name));
@@ -2201,7 +2211,10 @@ test('dedicated exterior supplies reach the fitted gate drive, BioDisc, monobloc
  assert.deepEqual(conflicts,[],'Exterior cable and water pipe walls keep 10 cm model clearance');
  const line=power.getObjectByName('controller-to-biodisc-drive');
  assert.deepEqual(line.userData.from,controllerOut);
- assert(drive.distanceTo(new THREE.Vector3(...line.userData.to))<.001);
+ assert(drive.distanceTo(cableCenterline(line).at(-1))<.001);
+ for(const pipe of wastewater.children.filter(o=>/^(building-inlet-|clarified-outlet-)/.test(o.name))){
+  assert(clearanceToPipe(line,pipe,siteToPlan)>.10,'BioDisc motor cable clears '+pipe.name);
+ }
  const gateWorld=new THREE.Vector3(...interior.localToWorld(gate));
  assert(siteGate.points.some(p=>gateWorld.distanceTo(new THREE.Vector3(...p,gate[2]))<.36));
  const rack=bounds(physical('drive-gate-rack')),pinion=bounds(physical('drive-gate-pinion'));

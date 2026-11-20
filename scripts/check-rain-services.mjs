@@ -262,20 +262,20 @@ function clearFootprint(polygon){
   for(const obstacle of obstacles)assert.equal(clipping.intersection(polygon,obstacle).length,0,'garden or building obstacle');
 }
 
-test('the full 6 m³ tank sits at the side wall facing parcel /190 with accessible lids and a pumped hose outlet',()=>{
+test('the full 6 m³ tank sits beside the rear terrace facing parcel /190 with accessible lids and a pumped hose outlet',()=>{
   const tank=named('tank-shell')[0],polygon=boxPolygon(tank),footprint=rainTankFootprint193(house,iconPlanPoint);
   clearFootprint(polygon);
   assert(footprint.ring.every(p=>polygon[0].some(q=>Math.hypot(p[0]-q[0],p[1]-q[1])<1e-6)));
   const terrace=lot.terrace.coordinates[0],neighbor=neighbors.parcels['190'].coordinates[0];
   const boundary=outline[0].filter(p=>neighbor.some(q=>Math.hypot(q[0]-p[0],q[1]-p[1])<.001));
   assert.equal(new Set(boundary.map(p=>p.join(','))).size,2,'confirmed common /193-/190 boundary');
-  assert(polygon[0].every(p=>{const local=new THREE.Vector3(...p,0).applyMatrix4(rain.matrixWorld.clone().invert());
-    return local.x>14.64&&local.y>4.21&&local.y<8.45;}),'all four shell corners behind the side wall and before terrace');
+  assert(close(tank.position.x,16.70)&&close(tank.position.y,16.70));
+  assert(close(tank.geometry.parameters.width,1.50)&&close(tank.geometry.parameters.height,3.50));
   const water=named('tank-water')[0],shellFloor=tank.position.z-tank.geometry.parameters.depth/2+.08;
   assert(close(water.geometry.parameters.width*water.geometry.parameters.height*(water.position.z-shellFloor),6));
-  assert(close(minimumDistance(polygon[0],lot.house.coordinates[0]),1.41,.001));
-  assert(close(minimumDistance(polygon[0],terrace),.811,.003));
-  assert(close(minimumDistance(polygon[0],boundary),1.138,.002));
+  assert(close(minimumDistance(polygon[0],lot.house.coordinates[0]),2.595,.001));
+  assert(close(minimumDistance(polygon[0],terrace),.310,.001));
+  assert(close(minimumDistance(polygon[0],boundary),1.358,.001));
   for(const path of garden.polygons.filter(p=>['path','flagstone','shared_path'].includes(p.kind)))
     assert.equal(clipping.intersection(polygon,[path.ring,...path.holes||[]]).length,0,path.id);
   for(const {ring} of rainFieldFootprints193(house,iconPlanPoint))assert(minimumDistance(polygon[0],ring)>1);
@@ -295,6 +295,14 @@ test('the full 6 m³ tank sits at the side wall facing parcel /190 with accessib
   assert(base.z>shellFloor&&head.z<water.position.z&&line[0][0].distanceTo(head)<1e-6);
   assert(terminal.position.distanceTo(head)<.09);
   for(const [i,[from]] of line.entries())if(i)assert(from.distanceTo(line[i-1][1])<1e-6);
+  const westWall=tank.position.x-tank.geometry.parameters.width/2;
+  const riser=named('irrigation-supply-').find(mesh=>{
+    const [a,b]=pipeEnds(mesh);
+    return a.z<0&&b.z>0;
+  });
+  const post=surface.getObjectByName('rain-irrigation-tap-post');
+  assert(westWall-riser.position.x-riser.geometry.parameters.radiusTop>.10,'riser clears the tank wall');
+  assert(westWall-post.position.x-post.geometry.parameters.width/2>.05,'tap post clears the tank roof');
   const outlet=surface.getObjectByName('rain-irrigation-hose-connector');
   assert(pipeEnds(outlet)[1].distanceTo(line.at(-1)[1])<1e-6);
 });
@@ -351,13 +359,15 @@ test('two stormwater infiltration beds remain under the private lawn',()=>{
     assert.equal(clipping.difference(footprint,privateLawn).length,0,'outside the private lawn');
     assert.equal(clipping.difference(footprint,...reservations).length,0);
     clearFootprint(footprint);
+    assert(close(local.min.x,8.4,.001)&&close(local.max.x,11.6,.001));
+    assert(close(local.min.y,[22.2,26][i],.001)&&close(local.max.y,[23.8,27.6][i],.001));
     const baseDepth=-modules[0].position.z+modules[0].geometry.parameters.depth/2+.10;
     assert(minimumDistance(ring,lot.house.coordinates[0])>=1.5*baseDepth);
-    assert(minimumDistance(ring,lot.terrace.coordinates[0])>=4);
-    assert(minimumDistance(ring,outline[0])>=5.7);
+    assert(minimumDistance(ring,lot.terrace.coordinates[0])>=2.64);
+    assert(minimumDistance(ring,outline[0])>=7.2);
     for(const {id,ring:surface} of gardenSurfaces)assert(minimumDistance(ring,surface)>1,'excavation space by '+id);
     for(const t of allTrees)assert(edgeDistance(t.center,ring)>Math.max(3,2*t.crownRadius));
-    for(const other of beds.slice(0,i))assert(minimumDistance(ring,other.ring)>3);
+    for(const other of beds.slice(0,i))assert(close(minimumDistance(ring,other.ring),2.2,.001));
   }
   const [branch,vent]=pipeEnds(named('field-air-branch')[0]),[riserBottom,riserTop]=pipeEnds(named('field-air-riser')[0]);
   const chamber=rain.getObjectByName('rain-field-inspection');

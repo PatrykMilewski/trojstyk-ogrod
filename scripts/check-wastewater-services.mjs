@@ -64,12 +64,16 @@ test('the downhill clarified pipe reaches the distributor and equally feeds both
   const end=gradedPipes(outlet,.01);
   const chamber=field.getObjectByName('distribution-chamber'),axis=axisEnds(chamber);
   assert(close(end.x,axis[0].x)&&close(end.y,axis[0].y)&&end.z>axis[0].z&&end.z<axis[1].z);
+  const feed=field.children.filter(mesh=>mesh.name.startsWith('distribution-feed-'));
+  const feedStart=axisEnds(feed[0])[0];
+  assert(close(feedStart.x,end.x)&&close(feedStart.y,end.y)&&close(end.z-feedStart.z,.015));
+  const split=gradedPipes(feed,.02);
   let firstInvert;
   for(const row of [0,1]){
     const branches=field.children.filter(m=>m.name.startsWith('distribution-branch-'+row+'-'));
-    assert.equal(branches.length,2);
+    assert(branches.length>1);
     const start=axisEnds(branches[0])[0];
-    assert(close(start.x,end.x)&&close(start.y,end.y)&&start.z<end.z);
+    assert(start.distanceTo(split)<1e-6);
     const terminal=gradedPipes(branches,.02);
     if(row)assert(close(terminal.z,firstInvert));
     firstInvert=terminal.z;
@@ -103,8 +107,8 @@ function worldFieldRing(){
 test('the tunnel footprint is entirely inside /193, away from structures, vehicles and tree trunks',()=>{
   const ring=worldFieldRing();
   assert.equal(clipping.difference([ring],neighbors.parcels['193'].coordinates).length,0);
-  assert(ringDistance(ring,neighbors.parcels['193'].coordinates[0])>3.4);
-  for(const [key,gap] of [['house',2.1],['terrace',6.3],['driveway',.63],['entry',.63]]){
+  assert(ringDistance(ring,neighbors.parcels['193'].coordinates[0])>1.59);
+  for(const [key,gap] of [['house',1.50],['terrace',9.9],['driveway',.19],['entry',1.39]]){
     const polygon=hard[key].coordinates;
     assert.equal(clipping.intersection([ring],polygon).length,0,key);
     assert(ringDistance(ring,polygon[0])>gap,key);
@@ -116,11 +120,17 @@ test('the tunnel footprint is entirely inside /193, away from structures, vehicl
   assert.equal(field.children.filter(m=>/-tunnel-[1-5]$/.test(m.name)).length,10);
 });
 
-test('the tank and tunnels occupy the original garage-side site, with service access from the driveway',()=>{
+test('the front-corner tank and parallel front-boundary rows preserve the service ring and the driveway approach',()=>{
   const tankPlan=system.position.clone().applyMatrix4(siteToPlan);
   const fieldPlan=field.getWorldPosition(new THREE.Vector3()).applyMatrix4(siteToPlan);
-  assert(Math.hypot(tankPlan.x-13.279,tankPlan.y+1.904)<.02);
-  assert(Math.hypot(fieldPlan.x-12.181,fieldPlan.y-1.097)<.02);
+  assert(Math.hypot(tankPlan.x-15.60,tankPlan.y+1.99)<.02);
+  assert(Math.hypot(fieldPlan.x-10.50,fieldPlan.y+2.40)<.02);
+  for(const [i,y] of [-3.15,-1.65].entries()){
+    const ends=['inlet','end'].map(id=>field.getObjectByName('drain-row-'+(i+1)+'-'+id+'-cap')
+      .getWorldPosition(new THREE.Vector3()).applyMatrix4(siteToPlan));
+    assert(ends.every(p=>close(p.y,y)));
+    assert(close(ends[0].x,13.543)&&close(ends[1].x,7.50));
+  }
   const circle=(centre,r)=>Array.from({length:96},(_,i)=>[centre.x+r*Math.cos(i*Math.PI/48),centre.y+r*Math.sin(i*Math.PI/48)]);
   const tank=circle(system.position,wastewater193.tankDiameter/2);
   const cap=surface.getObjectByName('distributor-hatch'),centre=cap.getWorldPosition(new THREE.Vector3());
@@ -131,11 +141,13 @@ test('the tank and tunnels occupy the original garage-side site, with service ac
   assert(ringDistance(tank,hard.house.coordinates[0])>5.1);
   assert(ringDistance(tank,hard.terrace.coordinates[0])>9.4);
   assert(ringDistance(tank,neighbors.parcels['193'].coordinates[0])>2.0);
-  assert(ringDistance(tank,worldFieldRing())>1.0);
+  assert(ringDistance(tank,worldFieldRing())>wastewater193.serviceMargin);
   for(const tree of [...garden.trees,...woods.trees])assert(clearance(tree.center,tank)>3);
   const access=wastewaterServiceAccess193(),approach=access.at(-1).ring;
   assert(clipping.intersection([approach],hard.driveway.coordinates).length);
   assert(clipping.intersection([approach],[access[0].ring]).length);
+  for(const item of access.filter(item=>['field','distributor','vent-1','vent-2'].includes(item.id)))
+    assert.equal(clipping.intersection([approach],[item.footprint??item.ring]).length,0,item.id);
   for(const geo of [hard.house,hard.terrace])assert.equal(clipping.intersection([approach],geo.coordinates).length,0);
 });
 
@@ -157,6 +169,10 @@ test('actual BioDisc lid, rim, distribution hatch and vent cowls clear the parce
     assert.equal(clipping.difference([outline],[boundary]).length,0,name+' must lie inside /193');
     const gap=clearance(xy(center),boundary)-radius;
     assert(gap>=minGap,name+' outer edge '+gap+' m from boundary');
+    if(name==='biodisc-lid-seam'){
+      const nearCorner=boundary.slice(0,-1).filter((p,i)=>clearance(xy(center),[p,boundary[i+1]])-radius<2.03);
+      assert.equal(nearCorner.length,2,'lid reaches both setback lines at the marked corner');
+    }
   }
 });
 
@@ -205,7 +221,7 @@ test('the separate rain and wastewater networks clear each other in three dimens
   const rain=createRainServices(THREE,house,{group},data);
   rain.updateMatrixWorld(true);
   const wastewater=[...system.children,...field.children].filter(m=>
-    /^(clarified-outlet-|building-inlet-|distribution-branch-|distribution-chamber$|drain-row-\d+-vent(?:$|-link-))/.test(m.name));
+    /^(clarified-outlet-|building-inlet-|distribution-branch-|distribution-feed-|distribution-chamber$|drain-row-\d+-vent(?:$|-link-))/.test(m.name));
   const rainPipes=rain.children.filter(m=>m.geometry.type==='CylinderGeometry'&&
     /^rain-(ground-|garden-outfall-|irrigation-supply-|leaf-filter|screened-overflow|filtered-inlet|tank-inspection|field-(inspection|feed-|vent-return-|air-))/.test(m.name));
   assert(rainPipes.some(mesh=>mesh.name.startsWith('rain-field-feed-')));
@@ -239,13 +255,17 @@ test('the section outline meets the physical shoulder of the BioDisc lid',()=>{
   assert(close(.31-bottom,wastewater193.tankHeight));
 });
 
-test('the level mulch finishes join the shrub beds and leave every service opening clear',()=>{
+test('the level mulch collars meet the shrub beds and leave every service opening clear',()=>{
   const soilMeshes=['biodisc','distributor','vent-0','vent-1'].map(id=>surface.getObjectByName('wastewater-mulch-'+id));
-  const areas=woods.beds.map(b=>[b.ring,...b.holes]);
+  const ventRings=soilMeshes.slice(2).map(mesh=>mesh.geometry.parameters.shapes.getPoints(40)
+    .map(({x,y})=>xy(mesh.localToWorld(new THREE.Vector3(x,y,0)))));
+  assert.equal(clipping.intersection(...ventRings.map(ring=>[ring])).length,0);
+  const beds=woods.beds.map(b=>[b.ring,...b.holes]);
   for(const mesh of soilMeshes){
     const shape=mesh.geometry.parameters.shapes;
-    const ring=shape.getPoints(40).map(({x,y})=>xy(mesh.localToWorld(new THREE.Vector3(x,y,0))));
-    assert(areas.some(area=>clipping.intersection([ring],area).length));
+    const outline=shape.getPoints(40).map(({x,y})=>xy(mesh.localToWorld(new THREE.Vector3(x,y,0))));
+    assert(beds.some(bed=>clipping.intersection([outline],bed).length),mesh.name);
+    assert.equal(shape.holes.length,1);
     assert(mesh.position.z>.032+.001+.043*1.14&&mesh.position.z<.09);
   }
   for(const [i,id] of ['biodisc-service-lid','distributor-hatch','tunnel-vent-0','tunnel-vent-1'].entries()){
@@ -263,8 +283,8 @@ test('tank boundary labels measure the lid edge and the rotated rain tank footpr
   part.geometry.computeBoundingBox();
   const radius=part.geometry.boundingBox.max.x,boundary=neighbors.parcels['193'].coordinates[0];
   const [lid,body]=measureTankGaps(boundary,wastewater193.tankCenter,radius,footprint);
-  assert.equal(lid.length.toFixed(2),'2.10');
-  assert.equal(body.length.toFixed(2),'1.14');
+  assert.equal(lid.length.toFixed(2),'2.01');
+  assert.equal(body.length.toFixed(2),'1.36');
   assert(close(clearance(body.start,footprint),0));
   for(const gap of [lid,body]){
     assert(close(clearance(gap.end,boundary),0));

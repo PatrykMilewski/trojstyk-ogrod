@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-20.12",
+  "modelVersion": "2026-11-20.13",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1786,10 +1786,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "908f885d773afe0297fde5a5c0b333409cb6465c5c4e1bbd7b04252037a956a6",
-    "proceduralCodeSha256": "a7f54412f55da723624e783b549647b3939da79828ed8af445e38d1fe219256c",
+    "proceduralCodeSha256": "2b23295c96be03b0ef62f04b236c416303890b513fdb1f943068e4d1f670d737",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
-    "planSha256": "f3fac157a0646487715637df1d7f20139abcb08eb8db051ee1d652f6f75b7822",
-    "runtimeSha256": "a8d25f195208eb4b3209c047f2434e8c0a4263eee74181e8dc35d6120d1fc1f2"
+    "planSha256": "e7ffc58b88092f8bd7e8002941cb957c93d0904cfc8c7a39d3c34ca45c1dde0a",
+    "runtimeSha256": "e696fb080de765bf6bf62c0909fe47d689a7c141038281992ce196e5080246fd"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1851,7 +1851,8 @@
     "Dom /193: wspólne przejście dachowe PoE i DN110, Ethernet w garażu, rozdzielnica, magazyn MUST, wallbox trójfazowy, zbiornik deszczówki na południu i korekta wywiewek BioDisc.",
     "Dom /193: deszczówka SE i osobny rozsącz SW, wymiary od granicy, zmywarka pod ekspresem, rezerwa przyłączy stacji robota, spiżarnia gospodarcza i cztery osoby w salonie.",
     "Dom /193: obwody zewnętrzne, wallbox przy rowerach, lampy wiszące na tarasie, zbiornik z pompą po wschodniej stronie tarasu, ogród deszczowy przy garażu i dwie ścieżki z płaskich kamieni.",
-    "Dom /193: boczny zbiornik przy /190, osobna zagłębiona niecka deszczowa wśród krzewów oraz dwa rzędy mniejszych kamieni układanych na mijankę."
+    "Dom /193: boczny zbiornik przy /190, osobna zagłębiona niecka deszczowa wśród krzewów oraz dwa rzędy mniejszych kamieni układanych na mijankę.",
+    "Dom /193: BioDisc w narożniku przy garażu, tunele równolegle do ogrodzenia, zbiornik deszczówki przy końcu tarasu i dwa równoległe pola skrzynek pod trawnikiem."
   ],
   "contextParcels": [
     {

@@ -116,12 +116,16 @@ def design(parcel_id, parcel, free, existing, inspection_beds, rain_credit):
         raise ValueError(f"Parcel {parcel_id} geometry changed; review the perimeter design")
     tree_beds = [Point(t["center"]).buffer(1.15) for t in existing if parcel.covers(Point(t["center"]))]
 
+    # Compact shrubs fit the narrow service borders while the main beds still need a wider core.
+    narrow = free.intersection(unary_union(inspection_beds))
+    narrow = narrow.buffer(-.20, quad_segs=5).buffer(.20, quad_segs=5).intersection(narrow)
+
     def beds(width):
         perimeter = [edge.buffer(width * weight) for edge, weight in zip(edges, weights)]
         raw = free.intersection(unary_union(perimeter + tree_beds + inspection_beds))
         # Remove unplantable slivers and round clipped corners before measuring.
         smooth = raw.buffer(-.35, quad_segs=5).buffer(.35, quad_segs=5).intersection(raw)
-        return unary_union([p for p in polygon_parts(smooth) if p.area >= 3.5])
+        return unary_union([p for p in polygon_parts(smooth.union(narrow)) if p.area >= 3.5])
 
     lo, hi = 0, 12
     target = parcel.area * TARGET - rain_credit
