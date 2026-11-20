@@ -40,7 +40,7 @@ test('catchment uses the projected roof triangles and covers a 30 mm event with 
   assert(close(se.stormM3+sw.stormM3,info.stormVolumeM3));
   assert(close(sw.stormM3+sw.directRainM3,2.5586,.001));
   assert(sw.gardenM3>=sw.stormM3+sw.directRainM3&&info.tankUsableM3>=se.stormM3);
-  assert(info.fieldNetM3>=se.stormM3);
+  assert(info.fieldVentedM3>=se.stormM3&&info.fieldVentedM3<info.fieldNetM3);
   assert.equal(named('crate-').filter(m=>m.name!=='rain-crate-rib').length,16);
   assert(close(info.fieldNetM3,6.48));
   assert.equal(named('downpipe-').length,4);
@@ -174,12 +174,19 @@ function checkCrateWallEntry(modules,pipe,segment){
   const hit=new THREE.Ray(from,direction).intersectBox(bounds,new THREE.Vector3());
   const axis=close(Math.abs(direction.x),0)?'y':'x',across=axis==='x'?'y':'x';
   assert(hit&&close(direction[across],0),pipe.name+' enters square to the crate wall');
-  const radius=pipe.geometry.parameters.radiusTop;
-  assert(modules.some(crate=>{
-    const {width,height,depth}=crate.geometry.parameters,halfWidth=(axis==='x'?width:height)/2;
-    return close(Math.abs(hit[axis]-crate.position[axis]),halfWidth)&&close(hit[across],crate.position[across])&&
-      Math.abs(hit.z-crate.position.z)+radius<depth/2;
-  }),pipe.name+' passes through the centreline of a single module wall');
+  const feed=pipe.name.startsWith('rain-field-feed'),radius=feed?.080:.055;
+  assert(close(pipe.geometry.parameters.radiusTop,radius)&&pipe.geometry.parameters.openEnded);
+  assert(close(hit.x-to.x,.20)&&close(hit.y-bounds.min.y,feed?.65:.40));
+  assert(close(hit.z-bounds.min.z,feed?.140:.565,.00001),'catalogue port axis at the end plate');
+  const index=pipe.name.match(/-(\d+)-\d+$/)[1],plate=rain.getObjectByName('rain-field-end-plate-'+index);
+  const panels=[...modules,plate].map(src=>{
+    const mesh=new THREE.Mesh(src.geometry,new THREE.MeshBasicMaterial({side:THREE.DoubleSide}));
+    mesh.position.copy(src.position);mesh.updateMatrixWorld();return mesh;
+  });
+  const trace=(y,z)=>new THREE.Raycaster(new THREE.Vector3(hit.x+.10,y,z),new THREE.Vector3(-1,0,0),0,4)
+    .intersectObjects(panels,false)[0]?.distance;
+  assert(close(trace(hit.y,hit.z),3.30,.00001),'port is open through four aligned modules');
+  assert(close(trace(hit.y,hit.z+radius+.015),.10,.00001),'end plate frames the port');
 }
 
 test('two independent gravity lines end at the natural garden, and only east downpipes feed the tank',()=>{
@@ -223,7 +230,8 @@ test('two independent gravity lines end at the natural garden, and only east dow
       assert(close(port.x,chamber.position.x)&&close(port.y,chamber.position.y));
       for(const [j,[a,b]] of route.entries()){
         if(j)assert(a.distanceTo(route[j-1][1])<1e-6);
-        assert(close((a.z-b.z)/Math.hypot(b.x-a.x,b.y-a.y),.012));
+        const slope=(a.z-b.z)/Math.hypot(b.x-a.x,b.y-a.y);
+        assert(prefix==='field-feed-'?close(slope,.012):slope>=.012&&slope<.013);
       }
       checkCrateWallEntry(faces.filter(m=>m.name.startsWith('rain-crate-'+i+'-')),pipes.at(-1),route.at(-1));
     }
@@ -331,6 +339,29 @@ test('two connected hollows retain SW runoff below grade; only actual shrub crow
   }
   assert(!surface.children.some(m=>/garden-(cladding|coping|standpipe)/.test(m.name)));
   assert(!named('garden-liner').length);
+});
+
+test('the relocated field inspection has a clear approach from the wicket path and roddable feeds',()=>{
+  const chamber=rain.getObjectByName('rain-field-inspection');
+  assert(close(chamber.position.x,16.90)&&close(chamber.position.y,22.10));
+  const path=garden.polygons.filter(p=>p.id.startsWith('flagstone-wicket-')).map(p=>[p.ring]);
+  const lid=rainServiceAccess193(house,iconPlanPoint).find(p=>p.id==='rain-field-inspection');
+  const serviceArea=clipping.union(...reservations).find(polygon=>clipping.intersection(polygon,[lid.ring]).length);
+  assert(serviceArea&&clipping.intersection(serviceArea,clipping.union(...path)).length,
+    'the plant-free working space reaches the stepping stones');
+  assert(Math.min(...path.map(([ring])=>edgeDistance(world([16.90,22.10]),ring)))>1.2);
+  const {overflow,feeds}=rainHydraulics193();
+  assert.equal(overflow.length,2);
+  const length=route=>route.slice(1).reduce((len,[x,y],i)=>len+Math.hypot(x-route[i][0],y-route[i][1]),0);
+  assert(close((overflow[0][2]-overflow[1][2])/length(overflow),.015));
+  for(const [i,feed] of feeds.entries()){
+    assert(length(feed)<[5.8,7.5][i]);
+    for(let k=1;k<feed.length-1;k++){
+      const incoming=new THREE.Vector2(feed[k][0]-feed[k-1][0],feed[k][1]-feed[k-1][1]);
+      const outgoing=new THREE.Vector2(feed[k+1][0]-feed[k][0],feed[k+1][1]-feed[k][1]);
+      assert(incoming.angleTo(outgoing)<Math.PI/4+.00001,'camera path bend');
+    }
+  }
 });
 
 test('two stormwater infiltration beds remain under the private lawn',()=>{

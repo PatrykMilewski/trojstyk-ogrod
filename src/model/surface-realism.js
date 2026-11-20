@@ -49,6 +49,58 @@ function surfaceMasonry(u, v, noise, grit, {columns, rows, stagger, joint}) {
   return [shade, .73 + aggregate];
 }
 
+// Eight concentric courses form each 120° fan. The tips land on the crown
+// of the previous row, so neighbouring fans interlock without straight seams.
+const graniteFanRadius = .832;
+const graniteFanHalfWidth = graniteFanRadius * Math.sqrt(3) / 2;
+const graniteFanPitch = graniteFanRadius / 2;
+const graniteFanTile = [4 * graniteFanHalfWidth, 4 * graniteFanPitch];
+
+function graniteMinerals(noise, grit) {
+  const crystal = noise(479, 277, 84);
+  const mica = Math.max(0, .43 - crystal) * .82;
+  const quartz = Math.max(0, crystal - .47) * .65;
+  return quartz - mica + (grit - .5) * .105;
+}
+
+function surfaceGraniteFan(u, v, noise, grit) {
+  const x = u * graniteFanTile[0] + .012 * (noise(33, 19, 86) - .5);
+  const y = v * graniteFanTile[1] + .014 * (noise(37, 21, 88) - .5);
+  let row = Math.ceil((y - graniteFanRadius) / graniteFanPitch);
+  const fan = () => Math.round((x / graniteFanHalfWidth - row) / 2);
+  let column = fan(), dx = x - (2 * column + row) * graniteFanHalfWidth, dy = y - row * graniteFanPitch;
+  if (dx * dx + dy * dy > graniteFanRadius * graniteFanRadius) {
+    row++;
+    column = fan(); dx = x - (2 * column + row) * graniteFanHalfWidth; dy -= graniteFanPitch;
+  }
+  const radius = Math.hypot(dx, dy);
+  const courseDepth = graniteFanRadius / 8;
+  const course = Math.min(7, Math.floor(radius / courseDepth));
+  const courseRadius = (course + .5) * courseDepth;
+  const arcStep = 2 * Math.PI / Math.max(6, Math.round(2 * Math.PI * courseRadius / .105));
+  const angle = Math.atan2(dx, dy);
+  const rowId = (row % 4 + 4) % 4, columnId = (column % 2 + 2) % 2;
+  const phaseSeed = rowId * 17 + columnId * 43;
+  const phase = (course % 2) * .5 + surfaceHash(course, phaseSeed, 30) * .25;
+  const sector = angle / arcStep + phase;
+  const nearest = Math.round(sector);
+  const split = nearest + .25 * (surfaceHash(nearest, course + phaseSeed, 15) - .5);
+  const stone = sector < split ? nearest - 1 : nearest;
+  const alongJoint = course ? Math.abs(sector - split) * arcStep * courseRadius : Infinity;
+  const radialJoint = Math.abs(radius - Math.round(radius / courseDepth) * courseDepth);
+  const lowerScallop = Math.hypot(graniteFanHalfWidth - Math.abs(dx), dy + graniteFanPitch) - graniteFanRadius;
+  const edge = Math.min(alongJoint, radialJoint, lowerScallop) + .0058 * (noise(155, 89, 54) - .5);
+  const tone = surfaceHash(stone + 61 * course, phaseSeed, 42);
+  const mineral = graniteMinerals(noise, grit);
+  const stoneShade = .29 + .17 * tone + mineral + (noise(37, 21, 52) - .5) * .07;
+  const spall = Math.max(0, .43 - noise(81, 47, 38)) * .010;
+  const bevel = surfaceClamp((edge - .0028 - spall) / .0041);
+  const joint = .058 + grit * .035;
+  const warm = surfaceHash(stone, course + phaseSeed, 22) - .46;
+  return [surfaceMix(joint, stoneShade, bevel), .12 + bevel * (.62 + mineral * .33),
+    [1 + warm * bevel * .080, 1, 1 - warm * bevel * .109]];
+}
+
 function surfaceGrass(u, v, noise, grit) {
   const patches = noise(5, 6, 19) * .51 + noise(11, 13, 81) * .30 + noise(27, 23, 5) * .19;
   const thatch = noise(121, 135, 56);
@@ -118,6 +170,12 @@ const surfaceProfiles = {
     sample: (u, v, n, g) => surfaceAggregate(n, g, .85)},
   gravel: {tile: [2.5, 2.5], gain: 1.09, bump: .035, roughness: .95, sample: (u, v, n, g) => surfaceAggregate(n, g, 1.2)},
   sand: {tile: [1.5, 1.5], gain: 1.04, bump: .012, roughness: .94, sample: (u, v, n, g) => surfaceAggregate(n, g, .39)},
+  graniteFan: {tile: graniteFanTile, size: 1024, gain: 1, color: 0xffffff, roughness: .92, bump: .008, sample: surfaceGraniteFan},
+  graniteCurb: {tile: [.64, .38], gain: 1, color: 0xffffff, roughness: .91, bump: .002,
+    sample: (u, v, n, g) => {
+      const chips = n(141, 83, 84) - .5;
+      return [.32 + chips * .37 + (g - .5) * .13 + (n(9, 6, 32) - .5) * .065, .51 + chips * .31];
+    }},
   pavers: {tile: [2.4, 2.4], gain: 1.09, bump: .023, roughness: .91, sample: (u, v, n, g) =>
     surfaceMasonry(u, v, n, g, {columns: 8, rows: 12, stagger: true, joint: .030})},
   tile: {tile: [2.4, 2.4], gain: 1.14, bump: .012, roughness: .69, sample: (u, v, n, g) =>
@@ -210,6 +268,8 @@ function surfaceProfileFor(object, material, key, index, hasVinylTexture) {
   if (!material.isMeshStandardMaterial || material.map || material.transparent) return null;
   if (material.userData.surfaceProfile === 'smoothPaint') return null;
   const color = material.color.getHexString();
+  if (object.userData.parcel === '193' && (name === 'surface-driveway' || name === 'surface-entry')) return 'graniteFan';
+  if (name === 'icon-granite-curb-193') return 'graniteCurb';
   if (/^(parcel|context)-grass-/.test(name)) return 'grass';
   if (/^(parcel|context)-soil-/.test(name)) return 'soil';
   if (name.startsWith('surface-')) return surfaceGroundProfiles[name.slice(8)];

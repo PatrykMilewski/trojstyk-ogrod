@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-20.13",
+  "modelVersion": "2026-11-20.14",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1786,10 +1786,10 @@
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
     "inputsSha256": "908f885d773afe0297fde5a5c0b333409cb6465c5c4e1bbd7b04252037a956a6",
-    "proceduralCodeSha256": "2b23295c96be03b0ef62f04b236c416303890b513fdb1f943068e4d1f670d737",
+    "proceduralCodeSha256": "4165e83f1267111f748c85887ffbfb7b536c715c9e644ca410d9450ec0e543fc",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
-    "planSha256": "e7ffc58b88092f8bd7e8002941cb957c93d0904cfc8c7a39d3c34ca45c1dde0a",
-    "runtimeSha256": "e696fb080de765bf6bf62c0909fe47d689a7c141038281992ce196e5080246fd"
+    "planSha256": "834cc5ae90fcb9b19e4e8d77331b34fc975426a6dc2f30dfa14c828ab895a5c0",
+    "runtimeSha256": "623ebdf80a75271a3b26d2dc6feae59c374c2380b4c42142ee9031a9da6c201b"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1852,7 +1852,8 @@
     "Dom /193: deszczówka SE i osobny rozsącz SW, wymiary od granicy, zmywarka pod ekspresem, rezerwa przyłączy stacji robota, spiżarnia gospodarcza i cztery osoby w salonie.",
     "Dom /193: obwody zewnętrzne, wallbox przy rowerach, lampy wiszące na tarasie, zbiornik z pompą po wschodniej stronie tarasu, ogród deszczowy przy garażu i dwie ścieżki z płaskich kamieni.",
     "Dom /193: boczny zbiornik przy /190, osobna zagłębiona niecka deszczowa wśród krzewów oraz dwa rzędy mniejszych kamieni układanych na mijankę.",
-    "Dom /193: BioDisc w narożniku przy garażu, tunele równolegle do ogrodzenia, zbiornik deszczówki przy końcu tarasu i dwa równoległe pola skrzynek pod trawnikiem."
+    "Dom /193: BioDisc w narożniku przy garażu, tunele równolegle do ogrodzenia, zbiornik deszczówki przy końcu tarasu i dwa równoległe pola skrzynek pod trawnikiem.",
+    "Dom /193: szara kostka granitowa w łuki na podjeździe i dojściu do wejścia, granitowe obrzeża i rewizja deszczówki w rabacie przy ścieżce."
   ],
   "contextParcels": [
     {

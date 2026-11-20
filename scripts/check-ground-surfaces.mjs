@@ -10,7 +10,7 @@ const {interiorGroundRings,groundSurfaceGeometry,mapGroundGeometry} = await load
 const {createWalkDepthGuard} = await load(await readFile(new URL('../src/model/walk.js',import.meta.url),'utf8'));
 const marker = 'const [source,garden,house,neighbors]=';
 const start = html.indexOf(marker)+marker.length;
-const [,,house,neighbors] = JSON.parse(html.slice(start,html.indexOf(';\nconst landscaping=',start)));
+const [site,garden,house,neighbors] = JSON.parse(html.slice(start,html.indexOf(';\nconst landscaping=',start)));
 const footprints = interiorGroundRings(house,neighbors);
 const rayHit = (geometry,point) => new THREE.Raycaster(new THREE.Vector3(...point,1),new THREE.Vector3(0,0,-1))
   .intersectObject(new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({side:THREE.DoubleSide}))).length > 0;
@@ -111,4 +111,108 @@ test('Icon floors use 592 × 148 mm Dąb Virgin vinyl at the existing heights an
     return 'data:image/webp;base64,'+bytes.toString('base64');
   }));
   assert(html.includes('"virginOakVinyl": ["'+images.join('", "')+'"]'),'Standalone viewer embeds the current vinyl and its registered relief');
+});
+
+test('the two /193 paved surfaces share metric granite fans and adjacent parcels retain their finishes',async()=>{
+  const source=await readFile(new URL('../src/model/surface-realism.js',import.meta.url),'utf8');
+  const {applyRealisticSurfaces}=await load(source);
+  const plot=site.variants.find(item=>item.id==='aktualny'),scene=new THREE.Scene();
+  const surface=(ring,name,parcel)=>{
+    const shape=new THREE.Shape(ring.map(([x,y])=>new THREE.Vector2(x,y)));
+    const mesh=new THREE.Mesh(new THREE.ShapeGeometry(shape),new THREE.MeshStandardMaterial());
+    mesh.name='surface-'+name;mesh.userData.parcel=parcel;scene.add(mesh);return mesh;
+  };
+  const driveway=surface(plot.driveway.coordinates[0],'driveway','193');
+  const entry=surface(plot.entry.coordinates[0],'entry','193');
+  const others=neighbors.surfaces.filter(p=>p.kind==='driveway'||p.kind==='entryPaving')
+    .map(p=>surface(p.geometry.coordinates[0],p.kind,p.parcel));
+  const angle=site.rotation*Math.PI/180;
+  await applyRealisticSurfaces({THREE,scene,mats:{},renderer:{capabilities:{getMaxAnisotropy:()=>8}},siteRotation:angle});
+  assert.equal(driveway.material.name,'graniteFan');
+  assert.equal(entry.material.map,driveway.material.map);
+  for(const other of others)assert.equal(other.material.name,'pavers');
+  const radius=.832,repeat=[2*Math.sqrt(3)*radius,2*radius];
+  for(const mesh of [entry,driveway]){
+    const {uv,position}=mesh.geometry.attributes;
+    for(let i=0;i<uv.count;i++){
+      const x=position.getX(i),y=position.getY(i);
+      assert(Math.abs(uv.getX(i)*repeat[0]-x*Math.cos(angle)-y*Math.sin(angle))<.00001);
+      assert(Math.abs(uv.getY(i)*repeat[1]+x*Math.sin(angle)-y*Math.cos(angle))<.00001);
+    }
+  }
+  const image=entry.material.bumpMap.image;
+  const relief=(x,y)=>{
+    const pixel=(n,span,limit)=>Math.floor(((n/span%1+1)%1)*limit);
+    return image.data[(pixel(y,repeat[1],image.height)*image.width+pixel(x,repeat[0],image.width))*4];
+  };
+  for(const [cx,cy] of [[0,0],[radius*Math.sqrt(3)/2,radius/2]]){
+    for(let ring=2;ring<=7;ring++){
+      let seam=0,face=0;
+      for(let i=0;i<31;i++){
+        const a=(i/30-.5)*.58;
+        seam+=relief(cx+Math.sin(a)*ring*.104,cy+Math.cos(a)*ring*.104);
+        face+=relief(cx+Math.sin(a)*(ring+.5)*.104,cy+Math.cos(a)*(ring+.5)*.104);
+      }
+      assert(seam/31<110 && face/31>141,'Split-face stones have recessed concentric joints');
+    }
+  }
+});
+
+test('granite curbs follow only the garden edges, with clear gates, thresholds and transition',async()=>{
+  const {createIconGraniteCurbs}=await load(await readFile(new URL('../src/model/granite-curbs.js',import.meta.url),'utf8'));
+  const {iconPlanPoint}=await load(await readFile(new URL('../src/model/roof-windows.js',import.meta.url),'utf8'));
+  const plot=site.variants.find(item=>item.id==='aktualny');
+  const curb=createIconGraniteCurbs(THREE,plot,garden.lines.find(l=>l.kind==='drive_gate'));
+  const hitAt=(x,y)=>{
+    const ray=new THREE.Raycaster(new THREE.Vector3(...iconPlanPoint(house.metadata,x,y,1)),new THREE.Vector3(0,0,-1));
+    return ray.intersectObject(curb)[0];
+  };
+  for(const [x,y,z] of [[.66,-2.711,.080],[6.46,-3.811,.080],[7.314,-1.15,.080],[8.45,-.411,.080],[8.45,2.711,.080+.035*2.711/4.21]]){
+    const hit=hitAt(x,y);
+    assert(hit && Math.abs(hit.point.z-z)<.0001,'Granite edging at '+[x,y]);
+  }
+  for(let x=.614;x<6.51;x+=.038)assert(!hitAt(x,-4.999) && !hitAt(x,-4.875),'Full sliding gate opening');
+  for(let x=.72;x<6.9;x+=.08)assert(!hitAt(x,-.005),'Garage facade and threshold');
+  for(let x=6.91;x<8.39;x+=.08){
+    assert(!hitAt(x,.001) && !hitAt(x,-.001),'Driveway-to-entry join');
+    assert(!hitAt(x,4.205),'Front door');
+  }
+  for(let y=.05;y<4.2;y+=.09)assert(!hitAt(6.91,y),'Wall along entry');
+  assert(!hitAt(.58,-2) && !hitAt(6.52,-2) && !hitAt(8.52,2.5),'Edgings stay inside the paved outlines');
+  assert(curb.userData.blocks>=30 && curb.userData.blocks<=35);
+});
+
+test('standalone scene installs the Icon granite paving and edging',async()=>{
+  const curbSource=await readFile(new URL('../src/model/granite-curbs.js',import.meta.url),'utf8');
+  assert(html.includes(curbSource.replaceAll('export function','function').trim()));
+  assert.match(html,/region\(plot\.entry,[^;]*'entry','193'\)/);
+  assert.match(html,/region\(plot\.driveway,[^;]*'driveway','193'\)/);
+  assert.match(html,/scene\.add\(createIconGraniteCurbs\(THREE,plot,/);
+});
+
+test('entry pavers meet the driveway at grade across the entire joint and rise continuously to the front door',async()=>{
+  const {gradeIconEntry193}=await load(await readFile(new URL('../src/model/granite-curbs.js',import.meta.url),'utf8'));
+  const {iconPlanPoint}=await load(await readFile(new URL('../src/model/roof-windows.js',import.meta.url),'utf8'));
+  const plot=site.variants.find(item=>item.id==='aktualny');
+  const paving=(kind,z)=>{
+    const ring=plot[kind].coordinates[0], shape=new THREE.Shape(ring.map(p=>new THREE.Vector2(...p)));
+    const mesh=new THREE.Mesh(new THREE.ShapeGeometry(shape),new THREE.MeshBasicMaterial({side:THREE.DoubleSide}));
+    mesh.position.z=z;
+    if(kind==='entry')gradeIconEntry193(mesh,ring);
+    mesh.updateMatrixWorld();return mesh;
+  };
+  const entry=paving('entry',.08),drive=paving('driveway',.045);
+  for(const x of [6.901,7.2,7.7,8.15,8.499])for(const y of [-.001,.001,.4,1.6,3.7,4.209]){
+    const origin=new THREE.Vector3(...iconPlanPoint(house.metadata,x,y,1));
+    const hits=new THREE.Raycaster(origin,new THREE.Vector3(0,0,-1)).intersectObjects([drive,entry]);
+    const expected=.045+.035*Math.max(0,y)/4.21;
+    assert(hits.length>0 && Math.abs(hits[0].point.z-expected)<.000001,`Missing paved grade at ${x},${y}`);
+  }
+  // A near-horizontal ray from either side of the old 35 mm open riser strikes the continuous surface.
+  for(const [from,to] of [[-.12,.12],[.12,-.12]]){
+    const origin=new THREE.Vector3(...iconPlanPoint(house.metadata,7.75,from,.065));
+    const end=new THREE.Vector3(...iconPlanPoint(house.metadata,7.75,to,.030));
+    const hits=new THREE.Raycaster(origin,end.clone().sub(origin).normalize(),0,end.distanceTo(origin)).intersectObjects([drive,entry]);
+    assert(hits.length,'No view through the raised edge');
+  }
 });

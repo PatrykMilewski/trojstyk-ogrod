@@ -4,8 +4,9 @@ const rainOutlets193 = [
 ];
 const rainTank193 = {center:[16.70,16.70], outside:[1.50,3.50], wall:.08, usableM3:6};
 const [rainTankX193,rainTankY193]=rainTank193.center;
-const rainFilter193=[16.20,14.10],fieldInspection193=[13.35,24.60];
-const fieldVent193=[13.85,24.60],hoseTap193=[15.82,17.95];
+const rainFilter193=[16.20,14.10],fieldInspection193=[16.90,22.10];
+const [fieldX193,fieldY193]=fieldInspection193;
+const fieldVent193=[fieldX193+.50,fieldY193],hoseTap193=[15.82,17.95];
 // Survey-plan cross sections: garden edges, gravelly planted floor, and the saddle between the two bowls.
 const rainGardenSections193=[
   [-.5,-6.31,-6.05,.069],[-.12,-6.73,-5.8,-.12],[.45,-7.05,-5.98,-.23],[1.25,-7.17,-6.23,-.19],
@@ -18,10 +19,14 @@ const rainGarden193={rim:.069,crest:-.045,designLevel:.020,floor:-.36,soilDepth:
   ring:[...rainGardenSections193.map(([y,l])=>[l,y]),...rainGardenSections193.slice().reverse().map(([y,,r])=>[r,y])]};
 const rainGardenShrubs193=[[-6.67,.61,.30],[-6.62,2.74,.34],[-6.65,3.73,.41],[-6.66,4.98,.44],
   [-5.89,6.04,.47],[-6.54,6.75,.45],[-5.69,7.51,.44],[-6.54,8.25,.34]];
+// GRAF 402000 end plate. Heights are pipe axes above the base at its outside face.
+const fieldPorts193={feedRadius:.080,feedHeight:.140,ventRadius:.055,ventHeight:.565,insertion:.20};
 const rainField193 = {unit:.80, height:.66, unitNetM3:.405,
   strips:[
-    {x:8.4,y:22.2,columns:4,rows:2,feed:[fieldInspection193,[13.35,24.4],[12.35,23.4],[11.2,23.4]]},
-    {x:8.4,y:26.0,columns:4,rows:2,feed:[fieldInspection193,[13.35,25.4],[12.35,26.4],[11.2,26.4]]}
+    {x:8.4,y:22.2,columns:4,rows:2,feed:[fieldInspection193,[15.15,22.10],[12.351,22.85],[11.4,22.85]],
+      vent:[fieldInspection193,[14.60,22.10],[12.734,22.60],[11.4,22.60]]},
+    {x:8.4,y:26.0,columns:4,rows:2,feed:[fieldInspection193,[12.35,26.65],[11.4,26.65]],
+      vent:[fieldInspection193,[12.60,26.40],[11.4,26.40]]}
   ]};
 
 const rainGutter193 = {outletDepth:.125, slope:.003, socketDrop:.12};
@@ -100,13 +105,19 @@ export function rainHydraulics193() {
   const eastIn=eastTrunk.at(-1),eastOut=[...rainFilter193,eastIn[2]-.08];
   const tankInlet=rainGrade193([rainFilter193,[rainFilter193[0],rainTankY193-1.75]],eastOut[2],.012);
   const overflowZ=tankInlet.at(-1)[2]-.12;
-  const overflow=rainGrade193([[rainTankX193,rainTankY193+1.75],[16.70,20.45],[13.35,23.80],fieldInspection193],overflowZ,.015);
-  const level=overflow.at(-1)[2]-.48;
+  const overflow=rainGrade193([[rainTankX193,rainTankY193+1.75],fieldInspection193],overflowZ,.015);
+  const level=overflow.at(-1)[2]-.67;
   const feeds=rainField193.strips.map(strip=>rainGrade193(strip.feed,level,.012));
   const {outside:[w,d],wall,usableM3}=rainTank193,waterLevel=overflowZ-.065;
   const tank={...rainTank193,top:-.55,waterLevel,bottom:waterLevel-usableM3/((w-2*wall)*(d-2*wall))-wall};
-  const fields=rainField193.strips.map(({x,y,columns,rows})=>({x,y,width:columns*rainField193.unit,
-    depth:rows*rainField193.unit,height:rainField193.height}));
+  const fields=rainField193.strips.map(({x,y,columns,rows},i)=>({x,y,width:columns*rainField193.unit,
+    depth:rows*rainField193.unit,height:rainField193.height,
+    base:feeds[i].at(-1)[2]+fieldPorts193.insertion*.012-fieldPorts193.feedHeight}));
+  const ventStart=level+fieldPorts193.ventHeight-fieldPorts193.feedHeight;
+  const vents=rainField193.strips.map(({vent},i)=>{
+    const slope=(ventStart-fields[i].base-fieldPorts193.ventHeight)/(rainLength193(vent)-fieldPorts193.insertion);
+    return rainGrade193(vent,ventStart,slope);
+  });
   const triangles=rainBedTriangles193(),footprintM2=rainArea193(rainGarden193.ring);
   const spillAreaM2=rainSpillSections193.slice(1).reduce((total,[y,l,r],i)=>{
     const [py,pl,pr]=rainSpillSections193[i];return total+(y-py)*(r-l+pr-pl)/2;
@@ -116,7 +127,7 @@ export function rainHydraulics193() {
     storageM3:.90*rainBedStorage193(triangles,rainGarden193.designLevel),
     storageToSaddleM3:.90*rainBedStorage193(triangles.filter(t=>t.every(p=>p[1]>=2.02)),rainGarden193.crest)};
   return {west,garden,east,eastTrunk,eastIn,eastOut,
-    tankInlet,tank,overflow,feeds,fields};
+    tankInlet,tank,overflow,feeds,vents,fields,fieldPorts:fieldPorts193};
 }
 
 function rainPlanRing193(house,project,[left,bottom,right,top]) {
@@ -158,7 +169,9 @@ export function rainServiceAccess193(house,project) {
     [x-w/2-margin,y-d/2-margin,x+w/2+margin,y+d/2+margin],
     ...rainField193.strips.map(({x,y,columns,rows})=>[x-margin,y-margin,
       x+columns*rainField193.unit+margin,y+rows*rainField193.unit+margin]),
-    [15.55,13.57,16.76,18.50],[13.00,24.03,14.30,25.13]
+    [15.55,13.57,16.76,18.50],
+    [fieldX193-.50,fieldY193-.57,fieldVent193[0]+.45,fieldY193+.53],
+    [fieldX193-1.40,fieldY193-.40,fieldX193,fieldY193+.40]
   ];
   return [rainGardenFootprint193(house,project),rainGardenSpillFootprint193(house,project),...areas.map(bounds=>({ring:rainPlanRing193(house,project,bounds)})),
     ...rainCovers193.map(([id,x,y,r])=>({id:'rain-'+id,
@@ -186,8 +199,8 @@ function rainDrawing(THREE,group) {
     item.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v.normalize());
     return item;
   }
-  function route(id,points) {
-    for(let i=1;i<points.length;i++)pipe(id+'-'+i,points[i-1],points[i]);
+  function route(id,points,radius,openEnds=false) {
+    for(let i=1;i<points.length;i++)pipe(id+'-'+i,points[i-1],points[i],radius,'pipe',openEnds);
   }
   function chamber(id,x,y,bottom,radius) {
     pipe(id,[x,y,bottom],[x,y,.018],radius,'body');
@@ -276,19 +289,40 @@ function rainStorage193(THREE,draw,layout) {
   draw.chamber('tank-inspection',x+.40,y,top,.30);
   draw.route('screened-overflow',layout.overflow);
   draw.chamber('field-inspection',...fieldInspection193,layout.feeds[0][0][2]-.17,.30);
-  rainField193.strips.forEach((strip,i)=>rainInfiltrationStrip193(draw,strip,i,layout.feeds[i]));
-  const z=layout.feeds[0][0][2]+.23;
+  rainField193.strips.forEach((strip,i)=>rainInfiltrationStrip193(THREE,draw,strip,i,layout));
+  const z=layout.vents[0][0][2];
   draw.pipe('field-air-branch',[...fieldInspection193,z],[...fieldVent193,z],.055);
   draw.pipe('field-air-riser',[...fieldVent193,z],[...fieldVent193,.22],.055);
 }
 
-function rainInfiltrationStrip193(draw,{x,y,columns,rows},index,branch) {
-  const {unit,height}=rainField193,z=branch.at(-1)[2];
-  draw.route('field-feed-'+index,branch);
-  draw.route('field-vent-return-'+index,branch.map(([x,y,h])=>[x,y,h+.23]));
+function rainFieldEndPlate193(THREE,draw,index,field){
+  const {unit,height}=rainField193,half=unit/2,h=height/2;
+  const shape=new THREE.Shape();
+  shape.moveTo(-half,-h);shape.lineTo(-half,h);shape.lineTo(half,h);shape.lineTo(half,-h);shape.closePath();
+  for(const [side,axis,radius] of [[half-.15,fieldPorts193.feedHeight,fieldPorts193.feedRadius],
+    [0,fieldPorts193.ventHeight,fieldPorts193.ventRadius]]){
+    const port=new THREE.Path();
+    port.absarc(side,axis-h,radius+.001,0,2*Math.PI,false);
+    shape.holes.push(port);
+  }
+  const geometry=new THREE.ShapeGeometry(shape,48).rotateX(Math.PI/2).rotateZ(Math.PI/2);
+  draw.mesh('field-end-plate-'+index,geometry,[field.x+field.width,field.y+half,field.base+h],'body',.66,1);
+}
+
+function rainInfiltrationStrip193(THREE,draw,{x,y,columns,rows},index,layout) {
+  const {unit,height}=rainField193,z=layout.fields[index].base+height/2;
+  rainFieldEndPlate193(THREE,draw,index,layout.fields[index]);
+  draw.route('field-feed-'+index,layout.feeds[index],fieldPorts193.feedRadius,true);
+  draw.route('field-vent-return-'+index,layout.vents[index],fieldPorts193.ventRadius,true);
   for(let col=0;col<columns;col++)for(let row=0;row<rows;row++){
     const cx=x+(col+.5)*unit,cy=y+(row+.5)*unit;
-    draw.box('crate-'+index+'-'+col+'-'+row,[unit,unit,height],[cx,cy,z],'body',.66,1);
+    const crate=draw.box('crate-'+index+'-'+col+'-'+row,[unit,unit,height],[cx,cy,z],'body',.66,1);
+    if(row===0){
+      // The service lane is continuous across crate joints; only its far end is closed.
+      const geometry=crate.geometry;
+      geometry.setIndex(Array.from(geometry.index.array).slice(col===0?6:12));
+      geometry.clearGroups();
+    }
     for(const offset of [-.24,0,.24]){
       draw.box('crate-rib',[.022,unit,.035],[cx+offset,cy,z+height/2],'grid',1,3);
       draw.box('crate-rib',[unit,.022,.035],[cx,cy+offset,z+height/2],'grid',1,3);
@@ -433,8 +467,8 @@ function rainMulch193(THREE,group,plantingMaterial) {
   const outlines=[[[15.70,13.70],[16.15,13.43],[16.68,13.64],[16.77,14.25],
     [17.54,15.65],[17.76,16.37],[17.75,17.15],[17.18,17.70],[16.43,18.26],
     [15.72,18.30],[15.70,17.65],[16.38,16.80],[16.09,15.38],[15.70,14.52]],
-    [[12.73,24.27],[13.03,23.96],[13.73,24.02],[14.27,24.27],[14.26,24.91],[13.86,25.21],
-    [13.18,25.24],[12.83,24.97]]];
+    [[-1.24,-.31],[-.65,-.35],[-.32,-.64],[.38,-.58],[.92,-.33],[.91,.31],[.51,.61],
+    [-.17,.64],[-.65,.39],[-1.24,.38],[-1.24,.08]].map(([dx,dy])=>[fieldX193+dx,fieldY193+dy])];
   const material=plantingMaterial??new THREE.MeshStandardMaterial({color:'#725d44',roughness:.99});
   // The scanned planting surface repeats every 1.30 m in site coordinates.
   const tileMetres=1.30;
@@ -645,9 +679,13 @@ export function createRainServices(THREE,house,interior,data) {
   const footprint=data.exterior.upper;
   const area=rainArea193(footprint),layout=rainHydraulics193();
   const fieldNetM3=rainField193.strips.reduce((sum,s)=>sum+s.columns*s.rows*rainField193.unitNetM3,0);
+  const lowVentInvert=Math.min(...layout.vents.map(vent=>vent.at(-1)[2]))-fieldPorts193.ventRadius;
+  const headspace=layout.fields.reduce((sum,f)=>sum+f.width*f.depth*(f.base+f.height-lowVentInvert),0);
+  const inserted=layout.fields.length*Math.PI*(fieldPorts193.feedRadius**2+fieldPorts193.ventRadius**2)*fieldPorts193.insertion;
+  const fieldVentedM3=fieldNetM3-headspace-inserted;
   const swArea=4.25*18.13;
   group.userData={kind:'rain-services',parcel:'193',projectedRoofM2:area,assumedStormMm:30,
-    runoffCoefficient:.90,stormVolumeM3:area*.027,tankUsableM3:rainTank193.usableM3,fieldNetM3,
+    runoffCoefficient:.90,stormVolumeM3:area*.027,tankUsableM3:rainTank193.usableM3,fieldNetM3,fieldVentedM3,
     circuits:{sw:{areaM2:swArea,stormM3:swArea*.027,directRainM3:(layout.garden.footprintM2+layout.garden.spillAreaM2)*.030,gardenM3:layout.garden.storageM3},
       se:{areaM2:area-swArea,stormM3:(area-swArea)*.027}}};
   const draw=rainDrawing(THREE,group),{eave,ridge}=house.metadata.dimensions;

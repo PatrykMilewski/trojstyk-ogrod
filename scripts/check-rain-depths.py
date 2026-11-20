@@ -71,15 +71,18 @@ def report(grid):
     datum = float(ground([[4.25, 8.46]])[0])
     result = {"assumedDatumEVRF2007M": datum, "pipeGroups": {}, "beds": []}
     deepest = None
-    for name, routes in {
-        "SW individual downpipes to planted basin": layout["west"],
-        "SE downpipes to tank": [*layout["east"], layout["eastTrunk"], layout["tankInlet"]],
-        "SE tank overflow and field pipes": [layout["overflow"], *layout["feeds"]],
+    ports = layout["fieldPorts"]
+    for name, (routes, radius) in {
+        "SW individual downpipes to planted basin": (layout["west"], .065),
+        "SE downpipes to tank": ([*layout["east"], layout["eastTrunk"], layout["tankInlet"]], .065),
+        "SE tank overflow": ([layout["overflow"]], .065),
+        "SE inspection and feed pipes DN160": (layout["feeds"], ports["feedRadius"]),
+        "SE air returns DN110": (layout["vents"], ports["ventRadius"]),
     }.items():
         pts = station_points(routes)
         terrain = ground(pts[:, :2])
-        invert = terrain-datum-pts[:, 2]+.065
-        cover = invert-.13
+        invert = terrain-datum-pts[:, 2]+radius
+        cover = invert-2*radius
         assert np.all(cover > 0), f"{name} protrudes above NMT"
         result["pipeGroups"][name] = {"terrainEVRF2007M": span(terrain), "topCoverM": span(cover),
                                       "invertDepthM": span(invert), "excavationWith10cmM": span(invert+.10)}
@@ -92,9 +95,22 @@ def report(grid):
     for key in ("eastIn", "eastOut"):
         x, y, z = layout[key]
         result[key+"FilterInvertDepthM"] = round(float(ground([[x, y]])[0])-datum-z+.065, 3)
-    for bed, feed in zip(layout["fields"], layout["feeds"]):
+    x, y, arrival = layout["overflow"][-1]
+    terrain = float(ground([[x, y]])[0])
+    departures = [route[0][2] for route in layout["feeds"]]
+    assert all(math.isclose(z, departures[0]) and z < arrival for z in departures)
+    result["fieldInspection"] = {
+        "iconPlanXYM": [x, y], "terrainEVRF2007M": round(terrain, 3),
+        "inletInvertDepthM": round(terrain-datum-arrival+.065, 3),
+        "outletInvertDepthM": round(terrain-datum-departures[0]+ports["feedRadius"], 3),
+        "overflowLengthM": round(sum(math.dist(a[:2], b[:2]) for a, b in
+                                     zip(layout["overflow"], layout["overflow"][1:])), 3),
+        "feedLengthsM": [round(sum(math.dist(a[:2], b[:2]) for a, b in zip(route, route[1:])), 3)
+                         for route in layout["feeds"]],
+    }
+    for bed in layout["fields"]:
         terrain = ground(rectangle(bed["x"], bed["y"], bed["width"], bed["depth"]))
-        center_depth = terrain-datum-feed[-1][2]
+        center_depth = terrain-datum-bed["base"]-bed["height"]/2
         cover = center_depth-bed["height"]/2
         assert np.all(cover > 0), "Crate roof protrudes above NMT"
         result["beds"].append({"terrainEVRF2007M": span(terrain), "topCoverM": span(cover),
@@ -113,7 +129,7 @@ def report(grid):
     bottom = np.array([p for tri in garden["triangles"] for p in tri])
     native = ground(bottom[:, :2])
     excavation = native-datum-bottom[:, 2]+garden["soilDepth"]
-    high_water = max(feed[-1][2]+field["height"]/2 for feed, field in zip(layout["feeds"],layout["fields"]))
+    high_water = max(field["base"]+field["height"] for field in layout["fields"])
     assert layout["overflow"][-1][2]-.065>high_water
     assert min(garden["rim"],garden["spillSections"][0][3])>garden["designLevel"]>garden["crest"]>garden["floor"]
     spill = garden["spillSections"]
