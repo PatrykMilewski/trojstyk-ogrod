@@ -6,10 +6,10 @@ export function bindIconServiceView({THREE,indoor,rain,wastewater,camera,control
   const floor=document.getElementById('service-floor');
   const key=document.getElementById('service-key');
   const legend={
-    all:'Koralowy – podłogówka · fioletowy – pompa · niebieski i czerwony – woda · ochra – ścieki · turkus – deszczówka',
+    all:'Koralowy – podłogówka · fioletowy – pompa · niebieski, czerwony i malinowy – woda · ochra – ścieki · turkus – deszczówka',
     underfloor:'Koralowy – pętle grzewcze · bursztynowy – powroty',
     'heat-pump':'Fiolet – zasilanie i powrót · grafit – przewód elektryczny',
-    water:'Niebieski – zimna woda · czerwony – ciepła woda',
+    water:'Niebieski – zimna woda · czerwony – ciepła woda · malinowy – powrót cyrkulacji CWU',
     sewer:'Ochra – odpływy do oczyszczalni · turkus przy zbiorniku – odpływ po oczyszczeniu',
     rain:'Turkus – rynny, piony i przewody do zbiornika · kratownica – rozsącz deszczówki'
   };
@@ -24,6 +24,8 @@ export function bindIconServiceView({THREE,indoor,rain,wastewater,camera,control
       category.visible=active && (all||category.name===choice);
       for(const storey of category.children){
         storey.visible=choice==='heat-pump'||level==='both'||storey.userData.level===level;
+        const backdrop=storey.getObjectByName('service-floor-backdrop-'+storey.userData.level);
+        if(backdrop)backdrop.visible=choice==='underfloor'&&level!=='both'&&storey.visible;
         if(category.visible&&storey.visible)layers.push(storey);
       }
     }

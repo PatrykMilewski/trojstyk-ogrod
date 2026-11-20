@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-20.4",
+  "modelVersion": "2026-11-20.5",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1747,7 +1747,7 @@
     "proceduralCodeSha256": "ebe6b1b59597bf0ef62f392fe49c8dc23a7156a02b31560f9c23074baa27fc92",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "dedbf868ca446a18874c8f882848a59920e8d9ab12833f73284c22fd2a100119",
-    "runtimeSha256": "e0849d21d1b2b1957261cd44d20514bbed70a413503128e1b2a955378cc499d5"
+    "runtimeSha256": "5960078431a682817f17d1203887d639d0b25a51965145b351a8a9626995648a"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1801,7 +1801,8 @@
     "Dom /193: blaty w ciemnobrązowym dekorze orzecha, wyspa 382,3 × 105 cm, otwierana szafka ze stacją robota i półkami przy wejściu do spiżarni oraz Apple TV przy projektorze.",
     "Dom /193: dwa przechodnie auta w garażu i pusty podjazd. Wyspa z sześcioma kolumnami po 60 cm, jedenastoma wysuwanymi szufladami i płytą pośrodku. Czarne gniazda w boku od okna. Wymiary kuchni na podłodze pod przyciskiem „Opisy”.",
     "Dom /193: cztery dywany, poszerzony zagłówek i dwie pufy. Przycisk „Instalacje” pokazuje porównawczy wariant oczyszczalni dla 5 osób z przodu działki.",
-    "Dom /193: instalacje wewnętrzne w przekroju obu kondygnacji, rynny ukryte i oddzielna retencja deszczówki. Pokrywa i wentylacja oczyszczalni widoczne na trawniku. Zlew centralny w ciągu szafek 60 + 60 + 80 + 60 + 60 cm."
+    "Dom /193: instalacje wewnętrzne w przekroju obu kondygnacji, rynny ukryte i oddzielna retencja deszczówki. Pokrywa i wentylacja oczyszczalni widoczne na trawniku. Zlew centralny w ciągu szafek 60 + 60 + 80 + 60 + 60 cm.",
+    "Dom /193: podłogówka pod zabudowami i schodami, niskie prowadzenie rur pompy ciepła, cyrkulacja CWU i odpływy obu urządzeń w pralni. Zbiornik deszczówki przy bocznej rabacie, rewizje w trawniku i otwarte koryta rynien."
   ],
   "contextParcels": [
     {

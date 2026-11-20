@@ -3,7 +3,17 @@ const rainOutlets193 = [
   [.075,.36], [.075,16.84], [14.19,4.285], [8.68,12.635]
 ];
 const rainField193 = {center:[9.6,26.65], columns:5, rows:3, unit:.80, height:.66, unitNetM3:.405};
-const rainTank193 = {center:[10.2,22.35], outside:[2,2.9], wall:.08, usableM3:6, overflowZ:-1.10};
+const rainTank193 = {center:[-1.05,22.75], outside:[2,2.9], wall:.08, usableM3:6, overflowZ:-1.22};
+
+const rainGutter193 = {outletDepth:.125, slope:.003, socketDrop:.12};
+const rainDownpipe193 = {width:.070, depth:.080};
+const rainFilter193 = [-1.05,20.30,-1.10];
+const rainIntake193 = [[-.06,.36],[-.06,16.84],[14.19,4.15],[8.68,12.77]];
+const rainCovers193 = [
+  ['leaf-filter',...rainFilter193.slice(0,2),.23],
+  ['tank-inspection',rainTank193.center[0]+.45,rainTank193.center[1],.30],
+  ['field-inspection',rainField193.center[0]-2*rainField193.unit,rainField193.center[1]+rainField193.unit,.11]
+];
 
 function rainDrawing(THREE,group) {
   const color = {gutter:0x44d0b8,lip:0xb4f0db,pipe:0x36beb5,body:0x17555d,water:0x46aeb5,grid:0x84e5d3};
@@ -30,39 +40,35 @@ function rainDrawing(THREE,group) {
     for(let i=1;i<points.length;i++)pipe(id+'-'+i,points[i-1],points[i]);
   }
   function chamber(id,x,y,bottom,radius) {
-    pipe(id,[x,y,bottom],[x,y,.015],radius,'body');
-    mesh(id+'-rim',new THREE.TorusGeometry(radius,.022,8,40),[x,y,.022],'lip',1,5);
+    pipe(id,[x,y,bottom],[x,y,.018],radius,'body');
   }
   return {box,mesh,pipe,route,chamber};
 }
 
-function rainRoof193(THREE,draw,eave,ridge) {
-  const [gf,gr,wf,wr]=rainOutlets193, z=eave-.085;
-  // Centrelines run inside the fascia; the unsupported porch edge discharges at the wing wall.
-  const runs=[
-    [[.075,0],gf],[[.075,9.06],gf],[[.075,9.06],gr],[[.075,18.13],gr],
-    [[8.425,0],[8.425,4.285],wf],[[14.64,4.285],wf],
-    [[8.425,18.13],[8.425,12.635],wr],[[14.64,12.635],wr]
+// Paths start at the four outlets. The sign selects the roof-facing side of the metal profile.
+function rainGutterRuns193() {
+  const [gf,gr,wf,wr]=rainIntake193;
+  return [
+    [1,[gf,[-.06,0]]],[-1,[gf,[-.06,8.60]]],[1,[gr,[-.06,8.60]]],[-1,[gr,[-.06,18.13]]],
+    [-1,[wf,[8.56,4.15],[8.56,0]]],[1,[wf,[14.64,4.15]]],
+    [1,[wr,[8.56,12.77],[8.56,18.13]]],[-1,[wr,[14.64,12.77]]]
   ];
-  const profile=new THREE.Shape();
-  for(const [i,[x,y]] of [[-.0625,0],[-.0625,.075],[-.054,.075],[-.054,.009],[.054,.009],[.054,.075],[.0625,.075],[.0625,0]].entries()){
-    if(i===0)profile.moveTo(x,y);else profile.lineTo(x,y);
-  }
-  profile.closePath();
-  for(const [run,points] of runs.entries()){
-    let rise=0;
-    for(let i=points.length-1;i>0;i--){
-      const a=points[i],b=points[i-1],dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
-      const geometry=new THREE.ExtrudeGeometry(profile,{depth:length,bevelEnabled:false});
-      geometry.rotateX(Math.PI/2);geometry.rotateZ(Math.atan2(dx,-dy));
-      const pos=geometry.attributes.position;
-      for(let j=0;j<pos.count;j++)pos.setZ(j,pos.getZ(j)+.001*(pos.getX(j)*dx+pos.getY(j)*dy)/length);
-      draw.mesh('gutter-'+run+'-'+i,geometry,[...a,z+rise],'gutter',1,4);
-      rise+=length*.001;
-    }
+}
+
+function rainRoof193(draw,eave,ridge) {
+  const z=eave-rainGutter193.outletDepth;
+  for(const [i,[,points]] of rainGutterRuns193().entries()){
+    let height=z;
+    const route=points.map(([x,y],j)=>{
+      if(j)height+=rainGutter193.slope*Math.hypot(x-points[j-1][0],y-points[j-1][1]);
+      return [x,y,height];
+    });
+    for(let j=1;j<route.length;j++)draw.pipe('flow-'+i+'-'+j,route[j-1],route[j],.012,'gutter');
   }
   for(const [index,[x,y]] of rainOutlets193.entries()){
-    draw.box('downpipe-'+index,[.070,.080,z+.47],[x,y,(z-.47)/2],'pipe');
+    draw.pipe('outlet-offset-'+index,[...rainIntake193[index],z],[x,y,z-rainGutter193.socketDrop],.044);
+    const top=z-rainGutter193.socketDrop;
+    draw.box('downpipe-'+index,[rainDownpipe193.width,rainDownpipe193.depth,top+.47],[x,y,(top-.47)/2],'pipe');
     draw.box('cleanout-'+index,[.12,.13,.18],[x,y,.20],'lip',1,4);
   }
   // Both valleys conduct runoff into the inside corners of the T-shaped eaves.
@@ -71,15 +77,15 @@ function rainRoof193(THREE,draw,eave,ridge) {
 
 function rainCollectors193(draw) {
   const [gf,gr,wf,wr]=rainOutlets193;
-  const westTee=[-1.48,gr[1],-.72],eastTee=[15.36,13.55,-.72],filter=[10.2,20.15,-.99];
-  draw.route('ground-front-west',[[...gf,-.47],[-1.48,gf[1],-.485],westTee]);
+  const westTee=[-1.48,gr[1],-.72],eastTee=[15.36,13.55,-.72],filter=rainFilter193;
+  draw.route('ground-front-west',[[...gf,-.47],[-1.48,gf[1],-.49],westTee]);
   draw.route('ground-rear-west',[[...gr,-.47],[gr[0],gr[1],-.69],westTee]);
-  draw.route('ground-west-trunk',[westTee,[-1.48,19.95,-.76],[-.80,20.63,-.78],[9.72,20.63,-.98],filter]);
+  draw.route('ground-west-trunk',[westTee,[-1.48,19.87,-1.085],filter]);
   draw.route('ground-front-east',[[...wf,-.47],[15.36,3.80,-.50],eastTee]);
   draw.route('ground-rear-east',[[...wr,-.47],[9.48,13.55,-.60],eastTee]);
-  draw.route('ground-east-trunk',[eastTee,[15.36,18.30,-.80],[14.40,19.26,-.83],[11.09,19.26,-.94],filter]);
-  draw.chamber('leaf-filter',filter[0],filter[1],-1.16,.23);
-  draw.route('filtered-inlet',[filter,[10.2,20.91,-1.01]]);
+  draw.route('ground-east-trunk',[eastTee,[15.36,19.66,-.83],[14.68,20.34,-.85],[.10,20.34,-1.08],filter]);
+  draw.chamber('leaf-filter',filter[0],filter[1],-1.23,.23);
+  draw.route('filtered-inlet',[filter,[rainTank193.center[0],rainTank193.center[1]-rainTank193.outside[1]/2,-1.13]]);
 }
 
 function rainStorage193(THREE,draw) {
@@ -91,8 +97,9 @@ function rainStorage193(THREE,draw) {
   const field=rainField193;
   const firstX=field.center[0]-(field.columns-1)*field.unit/2;
   const nearY=field.center[1]-field.rows*field.unit/2;
-  const feedX=firstX+3*field.unit,fieldInZ=-1.18;
-  draw.route('screened-overflow',[[x,y+d/2,overflowZ],[x,y+d/2+.40,-1.12],[feedX,y+d/2+.66,-1.14],[feedX,nearY,fieldInZ]]);
+  const fieldInZ=-1.37;
+  draw.route('screened-overflow',[[x,y+d/2,overflowZ],[x,24.55,-1.23],[.40,26,-1.265],
+    [6.95,26,-1.35],[firstX-field.unit/2+.04,field.center[1],fieldInZ]]);
   for(let col=0;col<field.columns;col++)for(let row=0;row<field.rows;row++){
     const cx=firstX+col*field.unit,cy=nearY+(row+.5)*field.unit,cz=fieldInZ;
     const size=field.unit-.014;
@@ -102,7 +109,104 @@ function rainStorage193(THREE,draw) {
       draw.box('crate-rib',[size,.022,.035],[cx,cy+offset,cz+field.height/2],'grid',1,3);
     }
   }
-  draw.chamber('field-inspection',feedX,nearY+(field.rows-.5)*field.unit,fieldInZ,.11);
+  draw.chamber('field-inspection',firstX,nearY+(field.rows-.5)*field.unit,fieldInZ,.11);
+}
+
+function rainChannelGeometry(THREE,points,side,eave) {
+  const normals=[],lengths=[0],positions=[];
+  for(let i=1;i<points.length;i++){
+    const dx=points[i][0]-points[i-1][0],dy=points[i][1]-points[i-1][1],length=Math.hypot(dx,dy);
+    normals.push([-side*dy/length,side*dx/length]);
+    lengths.push(lengths[i-1]+length);
+  }
+  const sections=points.map(([x,y],i)=>{
+    const prev=normals[Math.max(0,i-1)],next=normals[Math.min(i,normals.length-1)];
+    const factor=1+prev[0]*next[0]+prev[1]*next[1];
+    return [x,y,(prev[0]+next[0])/factor,(prev[1]+next[1])/factor,lengths[i]];
+  });
+  // Leave a 90 mm opening in the sole directly above each concealed offset.
+  const [low,following]=sections,f=.045/lengths[1];
+  sections.splice(1,0,low.map((v,i)=>v+(following[i]-v)*f));
+  function profile([x,y,nx,ny,run]){
+    const floor=eave-rainGutter193.outletDepth+run*rainGutter193.slope;
+    // The inner fold tucks under the roof covering. The front hem and sole stay outside the wall.
+    return [[-.072,floor+.085],[-.065,floor+.085],[-.065,floor],
+      [.052,floor],[.060,eave-.006],[.079,eave+.008]].map(([offset,z])=>[x+nx*offset,y+ny*offset,z]);
+  }
+  const rings=sections.map(profile);
+  for(let i=1;i<rings.length;i++){
+    const a=rings[i-1],b=rings[i];
+    for(let j=1;j<a.length;j++){
+      if(i===1&&j===3)continue;
+      positions.push(...a[j-1],...b[j-1],...b[j],...a[j-1],...b[j],...a[j]);
+    }
+  }
+  // Gable ends have stop ends. The two west runs meet at a shared high point.
+  if(!(points.at(-1)[0]===-.06&&points.at(-1)[1]===8.60)){
+    const [,lip,a,b,back]=rings.at(-1),backLip=[back[0],back[1],lip[2]];
+    positions.push(...a,...b,...backLip,...a,...backLip,...lip);
+  }
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function rainOutletSocket(THREE,index,eave) {
+  const [x,y]=rainIntake193[index],[tx,ty]=rainOutlets193[index],distance=Math.hypot(tx-x,ty-y);
+  const nx=(tx-x)/distance,ny=(ty-y)/distance,positions=[];
+  const z=eave-rainGutter193.outletDepth;
+  const inlet=[[-.065,-.045],[.052,-.045],[.052,.045],[-.065,.045]]
+    .map(([n,t])=>[x+nx*n-ny*t,y+ny*n+nx*t,z]);
+  const socket=inlet.map(([ix,iy])=>[
+    tx+Math.sign(ix-x)*rainDownpipe193.width/2,
+    ty+Math.sign(iy-y)*rainDownpipe193.depth/2,
+    z-rainGutter193.socketDrop
+  ]);
+  for(let i=0;i<4;i++){
+    const j=(i+1)%4;
+    positions.push(...inlet[i],...socket[i],...socket[j],...inlet[i],...socket[j],...inlet[j]);
+  }
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function rainSurfaceCovers(THREE,group) {
+  const frame=new THREE.MeshStandardMaterial({color:0x3e4741,roughness:.86});
+  const lid=new THREE.MeshStandardMaterial({color:0x59605a,roughness:.88});
+  for(const [id,x,y,radius] of rainCovers193){
+    const collar=new THREE.Mesh(new THREE.CylinderGeometry(radius+.025,radius+.025,.065,40),frame);
+    collar.name='rain-frame-'+id;
+    collar.rotation.x=Math.PI/2;collar.position.set(x,y,.0475);group.add(collar);
+    const cover=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,.016,40),lid);
+    cover.name='rain-cover-'+id;
+    cover.rotation.x=Math.PI/2;cover.position.set(x,y,.079);cover.receiveShadow=true;group.add(cover);
+    for(const offset of [-.38,.38]){
+      const recess=new THREE.Mesh(new THREE.BoxGeometry(radius*.17,radius*.34,.003),frame);
+      recess.name='rain-cover-keyhole';recess.position.set(x+offset*radius,y,.087);group.add(recess);
+    }
+  }
+}
+
+export function createRainSurface(THREE,house,interior) {
+  const group=new THREE.Group();
+  group.name='rain-surface-193';
+  group.matrixAutoUpdate=false;group.matrix.copy(interior.group.matrix);
+  const metal=new THREE.MeshStandardMaterial({color:0x384143,roughness:.48,metalness:.40,side:THREE.DoubleSide});
+  metal.name='Icon roof folded metal';
+  for(const [i,[side,points]] of rainGutterRuns193().entries()){
+    const geometry=rainChannelGeometry(THREE,points,side,house.metadata.dimensions.eave);
+    const channel=new THREE.Mesh(geometry,metal);
+    channel.name='rain-gutter-'+i;channel.receiveShadow=true;channel.castShadow=true;group.add(channel);
+  }
+  for(let i=0;i<rainOutlets193.length;i++){
+    const socket=new THREE.Mesh(rainOutletSocket(THREE,i,house.metadata.dimensions.eave),metal);
+    socket.name='rain-outlet-socket-'+i;socket.receiveShadow=true;group.add(socket);
+  }
+  rainSurfaceCovers(THREE,group);
+  return group;
 }
 
 export function createRainServices(THREE,house,interior,data) {
@@ -117,6 +221,6 @@ export function createRainServices(THREE,house,interior,data) {
     runoffCoefficient:.90,stormVolumeM3:area*.030*.90,tankUsableM3:rainTank193.usableM3,
     fieldNetM3:rainField193.columns*rainField193.rows*rainField193.unitNetM3};
   const draw=rainDrawing(THREE,group),{eave,ridge}=house.metadata.dimensions;
-  rainRoof193(THREE,draw,eave,ridge);rainCollectors193(draw);rainStorage193(THREE,draw);
+  rainRoof193(draw,eave,ridge);rainCollectors193(draw);rainStorage193(THREE,draw);
   return group;
 }
