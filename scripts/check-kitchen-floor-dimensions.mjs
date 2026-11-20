@@ -19,7 +19,7 @@ const widths = segments => segments.map(({end, start}) => mm(end - start));
 
 test('floor dimensions measure finished faces, both worktop edges and the clear aisle', () => {
   const {base, upper, island, wallTop, islandTop} = measureIconKitchen(THREE, interior.group);
-  assert.deepEqual(widths(base), [544, 894, 94, 745, 745, 795, 445, 445, 594, 594]);
+  assert.deepEqual(widths(base), [544, 894, 94, 595, 595, 795, 595, 595, 594, 594]);
   assert.deepEqual(widths(upper), [635, 635, 635, 635, 635]);
   assert.deepEqual(widths(island), [595, 595, 595, 595, 595, 595]);
   assert.equal(island[1].caption, 'piekarnik');

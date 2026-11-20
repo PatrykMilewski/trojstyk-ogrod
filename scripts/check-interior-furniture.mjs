@@ -1059,8 +1059,8 @@ test('Samsung columns preserve product envelopes, removable shelves, drawers and
   }
   const counter=bounds(get('kitchen-back-top')),sink=itemBounds('kitchen-sink');
   close(counter.max.x-counter.min.x,3.20,'Full 3.10 m original counter plus 100 mm released from the two columns');
-  close(counter.max.x-sink.max.x,.95,'95 cm of counter to the right of the sink');
-  close(sink.min.x-counter.min.x,1.55,'155 cm to the left');
+  close(counter.max.x-sink.max.x,1.25,'125 cm of counter to the right of the sink');
+  close(sink.min.x-counter.min.x,1.25,'125 cm to the left');
   close(counter.max.x,furniture.get('kitchen-tall').box[0],'Perimeter counter meets the first column');
 });
 
@@ -1209,7 +1209,7 @@ test('the black Magnifica Evo sits near the worktop end with access to its tank,
  assert(envelope.min.x-bounds(get('niche-end-trim')).max.x>.065&&envelope.min.x-counter.min.x<.11);
  assert(envelope.min.y-tiles.max.y>.05&&counter.max.y-envelope.max.y>.08);
  assert(upper.min.z-envelope.max.z>.26,'Bean lid clearance');
- assert(itemBounds('kitchen-sink').min.x-envelope.max.x>1.2,'Continuous free preparation surface');
+ assert(itemBounds('kitchen-sink').min.x-envelope.max.x>.90,'Continuous free preparation surface');
  for(const name of ['touch-panel','hopper-lid','steam-wand','dispensing-head','spout-0','spout-1','drip-grille'])assert(get('magnifica-'+name),name);
  const body=get('magnifica-rear-body');
  assert.equal(body.material.name,'DeLonghi Magnifica Evo ECAM290.21.B black ABS');
@@ -1223,6 +1223,9 @@ test('the 70 cm single bowl is let into the worktop below the full-width mosaic'
   close(rim.max.x-rim.min.x,.70,'Overall sink width including rim');
   const dividers=[0,1,2,3].map(i=>bounds(get('kitchen-back-cabinet-divider-'+i)));
   const face=bounds(get('kitchen-back-front-2-0'));
+  const cabinetEdges=[stone.min.x,...dividers.map(box=>box.getCenter(new THREE.Vector3()).x),stone.max.x];
+  const modules=cabinetEdges.slice(1).map((x,i)=>Math.round((x-cabinetEdges[i])*1000));
+  assert.deepEqual(modules,[600,600,800,600,600],'Carcass partitions center the sink between two 600 mm cabinets on each side');
   close(face.max.x-face.min.x,.795,'800 mm sink cabinet door with two 2.5 mm reveals');
   assert(!get('kitchen-back-front-2-1'),'One full-height sink front');
   for(const [edge,divider] of [['min',dividers[1]],['max',dividers[2]]])
@@ -1255,7 +1258,7 @@ test('the 70 cm single bowl is let into the worktop below the full-width mosaic'
   close(rim.max.z-stone.max.z,.005,'Raised edge on worktop');
   assert(bounds(drain).max.z<stone.max.z-.19 && bounds(get('kitchen-sink-tap-aerator')).min.z>stone.max.z+.20);
   interior.group.updateMatrixWorld(true);
-  for(const x of [3.70,3.91,4.20]){
+  for(const x of [rim.min.x+.10,rim.max.x-.39,rim.max.x-.10]){
     const ray=new THREE.Raycaster(new THREE.Vector3(...interior.localToWorld([x,9.03,1.08])),
       new THREE.Vector3(0,0,-1),0,.55);
     const hit=ray.intersectObjects([...parts('kitchen-back'),...parts('kitchen-sink')])[0];
@@ -1842,7 +1845,7 @@ test('the full-height sink drawer slides around the fixed waste and leaves a wal
     scene.updateMatrixWorld(true);
     return new THREE.Raycaster(world([x,y,1.33]),new THREE.Vector3(0,0,-1),0,1).intersectObjects(group.children,true)[0].point.z;
   };
-  const locations=[[3.75,9.03],[4.39,9.03]],initial=locations.map(([x,y])=>surfaceAt(x,y));
+  const locations=[[cx-.20,9.03],[cx+.44,9.03]],initial=locations.map(([x,y])=>surfaceAt(x,y));
   assert(tap(eye,target),'The closed full-height front opens from the aisle');assert.notDeepEqual(ring,closedRing);
   const start=performance.now();
   for(const elapsed of [0,85,170,255,350]){

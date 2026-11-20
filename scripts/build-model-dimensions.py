@@ -81,15 +81,22 @@ content += section('Wyposażenie — rzut i pełny model', '<p>Rzut nie obejmuje
 content += section('Detale i przyjęte wymiary', table(['Element', 'Wymiary / parametry', 'Podstawa'], [
     [d['name'], '; '.join(f'{label}: {number(value)}' for label, value in zip(d['labels'], d['values'])), d['source']]
     for d in registry['details']]))
-content += '<div id="oczyszczalnia"></div>' + section('Oczyszczalnia /193 · wariant porównawczy', '''
-<p>Na północnym skrawku przed domem mieści się wariant dla pięciu mieszkańców. Przycisk „Instalacje” pokazuje podziemne elementy w przekroju.</p>
-<p><strong>Ustalenia planu.</strong> Zmiana MPZP 05029z przewiduje odprowadzenie ścieków do kanalizacji komunalnej. Przed budową sieci dopuszcza szczelne zbiorniki bezodpływowe z udokumentowanym wywozem ścieków. Rozsączu w gruncie nie wymienia. Przesunięcie urządzenia w inne miejsce tej samej działki nie zmienia zapisu. <a href="https://bip.zukowo.pl/api/files/108360">Uchwała IV/52/2006, § 1 ust. 2</a>.</p>
+content += '<div id="oczyszczalnia"></div>' + section('Instalacje /193', '''
+<p>Wybierz „Widoki i sterowanie” → „Instalacje”, a następnie układ i kondygnację. Pokrywa oczyszczalni, właz studzienki rozdzielczej i dwie wywiewki tuneli są widoczne także w zwykłym widoku.</p>
+<p><strong>Ustalenia planu.</strong> Zmiana MPZP 05029z przewiduje odprowadzenie ścieków do kanalizacji komunalnej. Przed budową sieci dopuszcza szczelne zbiorniki bezodpływowe z udokumentowanym wywozem ścieków. Rozsączu w gruncie nie wymienia. Sam ten zapis nie rozstrzyga o zakazie oczyszczalni. NSA zwrócił uwagę na możliwość realizacji oczyszczalni przy braku możliwości przyłączenia do sieci. Wyrok dotyczy innej gminy. Dla /193 brakuje pisemnych warunków przyłączenia oraz oceny gruntu i wód, dlatego oczyszczalnię pokazano warunkowo. <a href="https://orzeczenia.nsa.gov.pl/doc/183FB7753A">Wyrok NSA II OSK 628/25</a>. <a href="https://bip.zukowo.pl/api/files/108360">Uchwała IV/52/2006, § 1 ust. 2</a>.</p>
 ''' + table(['Element', 'Wymiary i założenia modelu'], [
-    ['Zbiornik Kingspan BioDisc BA', 'Złoże obrotowe, 6 RLM, do 1,2 m³/d. Średnica 2,00 m, wysokość 2,16 m.'],
+    ['Zbiornik Kingspan BioDisc BA', 'Złoże obrotowe, 6 RLM, do 1,2 m³/d. Średnica 2,00 m, wysokość modelowa 2,56 m (wariant 2,46 m z nadstawką 10 cm).'],
     ['Pole tuneli MPI DrainTunel 150', 'Dwa rzędy po pięć modułów długości 1,20 m. Przerwa 1,00 m między rzędami. Obrys z deklami około 6,09 × 2,00 m.'],
     ['Odstępy w rzucie', 'Zbiornik 5,12 m od domu i 2,10 m od granicy. Pole tuneli 2,11 m od domu, 3,42 m od granicy i 0,65 m od podjazdu.'],
 ]) + '''<p>Dobór dziesięciu modułów zakłada pięć osób i dobrze przepuszczalny grunt. Nie wykonano testu infiltracji ani pomiaru najwyższego poziomu wód. Do oceny technicznej potrzebne są też rzędna odpływu z budynku, mapa przyłączy i studni, w tym u sąsiadów. Nad urządzeniami trzeba zachować dostęp serwisowy i zmienić fragment nasadzeń. Pokazane rzędne przewodów i wnętrze zbiornika są orientacyjne.</p>
 <p><a href="https://waterandsafestorage.kingspan.com/pl/p/biodisc-domowa-oczyszczalnia-sciekow/">Dane Kingspan BioDisc</a> · <a href="https://mpi.com.pl/wp-content/uploads/2023/03/Instrukcja-montazu-tunele-rozsaczajace-Draintunel-150-l.pdf#page=4">Wytyczne doboru tuneli MPI</a></p>''')
+content += table(['Układ', 'Rozwiązanie koncepcyjne'], [
+    ['Ogrzewanie podłogowe', '16 pętli na parterze i 11 na poddaszu. Rozdzielacze z zasilaniem i powrotem. Spiżarnia bez pętli. Długości, przepływy i moc do obliczenia na podstawie strat ciepła poszczególnych pomieszczeń.'],
+    ['Pompa ciepła', 'Przewody hydrauliczne i elektryczny od jednostki zewnętrznej do modułu w kotłowni.'],
+    ['Instalacja wodna i kanalizacyjna', 'Zimna i ciepła woda do punktów poboru, odpływy z przyborów i pion z wentylacją ponad dachem. Przyjęty poziom wyjścia kanalizacji z domu −0,72 m.'],
+    ['Dach i deszczówka', 'Cztery ukryte piony, rynny przy okapach i dwa kosze. Osobne przewody przez filtr do zbiornika 6 m³ za domem. Przelew do 15 skrzynek o łącznej pojemności netto ok. 6,08 m³.'],
+    ['Założenia retencji', 'Dla 206,3 m² rzutu dachu, opadu 30 mm i współczynnika spływu 0,90 dopływ wynosi ok. 5,57 m³. Dostępna retencja zależy od napełnienia zbiornika. Przepustowość odpływów, infiltracja gruntu i poziom wód wymagają sprawdzenia przed realizacją.'],
+]) + '<p><a href="https://galeco.pl/produkty/systemy-rynnowe/system-rynnowy-galeco-bezokapowy/">System bezokapowy Galeco</a> · <a href="https://www.graf.info/fileadmin/media/2019-12-Graf-Instrukcja-uzytkowania-EcoBloc-Inspect-flex-Inspect-230-Inspect-420.pdf">Skrzynki GRAF EcoBloc</a></p>'
 content += section('Samochody w skali', table(['Pojazd / miejsce', 'Długość × szerokość × wysokość (m)'], [
     [c['id']+' · '+c['location'].replace('driveway-','podjazd /').replace('road-133','droga /133'),
      dimensions([c['measuredLength'],c['measuredWidth'],c['measuredHeight']])] for c in registry['cars']]))
