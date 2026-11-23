@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import clipping from 'polygon-clipping';
+import {iconPlanPoint} from '../src/model/roof-windows.js';
 
 const distance = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 const close = (actual, expected) => assert.ok(Math.abs(actual - expected) < .00051, `${actual} vs ${expected}`);
@@ -29,8 +30,18 @@ function grassAtMidpoint(a, b, lawn, radius) {
 
 function checkFootfalls(route, run, row, lawn) {
   const [count, routeLength, pitch, shortestGap, longestGap, rowSpacing, stride, sameRowPitch] = row;
-  const [start, end] = route.ends, length = distance(start, end);
-  const dx = (end[0]-start[0])/length, dy = (end[1]-start[1])/length;
+  const [start,end] = route.ends, chord = distance(start,end), arc = route.clockwiseArcCenter;
+  const radius = arc && distance(start,arc);
+  const length = arc ? 2*radius*Math.asin(chord/(2*radius)) : chord;
+  function frame(station) {
+    if (arc) {
+      const angle = Math.atan2(start[1]-arc[1],start[0]-arc[0])-station/radius;
+      const dx = Math.sin(angle), dy = -Math.cos(angle);
+      return [arc[0]-radius*dy,arc[1]+radius*dx,dx,dy];
+    }
+    const dx = (end[0]-start[0])/length, dy = (end[1]-start[1])/length;
+    return [start[0]+station*dx,start[1]+station*dy,dx,dy];
+  }
   assert.equal(run.length, count);
   assert.equal(count % 2, 0);
   close(length, routeLength); close((length-2*route.firstCenterM)/(count-1), pitch);
@@ -39,10 +50,12 @@ function checkFootfalls(route, run, row, lawn) {
   assert(edgeDistance(start,run[0].ring) < .30 && edgeDistance(end,run.at(-1).ring) < .30);
   const gaps = [];
   for (const [i, stone] of run.entries()) {
-    assert.equal(stone.row, i%2 === 0 ? 'left' : 'right');
-    const [x,y] = stone.center, relativeX = x-start[0], relativeY = y-start[1];
-    close(dx*relativeX + dy*relativeY, route.firstCenterM+i*route.stepM);
-    close(-dy*relativeX + dx*relativeY, (i%2 === 0 ? .5 : -.5)*rowSpacing);
+    const left = i%2 === (route.id === 'wicket' ? 1 : 0);
+    assert.equal(stone.row, left ? 'left' : 'right');
+    const [mx,my,dx,dy] = frame(route.firstCenterM+i*route.stepM);
+    const [x,y] = stone.center, relativeX = x-mx, relativeY = y-my;
+    close(dx*relativeX + dy*relativeY,0);
+    close(-dy*relativeX + dx*relativeY, (left ? .5 : -.5)*rowSpacing);
     const sole = [[-.055,-.14],[.055,-.14],[.055,.14],[-.055,.14]].map(([u,v]) => [x-dy*u+dx*v,y+dx*u+dy*v]);
     assert.deepEqual(clipping.difference([sole], [stone.ring]), [], 'Foot lands fully on ' + stone.id);
     if (i) {
@@ -56,7 +69,8 @@ function checkFootfalls(route, run, row, lawn) {
     }
     if (i >= 2) {
       const sameSide = run[i-2];
-      close(distance(stone.center, sameSide.center), sameRowPitch);
+      const rowPitch = arc ? 2*(radius+(left ? .5 : -.5)*rowSpacing)*Math.sin(route.stepM/radius) : sameRowPitch;
+      close(distance(stone.center, sameSide.center), rowPitch);
       assert(gap(stone.ring, sameSide.ring) >= .12);
       grassAtMidpoint(stone.center, sameSide.center, lawn, .025);
     }
@@ -64,7 +78,7 @@ function checkFootfalls(route, run, row, lawn) {
   }
   assert(Math.min(...gaps) > .01);
   close(Math.min(...gaps), shortestGap); close(Math.max(...gaps), longestGap);
-  return [dx,dy];
+  return i => frame(route.firstCenterM+i*route.stepM).slice(2);
 }
 
 function checkStreetEntry(garden, editor, world, controlPlan) {
@@ -107,7 +121,31 @@ function checkOtherGardens(additions, editor, world, controlPlan) {
   }
 }
 
-export function checkIconGardenPaths(garden, editor, registry, controlPlan, additions) {
+function checkTerraceWicket(garden, editor, world, house, interior, additions) {
+  const facade = interior.facades.find(f => f.id === 'facade-terrace');
+  const door = facade.openings.find(o => !o.glass);
+  const threshold = iconPlanPoint(house.metadata, facade.a[0]-facade.thickness/2-.055, facade.a[1]+(door.start+door.end)/2, 0);
+  const [a,b] = garden.lines.find(l => l.id === 'brama-193-0').points;
+  const center = a.map((v,i) => (v+b[i])/2);
+  const {ends:[start,end],clockwiseArcCenter:arc} = garden.metadata.flagstoneRoutes.find(r => r.id === 'wicket');
+  close(distance(center,end),0);
+  close(distance(arc,start),distance(arc,end));
+  const radius = distance(arc,start), deckRun = distance(threshold,start);
+  const tangent = [(start[1]-arc[1])/radius,(arc[0]-start[0])/radius];
+  tangent.forEach((v,i) => close(v,(start[i]-threshold[i])/deckRun));
+  const deck = editor.terraces['193'].map(world);
+  close(edgeDistance(start,[...deck,deck[0]]),0);
+  assert(distance(threshold,start)>1 && distance(start,end)>1);
+  const fences = garden.lines.filter(l => ['shared_fence','parcel_fence'].includes(l.kind));
+  const run = garden.polygons.filter(p => p.route === 'wicket');
+  for (const stone of run) {
+    assert(fences.every(f => Math.min(...stone.ring.map(p => edgeDistance(p,f.points))) > .20));
+  }
+  const shared = additions.polygons.filter(p => p.parcel === 'shared' && p.kind === 'flagstone');
+  assert(Math.min(...shared.map(p => gap(run.at(-1).ring,p.ring))) < .50, 'Reach the shared garden path through the gate');
+}
+
+export function checkIconGardenPaths(garden, editor, registry, controlPlan, additions, house, interior) {
   assert(!garden.objects.some(o => o.kind === 'grill'));
   assert(!garden.polygons.some(p => ['path','shared_path'].includes(p.kind) || p.id === 'kitchen-pad'));
   assert.equal(garden.metadata.areasM2.kitchenPaving, 0);
@@ -116,13 +154,15 @@ export function checkIconGardenPaths(garden, editor, registry, controlPlan, addi
   const lawn = garden.polygons.filter(p => p.kind === 'lawn').map(p => [p.ring, ...p.holes]);
   checkStreetEntry(garden, editor, world, controlPlan);
   checkOtherGardens(additions, editor, world, controlPlan);
+  checkTerraceWicket(garden, editor, world, house, interior, additions);
   const stones = garden.polygons.filter(p => p.kind === 'flagstone');
   const published = id => registry.details.find(row => row.id === id).values;
   const widths = [], lengths = [];
   for (const route of garden.metadata.flagstoneRoutes) {
     const run = stones.filter(s => s.route === route.id);
-    const [dx,dy] = checkFootfalls(route, run, published(`flagstones-193-${route.id}`), lawn);
-    for (const stone of run) {
+    const directionAt = checkFootfalls(route, run, published(`flagstones-193-${route.id}`), lawn);
+    for (const [i,stone] of run.entries()) {
+      const [dx,dy] = directionAt(i);
       assert.equal(stone.height, .035);
       assert(stone.ring.length >= 6);
       assert(controlPlan.includes(`id="${stone.id}"`));

@@ -27,7 +27,7 @@ test('floor dimensions measure finished faces, both worktop edges and the clear 
   assert.equal(base[3].caption, 'zmywarka');
   assert.equal(mm(islandTop.max.x - islandTop.min.x), 3823);
   assert.equal(mm(islandTop.max.y - islandTop.min.y), 1050);
-  assert.equal(mm(islandTop.min.y - wallTop.max.y), 1080);
+  assert.equal(mm(islandTop.min.y - wallTop.max.y), 1140);
 });
 
 test('mirrored floor guide has upright, unmirrored wall text, remains toggleable after batching and ignores picks', () => {

@@ -60,28 +60,41 @@ function servicePipeGeometry(THREE,path,radius) {
  return geom;
 }
 
+// Split orthogonal room outlines at their returns so coils follow the usable floor.
+function roomHeatingBands(outline){
+ const edges=[...new Set(outline.map(p=>p[0]))].sort((a,b)=>a-b);
+ return edges.slice(1).map((right,i)=>{
+  const left=edges[i],mid=(left+right)/2;
+  const hits=outline.flatMap(([x,y],j)=>{
+   const [endX,endY]=outline[(j+1)%outline.length];
+   return y===endY && mid>Math.min(x,endX) && mid<Math.max(x,endX)?[y]:[];
+  });
+  return [left,right,Math.min(...hits),Math.max(...hits)];
+ });
+}
+
 // Each band spans west to east and carries its own south and north floor edges.
 function serviceHeatingBands(data,room) {
  const [w,s,e,n]=room.box,[sx,sy,ex,ey]=data.stairs.box;
  const box=(west,east,south,north)=>[west,east,south,north];
  const innerWest=.36,innerEast=data.exterior.upper[3][0]-.36;
  const wingFront=data.exterior.upper[2][1]+.36,mainEast=data.exterior.upper[1][0]-.36;
- const wingRear=data.exterior.upper[4][1]-.36,voidEdge=data.void.box[1];
+ const wingRear=data.exterior.upper[4][1]-.36;
  const roomBox=id=>data.rooms.find(r=>r.id===id).box;
  const hall=roomBox('0.5'),kitchenWallEnd=data.walls.find(wall=>wall.id==='kitchen-back').b[0];
  switch(room.id){
-  case '0.4':return [box(w,kitchenWallEnd,s,n),box(kitchenWallEnd,e,hall[3],n)];
-  case '0.5':return [box(kitchenWallEnd,e,s,n)];
-  case '0.6':{
-   const [,se,,corner,,nw]=room.outline;
-   const partition=data.walls.find(wall=>wall.id==='bath-left');
-   const left=partition.a[0]-partition.thickness/2,right=partition.a[0]+partition.thickness/2;
-   return [box(nw[0],left,s,n),box(left,right,s,partition.a[1]),box(right,se[0],s,corner[1])];
+  case '0.2':case '0.6':return roomHeatingBands(room.outline);
+  case '0.4':{
+   const pantry=roomBox('0.2'),alcoveEast=data.rooms.find(r=>r.id==='0.2').outline[3][0];
+   return [box(w,alcoveEast,pantry[3],n),
+    box(alcoveEast,kitchenWallEnd,s,n),
+    box(kitchenWallEnd,sx,hall[3],n)];
   }
+  case '0.5':return [box(kitchenWallEnd,e,s,n)];
   case '0.9':return [box(sx,w,sy,ey),box(w,e,s,ey)];
   case '1.1':return [box(innerWest,mainEast,.36,n)];
   case '1.2':case '1.3':return [box(innerWest,e,s,n)];
-  case '1.4':return [box(w,e,s,voidEdge),box(e,sx,roomBox('1.8')[1],voidEdge),box(sx,ex,roomBox('1.8')[1],sy)];
+  case '1.4':return roomHeatingBands(room.outline);
   case '1.5':return [box(w,mainEast,roomBox('1.4')[1],n),box(mainEast,e,wingFront,n)];
   case '1.6':return [box(w,e,wingFront,n)];
   case '1.7':return [box(w,innerEast,wingFront,n)];
@@ -115,14 +128,14 @@ function serviceHeatingCoil(legs,base,startHigh) {
 }
 
 function serviceHeatingLeads(coil,port,base,tailXs=[]) {
- const [px,py,index,face,alongY]=port;
+ const [px,py,index,face,alongY,crossingY]=port;
  return [coil[0],coil.at(-1)].map(([x,y,z],side)=>{
   const feedZ=base+(side?.38:.55),dropX=px+(side?1:-1)*iconHeatingPortSpacing/4;
   const dropY=py+face*.075,laneY=py+face*(.22+(2*index+side)*.032),tailX=tailXs[side]??x;
   const fanZ=base-.135,crossZ=base-.172,tailZ=base-.10;
   if(alongY){
    const shaftY=py+(side?1:-1)*iconHeatingPortSpacing/4,shaftX=px+face*.075;
-   const fanX=px+face*(.22+(2*index+side)*.032),busY=6.05+(2*index+side)*.032;
+   const fanX=px+face*(.22+(2*index+side)*.032),busY=crossingY+(2*index+side)*.032;
    return [[px,py,feedZ],[px,py,feedZ-.042],[shaftX,shaftY,feedZ-.072],[shaftX,shaftY,fanZ],[fanX,shaftY,fanZ],
     [fanX,shaftY,crossZ],[fanX,busY,crossZ],[tailX,busY,crossZ],[tailX,busY,tailZ],
     [tailX,y,tailZ],...(tailX===x?[]:[[x,y,tailZ]]),[x,y,z]];
@@ -135,11 +148,11 @@ function serviceHeatingLeads(coil,port,base,tailXs=[]) {
 // Pairs of rails in accessible wall cabinets. Each room belongs to its nearest service zone.
 const iconHeatingManifolds={
  ground:[
-  {x:5.35,y:8.318,face:-1,location:'Kotłownia · pod rozdzielnicą',lining:[-0.122, 0.61, 0.85],finish:'#e9e3d7',rooms:['0.1','0.2','0.3','0.4']},
-  {x:9.28,y:9.204,face:-1,location:'Pod schodami · od strony holu',lining:[-0.21, 0.57, 2.12],finish:'#c77d59',rooms:['0.5','0.6','0.7','0.8','0.9']}
+  {x:5.35,y:8.258,face:-1,location:'Kotłownia · pod rozdzielnicą',lining:[-0.122, 0.61, 0.85],finish:'#e9e3d7',rooms:['0.1','0.2','0.3','0.4']},
+  {face:1,alongY:true,wardrobe:true,location:'Gabinet · w dwudrzwiowej szafie pod schodami',rooms:['0.5','0.6','0.7','0.8','0.9']}
  ],
  upper:[
-  {x:6.374,y:5.72,face:1,alongY:true,location:'Pralnia · przy wejściu od holu',lining:[-0.16, 0.435, 0.82],finish:'#e9e3d7',rooms:['1.1','1.2','1.3','1.4']},
+  {x:6.374,y:5.72,face:1,alongY:true,crossingY:6.05,location:'Pralnia · przy wejściu od holu',lining:[-0.16, 0.435, 0.82],finish:'#e9e3d7',rooms:['1.1','1.2','1.3','1.4']},
   {x:12.79,y:4.64,face:1,location:'Garderoba · pod skosem między szafami',lining:[-0.49, 0.75, 0.79],finish:'#e9e3d7',rooms:['1.5','1.6','1.7','1.8']}
  ]
 };
@@ -147,7 +160,7 @@ const iconHeatingPortSpacing=.051;
 
 function serviceHeatingPort(manifold,index) {
  const offset=(index+.5)*iconHeatingPortSpacing;
- return [manifold.x+(manifold.alongY?0:offset),manifold.y+(manifold.alongY?offset:0),index,manifold.face,manifold.alongY];
+ return [manifold.x+(manifold.alongY?0:offset),manifold.y+(manifold.alongY?offset:0),index,manifold.face,manifold.alongY,manifold.crossingY];
 }
 
 // Keep the long room tails in separate lanes and inside the same strip of slab as their loop.
@@ -166,8 +179,8 @@ function serviceHeatingTailLanes(data,circuits) {
  }
 }
 
-function serviceHeatingCircuits(data,level) {
- const circuits=[],base=data.levels[level],manifolds=iconHeatingManifolds[level];
+function serviceHeatingCircuits(data,level,manifolds) {
+ const circuits=[],base=data.levels[level];
  const length=path=>path.reduce((sum,p,i)=>i?sum+Math.hypot(...p.map((v,k)=>v-path[i-1][k])):sum,0);
  for(const room of data.rooms.filter(r=>r.id[0]===(level==='ground'?'0':'1'))){
   const bank=manifolds.findIndex(m=>m.rooms.includes(room.id)),manifold=manifolds[bank];
@@ -276,8 +289,15 @@ function serviceOutlineLines(THREE,group,base,name='service-plan',opacity=.68) {
 function serviceUnderfloor(THREE,levels,data,pipe) {
  for(const level of ['ground','upper']){
   const upper=level==='upper',base=data.levels[level],group=levels[level];
-  const circuits=serviceHeatingCircuits(data,level);
-  group.userData.cabinets=iconHeatingManifolds[level];
+  const manifolds=iconHeatingManifolds[level].map(config=>{
+   if(!config.wardrobe)return config;
+   const wardrobe=data.furniture.find(item=>item.heatingManifold)??data.furniture.find(item=>item.id==='office-under-stair-4');
+   if(!wardrobe)throw new Error('Brak szafy pod schodami na rozdzielacz gabinetu.');
+   const [,south,front,north]=wardrobe.box;
+   return {...config,x:front-.25,y:(south+north)/2-6*iconHeatingPortSpacing/2,crossingY:south-.55};
+  });
+  const circuits=serviceHeatingCircuits(data,level,manifolds);
+  group.userData.cabinets=manifolds;
   servicePlanOutline(THREE,group,data,level);
   serviceHeatingFurniture(THREE,group,data,level);
   for(const [side,color,barZ] of [[0,iconServiceColors.floor,.55],[1,iconServiceColors.return,.38]]){
@@ -293,9 +313,11 @@ function serviceUnderfloor(THREE,levels,data,pipe) {
     pipe(group,'heating-primary-'+barZ,[source,[sourceX,feedY,.73],header],color,.025);
     pipe(group,'upper-heating-feed-'+barZ,[header,[riserX,feedY,mainZ],riser],color,.022);
    }
-   for(const [bank,{x,y,alongY}] of iconHeatingManifolds[level].entries()){
+   for(const [bank,{x,y,alongY,wardrobe}] of manifolds.entries()){
     const n=circuits.filter(c=>c.bank===bank).length,rail='manifold-'+bank+'-'+barZ;
-    const z=base+barZ,start=upper?riser:header,valveOffset=.062+.024*side,feedX=x-(alongY?0:valveOffset),feedY=y-(alongY?valveOffset:0);
+    const z=base+barZ,start=upper?riser:header;
+    const valveOffset=wardrobe ? .113-.055*side : .062+.024*side;
+    const feedX=x-(alongY?0:valveOffset),feedY=y-(alongY?valveOffset:0);
     pipe(group,rail+'-feed',[start,[start[0],feedY,mainZ],[feedX,feedY,mainZ],[feedX,feedY,z],[x,y,z]],color,.022,{bank,rail:side?'primary-return':'primary-supply'});
     pipe(group,rail,[[x,y,z],[x+(alongY?0:n*iconHeatingPortSpacing),y+(alongY?n*iconHeatingPortSpacing:0),z]],color,.033,{ports:n,bank});
    }
@@ -719,12 +741,12 @@ function serviceDrainBranch(group,pipe,name,waste,stack,slope,radius,fixture){
 
 // Wall coordinates are on the finished faces. The normal points into the room.
 const iconLanOutlets=[
- {id:'salon-rtv',room:'0.4',face:[.48,14.48,.56],normal:[1,0]},
- {id:'bawialnia',room:'0.8',face:[11.33,4.91,.30],normal:[1,0]},
+ {id:'salon-rtv',room:'0.4',face:[.50,14.48,.56],normal:[1,0]},
+ {id:'bawialnia',room:'0.8',face:[11.34,4.91,.30],normal:[1,0]},
  {id:'gabinet',room:'0.9',face:[11.40,12.21,.48],normal:[0,-1]},
  {id:'pokoj-1',room:'1.1',face:[7.55,3.60,.32],normal:[0,-1]},
  {id:'pokoj-2',room:'1.3',face:[1.70,5.78,.32],normal:[0,1]},
- {id:'sypialnia',room:'1.8',face:[11.48,8.03,.32],normal:[0,1]},
+ {id:'sypialnia',room:'1.8',face:[11.48,7.96,.32],normal:[0,1]},
  {id:'garaz',room:'0.1',port:8,face:[5.76,6.53,1.05],normal:[0,-1]}
 ];
 
@@ -795,8 +817,9 @@ function serviceEthernet(THREE,levels,data,pipe) {
    route=[split,[shaftX,shaftY,z],[shaftX,y,z]];
    if(!room){
     // Rise inside the solid partition beyond the bedroom doorway, then cross above the attic ceiling.
-    const chaseX=data.walls.find(w=>w.id==='u-room2-hall').a[0],atticZ=data.levels.upperCeiling+.18;
-    route.push([chaseX,y,z],[chaseX,y,atticZ],[x,y,atticZ]);
+    const partition=data.walls.find(w=>w.id==='u-room2-hall'),chaseX=partition.a[0];
+    const chaseY=Math.max(y,partition.a[1]+partition.doors.at(-1)[1]+.14),atticZ=data.levels.upperCeiling+.18;
+    route.push([chaseX,y,z],[chaseX,chaseY,z],[chaseX,chaseY,atticZ],[chaseX,y,atticZ],[x,y,atticZ]);
    }else route.push([x,y,z]);
    route.push(destination);
   }else if(id==='garaz'){

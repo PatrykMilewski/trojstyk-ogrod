@@ -14,11 +14,29 @@ from woodland_plan import garden_services, polygon_parts, sources, surface
 PALETTE = ('#dfdacb', '#d5cfc0', '#e4dfd2', '#dbd5c6', '#d2cdbf')
 
 
-def terrace_point(house, terrace, x):
+def plan_point(house, x, y):
     meta = house['metadata']
-    u, v = meta['dimensions']['width'] - x, 19.55
-    xy = [a*u + b*v + t for (a, b), t in zip(meta['matrix'], meta['translation'])]
-    return nearest_points(Point(xy), terrace.boundary)[1]
+    u = meta['dimensions']['width'] - x
+    return Point([a*u + b*y + t for (a, b), t in zip(meta['matrix'], meta['translation'])])
+
+
+def terrace_exit(house, facade, terrace, wicket):
+    opening = next(o for o in facade['openings'] if not o['glass'])
+    center = (opening['start'] + opening['end']) / 2
+    door = LineString([facade['a'], facade['b']]).interpolate(center)
+    threshold = plan_point(house, door.x - facade['thickness']/2 - .055, door.y)
+    gate = wicket.centroid
+    # Leave the deck seven degrees toward the service lawn to clear the rain-field excavation.
+    heading = math.atan2(gate.y-threshold.y, gate.x-threshold.x) + math.radians(7)
+    dx, dy = math.cos(heading), math.sin(heading)
+    reach = threshold.distance(gate)
+    walk = LineString([threshold, (threshold.x + reach*dx, threshold.y + reach*dy)])
+    deck = walk.intersection(terrace)
+    assert deck.geom_type == 'LineString' and deck.distance(threshold) < .7
+    start = max((Point(p) for p in deck.coords), key=threshold.distance)
+    # Tangent to the walk across the boards, ending at the existing wicket.
+    radius = start.distance(gate)**2 / (2*(-dy*(gate.x-start.x) + dx*(gate.y-start.y)))
+    return start, Point(start.x-dy*radius, start.y+dx*radius)
 
 
 def stone_ring(rng, center, direction, width, length):
@@ -39,18 +57,30 @@ def stone_ring(rng, center, direction, width, length):
     return Polygon(points)
 
 
-def flagstones(route_id, start, end, free, seed):
+def flagstones(route_id, start, end, free, seed, arc=None):
     line = LineString([start, end])
+    length = line.length
+    if arc:
+        radius = start.distance(arc)
+        length = 2*radius*math.asin(line.length/(2*radius))
+        initial_angle = math.atan2(start.y-arc.y, start.x-arc.x)
     first_center = .30
-    count = 2 * round((line.length - first_center) / .60)
-    pitch = (line.length - 2*first_center) / (count-1)
+    count = 2 * round((length - first_center) / .60)
+    pitch = (length - 2*first_center) / (count-1)
     row_spacing = .34
     dx, dy = (end.x - start.x)/line.length, (end.y - start.y)/line.length
     rng = random.Random(seed)
     stones, gaps = [], []
     for i in range(count):
-        mid = line.interpolate(first_center + i*pitch)
-        left = i % 2 == 0
+        station = first_center + i*pitch
+        if arc:
+            angle = initial_angle - station/radius
+            dx, dy = math.sin(angle), -math.cos(angle)
+            mid = Point(arc.x-radius*dy, arc.y+radius*dx)
+        else:
+            mid = line.interpolate(station)
+        # The approach to the wicket leaves the angled deck edge with the right foot.
+        left = i % 2 == (1 if route_id == 'wicket' else 0)
         offset = row_spacing / 2 if left else -row_spacing / 2
         center = Point(mid.x - dy*offset, mid.y + dx*offset)
         # Keep enough flat stone under the entire foot even at the irregular corners.
@@ -72,10 +102,14 @@ def flagstones(route_id, start, end, free, seed):
     stride = math.hypot(pitch, row_spacing)
     assert .57 <= 2*pitch <= .63 and min(gaps) > .01
     assert start.distance(surface(stones[0])) < .30 and end.distance(surface(stones[-1])) < .30
-    return stones, dict(id=route_id, ends=list(line.coords), lengthM=line.length, count=count,
+    details = dict(id=route_id, ends=list(line.coords), lengthM=length, count=count,
                         firstCenterM=first_center, stepM=pitch, sameRowPitchM=2*pitch,
                         rowSpacingM=row_spacing, footfallM=stride,
                         minGapM=min(gaps), maxGapM=max(gaps))
+    if arc:
+        details['clockwiseArcCenter'] = list(arc.coords[0])
+        details['footfallM'] = sum(math.dist(a['center'], b['center']) for a,b in zip(stones, stones[1:]))/(count-1)
+    return stones, details
 
 
 def set_sliding_gate(garden, plot):
@@ -135,7 +169,7 @@ def add_street_entry(plot, garden, house):
     return garden
 
 
-def build_paths(plot, garden, house):
+def build_paths(plot, garden, house, interior):
     retained = [p for p in garden['polygons'] if p['id'] not in ('kitchen-pad', 'shared-path')
                 and not p['id'].startswith(('private-path', 'private-lawn', 'flagstone-'))]
     regions = {p['id']:surface(p) for p in retained}
@@ -147,12 +181,19 @@ def build_paths(plot, garden, house):
     fire_angle = math.radians(132)
     entrance = Point(fire.centroid.x + 3*math.cos(fire_angle), fire.centroid.y + 3*math.sin(fire_angle))
     terrace = shape(plot['terrace'])
-    routes = [('fire', 5.7, nearest_points(entrance, fire.boundary)[1], 193),
-              ('wicket', 15.05, wicket.centroid, 2193)]
+    facade = next(f for f in interior['facades'] if f['id'] == 'facade-terrace')
+    wicket_start, arc = terrace_exit(house, facade, terrace, wicket)
+    routes = [('fire', nearest_points(plan_point(house, 5.7, 19.55), terrace.boundary)[1],
+               nearest_points(entrance, fire.boundary)[1], 193, None),
+              ('wicket', wicket_start, wicket.centroid, 2193, arc)]
     stones, details = [], []
-    for name, terrace_x, end, seed in routes:
-        run, measurements = flagstones(name, terrace_point(house, terrace, terrace_x), end,
-                                       available.buffer(-.035), seed)
+    for name, start, end, seed, curve in routes:
+        free = available.buffer(-.035)
+        if curve:
+            for field in garden_services(house)['footprints']:
+                if field['id'].startswith('rain-field-'):
+                    free = free.difference(surface(field).buffer(1.0))
+        run, measurements = flagstones(name, start, end, free, seed, curve)
         landing = fire if name == 'fire' else wicket
         assert all(terrace.distance(surface(stone)) < .45 for stone in run[:2])
         assert all(landing.distance(surface(stone)) < .45 for stone in run[-2:])
@@ -201,7 +242,10 @@ if __name__ == '__main__':
     parser.add_argument('--editor', type=Path, help='Update the 2D editor metric background')
     args = parser.parse_args()
     plot, garden, _, house = sources(args.model)
-    garden = build_paths(plot, garden, house)
+    model = args.model.read_text()
+    marker = 'const interiorData='
+    interior, _ = json.JSONDecoder().raw_decode(model, model.index(marker)+len(marker))
+    garden = build_paths(plot, garden, house, interior)
     if args.editor:
         sync_editor(args.editor, plot, garden)
     args.output.write_text(json.dumps(garden, ensure_ascii=False, indent=2))

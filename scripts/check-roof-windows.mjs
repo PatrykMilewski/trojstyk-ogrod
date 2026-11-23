@@ -82,16 +82,18 @@ test('actual Icon interior lining callback opens every window through both real 
   };
   const oak=bedroomHits(12,11)[0].object.material;
   assert.equal(oak.name,'Honey oak bedroom ceiling panels');
-  for(const x of [9.945,10.77,12.11,13.54,14.275])for(const y of [8.035,8.37,8.55,10.91,12.345]){
+  const suite=data.rooms.find(r=>r.id==='1.8').box;
+  const left=suite[0],front=suite[1],right=14.64-.50,back=12.71-.50;
+  for(const x of [left+.005,10.77,12.11,13.54,right-.005])for(const y of [front+.005,8.37,8.55,10.91,back-.005]){
     const sample=bedroomHits(x,y);
     assert.equal(sample.length,1,'One finish over the bedroom');
     assert.equal(sample[0].object.material,oak,'Both slopes reach the four built wall faces');
-    assert(Math.abs(sample[0].uv.x-(x-9.94)/(14.28-9.94))<1e-5,'Grain across the room');
-    assert(Math.abs(sample[0].uv.y-(y-8.03)/(12.35-8.03))<1e-5,'Continuous grain along the slope after clipping');
+    assert(Math.abs(sample[0].uv.x-(x-left)/(right-left))<1e-5,'Grain across the room');
+    assert(Math.abs(sample[0].uv.y-(y-front)/(back-front))<1e-5,'Continuous grain along the slope after clipping');
   }
-  for(const [x,y] of [[9.93,9],[10.55,8.02],[13.05,7.4],[14.29,11],[12,12.36]]){
+  for(const [x,y] of [[left-.01,9],[10.55,front-.01],[13.05,7.4],[right+.01,11],[12,back+.01]]){
     const sample=bedroomHits(x,y);
-    assert.equal(sample.length,1);
+    assert(sample.length>=1);
     assert.equal(sample[0].object.material.color.getHex(),0xede8df,'Neutral lining outside the bedroom');
   }
   const combined=[...meshes(models[0],true),...linings(cut)];
@@ -104,6 +106,61 @@ test('actual Icon interior lining callback opens every window through both real 
   }
   assert(html.includes('cutRoof:(geometry,matrix)=>cutRoofGeometry(THREE,geometry,roofCuts.filter(o=>o.parcel==="193"),matrix)'),
     'generated model must pass the real lining cut callback');
+});
+
+test('finished attic slopes, collar height and eight skylight reveals follow the sections',async()=>{
+  const {addIconInterior}=await load(await readFile(new URL('../src/model/interior.js',import.meta.url),'utf8'));
+  const data=JSON.parse(await readFile(new URL('../trzy-domy-3d/interior-data.json',import.meta.url),'utf8'));
+  const own=openings.filter(o=>o.parcel==='193');
+  const interior=addIconInterior({THREE,scene:new THREE.Scene(),house,data,cutRoof:(g,m)=>cutRoofGeometry(THREE,g,own,m)});
+  interior.group.updateMatrixWorld(true);
+  const lining=interior.group.children.filter(m=>m.name.startsWith('interior-roof-lining-'));
+  const close=(a,b)=>assert(Math.abs(a-b)<1e-4,`${a} versus ${b}`);
+  assert.deepEqual(data.atticSection.flatCeilingRoomIds,['1.2','1.3','1.5','1.6','1.7']);
+  const samples=[
+    ['front bedroom 1.1',4.25,2.03,7.73],['family bathroom 1.2',4,4.55,5.86],
+    ['child bedroom 1.3',3.9,7.5,5.86],['entry corridor 1.4',5.5,4.8,5.82],
+    ['corridor beside the sloped roof',6.15,3.76,5.82],['inside corridor mouth',5.5,7.95,5.82],
+    ['open side of corridor mouth',5.5,7.97,7.24],['beside gallery glass',5.5,10.20,6.48],
+    ['mezzanine 1.4',7.5,8.6,7.59],['laundry 1.5',7.25,7.2,5.86],
+    ['private bathroom 1.6',10.45,7.03,5.86],['dressing room 1.7',12.05,7.03,5.86],
+    ['suite 1.8',11.8,8.77,7.42],['stairwell',8.6,9.8,6.39],['living void',4.25,14.3,7.73],
+    ['knee wall',.50,.84,3.98],['main eaves',1.12,.84,4.60],['main slope',1.92,.84,5.40],
+    ['wing eaves',12,11.59,4.60],['wing slope',12,10.79,5.40],['low laundry extension',6.58,4.03,5.40]
+  ];
+  for(const [label,x,y,z] of samples){
+    const [wx,wy]=interior.localToWorld([x,y]);
+    const surface=hits(lining,[wx,wy,3.21],[0,0,1],5)[0];
+    assert.ok(surface,label+' has a visible roof lining');
+    assert.ok(Math.abs(interior.navigation.ceilingHeight([wx,wy])-z)<1e-4,label+' walk height');
+    assert.ok(Math.abs(surface.point.z-z)<1e-4,label+' visible height');
+  }
+  const corridor=data.atticSection.corridorCeilingBox;
+  const wall=id=>data.walls.find(w=>w.id===id);
+  const west=wall('u-room2-hall'),east=wall('u-laundry-hall'),end=wall('u-room1'),suite=wall('u-suite-front');
+  [west.a[0]+west.thickness/2,end.a[1]+end.thickness/2,east.a[0]-east.thickness/2,suite.a[1]+suite.thickness/2]
+    .forEach((face,i)=>close(corridor[i],face));
+  const header=interior.group.getObjectByName('attic-corridor-header');
+  const [left,,right,mouth]=corridor;
+  const intoHall=new THREE.Vector3(0,-1,0).transformDirection(interior.group.matrix).toArray();
+  for(const x of [left+.005,(left+right)/2,right-.005]){
+    const ray=z=>hits([header],interior.localToWorld([x,mouth+.15,z]),intoHall,.3);
+    assert.equal(ray(5.81).length,0,'Corridor entrance stays open below its ceiling');
+    for(const z of [5.83,7.22])close(ray(z)[0].distance,.15);
+    assert.equal(ray(7.24).length,0,'The infill stops at the roof lining');
+  }
+  const canopy=interior.group.getObjectByName('light-fixture-upper-hall-canopy');
+  const up=new THREE.Vector3(0,1,0).applyQuaternion(canopy.quaternion);
+  close(up.z,1);close(canopy.position.z+.0125,5.82);
+  for(const opening of own){
+    const reveal=createRoofWindowGlazing(THREE,opening).getObjectByName(opening.id+'-reveal');
+    assert(reveal?.castShadow && reveal.receiveShadow);
+    for(let i=0;i<4;i++){
+      const p=opening.vertices[i],v=new THREE.Vector3().fromBufferAttribute(reveal.geometry.attributes.position,6*i+5);
+      close(p[0],v.x);close(p[1],v.y);close(v.z,interior.navigation.ceilingHeight(p));
+      assert(p[2]-v.z>.58 && p[2]-v.z<.65);
+    }
+  }
 });
 
 test('Icon skylights follow the catalogue attic schedule and meet the physical roof',async()=>{

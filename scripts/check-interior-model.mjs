@@ -17,6 +17,22 @@ test('published interior renderer matches source', { skip: sourceOnly }, () => {
 const { addIconInterior } = await load(interiorSource);
 const { createWalkMotion, createWalkCollision, mergeInteriorNavigation } = await load(await readFile(new URL('../src/model/walk.js', import.meta.url), 'utf8'));
 const data = JSON.parse(await readFile(new URL('../trzy-domy-3d/interior-data.json', import.meta.url), 'utf8'));
+test('room dimensions agree with the basic Icon product card and enclose the finished floor outlines', () => {
+  const areas = [35.87, 6.37, 4.32, 61.31, 5.39, 10.35, 3.37, 12.63, 13.14,
+    16.93, 5.95, 14.23, 16.02, 6.47, 5.52, 5.12, 13.57];
+  assert.deepEqual(data.rooms.map(room => room.area), areas);
+  const spansMm = [[5950, 6030], [3110, 2460], [2700, 1600], [8400, 8040], [4490, 1200],
+    [4610, 3260], [2570, 1430], [2800, 4510], [5100, 2790], [7500, 3100], [4270, 1900],
+    [4270, 4400], [4890, 6580], [2470, 4080], [2640, 3110], [2450, 3110], [4200, 4250]];
+  for (const [i, room] of data.rooms.entries()) {
+    const [left, front, right, back] = room.box;
+    assert.deepEqual([right - left, back - front].map(m => Math.round(m * 1000)), spansMm[i], room.id);
+    if (!room.outline) continue;
+    const x = room.outline.map(point => point[0]);
+    const y = room.outline.map(point => point[1]);
+    assert.deepEqual(room.box, [Math.min(...x), Math.min(...y), Math.max(...x), Math.max(...y)], room.id);
+  }
+});
 const embedded = html.match(/const interiorData=(.*);\nconst interior=addIconInterior/);
 assert(embedded, 'Embedded interior dimensions');
 test('published interior dimensions match source', { skip: sourceOnly }, () => {
@@ -27,14 +43,14 @@ const stairs = [[7.4, 8.8, 0], [8.39, 9.23, 0], [8.39, 11.31, 1.6], [8.39, 11.8,
   [9.35, 11.8, 1.6], [9.35, 11.31, 1.6], [9.35, 9.23, 3.2], [9.35, 8.6, 3.2], [8.7, 8.6, 3.2]];
 const routes = {
   '0.1': [[7.4, 5.5], [5.5, 5.5]],
-  '0.2': [[7.4, 5.5], [2.1, 5.5], [2.1, 7.5]],
+  '0.2': [[7.4, 5.5], [1.60, 5.5], [1.60, 7.5]],
   '0.3': [[7.4, 5.5], [5.1, 5.5], [5.1, 7.5]],
   '0.4': [[7.4, 8.8], [7.1, 9.75], [5, 9.75]],
   '0.5': [[7.4, 8.6]],
   '0.6': [[7.5, 6]],
   '0.7': [[7.4, 8.6], [9.81, 8.6], [9.81, 7.32]],
-  '0.8': [[7.4, 8.8], [10.6, 8.8], [12, 8.8], [12, 7]],
-  '0.9': [[7.4, 8.8], [10.3, 8.8], [10.3, 10.5], [10.16, 11.9]],
+  '0.8': [[7.4, 8.8], [10.6, 8.62], [12, 8.62], [12, 7]],
+  '0.9': [[7.4, 8.8], [10.70, 8.8], [10.70, 10.12], [10.3, 10.5], [10.16, 11.9]],
   '1.1': [[5.6, 8.6], [5.6, 4.5], [5.7, 2]],
   '1.2': [[5.6, 8.6], [5.6, 5.1], [3, 5.1]],
   '1.3': [[5.6, 8.6], [5.6, 7.39], [3.5, 7.39]],
@@ -42,7 +58,7 @@ const routes = {
   '1.5': [[5.6, 8.6], [5.6, 6.6], [7.1, 6.6]],
   '1.6': [[9.2, 8.6], [10.45, 8.6], [10.45, 6.8]],
   '1.7': [[10.6, 8.6], [13, 8.6], [13, 6.8]],
-  '1.8': [[10.6, 8.6], [11, 10]],
+  '1.8': [[10.6, 8.6], [10.27, 9.60]],
 };
 function motionAtEntry() {
   const motion = createWalkMotion(createWalkCollision([]), navigation);

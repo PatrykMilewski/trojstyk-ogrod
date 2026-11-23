@@ -101,6 +101,10 @@ export function rainHydraulics193() {
     [seRear,[9.04,12.995],[15.795,12.995],tee]];
   const lengths=eastRoutes.map(rainLength193),fall=Math.max(...lengths)*.012;
   const east=eastRoutes.map((points,i)=>rainGrade193(points,-.47,fall/lengths[i]));
+  const [a,b]=east[1].slice(1,3),joinX=15.37;
+  const joinZ=a[2]+(b[2]-a[2])*(joinX-a[0])/(b[0]-a[0]);
+  const pergola=rainGrade193([[joinX,a[1]],[14.605,a[1]+joinX-14.605],[14.605,16.645]],joinZ,-.018).reverse();
+  pergola.unshift([14.605,16.645,-.20]);
   const eastTrunk=rainGrade193([tee,rainFilter193],east[0].at(-1)[2],.012);
   const eastIn=eastTrunk.at(-1),eastOut=[...rainFilter193,eastIn[2]-.08];
   const tankInlet=rainGrade193([rainFilter193,[rainFilter193[0],rainTankY193-1.75]],eastOut[2],.012);
@@ -126,7 +130,7 @@ export function rainHydraulics193() {
     floorArea:footprintM2*.48,pondDepth:rainGarden193.designLevel-rainGarden193.floor,
     storageM3:.90*rainBedStorage193(triangles,rainGarden193.designLevel),
     storageToSaddleM3:.90*rainBedStorage193(triangles.filter(t=>t.every(p=>p[1]>=2.02)),rainGarden193.crest)};
-  return {west,garden,east,eastTrunk,eastIn,eastOut,
+  return {west,garden,east,pergola,eastTrunk,eastIn,eastOut,
     tankInlet,tank,overflow,feeds,vents,fields,fieldPorts:fieldPorts193};
 }
 
@@ -171,7 +175,7 @@ export function rainServiceAccess193(house,project) {
       x+columns*rainField193.unit+margin,y+rows*rainField193.unit+margin]),
     [15.55,13.57,16.76,18.50],
     [fieldX193-.50,fieldY193-.57,fieldVent193[0]+.45,fieldY193+.53],
-    [fieldX193-1.40,fieldY193-.40,fieldX193,fieldY193+.40]
+    [12.80,fieldY193-.40,fieldX193,fieldY193+.40]
   ];
   return [rainGardenFootprint193(house,project),rainGardenSpillFootprint193(house,project),...areas.map(bounds=>({ring:rainPlanRing193(house,project,bounds)})),
     ...rainCovers193.map(([id,x,y,r])=>({id:'rain-'+id,
@@ -260,6 +264,7 @@ function rainCollectors193(draw,layout) {
       plate.rotation.order='ZYX';plate.rotation.z=Math.atan2(dy,dx);plate.rotation.y=-Math.atan2(dz,run);
     }
   }
+  draw.route('pergola-collector',layout.pergola,.045,true);
   draw.route('ground-east-trunk',layout.eastTrunk);
   draw.route('filter-drop-leaf-filter',[layout.eastIn,layout.eastOut]);
   draw.chamber('leaf-filter',...rainFilter193,layout.eastOut[2]-.15,.23);
@@ -683,11 +688,13 @@ export function createRainServices(THREE,house,interior,data) {
   const headspace=layout.fields.reduce((sum,f)=>sum+f.width*f.depth*(f.base+f.height-lowVentInvert),0);
   const inserted=layout.fields.length*Math.PI*(fieldPorts193.feedRadius**2+fieldPorts193.ventRadius**2)*fieldPorts193.insertion;
   const fieldVentedM3=fieldNetM3-headspace-inserted;
-  const swArea=4.25*18.13;
+  const swArea=4.25*18.13,pergolaArea=6.30*4.38;
+  // Size for the full frame footprint with the canopy deployed and all rainfall collected.
+  const pergolaStorm=pergolaArea*.03;
   group.userData={kind:'rain-services',parcel:'193',projectedRoofM2:area,assumedStormMm:30,
-    runoffCoefficient:.90,stormVolumeM3:area*.027,tankUsableM3:rainTank193.usableM3,fieldNetM3,fieldVentedM3,
+    runoffCoefficient:.90,pergolaEnvelopeM2:pergolaArea,pergolaStormM3:pergolaStorm,stormVolumeM3:area*.027+pergolaStorm,tankUsableM3:rainTank193.usableM3,fieldNetM3,fieldVentedM3,
     circuits:{sw:{areaM2:swArea,stormM3:swArea*.027,directRainM3:(layout.garden.footprintM2+layout.garden.spillAreaM2)*.030,gardenM3:layout.garden.storageM3},
-      se:{areaM2:area-swArea,stormM3:(area-swArea)*.027}}};
+      se:{roofAreaM2:area-swArea,areaM2:area-swArea+pergolaArea,stormM3:(area-swArea)*.027+pergolaStorm}}};
   const draw=rainDrawing(THREE,group),{eave,ridge}=house.metadata.dimensions;
   rainRoof193(draw,eave,ridge,layout);rainCollectors193(draw,layout);rainStorage193(THREE,draw,layout);
   const rootSection=new THREE.BufferGeometry();

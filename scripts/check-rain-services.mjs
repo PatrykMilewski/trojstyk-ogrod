@@ -31,12 +31,12 @@ test('catchment uses the projected roof triangles and covers a 30 mm event with 
   }
   const info=rain.userData;
   assert(close(info.projectedRoofM2,actual));
-  assert(close(info.stormVolumeM3,actual*.03*.9));
+  assert(close(info.stormVolumeM3,actual*.03*.9+6.30*4.38*.03));
   const {sw,se}=info.circuits;
   const westRoof=house.meshes.filter(m=>m.kind==='roof').flatMap(m=>m.faces.map(f=>f.map(i=>m.vertices[i])))
     .filter(tri=>tri.every(p=>new THREE.Vector3(...p).applyMatrix4(group.matrix.clone().invert()).x<4.251));
   const westArea=westRoof.reduce((sum,[a,b,c])=>sum+Math.abs((b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]))/2,0);
-  assert(close(sw.areaM2,westArea)&&close(se.areaM2,actual-westArea));
+  assert(close(sw.areaM2,westArea)&&close(se.roofAreaM2,actual-westArea)&&close(se.areaM2,se.roofAreaM2+info.pergolaEnvelopeM2));
   assert(close(se.stormM3+sw.stormM3,info.stormVolumeM3));
   assert(close(sw.stormM3+sw.directRainM3,2.5586,.001));
   assert(sw.gardenM3>=sw.stormM3+sw.directRainM3&&info.tankUsableM3>=se.stormM3);

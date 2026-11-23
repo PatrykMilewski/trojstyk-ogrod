@@ -125,5 +125,18 @@ export function createRoofWindowGlazing(THREE, opening) {
   const material=new THREE.MeshStandardMaterial({color:'#92b4bf',transparent:true,opacity:.2,roughness:.12,metalness:0,side:THREE.DoubleSide,depthWrite:false});
   const mesh=new THREE.Mesh(geometry,material);mesh.name=opening.id;mesh.castShadow=false;mesh.receiveShadow=false;
   mesh.userData={kind:'roof-window',parcel:opening.parcel,widthM:opening.widthM,heightM:opening.heightM,transmitsDirectSun:true};
+  if(opening.parcel==='193'){
+    // The 45° plaster line passes +3.98 m at the finished knee wall, 0.50 m inboard.
+    const lining=opening.vertices.map(([x,y,z])=>[x,y,3.98-.50+(z-.045-4.07)*4.25/(8.30-4.07)]);
+    const vertices=[];
+    for(let i=0;i<4;i++){
+      const j=(i+1)%4,a=opening.vertices[i],b=opening.vertices[j];
+      vertices.push(...a,...b,...lining[j],...a,...lining[j],...lining[i]);
+    }
+    const geometry=new THREE.BufferGeometry();
+    geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.computeVertexNormals();
+    const reveal=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:'#ede8df',roughness:.9,side:THREE.DoubleSide}));
+    reveal.name=opening.id+'-reveal';reveal.castShadow=true;reveal.receiveShadow=true;mesh.add(reveal);
+  }
   return mesh;
 }

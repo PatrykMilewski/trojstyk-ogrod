@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "coordinateSystem": "Original unmirrored catalogue coordinates, metres; x=0 left main facade, y=0 garage front. Apply house.metadata transform exactly once.",
   "levels": {
     "ground": 0,
@@ -90,90 +90,236 @@
         6.53
       ],
       "area": 35.87,
-      "finish": "tile"
+      "finish": "tile",
+      "outline": [
+        [
+          0.5,
+          0.5
+        ],
+        [
+          6.45,
+          0.5
+        ],
+        [
+          6.45,
+          6.53
+        ],
+        [
+          0.5,
+          6.53
+        ]
+      ]
     },
     {
       "id": "0.2",
       "name": "Spiżarnia",
       "box": [
         0.5,
-        6.79,
+        6.73,
         3.61,
-        8.39
+        9.19
       ],
       "area": 6.37,
-      "finish": "tile"
+      "finish": "tile",
+      "outline": [
+        [
+          0.5,
+          6.73
+        ],
+        [
+          3.61,
+          6.73
+        ],
+        [
+          3.61,
+          8.33
+        ],
+        [
+          2.1,
+          8.33
+        ],
+        [
+          2.1,
+          9.19
+        ],
+        [
+          0.5,
+          9.19
+        ]
+      ]
     },
     {
       "id": "0.3",
       "name": "Pomieszczenie techniczne",
       "box": [
-        3.87,
-        6.79,
-        6.57,
-        8.39
+        3.75,
+        6.73,
+        6.45,
+        8.33
       ],
       "area": 4.32,
-      "finish": "tile"
+      "finish": "tile",
+      "outline": [
+        [
+          3.75,
+          6.73
+        ],
+        [
+          6.45,
+          6.73
+        ],
+        [
+          6.45,
+          8.33
+        ],
+        [
+          3.75,
+          8.33
+        ]
+      ]
     },
     {
       "id": "0.4",
       "name": "Kuchnia, salon, jadalnia",
       "box": [
         0.5,
-        8.65,
-        8,
-        16.59
+        8.59,
+        8.9,
+        16.63
       ],
       "area": 61.31,
-      "finish": "oak"
+      "finish": "oak",
+      "outline": [
+        [
+          2.1,
+          8.59
+        ],
+        [
+          6.45,
+          8.59
+        ],
+        [
+          6.45,
+          9.22
+        ],
+        [
+          8.9,
+          9.22
+        ],
+        [
+          8.9,
+          12.21
+        ],
+        [
+          8,
+          12.21
+        ],
+        [
+          8,
+          16.63
+        ],
+        [
+          0.5,
+          16.63
+        ],
+        [
+          0.5,
+          9.19
+        ],
+        [
+          2.1,
+          9.19
+        ]
+      ]
     },
     {
       "id": "0.5",
       "name": "Komunikacja",
       "box": [
-        6.7,
-        8.01,
-        11.19,
-        9.21
+        6.71,
+        8.02,
+        11.2,
+        9.22
       ],
       "area": 5.39,
-      "finish": "oak"
+      "finish": "oak",
+      "outline": [
+        [
+          6.71,
+          8.02
+        ],
+        [
+          11.2,
+          8.02
+        ],
+        [
+          11.2,
+          9.22
+        ],
+        [
+          6.71,
+          9.22
+        ]
+      ]
     },
     {
       "id": "0.6",
       "name": "Wiatrołap z garderobą",
       "box": [
-        6.58,
+        6.59,
         4.71,
-        11.19,
-        7.88
+        11.2,
+        7.97
       ],
-      "area": 10.29,
+      "area": 10.35,
       "finish": "tile",
       "outline": [
         [
-          6.58,
+          6.59,
           4.71
         ],
         [
-          11.19,
+          10.97,
           4.71
         ],
         [
-          11.19,
+          10.97,
+          4.94
+        ],
+        [
+          11.2,
+          4.94
+        ],
+        [
+          11.2,
           6.31
         ],
         [
-          8.49,
+          8.63,
           6.31
         ],
         [
+          8.63,
+          5.71
+        ],
+        [
           8.49,
+          5.71
+        ],
+        [
+          8.49,
+          7.97
+        ],
+        [
+          7.03,
+          7.97
+        ],
+        [
+          7.03,
           7.88
         ],
         [
-          6.58,
+          6.59,
           7.88
         ]
       ]
@@ -184,24 +330,60 @@
       "box": [
         8.63,
         6.45,
-        11.19,
+        11.2,
         7.88
       ],
       "area": 3.37,
-      "finish": "tile"
+      "finish": "tile",
+      "outline": [
+        [
+          8.63,
+          6.45
+        ],
+        [
+          11.2,
+          6.45
+        ],
+        [
+          11.2,
+          7.88
+        ],
+        [
+          8.63,
+          7.88
+        ]
+      ]
     },
     {
       "id": "0.8",
       "name": "Pokój zabaw z rozkładaną sofą",
       "box": [
-        11.33,
+        11.34,
         4.71,
-        14.13,
+        14.14,
         9.22
       ],
       "area": 12.63,
       "finish": "oak",
-      "catalogueName": "Pokój gościnny"
+      "catalogueName": "Pokój gościnny",
+      "outline": [
+        [
+          11.34,
+          4.71
+        ],
+        [
+          14.14,
+          4.71
+        ],
+        [
+          14.14,
+          9.22
+        ],
+        [
+          11.34,
+          9.22
+        ]
+      ]
     },
     {
       "id": "0.9",
@@ -210,11 +392,29 @@
         9.04,
         9.42,
         14.14,
-        12.27
+        12.21
       ],
-      "area": 13.45,
+      "area": 13.14,
       "finish": "oak",
-      "catalogueName": "Gabinet"
+      "catalogueName": "Gabinet",
+      "outline": [
+        [
+          9.04,
+          9.42
+        ],
+        [
+          14.14,
+          9.42
+        ],
+        [
+          14.14,
+          12.21
+        ],
+        [
+          9.04,
+          12.21
+        ]
+      ]
     },
     {
       "id": "1.1",
@@ -222,11 +422,16 @@
       "box": [
         0.5,
         0.5,
-        8,
+        8.0,
         3.6
       ],
       "area": 16.93,
-      "finish": "oak"
+      "finish": "oak",
+      "cardDimensionsM": [
+        7.5,
+        3.1
+      ],
+      "floorAreaM2": 23.25
     },
     {
       "id": "1.2",
@@ -238,7 +443,12 @@
         5.64
       ],
       "area": 5.95,
-      "finish": "tile"
+      "finish": "tile",
+      "cardDimensionsM": [
+        4.27,
+        1.9
+      ],
+      "floorAreaM2": 8.11
     },
     {
       "id": "1.3",
@@ -250,7 +460,12 @@
         10.18
       ],
       "area": 14.23,
-      "finish": "oak"
+      "finish": "oak",
+      "cardDimensionsM": [
+        4.27,
+        4.4
+      ],
+      "floorAreaM2": 18.79
     },
     {
       "id": "1.4",
@@ -258,59 +473,146 @@
       "box": [
         4.91,
         3.74,
-        6.16,
-        10.18
+        9.8,
+        10.32
       ],
       "area": 16.02,
-      "finish": "oak"
+      "finish": "oak",
+      "cardDimensionsM": [
+        4.89,
+        6.58
+      ],
+      "outline": [
+        [
+          4.91,
+          3.74
+        ],
+        [
+          6.16,
+          3.74
+        ],
+        [
+          6.16,
+          7.96
+        ],
+        [
+          9.8,
+          7.96
+        ],
+        [
+          9.8,
+          9.23
+        ],
+        [
+          8.0,
+          9.23
+        ],
+        [
+          8.0,
+          10.32
+        ],
+        [
+          4.91,
+          10.32
+        ]
+      ],
+      "cardDimensionNote": "Obrys łamany. Korytarz ma 1,25 m szerokości. Pole obrysu poziomej posadzki pomija otwór schodów i wnęki progowe.",
+      "floorAreaM2": 14.85
     },
     {
       "id": "1.5",
       "name": "Pralnia",
       "box": [
         6.3,
-        5.11,
+        3.74,
         8.77,
-        7.89
+        7.82
       ],
       "area": 6.47,
-      "finish": "tile"
+      "finish": "tile",
+      "cardDimensionsM": [
+        2.47,
+        4.08
+      ],
+      "outline": [
+        [
+          6.3,
+          3.74
+        ],
+        [
+          8.0,
+          3.74
+        ],
+        [
+          8.0,
+          4.71
+        ],
+        [
+          8.77,
+          4.71
+        ],
+        [
+          8.77,
+          7.82
+        ],
+        [
+          6.3,
+          7.82
+        ]
+      ],
+      "cardDimensionNote": "Obrys L. Część 2,47 × 3,11 m i przedłużenie 1,70 × 0,97 m.",
+      "floorAreaM2": 9.33
     },
     {
       "id": "1.6",
       "name": "Łazienka prywatna",
       "box": [
         8.91,
-        5.11,
+        4.71,
         11.55,
-        7.89
+        7.82
       ],
       "area": 5.52,
-      "finish": "tile"
+      "finish": "tile",
+      "cardDimensionsM": [
+        2.64,
+        3.11
+      ],
+      "floorAreaM2": 8.21
     },
     {
       "id": "1.7",
       "name": "Garderoba",
       "box": [
         11.69,
-        5.11,
+        4.71,
         14.14,
-        7.89
+        7.82
       ],
       "area": 5.12,
-      "finish": "oak"
+      "finish": "oak",
+      "cardDimensionsM": [
+        2.45,
+        3.11
+      ],
+      "floorAreaM2": 7.62
     },
     {
       "id": "1.8",
       "name": "Sypialnia",
       "box": [
         9.94,
-        8.03,
+        7.96,
         14.14,
-        12.28
+        12.21
       ],
       "area": 13.57,
-      "finish": "oak"
+      "finish": "oak",
+      "cardDimensionsM": [
+        4.2,
+        4.25
+      ],
+      "floorAreaM2": 17.85
     }
   ],
   "walls": [
@@ -318,21 +620,21 @@
       "id": "garage-back",
       "a": [
         0.5,
-        6.66
+        6.63
       ],
       "b": [
-        6.57,
-        6.66
+        6.45,
+        6.63
       ],
-      "thickness": 0.26,
+      "thickness": 0.2,
       "doors": [
         [
-          1.16,
-          2.06
+          0.65,
+          1.55
         ],
         [
-          4.15,
-          5.05
+          4.18,
+          5.08
         ]
       ],
       "doorLeaves": [
@@ -357,18 +659,18 @@
     {
       "id": "garage-hall",
       "a": [
-        6.51,
+        6.52,
         4.71
       ],
       "b": [
-        6.51,
-        8.39
+        6.52,
+        7.88
       ],
       "thickness": 0.14,
       "doors": [
         [
-          0.3,
-          1.2
+          0.18,
+          1.18
         ]
       ],
       "doorLeaves": [
@@ -385,25 +687,25 @@
     {
       "id": "pantry-technical",
       "a": [
-        3.74,
-        6.79
+        3.68,
+        6.73
       ],
       "b": [
-        3.74,
-        8.39
+        3.68,
+        8.33
       ],
-      "thickness": 0.26,
+      "thickness": 0.14,
       "doors": []
     },
     {
       "id": "kitchen-back",
       "a": [
         0.5,
-        8.52
+        8.46
       ],
       "b": [
-        6.57,
-        8.52
+        6.45,
+        8.46
       ],
       "thickness": 0.26,
       "doors": [
@@ -416,18 +718,18 @@
     {
       "id": "guest-inner",
       "a": [
-        11.26,
+        11.27,
         4.71
       ],
       "b": [
-        11.26,
-        9.35
+        11.27,
+        9.22
       ],
       "thickness": 0.14,
       "doors": [
         [
-          3.68,
-          4.58
+          3.46,
+          4.36
         ]
       ],
       "doorLeaves": [
@@ -445,17 +747,17 @@
       "id": "guest-office",
       "a": [
         9.04,
-        9.35
+        9.32
       ],
       "b": [
         14.14,
-        9.35
+        9.32
       ],
-      "thickness": 0.14,
+      "thickness": 0.2,
       "doors": [
         [
-          0.85,
-          1.75
+          1.21,
+          2.11
         ]
       ],
       "doorLeaves": [
@@ -472,11 +774,11 @@
     {
       "id": "vestibule-bath-top",
       "a": [
-        8.56,
+        8.63,
         6.38
       ],
       "b": [
-        11.19,
+        11.2,
         6.38
       ],
       "thickness": 0.14,
@@ -499,17 +801,17 @@
       "id": "vestibule-screen",
       "finish": "clear-glass",
       "a": [
-        6.58,
-        7.95
+        6.71,
+        7.995
       ],
       "b": [
         8.49,
-        7.95
+        7.995
       ],
       "thickness": 0.05,
       "doors": [
         [
-          0.42,
+          0.32,
           1.32
         ]
       ]
@@ -521,14 +823,14 @@
         7.95
       ],
       "b": [
-        11.19,
+        11.2,
         7.95
       ],
       "thickness": 0.14,
       "doors": [
         [
-          0.87,
-          1.77
+          0.96,
+          1.86
         ]
       ],
       "doorLeaves": [
@@ -556,8 +858,8 @@
       "level": 1,
       "doors": [
         [
-          4.75,
-          5.65
+          4.59,
+          5.49
         ]
       ],
       "doorLeaves": [
@@ -599,12 +901,12 @@
       "level": 1,
       "doors": [
         [
-          0.9,
-          1.8
+          0.95,
+          1.85
         ],
         [
-          3.2,
-          4.1
+          3.36,
+          4.26
         ]
       ],
       "doorLeaves": [
@@ -634,14 +936,14 @@
       ],
       "b": [
         6.23,
-        8.03
+        7.96
       ],
       "thickness": 0.14,
       "level": 1,
       "doors": [
         [
-          2.42,
-          3.32
+          2.43,
+          3.33
         ]
       ],
       "doorLeaves": [
@@ -659,11 +961,11 @@
       "id": "u-laundry-private",
       "a": [
         8.84,
-        4.26
+        4.71
       ],
       "b": [
         8.84,
-        7.89
+        7.82
       ],
       "thickness": 0.14,
       "level": 1,
@@ -673,11 +975,11 @@
       "id": "u-private-dressing",
       "a": [
         11.62,
-        4.26
+        4.71
       ],
       "b": [
         11.62,
-        7.89
+        7.82
       ],
       "thickness": 0.14,
       "level": 1,
@@ -687,22 +989,22 @@
       "id": "u-suite-front",
       "a": [
         6.3,
-        7.96
+        7.89
       ],
       "b": [
-        14.28,
-        7.96
+        14.14,
+        7.89
       ],
       "thickness": 0.14,
       "level": 1,
       "doors": [
         [
-          3.7,
-          4.6
+          3.64,
+          4.54
         ],
         [
-          6.25,
-          7.15
+          6.17,
+          7.07
         ]
       ],
       "doorLeaves": [
@@ -724,18 +1026,18 @@
       "id": "u-suite-hall",
       "a": [
         9.87,
-        8.03
+        7.96
       ],
       "b": [
         9.87,
-        12.66
+        12.21
       ],
       "thickness": 0.14,
       "level": 1,
       "doors": [
         [
-          0.2,
-          1.1
+          0.18,
+          1.08
         ]
       ],
       "doorLeaves": [
@@ -762,6 +1064,32 @@
       "thickness": 0.14,
       "level": 1,
       "doors": []
+    },
+    {
+      "id": "garage-hall-return",
+      "a": [
+        6.58,
+        7.88
+      ],
+      "b": [
+        6.58,
+        9.22
+      ],
+      "thickness": 0.26,
+      "doors": []
+    },
+    {
+      "id": "vestibule-service-chase",
+      "a": [
+        11.085,
+        4.71
+      ],
+      "b": [
+        11.085,
+        4.94
+      ],
+      "thickness": 0.23,
+      "doors": []
     }
   ],
   "stairs": {
@@ -782,14 +1110,14 @@
   "void": {
     "box": [
       0,
-      10.3,
+      10.32,
       8.5,
       18.13
     ]
   },
   "entry": {
     "position": [
-      7.4,
+      7.51,
       4.21,
       0
     ],
@@ -809,24 +1137,22 @@
       "work/icon3d/interior-research/section1-mirror.jpg"
     ],
     "assumptions": [
-      "Approximate visual reconstruction from public catalogue raster plans, not execution or BIM documentation.",
-      "Room areas, 18 stair rises, 26cm treads, 90cm flight widths, 2.80m ceiling and +3.20m floor come from publisher drawings. Coordinates and door placement are manually traced approximations, typically 10–20cm uncertainty.",
+      "Room dimensions are registered to the finished wall faces on sheets 4 and 5 of the Stodoła Icon base product card. Scheduled usable areas are transcribed from the publisher; furniture and owner adaptations are modelled separately.",
       "Source stair label18×17.68cm sums to3.1824m; visual model uses section+3.20m and uniform18rises.",
       "Published room usable areas on sloped upper floor differ from rectangular floor footprints.",
-      "Upper slope follows unchanged exterior roof; interior roof finish thickness and installation void estimated.",
-      "The 0.90 m doorway to the private bathroom occupies local x=10.00–10.90 m along the suite partition. Its approximate position is fitted to the traced plan and the junction with the hall wall.",
-      "Eight roof windows on the mirrored attic plan have matching openings through the outer roof and the interior lining 45 mm below it. Window centres were digitised from the drawing; glazing size is an estimate. The living room has a solid roof.",
+      "The finished 45° slopes follow the 0.78 m knee height and the 1.40/2.20 m contours. Sheet 6 shows plasterboard 2.66 m above the upper floor from the rear wall of room 1.1 to the living void. The model applies the +5.86 m cap in rooms 1.2, 1.3, 1.5, 1.6 and 1.7. The supplied mezzanine visualization also shows a ceiling over the narrow approach in hall 1.4. Its modeled extent follows the adjacent wall faces and its level (+5.82 m) meets the lowest corner of the adjoining slope. The gallery beside the balustrade is open to the roof.",
+      "The 0.90 m private-bathroom door runs from x=9.94 to 10.84 m. The dimension chain on page 5 gives 1.03 / 0.90 / 0.71 m.",
+      "Eight roof windows open through both the exterior and the dimensioned interior roof lining. Their dimensions and framing are schematic.",
       "The plant room door and the garage-side pantry door swing into the garage. The concealed kitchen-side pantry door swings into the kitchen. Other door handing and the two opposing pocket doors in the main suite follow the catalogue floor plans. Values describe the original plan before the site mirror. The main entry, vestibule glass door, concealed pantry front and terrace slider open on approach. Individual paint colours, hardware and pocket tracks are visual design assumptions.",
       "Furniture inventory records approximate source footprints and front direction; beds face from head to foot. Dimensions are visual traces, typically uncertain by15–30cm, not product or execution dimensions.",
       "Room2 upper partition beside the void is solid; the hall alone has a guardrail. Laundry entry is through the side hall; its rear partition is solid as drawn.",
-      "Ground main-side glazing traced to y9.23–12.23m; terrace glazing traced to y13.90–16.60m. These refine openings only, preserving the exterior envelope.",
       "Private bathroom front sanitary fixture symbols overlap a rooflight in the public plan. Shower and WC remain explicit approximations; two wall basins follow the visible source.",
       "Furniture under roof slopes uses schematic heights; source footprints and wall contacts are more reliable than catalogue symbol sizes. No unsupported furniture is inferred from rooflight symbols.",
-      "Shared upper bathroom doorway refined to y4.64–5.54m against the source opening, leaving the shower approach clear.",
+      "The family bathroom opens between y=4.69 and 5.59 m. Bedroom 2 opens between y=7.10 and 8.00 m, following page 5.",
       "Custom 135 × 78 cm dining table inspired by Beliani MADOX, shown with its extension stored. Two chairs sit at each long side and one at each end. Chair designs and the inset socket dimensions are visual estimates.",
-      "The mirrored ground-floor drawing supplies usable areas 10.29 and 13.45 m²; their dimensioned footprints include finishes and the low office storage beneath the stairs. The four closed cabinet modules and their individual heights approximate a possible fit-out.",
       "Room 1.1 study desk, chair and wardrobe are a proposed fit-out. The upper hall reading corner and the exposed timber at the crossing of the two roofs interpret the supplied interior view. Member sizes and joints are for visualisation only.",
-      "Room 0.8 retains the catalogue folded sofa position. Its assumed pull-out daybed extends toward the room centre to 1.65 m overall depth, including frame and back, with a proposed 1.95 × 1.45 m sleeping area."
+      "Room 0.8 retains the catalogue folded sofa position. Its assumed pull-out daybed extends toward the room centre to 1.65 m overall depth, including frame and back, with a proposed 1.95 × 1.45 m sleeping area.",
+      "Attic usable areas are transcribed from the schedule. Model floor areas use the finished floor polygons, including low eaves and excluding the stair aperture in room 1.4. Furniture clearances beneath slopes are design choices."
     ],
     "furnitureSources": {
       "user-electrical": "Wyposażenie elektryczne wskazane przez inwestora. Wymiary i parametry magazynu pochodzą z karty AKMEL podanej przy urządzeniu. Gabaryty, osprzęt i rozmieszczenie falownika, rozdzielnicy i ładowarki oraz przebieg obwodów są poglądowe.",
@@ -843,9 +1169,7 @@
       "user-entry": "Entrance console, removable pouf, and painted fitted wardrobes interpreted from the user brief and reference photographs. Furniture sizes are design allowances.",
       "bror-85": "https://www.ikea.com/pl/pl/p/bror-regal-czarny-s89617443/",
       "bror-65": "https://www.ikea.com/pl/pl/p/bror-regal-czarny-s29619402/",
-      "bror-bench": "https://www.ikea.com/pl/pl/p/bror-lawa-do-pracy-czarny-sklejka-sosnowa-30333286/",
       "samsung-jet-85-pro": "Samsung Jet 85 pro VS20C8527TB/GE, 250 × 1130 × 202 mm, stacja 2w1 montowana do ściany. Gabaryty stacji i wysokość zawieszenia są poglądowe. https://www.samsung.com/pl/vacuum-cleaners/stick/vs9500al-stick-more-advance-cleaning-performance-hexajet-motor-jet-cyclone-blue-vs20c8527tb-ge/",
-      "bror-wall": "https://www.ikea.com/pl/pl/p/bror-polka-scienna-kombinacja-czarny-s09571854/",
       "user-ground-rooms": "Furnishings requested for the guest room, study and bathroom, fitted to the published plan. Furniture dimensions and finishes are schematic.",
       "user-study-playroom": "User-requested two-person study and children’s playroom fitted to publisher rooms 0.9 and 0.8. Desk, toy and unfolded sofa dimensions are design allowances.",
       "user-study-storage": "User-requested fitted bookcase behind the two existing workstations. Painted board and plain laminate, fitted to the study wall.",
@@ -854,7 +1178,8 @@
       "user-lounge-rug": "User-supplied cream pile rug with an irregular cornflower-blue grid, 200 × 300 cm.",
       "user-cat-rug": "User-supplied tufted cat rug, 120 × 180 cm.",
       "rugvista-bo-dog": "Rugvista Bo Dog 95 × 160 cm, cream beige / dark grey. https://www.rugvista.pl/p/bo-dog-95x160-cm-nieregularny-kremowy-bez-ciemnoszary-dywan-welniany-RVD44034",
-      "rugvista-ohara": "Rugvista Ohara 200 × 300 cm, rust red. https://www.rugvista.pl/p/ohara-200x300-cm-rdzawa-czerwien-duzy-dywan-RVD48817"
+      "rugvista-ohara": "Rugvista Ohara 200 × 300 cm, rust red. https://www.rugvista.pl/p/ohara-200x300-cm-rdzawa-czerwien-duzy-dywan-RVD48817",
+      "pantry-card-04": "Karta produktu Stodoła Icon, wersja podstawowa, rys. 04, spiżarnia 0.2. Rozstaw półek i rozkład zapasów według aranżacji."
     },
     "furnitureCoordinateUncertaintyM": 0.3,
     "finishSchedule": {
@@ -864,6 +1189,32 @@
       ],
       "veneerDescription": "Fornir orzechowy na blacie stolika kawowego i wąskim boku wnęki kawowej.",
       "officeDeskFinish": "Gładki laminat i stalowy stelaż z regulacją elektryczną."
+    },
+    "groundCard04": {
+      "sheet": 4,
+      "registration": "page points (222.12,166.08) at (0,0) m; 17.72 pt/m, positive y down page",
+      "adaptations": [
+        "garage and concealed pantry leaf handing",
+        "robot cabinet at concealed kitchen passage",
+        "playroom, two-person study and fitted cabinetry",
+        "glazed vestibule screen"
+      ],
+      "roomAreaBasis": "Published usable areas. Traced outlines describe wall faces; the pantry alcove and the first stair flight follow the drawing. Low-headroom storage, fit-out and service linings affect usable area."
+    },
+    "productCard": {
+      "file": "KARTA-PRODUKTU-STODOLA-ICON-WERSJA-PODSTAWOWA.pdf",
+      "sha256": "2a9b5e417841814c5c76200955eb5ba4b8b9fbea4c7e7b94c6f3de5c72cc0575",
+      "groundSheet": 4,
+      "upperSheet": 5,
+      "sectionSheets": [
+        6,
+        7
+      ],
+      "totalUsableAreaM2": 236.57,
+      "buildingFootprintM2": 199.12,
+      "frontWithoutCorniceM": 14.64,
+      "corniceProjectionM": 0.16,
+      "sideLengthM": 18.13
     }
   },
   "furniture": [
@@ -873,9 +1224,9 @@
       "room": "0.2",
       "box": [
         0.5,
-        6.83,
+        6.77,
         1.05,
-        7.68
+        7.62
       ],
       "facing": "+x",
       "source": "bror-85",
@@ -902,9 +1253,9 @@
       "room": "0.2",
       "box": [
         0.5,
-        7.7,
+        7.64,
         1.05,
-        8.35
+        8.29
       ],
       "facing": "+x",
       "source": "bror-65",
@@ -912,77 +1263,81 @@
       "elevation": 0.008,
       "shelfLevelsM": [
         0.103,
-        0.433,
-        0.763,
-        1.093,
-        1.423,
+        1.643,
         1.863
       ],
       "stock": [
-        "MĄKA",
-        "OGÓRKI",
-        "FASOLA",
-        "RYŻ",
-        "KAKAO",
-        "TOREBKI"
-      ]
+        "SPRZĄTANIE",
+        "ŚCIERKI",
+        "RĘKAWICE"
+      ],
+      "cleaningBay": true
     },
     {
       "id": "pantry-vacuum-bay",
       "type": "wall-mounted-vacuum",
       "room": "0.2",
-      "box": [2.138, 8.159, 2.399, 8.39],
+      "box": [
+        2.138,
+        8.099,
+        2.399,
+        8.33
+      ],
       "facing": "-y",
       "source": "samsung-jet-85-pro",
       "elevation": 0.008
     },
     {
-      "id": "pantry-bror-return",
-      "type": "bror-shelving",
+      "id": "pantry-fitted-garage",
+      "type": "pantry-shelving",
+      "room": "0.2",
+      "box": [
+        2.1,
+        6.73,
+        3.61,
+        7.08
+      ],
+      "facing": "+y",
+      "source": "pantry-card-04",
+      "elevation": 0.008
+    },
+    {
+      "id": "pantry-fitted-end",
+      "type": "pantry-shelving",
+      "room": "0.2",
+      "box": [
+        3.21,
+        7.08,
+        3.61,
+        7.98
+      ],
+      "facing": "-x",
+      "source": "pantry-card-04",
+      "elevation": 0.008
+    },
+    {
+      "id": "pantry-fitted-kitchen",
+      "type": "pantry-shelving",
       "room": "0.2",
       "box": [
         2.4,
-        7.84,
-        3.05,
-        8.39
+        7.98,
+        3.61,
+        8.33
       ],
       "facing": "-y",
-      "source": "bror-65",
-      "height": 1.9,
-      "elevation": 0.008,
-      "cleaningBay": true,
-      "shelfLevelsM": [0.103, 1.643, 1.863],
-      "stock": [
-        "SPRZĄTANIE",
-        "ŚCIERKI",
-        "RĘKAWICE"
-      ]
-    },
-    {
-      "id": "pantry-bror-bench",
-      "type": "bror-workbench",
-      "room": "0.2",
-      "box": [
-        3.06,
-        6.81,
-        3.61,
-        7.91
-      ],
-      "facing": "-x",
-      "source": "bror-bench",
-      "height": 0.88,
-      "elevation": 0.008,
-      "wallShelfSource": "bror-wall"
+      "source": "pantry-card-04",
+      "elevation": 0.008
     },
     {
       "id": "dhw-cylinder",
       "type": "dhw-cylinder",
       "room": "0.3",
       "box": [
-        3.89,
-        7.73,
-        4.55,
-        8.39
+        3.77,
+        7.67,
+        4.43,
+        8.33
       ],
       "facing": "-y",
       "source": "user-plant",
@@ -993,10 +1348,10 @@
       "type": "hydrobox",
       "room": "0.3",
       "box": [
-        4.55,
-        8.04,
-        5.22,
-        8.39
+        4.43,
+        7.98,
+        5.1,
+        8.33
       ],
       "facing": "-y",
       "source": "user-plant",
@@ -1009,9 +1364,9 @@
       "room": "0.3",
       "box": [
         5.7,
-        8.045,
+        7.985,
         6.43,
-        8.39
+        8.33
       ],
       "facing": "-y",
       "source": "user-plant",
@@ -1023,10 +1378,10 @@
       "type": "water-softener",
       "room": "0.3",
       "box": [
-        3.87,
-        6.82,
-        4.33,
-        7.33
+        3.75,
+        6.76,
+        4.21,
+        7.27
       ],
       "facing": "+x",
       "source": "user-plant",
@@ -1037,10 +1392,10 @@
       "type": "meter-assembly",
       "room": "0.3",
       "box": [
-        3.87,
-        7.33,
-        4.07,
-        7.72
+        3.75,
+        7.27,
+        3.95,
+        7.66
       ],
       "facing": "+x",
       "source": "user-plant",
@@ -1053,9 +1408,9 @@
       "room": "0.3",
       "box": [
         5.855,
-        6.79,
+        6.73,
         6.425,
-        7.175
+        7.115
       ],
       "facing": "+y",
       "source": "user-plant",
@@ -1068,9 +1423,9 @@
       "room": "0.3",
       "box": [
         6.2,
-        7.58,
+        7.52,
         6.44,
-        7.99
+        7.93
       ],
       "facing": "-x",
       "source": "user-electrical",
@@ -1101,9 +1456,9 @@
       "room": "0.3",
       "box": [
         6.161,
-        7.67,
+        7.61,
         6.425,
-        8.27
+        8.21
       ],
       "facing": "-x",
       "source": "user-electrical",
@@ -1132,9 +1487,9 @@
       "room": "0.3",
       "box": [
         5.245,
-        8.245,
+        8.185,
         5.685,
-        8.39
+        8.33
       ],
       "facing": "-y",
       "source": "user-electrical",
@@ -1220,9 +1575,9 @@
       "room": "0.4",
       "box": [
         0.5,
-        8.65,
+        8.59,
         2.05,
-        9.23
+        9.17
       ],
       "facing": "+y",
       "source": "living-render",
@@ -1245,9 +1600,9 @@
       "room": "0.4",
       "box": [
         2.05,
-        8.65,
+        8.59,
         5.25,
-        9.27
+        9.21
       ],
       "facing": "+y",
       "source": "ground-plan",
@@ -1259,9 +1614,9 @@
       "room": "0.4",
       "box": [
         5.25,
-        8.65,
+        8.59,
         6.45,
-        9.27
+        9.21
       ],
       "facing": "+y",
       "source": "ground-plan",
@@ -1273,9 +1628,9 @@
       "room": "0.4",
       "box": [
         3.3,
-        8.73,
+        8.67,
         4.0,
-        9.2
+        9.14
       ],
       "facing": "+y",
       "source": "ground-plan",
@@ -1545,7 +1900,7 @@
       "box": [
         8.63,
         5.71,
-        10.59,
+        10.6,
         6.31
       ],
       "facing": "-y",
@@ -1558,9 +1913,9 @@
       "type": "cabinet",
       "room": "0.6",
       "box": [
-        10.59,
+        10.6,
         4.71,
-        11.19,
+        11.2,
         6.31
       ],
       "facing": "-x",
@@ -1615,9 +1970,9 @@
       "type": "toilet",
       "room": "0.7",
       "box": [
-        10.53,
+        10.54,
         7.02,
-        11.19,
+        11.2,
         7.42
       ],
       "facing": "-x",
@@ -1641,18 +1996,18 @@
       "type": "sofa",
       "room": "0.8",
       "box": [
-        13.3,
+        13.31,
         5.05,
-        14.13,
+        14.14,
         7.15
       ],
       "facing": "-x",
       "source": "ground-plan",
       "approximation": "Folded footprint and orientation follow the publisher plan. Proposed daybed pulls out toward -x; the unfolded box includes the frame and is a design allowance.",
       "unfoldedBox": [
-        12.48,
+        12.49,
         5.05,
-        14.13,
+        14.14,
         7.15
       ],
       "sleepingSurface": [
@@ -1665,10 +2020,10 @@
       "type": "cabinet",
       "room": "0.8",
       "box": [
-        11.33,
-        5.2,
-        11.69,
-        7.2
+        11.34,
+        5.01,
+        11.7,
+        7.01
       ],
       "facing": "+x",
       "source": "ground-plan",
@@ -1708,9 +2063,9 @@
       "room": "0.9",
       "box": [
         10.74,
-        11.52,
+        11.46,
         12.12,
-        12.27
+        12.21
       ],
       "facing": "-y",
       "source": "user-study-playroom",
@@ -1735,9 +2090,9 @@
       "room": "0.9",
       "box": [
         12.2,
-        11.52,
+        11.46,
         13.58,
-        12.27
+        12.21
       ],
       "facing": "-y",
       "source": "user-study-playroom",
@@ -1761,9 +2116,9 @@
       "type": "bed",
       "room": "1.1",
       "box": [
-        0.52,
+        0.7,
         1.3,
-        2.52,
+        2.7,
         2.7
       ],
       "facing": "+x",
@@ -1774,9 +2129,9 @@
       "type": "table",
       "room": "1.1",
       "box": [
-        7.38,
+        7.15,
         1.22,
-        8,
+        7.77,
         2.82
       ],
       "facing": "-x",
@@ -1787,9 +2142,9 @@
       "type": "chair",
       "room": "1.1",
       "box": [
-        6.69,
+        6.46,
         1.75,
-        7.19,
+        6.96,
         2.25
       ],
       "facing": "+x",
@@ -1840,9 +2195,9 @@
       "type": "tub",
       "room": "1.2",
       "box": [
-        0.5,
+        0.7,
         3.74,
-        1.4,
+        1.6,
         5.64
       ],
       "facing": "+x",
@@ -1866,9 +2221,9 @@
       "type": "bed",
       "room": "1.3",
       "box": [
-        0.52,
+        0.7,
         7.65,
-        2.52,
+        2.7,
         9.05
       ],
       "facing": "+x",
@@ -1905,7 +2260,7 @@
       "type": "cabinet",
       "room": "1.3",
       "box": [
-        0.5,
+        0.96,
         9.58,
         4.17,
         10.18
@@ -1960,9 +2315,9 @@
       "room": "1.5",
       "box": [
         6.4,
-        7.39,
+        7.32,
         7.1,
-        7.89
+        7.82
       ],
       "facing": "-y",
       "source": "upper-plan"
@@ -1973,9 +2328,9 @@
       "room": "1.5",
       "box": [
         7.16,
-        7.21,
+        7.14,
         7.76,
-        7.89
+        7.82
       ],
       "facing": "-y",
       "source": "user-attic",
@@ -1987,9 +2342,9 @@
       "room": "1.5",
       "box": [
         7.82,
-        7.34,
+        7.27,
         8.75,
-        7.89
+        7.82
       ],
       "facing": "-y",
       "source": "user-attic",
@@ -2047,9 +2402,9 @@
       "room": "1.5",
       "box": [
         6.4,
-        7.56,
+        7.49,
         7.1,
-        7.89
+        7.82
       ],
       "facing": "-y",
       "source": "user-attic",
@@ -2063,9 +2418,9 @@
       "room": "1.5",
       "box": [
         7.16,
-        7.56,
+        7.49,
         7.76,
-        7.89
+        7.82
       ],
       "facing": "-y",
       "source": "user-attic",
@@ -2079,9 +2434,9 @@
       "room": "1.5",
       "box": [
         7.82,
-        7.56,
+        7.49,
         8.75,
-        7.89
+        7.82
       ],
       "facing": "-y",
       "source": "user-attic",
@@ -2095,9 +2450,9 @@
       "room": "1.5",
       "box": [
         7.32,
-        5.52,
+        5.44,
         8.57,
-        5.92
+        5.84
       ],
       "facing": "-y",
       "source": "user-attic",
@@ -2109,9 +2464,9 @@
       "room": "1.6",
       "box": [
         8.95,
-        5.4,
+        5.65,
         10,
-        6.4
+        6.65
       ],
       "facing": "+y",
       "source": "upper-plan",
@@ -2163,9 +2518,9 @@
       "room": "1.7",
       "box": [
         11.69,
-        5.11,
+        5.58,
         12.29,
-        7.89
+        7.82
       ],
       "facing": "+x",
       "source": "upper-plan",
@@ -2177,9 +2532,9 @@
       "room": "1.7",
       "box": [
         13.54,
-        5.11,
+        5.58,
         14.14,
-        7.89
+        7.82
       ],
       "facing": "-x",
       "source": "upper-plan",
@@ -2191,9 +2546,9 @@
       "room": "1.8",
       "box": [
         10.65,
-        9.4,
+        8.84,
         13.65,
-        11.4
+        10.84
       ],
       "facing": "+x",
       "source": "rugvista-ohara",
@@ -2206,9 +2561,9 @@
       "room": "1.8",
       "box": [
         11.15,
-        10.28,
+        9.72,
         13.15,
-        12.26
+        11.7
       ],
       "facing": "-y",
       "source": "upper-plan"
@@ -2219,9 +2574,9 @@
       "room": "1.8",
       "box": [
         10.62,
-        12.204,
+        11.644,
         13.68,
-        12.26
+        11.7
       ],
       "facing": "-y",
       "source": "user-attic",
@@ -2235,9 +2590,9 @@
       "room": "1.8",
       "box": [
         11.28,
-        9.77,
+        9.21,
         12.11,
-        10.2
+        9.64
       ],
       "facing": "-y",
       "source": "user-attic",
@@ -2250,9 +2605,9 @@
       "room": "1.8",
       "box": [
         12.19,
-        9.77,
+        9.21,
         13.02,
-        10.2
+        9.64
       ],
       "facing": "-y",
       "source": "user-attic",
@@ -2265,9 +2620,9 @@
       "room": "1.8",
       "box": [
         10.67,
-        11.88,
+        11.32,
         11.07,
-        12.26
+        11.7
       ],
       "facing": "-y",
       "source": "user-attic",
@@ -2279,9 +2634,9 @@
       "room": "1.8",
       "box": [
         13.23,
-        11.88,
+        11.32,
         13.63,
-        12.26
+        11.7
       ],
       "facing": "-y",
       "source": "user-attic",
@@ -2340,11 +2695,12 @@
         9.04,
         11.31,
         9.8,
-        12.23
+        12.21
       ],
       "facing": "+x",
       "source": "mirrored-ground-plan",
       "height": 1.28,
+      "heatingManifold": true,
       "doors": 2
     },
     {
@@ -2352,10 +2708,10 @@
       "type": "cabinet",
       "room": "0.8",
       "box": [
-        11.33,
-        7.22,
-        11.68,
-        8.32
+        11.34,
+        7.03,
+        11.69,
+        8.13
       ],
       "facing": "+x",
       "source": "user-study-playroom",
@@ -2366,9 +2722,9 @@
       "type": "cabinet",
       "room": "0.9",
       "box": [
-        11.1,
+        11.16,
         9.42,
-        13.25,
+        13.31,
         9.68
       ],
       "facing": "+y",
@@ -2380,9 +2736,9 @@
       "type": "pet-bed",
       "room": "0.9",
       "box": [
-        13.29,
+        13.33,
         9.42,
-        13.97,
+        14.01,
         9.94
       ],
       "facing": "+y",
@@ -2395,9 +2751,9 @@
       "room": "1.8",
       "box": [
         10.59,
-        10.71,
+        10.15,
         11.11,
-        11.39
+        10.83
       ],
       "facing": "-x",
       "height": 0.18,
@@ -2409,11 +2765,11 @@
       "id": "upper-void-edge",
       "a": [
         4.91,
-        10.275
+        10.295
       ],
       "b": [
         7.98,
-        10.275
+        10.295
       ],
       "level": 1
     }
@@ -2437,7 +2793,8 @@
           "top": 2.35,
           "glass": false
         }
-      ]
+      ],
+      "thickness": 0.5
     },
     {
       "id": "facade-garage-side",
@@ -2449,7 +2806,8 @@
         6.9,
         4.21
       ],
-      "openings": []
+      "openings": [],
+      "thickness": 0.45
     },
     {
       "id": "facade-front-wing",
@@ -2463,8 +2821,8 @@
       ],
       "openings": [
         {
-          "start": 0,
-          "end": 1,
+          "start": 0.11,
+          "end": 1.11,
           "bottom": 0,
           "top": 2.35,
           "glass": false
@@ -2477,13 +2835,14 @@
           "glass": true
         },
         {
-          "start": 4.8,
-          "end": 6.3,
+          "start": 4.81,
+          "end": 6.31,
           "bottom": 0,
           "top": 2.35,
           "glass": true
         }
-      ]
+      ],
+      "thickness": 0.5
     },
     {
       "id": "facade-wing-end",
@@ -2497,21 +2856,22 @@
       ],
       "openings": [
         {
-          "start": 4.29,
-          "end": 4.99,
+          "start": 4.25,
+          "end": 5.01,
           "bottom": 0,
           "top": 2.35,
           "glass": true
         },
         {
-          "start": 5.25,
-          "end": 7.39,
+          "start": 5.21,
+          "end": 7.35,
           "bottom": 0,
           "top": 2.35,
           "glass": true,
           "casement": true
         }
-      ]
+      ],
+      "thickness": 0.5
     },
     {
       "id": "facade-wing-rear",
@@ -2539,15 +2899,15 @@
       ],
       "openings": [
         {
-          "start": 1.19,
-          "end": 2.54,
+          "start": 1.22,
+          "end": 2.57,
           "bottom": 0,
           "top": 2.35,
           "glass": true
         },
         {
-          "start": 2.54,
-          "end": 3.89,
+          "start": 2.57,
+          "end": 3.92,
           "bottom": 0,
           "top": 2.35,
           "glass": false
@@ -2573,7 +2933,8 @@
           "glass": true,
           "panels": 3
         }
-      ]
+      ],
+      "thickness": 0.46
     },
     {
       "id": "facade-main-side",
@@ -2587,13 +2948,14 @@
       ],
       "openings": [
         {
-          "start": 9.23,
-          "end": 12.23,
+          "start": 9.21,
+          "end": 12.21,
           "bottom": 0,
           "top": 2.35,
           "glass": true
         }
-      ]
+      ],
+      "thickness": 0.5
     }
   ],
   "outdoorHeatPump": {
@@ -2735,7 +3097,7 @@
         "finish": "white",
         "support": "garage-back",
         "normal": "+y",
-        "alongM": 1.39,
+        "alongM": 2.22,
         "heightM": 1.06
       },
       {
@@ -2762,7 +3124,7 @@
         "finish": "blue",
         "support": "kitchen-tall-body",
         "normal": "+x",
-        "alongM": 8.93,
+        "alongM": 8.87,
         "heightM": 1.08
       },
       {
@@ -2852,7 +3214,7 @@
         "finish": "blue",
         "support": "guest-inner",
         "normal": "+x",
-        "alongM": 8.15,
+        "alongM": 7.89,
         "heightM": 1.08
       },
       {
@@ -2870,7 +3232,7 @@
         "finish": "blue",
         "support": "guest-office",
         "normal": "+y",
-        "alongM": 10.96,
+        "alongM": 10.08,
         "heightM": 1.08
       },
       {
@@ -2960,7 +3322,7 @@
         "finish": "black",
         "support": "u-room2-hall",
         "normal": "+x",
-        "alongM": 8.07,
+        "alongM": 8.13,
         "heightM": 1.08
       },
       {
@@ -6769,5 +7131,23 @@
         ]
       ]
     }
+  },
+  "atticSection": {
+    "kneeClearHeightM": 0.78,
+    "eaveToFinishedWallFaceM": 0.5,
+    "clearCeilingHeightM": 2.66,
+    "flatCeilingRoomIds": ["1.2", "1.3", "1.5", "1.6", "1.7"],
+    "corridorCeilingBox": [4.91, 3.74, 6.16, 7.96],
+    "pitchDeg": 45,
+    "heightContours": [
+      {
+        "heightM": 1.4,
+        "eaveInsetM": 1.12
+      },
+      {
+        "heightM": 2.2,
+        "eaveInsetM": 1.92
+      }
+    ]
   }
 }

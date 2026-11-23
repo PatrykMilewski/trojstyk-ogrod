@@ -101,6 +101,49 @@ function surfaceGraniteFan(u, v, noise, grit) {
     [1 + warm * bevel * .080, 1, 1 - warm * bevel * .109]];
 }
 
+// The repeat contains 12 × 12 irregular cobbles at an average 19 cm pitch.
+// Duplicate the border seeds so their colour and rounded shoulders wrap with the texture.
+const fieldstoneCount = 12;
+const fieldstoneTile = [2.28, 2.28];
+const fieldstoneSeeds = Array.from({length: fieldstoneCount + 2}, (_, j) =>
+  Array.from({length: fieldstoneCount + 2}, (_, i) => {
+    const col = (i - 1 + fieldstoneCount) % fieldstoneCount, row = (j - 1 + fieldstoneCount) % fieldstoneCount;
+    return {
+      x: i - .5 + (row % 2 - .5) * .42 + (surfaceHash(col, row, 11) - .5) * .45,
+      y: j - .5 + (surfaceHash(col, row, 37) - .5) * .62,
+      shade: .23 + .21 * surfaceHash(col, row, 70),
+      warmth: surfaceHash(col, row, 49) - .45,
+    };
+  }));
+
+function surfaceFieldstone(u, v, noise, grit) {
+  const x = surfaceUnit(u + (noise(23, 19, 73) - .5) * .006) * fieldstoneCount;
+  const y = surfaceUnit(v + (noise(21, 25, 28) - .5) * .006) * fieldstoneCount;
+  const col = Math.floor(x), row = Math.floor(y);
+  let first = Infinity, second = Infinity, third = Infinity, stone;
+  for (let j = row; j <= row + 2; j++) {
+    for (let i = col; i <= col + 2; i++) {
+      const seed = fieldstoneSeeds[j][i], dx = x - seed.x, dy = y - seed.y;
+      const distance = dx * dx + dy * dy;
+      if (distance < first) {
+        third = second; second = first; first = distance; stone = seed;
+      } else if (distance < second) {
+        third = second; second = distance;
+      } else if (distance < third) third = distance;
+    }
+  }
+  const corner = Math.max(0, 1 - (third - second) / .53);
+  const edge = (second - first) * .5 - .14 * corner * corner - .18 * Math.max(0, first - .24);
+  const shoulder = surfaceClamp((edge - .014) / .28);
+  const crown = 1 - (1 - shoulder) ** 2;
+  const cover = surfaceClamp((edge - .008) / .030);
+  const grain = (noise(173, 167, 41) - .5) * .064 + (grit - .5) * .048;
+  const mottling = (noise(46, 53, 32) - .5) * .074;
+  const shade = surfaceMix(.12 + grain, stone.shade * (.78 + .22 * crown) + mottling + grain, cover);
+  return [shade, .12 + .66 * crown + grain * .40,
+    [1 + stone.warmth * cover * .23, 1, 1 - stone.warmth * cover * .29]];
+}
+
 function surfaceGrass(u, v, noise, grit) {
   const patches = noise(5, 6, 19) * .51 + noise(11, 13, 81) * .30 + noise(27, 23, 5) * .19;
   const thatch = noise(121, 135, 56);
@@ -170,6 +213,7 @@ const surfaceProfiles = {
     sample: (u, v, n, g) => surfaceAggregate(n, g, .85)},
   gravel: {tile: [2.5, 2.5], gain: 1.09, bump: .035, roughness: .95, sample: (u, v, n, g) => surfaceAggregate(n, g, 1.2)},
   sand: {tile: [1.5, 1.5], gain: 1.04, bump: .012, roughness: .94, sample: (u, v, n, g) => surfaceAggregate(n, g, .39)},
+  fieldstone: {tile: fieldstoneTile, size: 512, gain: 1, color: 0xffffff, roughness: .90, bump: .016, sample: surfaceFieldstone},
   graniteFan: {tile: graniteFanTile, size: 1024, gain: 1, color: 0xffffff, roughness: .92, bump: .008, sample: surfaceGraniteFan},
   graniteCurb: {tile: [.64, .38], gain: 1, color: 0xffffff, roughness: .91, bump: .002,
     sample: (u, v, n, g) => {
@@ -269,7 +313,8 @@ function surfaceProfileFor(object, material, key, index, hasVinylTexture) {
   if (['smoothPaint', 'blackGlazing'].includes(material.userData.surfaceProfile)) return null;
   if (material.userData.surfaceProfile === 'facade') return 'facade';
   const color = material.color.getHexString();
-  if (object.userData.parcel === '193' && ['surface-driveway', 'surface-entry', 'surface-street-walk'].includes(name)) return 'graniteFan';
+  if (object.userData.parcel === '193' && ['surface-driveway', 'surface-entry'].includes(name)) return 'fieldstone';
+  if (object.userData.parcel === '193' && name === 'surface-street-walk') return 'graniteFan';
   if (name === 'icon-granite-curb-193') return 'graniteCurb';
   if (/^(parcel|context)-grass-/.test(name)) return 'grass';
   if (/^(parcel|context)-soil-/.test(name)) return 'soil';
@@ -422,7 +467,11 @@ function applyBarkScan(material, textures) {
   };
 }
 
+// Fourteen 117 mm board faces with approximately 10 mm open joints in the 900 × 830 image.
+const redwoodTileWidth = 14 * (.117 + .010);
 const scannedSurfaces = {
+  fieldstone: {metres: 2, tint: 0xffffff},
+  iconThermalRedwood: {tile: [redwoodTileWidth, redwoodTileWidth * 830 / 900], tint: 0xffffff, roughness: .88, bump: 0, gain: 1},
   iconCharredBoards: {tile: [2.8, 1.18], tint: 0xffffff, roughness: .88, bump: .0016, gain: 1},
   grass: {metres: 2, tint: 0xa0e4a1},
   planting: {metres: 1.3, tint: 0xd3bba3},
@@ -454,6 +503,7 @@ export async function applyRealisticSurfaces({THREE, scene, mats, renderer, scan
   const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   const textures = await loadSurfaceScans(THREE, scans, anisotropy);
   const hasVinylTexture = textures.has('virginOakVinyl');
+  const houseCladding = ['iconThermalRedwood', 'iconCharredBoards'].find(name => textures.has(name)) ?? 'facade';
   scene.traverse(object => {
     if (!object.isMesh || !object.geometry?.getAttribute('position')) return;
     if (object.isInstancedMesh && object.name.endsWith('-trunks') && textures.has('bark')) {
@@ -471,15 +521,16 @@ export async function applyRealisticSurfaces({THREE, scene, mats, renderer, scan
       return;
     }
     const originals = Array.isArray(object.material) ? object.material : [object.material];
-    const iconCladding = textures.has('iconCharredBoards') && (object.parent.name === 'icon-193-interior' || object.name.startsWith('garden-pier-'));
+    const gardenPier = /^garden-pier-\d+-wall-\d+$/.test(object.name);
     const types = originals.map((material, i) => {
       const type = surfaceProfileFor(object, material, keys.get(material), i, hasVinylTexture);
-      return iconCladding && type === 'facade' ? 'iconCharredBoards' : type;
+      const houseBoards = object.parent.name === 'icon-193-interior' && material.userData.surfaceProfile === 'facade';
+      return (houseBoards || gardenPier) && type === 'facade' ? houseCladding : type;
     });
     const type = types.find(Boolean);
     if (!type) return;
     const angle = /^surface-(driveway|entry|terrace)$/.test(object.name) ? siteRotation : 0;
-    const projectionType = types.find(t => t === 'facade' || t === 'iconCharredBoards') ?? type;
+    const projectionType = types.find(t => t === 'facade' || t === houseCladding) ?? type;
     const metres = scans[projectionType] && scannedSurfaces[projectionType].metres;
     const tile = metres ? [metres, metres] : (surfaceProfiles[projectionType] ?? scannedSurfaces[projectionType]).tile;
     object.geometry = surfaceProjectGeometry(THREE, object, tile, angle);

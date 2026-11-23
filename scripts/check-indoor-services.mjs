@@ -181,7 +181,15 @@ test('each zoned manifold has both primary connections and the pantry has a dedi
  }
 });
 
-test('four fitted heating cabinets open in the furnished house with installations hidden',async()=>{
+test('older furniture records locate the office manifold by the wardrobe ID',()=>{
+ const furniture=data.furniture.map(({heatingManifold,...item})=>item);
+ const legacy=createIndoorServices(THREE,null,{...data,furniture});
+ const rail='manifold-1-0.55';
+ assert.deepEqual(legacy.getObjectByName('underfloor-ground').getObjectByName(rail).userData,
+  at('underfloor-ground').getObjectByName(rail).userData);
+});
+
+test('all three dedicated service panels open in the furnished house with installations hidden',async()=>{
  const {createHeatingCabinets}=await load(await read('../src/model/heating-cabinets.js'));
  const source=await read('../src/model/interior.js');
  const {addIconInterior,iconVisiblePick}=await load(source+'\nexport {iconVisiblePick};');
@@ -192,7 +200,7 @@ test('four fitted heating cabinets open in the furnished house with installation
  interior.group.add(cabinets.group);scene.updateMatrixWorld(true);
  assert.equal(model.visible,false);
  const camera=new THREE.PerspectiveCamera(50,1.3,.02,100);camera.up.set(0,0,1);
- for(const [level,bank,n] of [['ground',0,9],['ground',1,6],['upper',0,7],['upper',1,5]]){
+ for(const [level,bank,n] of [['ground',0,9],['upper',0,7],['upper',1,5]]){
   const root=cabinets.group.getObjectByName('heating-cabinet-'+level+'-'+bank);
   const panel=root.getObjectByName('painted-access-panel'),hardware=root.getObjectByName('manifold-hardware');
   const tails=cabinets.group.getObjectByName(root.name+'-connections');
@@ -215,6 +223,72 @@ test('four fitted heating cabinets open in the furnished house with installation
   }
   assert(tap(),root.name+' open leaf can be closed');
   assert(!hardware.visible&&!tails.visible&&!root.userData.open);
+ }
+});
+
+test('office wardrobe doors provide access to the six-port manifold and its connections behind a continuous hall wall',async()=>{
+ const {addIconInterior,iconVisiblePick}=await load(await read('../src/model/interior.js')+'\nexport {iconVisiblePick};');
+ const {createHeatingCabinets}=await load(await read('../src/model/heating-cabinets.js'));
+ const marker='const [source,garden,house,neighbors]=',start=html.indexOf(marker)+marker.length;
+ const [,,house]=JSON.parse(html.slice(start,html.indexOf(';\nconst landscaping=',start)));
+ const scene=new THREE.Scene(),interior=addIconInterior({THREE,scene,house,data});
+ const cabinets=createHeatingCabinets(THREE,model,roots=>iconVisiblePick({THREE,scene},roots));
+ interior.group.add(cabinets.group);scene.updateMatrixWorld(true);
+ const wall=data.walls.find(w=>w.id==='guest-office'),wardrobe=data.furniture.find(f=>f.heatingManifold);
+ const [rear,south,front,north]=wardrobe.box,body=cabinets.group.getObjectByName('heating-cabinet-ground-1');
+ const rack=body.getObjectByName('manifold-hardware'),tails=cabinets.group.getObjectByName(body.name+'-connections');
+ assert.equal(body.getObjectByName('heating-access-door'),undefined);
+ assert.equal(tails.children.length,14);
+ assert.equal(rack.children.filter(o=>o.name.startsWith('flowmeter-')).length,6);
+ assert.equal(rack.children.filter(o=>/^return-valve-\d+$/.test(o.name)).length,6);
+ for(const mesh of [...rack.children,...tails.children]){
+  mesh.geometry.computeBoundingBox();
+  const bounds=mesh.geometry.boundingBox.clone().applyMatrix4(interior.group.matrixWorld.clone().invert().multiply(mesh.matrixWorld));
+  assert(bounds.min.x>rear+.018&&bounds.max.x<front-.045,mesh.name+' behind veneer');
+  assert(bounds.min.y>south+.018&&bounds.max.y<north-.018,mesh.name+' between gables');
+  assert(bounds.min.z>=-.00001&&bounds.max.z<.88,mesh.name+' below shelf');
+ }
+ for(const tail of tails.children){
+  const route=at('underfloor-ground').getObjectByName(tail.userData.route);
+  const terminal=route.userData.rail.startsWith('primary')?route.userData.to:route.userData.from;
+  assert(new THREE.Vector3(...terminal).distanceTo(new THREE.Vector3(...tail.userData.terminal))<.00001);
+ }
+ const rayHit=(x,y,z,dx,dy)=>{
+  const origin=new THREE.Vector3(...interior.localToWorld([x,y,z]));
+  const direction=new THREE.Vector3(dx,dy,0).transformDirection(interior.group.matrixWorld);
+  const hits=new THREE.Raycaster(origin,direction,0,1.25).intersectObject(interior.group,true);
+  return hits.find(hit=>{
+   for(let node=hit.object;node;node=node.parent)if(!node.visible)return false;
+   return true;
+  });
+ };
+ const hallFace=wall.a[1]-wall.thickness/2;
+ for(const x of [9.18,9.40,9.62])for(const z of [.12,.38,.55,.7]){
+  const hit=rayHit(x,hallFace-.5,z,0,1);
+  assert.equal(hit.object.name,wall.id);assert(Math.abs(hit.distance-.5)<1e-5);
+ }
+ const leafAt=y=>y>(south+north)/2?0:1;
+ const leafName=i=>wardrobe.id+'-door-'+i,seen=(y,z)=>rayHit(front+.56,y,z,-1,0).object.name;
+ const camera=new THREE.PerspectiveCamera(50,1,.01,100);camera.up.set(0,0,1);
+ for(const y of [body.position.y+.051,body.position.y+.255])assert.equal(seen(y,.55),leafName(leafAt(y)));
+ for(const i of [0,1]){
+  const y=south+(north-south)*(i===0?.75:.25);
+  camera.position.set(...interior.localToWorld([front+.9,y,.66]));
+  camera.lookAt(new THREE.Vector3(...interior.localToWorld([front,y,.58])));
+  camera.updateMatrixWorld(true);
+  assert(interior.appliances.toggleAt(new THREE.Vector2(),camera),leafName(i));
+  interior.appliances.update(performance.now()+500);scene.updateMatrixWorld(true);
+ }
+ for(const y of [body.position.y+.051,body.position.y+.255]){
+  assert.equal(seen(y,.55),'supply-header');
+  assert.equal(seen(y,.38),'return-header');
+ }
+ for(const tail of tails.children){
+  const route=at('underfloor-ground').getObjectByName(tail.userData.route),path=pipeCenterline(route);
+  const z=.18,index=path.findIndex((p,i)=>i&&(p.z-z)*(path[i-1].z-z)<=0);
+  assert(index>0,tail.name);
+  const a=path[index-1],b=path[index],drop=a.clone().lerp(b,(z-a.z)/(b.z-a.z));
+  assert.equal(seen(drop.y,z),tail.name);
  }
 });
 

@@ -566,7 +566,8 @@ export function mergeInteriorNavigation(interiors) {
   const sources = interiors.filter(item => item.navigation);
   if (!sources.length) return undefined;
   const merge = kind => sources.flatMap(({ parcel, navigation }) => navigation[kind].map(item =>
-    ({ ...item, id: `${parcel}:${item.id}` })));
+    item.dynamicHeight ? { ...item, id: `${parcel}:${item.id}`, get minZ(){ return item.minZ; }, get maxZ(){ return item.maxZ; } } :
+    { ...item, id: `${parcel}:${item.id}` }));
   return { obstacles: merge('obstacles'), floors: merge('floors'), ramps: merge('ramps'),
     ceilingHeight: point => Math.min(Infinity, ...sources.map(({ navigation }) => navigation.ceilingHeight?.(point) ?? Infinity)) };
 }

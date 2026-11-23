@@ -113,7 +113,7 @@ test('Icon floors use 592 × 148 mm Dąb Virgin vinyl at the existing heights an
   assert(html.includes('"virginOakVinyl": ["'+images.join('", "')+'"]'),'Standalone viewer embeds the current vinyl and its registered relief');
 });
 
-test('the two /193 paved surfaces share metric granite fans and adjacent parcels retain their finishes',async()=>{
+test('/193 driveway and doorstep share the fieldstone scan at real-world scale',async()=>{
   const source=await readFile(new URL('../src/model/surface-realism.js',import.meta.url),'utf8');
   const {applyRealisticSurfaces}=await load(source);
   const plot=site.variants.find(item=>item.id==='aktualny'),scene=new THREE.Scene();
@@ -124,23 +124,37 @@ test('the two /193 paved surfaces share metric granite fans and adjacent parcels
   };
   const driveway=surface(plot.driveway.coordinates[0],'driveway','193');
   const entry=surface(plot.entry.coordinates[0],'entry','193');
+  const streetWalk=surface(plot.entry.coordinates[0],'street-walk','193');
   const others=neighbors.surfaces.filter(p=>p.kind==='driveway'||p.kind==='entryPaving')
     .map(p=>surface(p.geometry.coordinates[0],p.kind,p.parcel));
   const angle=site.rotation*Math.PI/180;
-  await applyRealisticSurfaces({THREE,scene,mats:{},renderer:{capabilities:{getMaxAnisotropy:()=>8}},siteRotation:angle});
-  assert.equal(driveway.material.name,'graniteFan');
-  assert.equal(entry.material.map,driveway.material.map);
+  const maps=[new THREE.Texture(),new THREE.Texture()];
+  const urls=await Promise.all(['.webp','-relief.webp'].map(async suffix=>{
+    const bytes=await readFile(new URL('../src/model/surface-scans/cobblestone_floor_13'+suffix,import.meta.url));
+    return 'data:image/webp;base64,'+bytes.toString('base64');
+  }));
+  assert(html.includes(JSON.stringify('fieldstone')+': '+JSON.stringify(urls).replace('","','", "')));
+  class Loader {async loadAsync(url){return maps[urls.indexOf(url)];}}
+  await applyRealisticSurfaces({THREE:{...THREE,TextureLoader:Loader},scene,mats:{},
+    renderer:{capabilities:{getMaxAnisotropy:()=>8}},scans:{fieldstone:urls},siteRotation:angle});
+  for(const mesh of [driveway,entry]){
+    assert.equal(mesh.material.name,'fieldstone');
+    assert.equal(mesh.material.map,maps[0]);
+    assert.equal(mesh.material.bumpMap,maps[1]);
+  }
+  assert.equal(streetWalk.material.name,'graniteFan');
   for(const other of others)assert.equal(other.material.name,'pavers');
   const radius=.832,repeat=[2*Math.sqrt(3)*radius,2*radius];
   for(const mesh of [entry,driveway]){
+    const tile=[2,2];
     const {uv,position}=mesh.geometry.attributes;
     for(let i=0;i<uv.count;i++){
       const x=position.getX(i),y=position.getY(i);
-      assert(Math.abs(uv.getX(i)*repeat[0]-x*Math.cos(angle)-y*Math.sin(angle))<.00001);
-      assert(Math.abs(uv.getY(i)*repeat[1]+x*Math.sin(angle)-y*Math.cos(angle))<.00001);
+      assert(Math.abs(uv.getX(i)*tile[0]-x*Math.cos(angle)-y*Math.sin(angle))<.00001);
+      assert(Math.abs(uv.getY(i)*tile[1]+x*Math.sin(angle)-y*Math.cos(angle))<.00001);
     }
   }
-  const image=entry.material.bumpMap.image;
+  const image=streetWalk.material.bumpMap.image;
   const relief=(x,y)=>{
     const pixel=(n,span,limit)=>Math.floor(((n/span%1+1)%1)*limit);
     return image.data[(pixel(y,repeat[1],image.height)*image.width+pixel(x,repeat[0],image.width))*4];

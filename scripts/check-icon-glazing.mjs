@@ -63,13 +63,13 @@ test('lower garden glazing has two fixed sidelights and a framed centre leaf on 
  interior.updateHallDoors(null);interior.group.updateMatrixWorld(true);
  close(leaf.position.x,left+width+.003,'moving panel clears first divider');
  close(leaf.userData.width,width-.006,'centre sash fits between equal bays');
- close(leaf.position.y,16.785,'moving track');
+ close(leaf.position.y,16.795,'moving track');
  const glass=object('living-slider-glass');
  assert(glass.material.transparent);assert.equal(glass.castShadow,false);
  for(const i of [0,2]){
   const pane=object('facade-garden-glass-0-pane-'+i),b=bounds(pane);
   close(b.min.x,left+i*width,'fixed panel start');close(b.max.x,left+(i+1)*width,'fixed panel end');
-  close(b.min.y,16.85,'fixed glazing recess');close(b.min.z,0,'sill');close(b.max.z,2.35,'head');
+  close(b.min.y,16.86,'fixed glazing recess');close(b.min.z,0,'sill');close(b.max.z,2.35,'head');
   assert(pane.material.transparent);assert.equal(pane.castShadow,false);
  }
  for(const i of [1,2]){
@@ -137,8 +137,8 @@ test('master bath doorway clears the hall partition and closes the slit toward t
   assert(!hits(wall,[10.45,8.10,z],[0,-1,0],.35).length,'private bathroom doorway');
  }
  for(const [name,x,y,z] of [
-  ['u-laundry-private',8.84,4.85,4.4],['u-private-dressing',11.62,4.85,4.4],
-  ['u-private-dressing',11.62,4.48,4.17],['u-suite-hall',9.87,12.44,4.17]
+  ['u-laundry-private',8.84,4.85,4.06],['u-private-dressing',11.62,4.85,4.06],
+  ['u-private-dressing',11.62,4.72,3.96],['u-suite-hall',9.87,12.20,3.96]
  ])assert(hits(object(name),[x-.2,y,z],[1,0,0],.4).length,name+' closes at the eaves');
 });
 

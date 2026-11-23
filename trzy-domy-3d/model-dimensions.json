@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-20.21",
+  "modelVersion": "2026-11-23.6",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -807,28 +807,26 @@
     },
     {
       "id": "pergola-193",
-      "name": "Pergola nad stołem /193",
+      "name": "Czarna pergola ręczna ze zdejmowanym poszyciem nad stołem /193",
       "values": [
         6.3,
         4.38,
-        2.86,
-        3.04,
-        14,
-        55,
-        6.02,
-        0.2,
-        0.036
+        4,
+        6,
+        0.78,
+        1.5,
+        3.327,
+        3.17
       ],
       "labels": [
-        "szerokość zewnętrzna m",
-        "głębokość zewnętrzna m",
-        "spód ramy m",
-        "góra ramy m",
-        "liczba lameli",
-        "uchylenie lameli °",
-        "długość lameli m",
-        "szerokość lameli m",
-        "grubość lameli m"
+        "szerokość zewnętrzna ramy m",
+        "głębokość zewnętrzna ramy m",
+        "szerokość tkaniny w rzucie m",
+        "pełny wysięg tkaniny m",
+        "wysięg po zsunięciu m",
+        "nachylenie prowadnic °",
+        "wysokość tkaniny przy ścianie m",
+        "wysokość tkaniny przy rynnie m"
       ],
       "source": "model"
     },
@@ -944,7 +942,7 @@
         0.381,
         0.44,
         0.035,
-        4.382
+        4.745
       ],
       "labels": [
         "najmniejsza szerokość m",
@@ -983,16 +981,16 @@
     },
     {
       "id": "flagstones-193-wicket",
-      "name": "Dojście z tarasu /193 do furtki trójstyku",
+      "name": "Dojście od krawędzi tarasu /193 do furtki trójstyku, łukiem od przesuwnego wyjścia przy stole",
       "values": [
-        20,
-        6.506,
-        0.311,
-        0.078,
-        0.145,
+        24,
+        7.682,
+        0.308,
+        0.073,
+        0.142,
         0.34,
-        0.461,
-        0.622
+        0.459,
+        0.616
       ],
       "labels": [
         "liczba płyt",
@@ -1002,7 +1000,7 @@
         "największy odstęp między płytami m",
         "odległość między osiami rzędów m",
         "krok po przekątnej m",
-        "rozstaw środków w jednym rzędzie m"
+        "rozstaw dwóch kroków wzdłuż osi ścieżki m"
       ],
       "source": "model"
     },
@@ -1785,11 +1783,11 @@
   "sharedAreaM2": 156.18903025919093,
   "integrity": {
     "geometryBaselineCommit": "3dc4fefce08a22fc9edbc84a297002ebad27caeb",
-    "inputsSha256": "d4df80b8de3b82126033c4dbed254e9fdec12e1416e1aed920a4473e7a34d4fd",
-    "proceduralCodeSha256": "ce18885d610536d274aceca6edfa3c734c9f7e8b2a581fde682fa2a4665a8149",
+    "inputsSha256": "6046ffe65e14c1ca9675a586aa9bd1ef0dc1998925b335a6df3447663ba324b1",
+    "proceduralCodeSha256": "85251c4355fbf162d6577ebe94231ec4dfd942488ea17a21c99746e1dec4a46c",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
-    "planSha256": "d145ef3d51bd9a06a07328a2f09708d9ed55712449a7a86612779fc827b78ad8",
-    "runtimeSha256": "8abc38ff188e4dd87851c766286e1e10acc63ac3c177e10a59e46226dfc0a239"
+    "planSha256": "540241237e002da82936696f65dca416836a0c88eaf340b7899f8e246433c9b7",
+    "runtimeSha256": "92d98fb8bc55546e155807a8e2173203c7cadd117d24e1ecc084a69870220abb"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1860,7 +1858,15 @@
     "Dom /193 ma jasne dębowe fronty z satynowymi uchwytami, bezuchwytową szafkę robota, deskowaną wnękę salonu, czarne obramowanie szyb i automatyczną dwuskrzydłową bramę. Sterownik BioDisc znajduje się w kotłowni, a pokrywę osłaniają krzewy. Ogrody trzech działek i trójstyk łączą ścieżki z płaskich kamieni.",
     "Dom /193 ma samonośną bramę przesuwną, wideodomofon na furtce z monitorem w wiatrołapie oraz cztery rozdzielacze z otwieranymi rewizjami. Po zmianie tras 27 pętli ma łącznie 1794,8 m, w tym 300,86 m dojść.",
     "Dom /193: podpis sterownika BioDisc w kotłowni, drzwi kotłowni i spiżarni otwierane na zewnątrz pomieszczeń, posadzki w osobnych widokach pętli ogrzewania i niskie krzewy wokół pokrywy BioDisc.",
-    "Dom /193: wysoki, gęsty pierścień krzewów osłania pokrywę BioDisc. Jedno dojście do klapy prowadzi od narożnika działki."
+    "Dom /193: wysoki, gęsty pierścień krzewów osłania pokrywę BioDisc. Jedno dojście do klapy prowadzi od narożnika działki.",
+    "Stodoła Icon /193 — wymiary pomieszczeń parteru i poddasza według karty produktu wersji podstawowej, rysunki 04–07.",
+    "Spiżarnia /193 — zabudowa w kształcie U według rzutu 04, stacja odkurzacza przy wejściu z kuchni.",
+    "Na /193 rozdzielacz przy schodach mieści się we wnęce ściany od strony holu. Projektor startuje włączony. Poziome sufity poddasza obejmują pokoje 1.2, 1.3, 1.5 i 1.6. Ścieżka kamienna prowadzi od przesuwnego skrzydła jadalni do środka furtki trójstyku.",
+    "Na /193 rozdzielacz parteru przeniesiono do dwudrzwiowego modułu szafy pod schodami, dostępnego z gabinetu. Cztery moduły mają półki i pięć otwieranych frontów, w tym jeden składany przy drzwiach gabinetu. Nad stołem na tarasie rozciąga się składana osłona tekstylna na prowadnicach z odpływem do rynny przy słupie.",
+    "Na /193 czarna tkanina pergoli ma spadek 1,5° ku rynnie. Płaski sufit nad krótkim dojściem do pokoi, pralni i łazienki kończy się przy wejściu na otwartą antresolę.",
+    "Dom /193 ma podjazd z kamienia polnego o średnim rozstawie 19 cm i granitowe dojście od ulicy.",
+    "Dom /193: podjazd i dojście przy drzwiach z kamienia polnego, segmentowa brama garażowa na prowadnicach pod sufitem, ręczna pergola z poszyciem zdejmowanym na zimę i korekta widocznego drewna nad antresolą. Opisy domyślnie wyłączone.",
+    "Dom /193. Czarne zewnętrzne ościeża, mineralny próg garażowy, przywrócony sufit garderoby 1.7 oraz równy styk krótkiego sufitu korytarza ze skosem. Jętki widoczne w pokojach 1.1 i 1.8. Ukośne drewno antresoli ukryte za wykończeniem."
   ],
   "contextParcels": [
     {
@@ -3626,7 +3632,7 @@
   },
   "interior": {
     "dataFile": "interior-data.json",
-    "dataSha256": "74bab3218610978b336ebc1c8261ed25c78340682d0e585445b36967133b0a59",
+    "dataSha256": "fcb2d502a8f151cde080d212a67579df83484259802e24fe35ff7895823a0294",
     "source": "https://projektstodola.pl/produkt/projekt-stodola-icon/",
     "floorHeightsM": [
       0,
@@ -3636,8 +3642,8 @@
     "stairRises": 18,
     "stairFlightWidthM": 0.9,
     "stairTreadM": 0.26,
-    "reconstruction": "Publisher-plan review plus requested six dining chairs: continuous wall openings, floor slabs and roof-height partitions; supported stair rails and stringers. Raster uncertainty remains recorded in source data.",
-    "originalShell": "Original roof outline, garden piers and pergola retained. Exterior walls and attic roof glazing follow the plan openings.",
+    "reconstruction": "Finished faces and door openings registered to the vector product card, sheets 4–5. Elevations follow sheets 6–7. The local design is mirrored on parcel /193.",
+    "originalShell": "Original roof outline, garden piers and pergola perimeter frame retained. Exterior walls and attic roof glazing follow the plan openings.",
     "diningChairs": 6,
     "diningChairTableGapM": 0.06,
     "gardenGlazing": {
@@ -3694,21 +3700,21 @@
       "jointModuleSha256": "f258b6a378a1bf40db0228dc21a102e1a2df6f692546d60b7d9c51db951196d6"
     },
     "entranceWardrobe": {
-      "catalogueAreaM2": 10.29,
+      "catalogueAreaM2": 10.35,
       "outerSizeM": [
         4.61,
-        3.17
+        3.26
       ],
       "shallowDepthM": 1.6,
-      "returnWidthM": 1.91,
+      "returnWidthM": 1.9,
       "plasterReturnDepthM": 0.6
     },
     "officeStorage": {
-      "catalogueAreaM2": 13.45,
+      "catalogueAreaM2": 13.14,
       "clearOfficeWidthM": 4.34,
-      "roomDepthM": 2.85,
+      "roomDepthM": 2.79,
       "cabinetDepthM": 0.76,
-      "cabinetRunM": 2.81,
+      "cabinetRunM": 2.79,
       "numberOfModules": 4,
       "moduleHeightsEstimated": true
     },

@@ -122,7 +122,9 @@ function createHeatingInspectionFloors(THREE,interior,indoor){
   for(const [level,base,hall] of [['ground','ground-floor','0.5'],['upper','upper-oak-finish','1.4']]){
     const source=interior.group.getObjectByName(base),plan=new THREE.Group();
     plan.name='heating-floor-plan-'+level;
-    const [w,s,e,n]=interior.rooms.find(room=>room.id===hall).box,x=(w+e)/2,y=(s+n)/2;
+    const hallway=interior.rooms.find(room=>room.id===hall);
+    const [w,s,e,n]=hallway.box;
+    const x=(w+(level==='upper'?hallway.outline[1][0]:e))/2,y=(s+n)/2;
     const z=level==='ground'?0:source.position.z;
     const position=interior.localToWorld([x,y,z]);
     const target=interior.localToWorld([e-w>n-s?e:x,e-w>n-s?y:n,z]);

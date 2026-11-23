@@ -15,6 +15,7 @@ export function addIconInterior(options) {
  const projector=iconLivingProjector(context);
  const appliances=iconApplianceControls(context);
  const officeWindow=iconOfficeWindowControl(context);
+ const garageDoor=iconSectionalGarageDoor(context);
  iconLivingWallSconce(context);
  iconLivingMediaAccessories(context);
  iconInteriorLightingAndRoof(context);
@@ -28,12 +29,43 @@ export function addIconInterior(options) {
  const sitePower=iconSitePowerEquipment(context,driveGate);
  const updateHallDoors=iconHallDoorMotion(context);
  const {group,navigation,data,world} = context;
- return {group,navigation,rooms:data.rooms,metadata:data.metadata,localToWorld:world,updateHallDoors,projector,appliances,officeWindow,exteriorLights,sitePower,driveGate,intercom,robotCabinet};
+ return {group,navigation,rooms:data.rooms,metadata:data.metadata,localToWorld:world,updateHallDoors,projector,appliances,officeWindow,exteriorLights,sitePower,driveGate,intercom,robotCabinet,garageDoor};
 }
 
 const iconInteriorContains = (p,r)=>{let yes=false;for(let i=0,j=r.length-1;i<r.length;j=i++){const a=r[i],b=r[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;};
 
 const iconGroundFacadeDepth=facade=>facade?.thickness??.48;
+
+function iconAtticSection(data) {
+ const {kneeClearHeightM=.78,eaveToFinishedWallFaceM=.50,pitchDeg=45}=data.atticSection??{};
+ const pitch=Math.tan(pitchDeg*Math.PI/180),span=4.25;
+ const ridge=data.levels.upper+kneeClearHeightM+(span-eaveToFinishedWallFaceM)*pitch;
+ const roof=(x,y)=>ridge-pitch*Math.min(x<=8.500001?Math.abs(x-span):Infinity,
+  x>=span-.000001&&y>=4.209999&&y<=12.710001?Math.abs(y-8.46):Infinity);
+ const closedRooms=data.atticSection?.flatCeilingRoomIds??['1.2','1.3','1.5','1.6','1.7'];
+ const closed=data.rooms.filter(room=>closedRooms.includes(room.id)).flatMap(room=>{
+  if(!room.outline)return [room.box];
+  const xs=[...new Set(room.outline.map(([x])=>x))].sort((a,b)=>a-b);
+  const ys=[...new Set(room.outline.map(([,y])=>y))].sort((a,b)=>a-b);
+  const boxes=[];
+  for(let i=1;i<xs.length;i++)for(let j=1;j<ys.length;j++){
+   const box=[xs[i-1],ys[j-1],xs[i],ys[j]];
+   if(iconInteriorContains([(box[0]+box[2])/2,(box[1]+box[3])/2],room.outline))boxes.push(box);
+  }
+  return boxes;
+ }).map(box=>[...box,data.levels.upperCeiling]);
+ const corridor=data.atticSection?.corridorCeilingBox;
+ if(corridor){
+  const [left,front,right,back]=corridor;
+  const height=Math.min(data.levels.upperCeiling,roof(left,front),roof(left,back),roof(right,front),roof(right,back));
+  closed.push([...corridor,height]);
+ }
+ const ceiling=(x,y)=>{
+  const panel=closed.find(([x0,y0,x1,y1])=>x>=x0&&x<=x1&&y>=y0&&y<=y1);
+  return panel?Math.min(panel[4],roof(x,y)):roof(x,y);
+ };
+ return {roof,ceiling,closed,ridge,pitch,wallDepth:eaveToFinishedWallFaceM};
+}
 
 function iconInteriorSetup({THREE,scene,house,data,cutRoof=geometry=>geometry}) {
  const group = new THREE.Group(); group.name = 'icon-193-interior';
@@ -90,7 +122,7 @@ function iconInteriorSetup({THREE,scene,house,data,cutRoof=geometry=>geometry}) 
   const max=a.map((v,k)=>Math.max(v+pad(a,k),b[k]+pad(b,k)));
   obstacle(id,[...min,...max],z,z+1.075);
  };
- const ceilingAt = (x,y) => {const slope=(8.3-4.07)/4.25;return Math.max(x<=8.5?8.3-slope*Math.abs(x-4.25):-Infinity,x>=4.25&&y>=4.21&&y<=12.71?8.3-slope*Math.abs(y-8.46):-Infinity)-.045;};
+ const section=iconAtticSection(data),ceilingAt=section.ceiling;
  const wall = (id,a,b,z0,z1,thickness,openings=[],profile=null,hallFace=null) => {
   const external=id.startsWith('facade-')||id.startsWith('upper-')||id.endsWith('-gable');
   const corners=external?[a,b].map(p=>{
@@ -116,7 +148,13 @@ function iconInteriorSetup({THREE,scene,house,data,cutRoof=geometry=>geometry}) 
    return {side,from,to,index,returns:['vestibule','playroom','office'].includes(room)};
   });
   const plinth=external&&z0===0?finishes.push(mats.plinth)-1:undefined;
-  const geometry=iconInteriorWallGeometry(THREE,{plinth,gardenReveal:id==='garden-gable'?'boards':id==='facade-garden'?'black':null,a,ux,uy,L,z0,z1,thickness,outer,holes,ceilingAt,sloped:id.startsWith('u-'),external,nx,ny,corners,paintedFrom,hallFace,paintZones,flushDoors:openings.filter(o=>o.flush&&hallFace&&o.start>=hallFace.from&&o.end<=hallFace.to)});
+  const windowReturns=external&&!gardenWindow?openings.flatMap((o,i)=>{
+   const terraceSlider=id==='facade-terrace'&&!o.glass,garageDoor=id==='facade-garage';
+   if(!o.glass&&!terraceSlider&&!garageDoor)return [];
+   return [{polygon:holes[i],plane:garageDoor?-thickness/2:terraceSlider?-.055:0}];
+  }):[];
+  const returnFinish=windowReturns.length?finishes.push(mats.gardenFrame)-1:undefined;
+  const geometry=iconInteriorWallGeometry(THREE,{plinth,windowReturns,returnFinish,gardenReveal:id==='garden-gable'?'boards':id==='facade-garden'?'black':null,a,ux,uy,L,z0,z1,thickness,outer,holes,ceilingAt:section.roof,sloped:id.startsWith('u-'),external,nx,ny,corners,paintedFrom,hallFace,paintZones,flushDoors:openings.filter(o=>o.flush&&hallFace&&o.start>=hallFace.from&&o.end<=hallFace.to)});
   const wallMesh=mesh(geometry,finishes.length===1?finishes[0]:finishes,id);
   if(hallFace)wallMesh.userData.kind='hall-partition';
   const cuts=[0,L,...openings.flatMap(o=>[o.start,o.end])].sort((x,y)=>x-y);
@@ -127,7 +165,11 @@ function iconInteriorSetup({THREE,scene,house,data,cutRoof=geometry=>geometry}) 
    const points=o.poly||[[o.start,o.bottom],[o.end,o.bottom],[o.end,o.top],[o.start,o.top]],recess=o.recess||0,to3=p=>[a[0]+ux*p[0]-nx*recess,a[1]+uy*p[0]-ny*recess,p[1]];
    if(recess>thickness/2)iconInteriorWindowReveal({THREE,mesh,material:id==='garden-gable'?mats.charredBoards:mats.wall,id:id+'-reveal-'+i,points:o.wallPoly||points,to3,normal:[nx,ny],depth:recess-thickness/2});
    if(o.casement)continue;
-   if(!o.flush)for(let j=0;j<points.length;j++)beam(id+'-opening-'+i+'-frame-'+j,to3(points[j]),to3(points[(j+1)%points.length]),.025,glazingFrame);
+   if(!o.flush)for(let j=0;j<points.length;j++){
+    const p=points[j],q=points[(j+1)%points.length];
+    if(id==='facade-garage'&&p[1]===z0&&q[1]===z0)continue;
+    beam(id+'-opening-'+i+'-frame-'+j,to3(p),to3(q),.025,glazingFrame);
+   }
    if(o.glass){
     const panes=o.panels??1;
     for(let pane=0;pane<panes;pane++){
@@ -152,7 +194,7 @@ function iconInteriorSetup({THREE,scene,house,data,cutRoof=geometry=>geometry}) 
  };
  const opening = (start,end,bottom=0,top=2.35,glass=true) => ({start,end,bottom,top,glass});
  const contains = iconInteriorContains;
- return {THREE, scene, house, data, group, world, ring, navigation, mats, material, mesh, box, obstacle, floor, slab, beam, rail, wall, opening, contains, ceilingAt, cutRoof};
+ return {THREE, scene, house, data, group, world, ring, navigation, mats, material, mesh, box, obstacle, floor, slab, beam, rail, wall, opening, contains, ceilingAt, section, cutRoof};
 }
 
 function iconGlassHeadAt(outline,u) {
@@ -213,6 +255,10 @@ function iconGroundWallPaint(data,id,length) {
   case 'facade-garage':case 'facade-garage-side':return [[1,0,length,'garage']];
   case 'facade-main-side':return [[-1,0,garageEnd,'garage'],[-1,garageEnd,kitchen.a[1],'pantry']];
   case 'garage-hall':return [[1,0,garageEnd-garageStart,'garage'],[-1,0,vestibuleScreen.a[1]-garageStart,'vestibule']];
+  case 'garage-hall-return':{
+   const start=data.walls.find(w=>w.id===id).a[1];
+   return [[1,kitchen.a[1]+kitchen.thickness/2-start,length,'hall']];
+  }
   case 'garage-back':return [[-1,0,length,'garage'],[1,0,pantryEnd,'pantry']];
   case 'pantry-technical':return [[1,0,length,'pantry']];
   case 'kitchen-back':return [[-1,0,divider.a[0]-kitchen.a[0],'pantry']];
@@ -244,13 +290,29 @@ function iconInteriorWallGeometry(THREE,options) {
  };
  const bands=(u,mid)=>{const base=bounds(outer,u,mid);if(!base)return [];const openings=holes.map(p=>bounds(p,u,mid)).filter(Boolean).sort((x,y)=>x[0]-y[0]);let bottom=base[0];const result=[];for(const o of openings){if(o[0]>bottom+1e-8)result.push([bottom,o[0]]);bottom=Math.max(bottom,o[1]);}if(base[1]>bottom+1e-8)result.push([bottom,base[1]]);return result;};
  const quad=(p,q,r,t,material=0)=>{(facesByMaterial[material]??=[]).push(...p,...q,...r,...p,...r,...t);};
- function reveal(u,face,base,flush=false){
+ function reveal(u,z,face,base,flush=false){
   if(options.gardenReveal==='boards'){quad(...face(-thickness/2,thickness/2),1);return;}
   if(options.gardenReveal==='black'){
    quad(...face(-thickness/2,0),base);quad(...face(0,thickness/2),1);return;
   }
+  if(u===0&&hallFace?.paintStartTo!==undefined){
+   const end=Math.max(-thickness/2,Math.min(thickness/2,hallFace.paintStartTo));
+   if(end>-thickness/2)quad(...face(-thickness/2,end),1);
+   if(end<thickness/2)quad(...face(end,thickness/2),base);
+   return;
+  }
   if(u===L&&hallFace?.paintEnd){quad(...face(-thickness/2,thickness/2),1);return;}
   const zones=paintZones.filter(zone=>zone.returns&&u>=zone.from&&u<=zone.to);
+  const window=options.windowReturns?.find(({polygon})=>polygon.some(([x,y],i)=>{
+   const [endX,endY]=polygon[(i+1)%polygon.length],dx=endX-x,dy=endY-y;
+   return Math.abs((u-x)*dy-(z-y)*dx)<1e-7&&u>=Math.min(x,endX)-1e-8&&u<=Math.max(x,endX)+1e-8&&z>=Math.min(y,endY)-1e-8&&z<=Math.max(y,endY)+1e-8;
+  }));
+  if(window){
+   const out=Math.sign(-uy*nx+ux*ny),plane=window.plane*out,front=out*thickness/2,back=-front;
+   quad(...face(Math.min(plane,front),Math.max(plane,front)),options.returnFinish);
+   if(plane!==back)quad(...face(Math.min(back,plane),Math.max(back,plane)),zones.find(zone=>zone.side===-out)?.index??base);
+   return;
+  }
   if(!zones.length){quad(...face(-thickness/2,thickness/2),flush?1:base);return;}
   for(const side of [-1,1]){
    const finish=zones.find(zone=>zone.side===side)?.index??(flush&&side===hallFace?.side?1:base);
@@ -275,13 +337,13 @@ function iconInteriorWallGeometry(THREE,options) {
     if(bottomLeft<lo[j][1]||bottomRight<hi[j][1])
      quad(point(start,d,height(start,d,bottomLeft)),point(end,d,height(end,d,bottomRight)),point(end,d,height(end,d,hi[j][1])),point(start,d,height(start,d,lo[j][1])),finish);
    }
-   for(const edge of [0,1]){const h0=lo[j][edge],h1=hi[j][edge];if(sloped&&edge===1&&h0===z1&&h1===z1)continue;reveal(mid,(d0,d1)=>[point(start,d0,height(start,d0,h0)),point(end,d0,height(end,d0,h1)),point(end,d1,height(end,d1,h1)),point(start,d1,height(start,d1,h0))],interiorMaterial,flushDoors.some(o=>mid>=o.start&&mid<=o.end&&h0===o.top));}
+   for(const edge of [0,1]){const h0=lo[j][edge],h1=hi[j][edge];if(sloped&&edge===1&&h0===z1&&h1===z1)continue;reveal(mid,(h0+h1)/2,(d0,d1)=>[point(start,d0,height(start,d0,h0)),point(end,d0,height(end,d0,h1)),point(end,d1,height(end,d1,h1)),point(start,d1,height(start,d1,h0))],interiorMaterial,flushDoors.some(o=>mid>=o.start&&mid<=o.end&&h0===o.top));}
   }
  }
  for(let i=0;i<xs.length;i++){
   if(i===0&&corners[0]||i===xs.length-1&&corners[1])continue;
   const u=xs[i],left=i?bands(u,(xs[i-1]+u)/2):[],right=i<xs.length-1?bands(u,(u+xs[i+1])/2):[],heights=[...new Set([...left.flat(),...right.flat()])].sort((x,y)=>x-y);
-  for(let j=1;j<heights.length;j++){const bottom=heights[j-1],top=heights[j],mid=(bottom+top)/2,solid=band=>band.some(([lo,hi])=>mid>lo&&mid<hi);if(solid(left)===solid(right))continue;reveal(u,(d0,d1)=>[point(u,d0,height(u,d0,bottom)),point(u,d1,height(u,d1,bottom)),point(u,d1,height(u,d1,top)),point(u,d0,height(u,d0,top))],0,flushDoors.some(o=>(u===o.start||u===o.end)&&mid<=o.top));}
+  for(let j=1;j<heights.length;j++){const bottom=heights[j-1],top=heights[j],mid=(bottom+top)/2,solid=band=>band.some(([lo,hi])=>mid>lo&&mid<hi);if(solid(left)===solid(right))continue;reveal(u,mid,(d0,d1)=>[point(u,d0,height(u,d0,bottom)),point(u,d1,height(u,d1,bottom)),point(u,d1,height(u,d1,top)),point(u,d0,height(u,d0,top))],0,flushDoors.some(o=>(u===o.start||u===o.end)&&mid<=o.top));}
  }
  const geometry=new THREE.BufferGeometry(),vertices=[];
  facesByMaterial.forEach((faces,material)=>{
@@ -308,35 +370,38 @@ function iconInteriorInsetSlab(outline,exterior,distance) {
  });
 }
 
+function iconGroundFloorAndThreshold({data,slab,mats}) {
+ const garage=data.facades.find(facade=>facade.id==='facade-garage');
+ const door=garage.openings[0],outerY=garage.a[1],innerY=outerY+garage.thickness;
+ const left=garage.a[0]+door.start,right=garage.a[0]+door.end;
+ const threshold=[[left,outerY],[left,innerY],[right,innerY],[right,outerY]];
+ const outline=data.exterior.ground.flatMap(p=>p[0]===garage.a[0]&&p[1]===outerY?[p,...threshold]:[p]);
+ slab('ground-floor',outline,[],-.12,.12,mats.oak);
+ slab('garage-threshold',threshold,[],-.12,.128,mats.tile);
+}
+
 function iconInteriorFloorsAndPartitions(context) {
  const {data, navigation, ring, world, floor, slab, mats, obstacle, wall, opening, contains} = context;
- slab('ground-floor',data.exterior.ground,[],-.12,.12,mats.oak);
+ iconGroundFloorAndThreshold(context);
  const stairHole=ring(data.stairs.box),livingHole=ring(data.void.box);
- const [west,,east,north]=data.rooms.find(room=>room.id==='0.5').box;
- const office=data.walls.find(w=>w.id==='guest-office'),screen=data.walls.find(w=>w.id==='vestibule-screen');
- const hall=data.walls.find(w=>w.id==='hall-front'),garage=data.walls.find(w=>w.id==='garage-hall');
- const cabinetWall=data.walls.find(w=>w.id==='kitchen-back');
- const kitchenStart=cabinetWall.a[1]+cabinetWall.thickness/2,cornerEnd=cabinetWall.b[0];
- const screenY=screen.a[1]+screen.thickness/2,hallY=hall.a[1]+hall.thickness/2;
- const cornerX=screen.b[0],westX=garage.a[0]+garage.thickness/2,officeY=office.a[1]-office.thickness/2;
- const ceilingPlan=[[westX,screenY],[cornerX,screenY],[cornerX,hallY],[east,hallY],
-  [east,officeY],[data.stairs.box[2],officeY],[data.stairs.box[2],north],
-  [west,north],[west,kitchenStart],[cornerEnd,kitchenStart],[cornerEnd,garage.b[1]],[westX,garage.b[1]]];
- meshPaintedCeiling(context,'hall-painted-ceiling',ceilingPlan,mats.hall);
- const kitchenWest=cabinetWall.a[0],voidStart=data.void.box[1],stairEdge=data.stairs.box[0];
- meshPaintedCeiling(context,'kitchen-painted-ceiling',[[kitchenWest,kitchenStart],[west,kitchenStart],[west,north],
-  [stairEdge,north],[stairEdge,voidStart],[kitchenWest,voidStart]],mats.hall);
- const perimeterX=iconGroundFacadeDepth(data.facades.find(f=>f.id==='facade-main-side'));
- const garageSide=data.facades.find(f=>f.id==='facade-garage-side');
- const garageEast=garageSide.a[0]-iconGroundFacadeDepth(garageSide),jambEnd=garage.a[1];
- const dividerX=garage.a[0]-garage.thickness/2;
- const garageRoom=data.rooms.find(r=>r.id==='0.1'),pantry=data.rooms.find(r=>r.id==='0.2');
- const garageFront=iconGroundFacadeDepth(data.facades.find(f=>f.id==='facade-garage'));
- meshPaintedCeiling(context,'garage-painted-ceiling',[[perimeterX,garageFront],[garageEast,garageFront],
-  [garageEast,jambEnd],[dividerX,jambEnd],[dividerX,garageRoom.box[3]],[perimeterX,garageRoom.box[3]]],mats.garageCeiling);
- meshPaintedCeiling(context,'pantry-painted-ceiling',ring([perimeterX,pantry.box[1],pantry.box[2],pantry.box[3]]),mats.pantry);
+ const room=id=>data.rooms.find(room=>room.id===id);
+ const outline=id=>room(id).outline??ring(room(id).box);
+ meshPaintedCeiling(context,'hall-painted-ceiling',outline('0.5'),mats.hall);
+ const voidStart=data.void.box[1],stairEdge=data.stairs.box[0];
+ const kitchen=iconClipFloorPlan(iconClipFloorPlan(outline('0.4'),0,stairEdge),1,voidStart);
+ meshPaintedCeiling(context,'kitchen-painted-ceiling',kitchen,mats.hall);
+ meshPaintedCeiling(context,'garage-painted-ceiling',outline('0.1'),mats.garageCeiling);
+ meshPaintedCeiling(context,'pantry-painted-ceiling',outline('0.2'),mats.pantry);
 
  iconFrontRoomCeilings(context);
+ const corridor=data.atticSection?.corridorCeilingBox;
+ if(corridor){
+  const [left,,right,mouth]=corridor,base=context.section.ceiling((left+right)/2,mouth);
+  const top=context.section.roof(left,mouth);
+  const face=new context.THREE.PlaneGeometry(right-left,top-base).rotateX(-Math.PI/2);
+  const header=context.mesh(face,mats.wall,'attic-corridor-header');
+  header.position.set((left+right)/2,mouth,(base+top)/2);
+ }
  navigation.floors.push({id:'ground',ring:data.exterior.ground.map(p=>world(p).slice(0,2)),z:0});
  const [sx,sy,ex,ey]=data.stairs.box;
  const upperOutline=[[0,0],[8.5,0],[8.5,4.21],[14.64,4.21],[14.64,12.71],[8.5,12.71],[8.5,ey],[ex,ey],[ex,sy],[sx,sy],[sx,voidStart],[0,voidStart]];
@@ -356,21 +421,28 @@ function iconInteriorFloorsAndPartitions(context) {
  }
 }
 
+function iconClipFloorPlan(outline,axis,limit) {
+ const result=[];
+ for(const [i,to] of outline.entries()){
+  const from=outline[(i+outline.length-1)%outline.length];
+  if((from[axis]<limit&&to[axis]>limit)||(from[axis]>limit&&to[axis]<limit)){
+   const fraction=(limit-from[axis])/(to[axis]-from[axis]);
+   result.push(from.map((v,k)=>v+fraction*(to[k]-v)));
+  }
+  if(to[axis]<=limit)result.push(to);
+ }
+ return result;
+}
+
 function iconFrontRoomCeilings(context) {
  const {data,ring,mats}=context;
- const front=data.facades.find(f=>f.id==='facade-front-wing'),side=data.facades.find(f=>f.id==='facade-wing-end');
- const rear=data.facades.find(f=>f.id==='facade-wing-rear'),garage=data.walls.find(w=>w.id==='garage-hall');
- const screen=data.walls.find(w=>w.id==='vestibule-screen'),bath=data.walls.find(w=>w.id==='vestibule-bath-top');
- const play=data.walls.find(w=>w.id==='guest-inner'),office=data.walls.find(w=>w.id==='guest-office');
- const south=front.a[1]+iconGroundFacadeDepth(front),east=side.a[0]-iconGroundFacadeDepth(side);
- const west=garage.a[0]+garage.thickness/2,bathSouth=bath.a[1]-bath.thickness/2;
- const screenSouth=screen.a[1]-screen.thickness/2,playWest=play.a[0]-play.thickness/2;
- meshPaintedCeiling(context,'vestibule-painted-ceiling',[
-  [front.a[0],south],[playWest,south],[playWest,bathSouth],[screen.b[0],bathSouth],
-  [screen.b[0],screenSouth],[west,screenSouth],[west,garage.a[1]],[front.a[0],garage.a[1]]
- ],mats.vestibule);
- meshPaintedCeiling(context,'playroom-painted-ceiling',ring([play.a[0]+play.thickness/2,south,east,office.a[1]-office.thickness/2]),mats.playroomCeiling);
- meshPaintedCeiling(context,'office-painted-ceiling',ring([data.stairs.box[2],office.a[1]+office.thickness/2,east,rear.a[1]-iconGroundFacadeDepth(rear)]),mats.officeCeiling);
+ const rooms=new Map(data.rooms.map(room=>[room.id,room]));
+ for(const [id,name,finish] of [['0.6','vestibule',mats.vestibule],['0.8','playroom',mats.playroomCeiling]]){
+  const room=rooms.get(id);
+  meshPaintedCeiling(context,name+'-painted-ceiling',room.outline??ring(room.box),finish);
+ }
+ const [,south,east,north]=rooms.get('0.9').box;
+ meshPaintedCeiling(context,'office-painted-ceiling',ring([data.stairs.box[2],south,east,north]),mats.officeCeiling);
 }
 
 function meshPaintedCeiling({THREE,data,mesh},name,outline,paint) {
@@ -383,15 +455,17 @@ function iconHallWallFinish(data,wall) {
  const [,south,east]=data.rooms.find(r=>r.id==='0.5').box;
  switch(wall.id){
   case 'guest-inner': return {side:1,from:south-wall.a[1],to:wall.b[1]-wall.a[1]};
-  case 'guest-office': return {side:-1,from:0,to:east-wall.a[0]};
+  case 'guest-office': return {side:-1,from:0,to:east-wall.a[0],paintStartTo:data.stairs.box[1]-wall.a[1]};
   case 'hall-front': return {side:1,from:0,to:east-wall.a[0]};
   case 'kitchen-back': {
    const towerEdge=data.furniture.find(f=>f.id==='kitchen-tall')?.box[2]??wall.b[0];
    return {side:1,from:towerEdge-wall.a[0],to:wall.b[0]-wall.a[0],paintEnd:true};
   }
+  case 'garage-hall-return': return {side:-1,from:0,to:wall.b[1]-wall.a[1],paintEnd:true};
   case 'garage-hall': {
    const screen=data.walls.find(w=>w.id==='vestibule-screen');
-   return {side:-1,from:screen.a[1]+screen.thickness/2-wall.a[1],to:wall.b[1]-wall.a[1],paintEnd:true};
+   const start=screen.a[1]+screen.thickness/2;
+   return start<wall.b[1]?{side:-1,from:start-wall.a[1],to:wall.b[1]-wall.a[1],paintEnd:true}:null;
   }
   default: return null;
  }
@@ -476,7 +550,7 @@ function iconBespokeWalkDoors(context) {
  iconMovingAssembly(context,'vestibule-glass-door',screenParts,screen.a[0]+left,screen.a[1],0,right-left,1);
  const front=data.facades.find(f=>f.id==='facade-front-wing'),entry=front.openings[0];
  const entryParts=group.children.filter(o=>o.name==='entry-main-door-leaf'||o.name.startsWith('entry-main-pull-'));
- iconMovingAssembly(context,'front-entry-door',entryParts,front.a[0]+entry.start+.006,front.a[1]+.24-.027,0,entry.end-entry.start-.012,-1);
+ iconMovingAssembly(context,'front-entry-door',entryParts,front.a[0]+entry.start+.006,front.a[1]+iconGroundFacadeDepth(front)/2-.027,0,entry.end-entry.start-.012,-1);
  const pantry=group.getObjectByName('kitchen-pantry-closed-leaf'),pull=group.getObjectByName('kitchen-pantry-leaf-pull');
  if(pantry){
   const {width,height:thickness}=pantry.geometry.parameters;
@@ -544,7 +618,7 @@ function iconEntryReturn(context) {
  const {THREE,data,mesh,box,obstacle,mats,beam}=context;
  const facade=data.facades.find(w=>w.id==='facade-front-wing'),door=facade.openings[0];
  const [cornerX,cornerY]=facade.a,divider=data.walls.find(w=>w.id==='garage-hall'),top=data.levels.groundCeiling;
- const wallDepth=.48,innerX=cornerX-wallDepth,backY=divider.a[1],insideY=cornerY+wallDepth;
+ const wallDepth=iconGroundFacadeDepth(facade),innerX=cornerX-iconGroundFacadeDepth(data.facades.find(f=>f.id==='facade-garage-side')),backY=divider.a[1],insideY=cornerY+wallDepth;
  const vertices=[];
  function face(a,b,bottom,head){
   vertices.push(...a,bottom,...b,bottom,...b,head,...a,bottom,...b,head,...a,head);
@@ -667,8 +741,146 @@ function iconOfficeWindowControl(context) {
  return {toggleAt,update,get isOpen(){return isOpen;}};
 }
 
+function iconGarageTrackPath(y,top,radius){
+ const bendEnd=top+Math.PI*radius/2;
+ function at(s){
+  const a=Math.max(0,Math.min(Math.PI/2,(s-top)/radius));
+  return {y:y+radius*(1-Math.cos(a))+Math.max(0,s-bendEnd),
+   z:Math.min(s,top)+radius*Math.sin(a),angle:a};
+ }
+ // Consecutive roller axles on a rigid panel stay a fixed chord length apart.
+ function next(s,length){
+  const a=at(s);
+  if(s+length<=top||s>=bendEnd)return s+length;
+  let lo=s+length,hi=s+Math.SQRT2*length;
+  for(let i=0;i<20;i++){
+   const mid=(lo+hi)/2,b=at(mid);
+   if(Math.hypot(b.y-a.y,b.z-a.z)<length)lo=mid;else hi=mid;
+  }
+  return (lo+hi)/2;
+ }
+ return {at,next,top,bendEnd};
+}
+
+function iconGarageRails(context,track,opening,travel,frontY){
+ const {THREE,data,mesh,material,box,beam}=context,{start,end,top}=opening;
+ const steel=material('#a8afaf',{metalness:.64,roughness:.36}),length=travel+top+.09;
+ const stations=[0,...Array.from({length:21},(_,i)=>track.top+(track.bendEnd-track.top)*i/20),length];
+ for(const side of [-1,1]){
+  const x=(side<0?start:end)+side*.059,points=[],indices=[];
+  // Folded C-channel, with its open side facing the roller stems.
+  const section=[[-.027,-.016],[-.027,-.034],[.026,-.034],[.026,.034],[-.027,.034],[-.027,.016]];
+  for(const [i,s] of stations.entries()){
+   const p=track.at(s);
+   for(const [j,[across,depth]] of section.entries()){
+    points.push(x+side*across,p.y+depth*Math.cos(p.angle),p.z-depth*Math.sin(p.angle));
+    if(i&&j){
+     const k=i*section.length+j,n=section.length;
+     indices.push(k-n-1,k-1,k,k-n-1,k,k-n);
+    }
+   }
+  }
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(points,3));
+  g.setIndex(indices);g.computeVertexNormals();mesh(g,steel,'garage-door-guide-'+side);
+  for(const z of [.35,1.30,top-.12]){
+   box('garage-door-jamb-bracket',[x-.025,frontY,x+.025,track.at(0).y+.015],z,.026,steel);
+  }
+  const railEnd=track.at(length);
+  for(const y of [railEnd.y-1.33,railEnd.y-.095]){
+   const ceiling=data.levels.groundCeiling;
+   box('garage-door-ceiling-anchor',[x-.065,y-.062,x+.065,y+.062],ceiling-.012,.012,steel);
+   box('garage-door-track-hanger',[x-.014,y-.016,x+.014,y+.016],railEnd.z+.026,ceiling-railEnd.z-.026,steel);
+   beam('garage-door-track-brace',[x,y-.115,railEnd.z+.018],[x,y,ceiling-.023],.009,steel);
+  }
+ }
+ return steel;
+}
+
+function iconGaragePanel(context,opening,index,height,{steel,finish,inner},last){
+ const {THREE,group,mesh,obstacle,navigation,world}=context,{start,end}=opening,width=end-start;
+ const panel=new THREE.Group();panel.name='garage-door-section-'+index;group.add(panel);
+ function part(name,geometry,finish,x,y,z){
+  const m=mesh(geometry,finish,name);panel.add(m);m.position.set(x,y,z);return m;
+ }
+ part('garage-door-insulated-panel',new THREE.BoxGeometry(width+.012,.046,height-.004),
+  [steel,steel,inner,finish,finish,finish],0,0,0);
+ part('garage-door-bottom-seal',new THREE.BoxGeometry(width+.008,.038,.012),context.mats.dark,0,0,-height/2+.003);
+ for(const side of [-1,1]){
+  const x=side*(width/2+.059);
+  for(const z of last?[-height/2,height/2]:[-height/2]){
+   part('garage-door-roller',new THREE.CylinderGeometry(.022,.022,.030,16),context.mats.dark,x,0,z).rotation.z=Math.PI/2;
+   part('garage-door-roller-axle',new THREE.CylinderGeometry(.007,.007,.085,8),steel,x-side*.035,0,z).rotation.z=Math.PI/2;
+  }
+ }
+ for(const x of [-width*.43,0,width*.43]){
+  part('garage-door-hinge-plate',new THREE.BoxGeometry(.050,.007,.071),steel,x,.026,-height/2+.041);
+  part('garage-door-hinge-barrel',new THREE.CylinderGeometry(.008,.008,.062,10),steel,x,.031,-height/2+.006).rotation.z=Math.PI/2;
+ }
+ obstacle(panel.name,[start,0,end,.001],0,height);
+ const barrier=navigation.obstacles.at(-1);barrier.dynamicHeight=true;
+ function pose(a,b){
+  const angle=Math.atan2(b.y-a.y,b.z-a.z);
+  panel.position.set((start+end)/2,(a.y+b.y)/2,(a.z+b.z)/2);panel.rotation.x=-angle;
+  const dy=.025*Math.cos(angle),dz=.025*Math.sin(angle);
+  barrier.minZ=a.z-dz;barrier.maxZ=b.z+dz;
+  const ring=[[start,a.y-dy],[end,a.y-dy],[end,b.y+dy],[start,b.y+dy]];
+  for(const [i,p] of ring.entries()){
+   const [x,y]=world(p);barrier.ring[i][0]=x;barrier.ring[i][1]=y;
+  }
+ }
+ return {panel,pose};
+}
+
+function iconSectionalGarageDoor(context){
+ const {THREE,data,group,box,mats}=context,facade=data.facades.find(f=>f.id==='facade-garage');
+ const opening=facade.openings[0],frontY=facade.a[1]+iconGroundFacadeDepth(facade);
+ const track=iconGarageTrackPath(frontY+.075,opening.top,.30),travel=track.bendEnd+.085;
+ const sealFace=track.at(0).y-.023,rubber=context.material('#292c29',{name:'Garage perimeter rubber seal',roughness:.89});
+ for(const x of [opening.start,opening.end]){
+  box('garage-door-jamb-seal',[x-.006,frontY-.001,x+.006,sealFace+.001],opening.bottom,opening.top-opening.bottom,rubber);
+ }
+ box('garage-door-header-seal',[opening.start-.006,frontY-.001,opening.end+.006,sealFace+.001],opening.top-.008,.014,rubber);
+ const steel=iconGarageRails(context,track,opening,travel,frontY);
+ const count=6,pitch=opening.top/count,x=opening.start-.17;
+ const finish=context.material('#363e3b',{name:'Garage door graphite coating',roughness:.55,metalness:.35});
+ const inner=context.material('#cbcfc9',{name:'Garage door interior coating',roughness:.67,metalness:.22});
+ const sections=Array.from({length:count},(_,i)=>iconGaragePanel(context,opening,i,pitch,{steel,finish,inner},i===count-1));
+ const roots=sections.map(section=>section.panel);
+ for(const [side,y] of [['outside',facade.a[1]-.019],['inside',frontY+.019]]){
+  const plate=box('garage-door-switch-'+side,[x-.054,y-.018,x+.054,y+.018],1.10,.14,steel);
+  const button=box('garage-door-button-'+side,[x-.034,y-.021,x+.034,y+.021],1.124,.092,mats.dark);
+  roots.push(plate,button);
+ }
+ const pick=iconVisiblePick(context,roots),eye=new THREE.Vector3();
+ let distance=0,origin=0,goal=0,since=0,moving=false;
+ function pose(value){
+  distance=value;let s=value;
+  for(const section of sections){
+   const next=track.next(s,pitch);section.pose(track.at(s),track.at(next));s=next;
+  }
+ }
+ function update(now,camera){
+  if(!moving)return false;
+  const span=Math.abs(goal-origin),step=Math.min(span,Math.max(0,now-since)*.00085);
+  const value=step===span?goal:origin+Math.sign(goal-origin)*step;
+  if(goal===0&&camera?.isPerspectiveCamera){
+   group.worldToLocal(camera.getWorldPosition(eye));
+   if(eye.z>=opening.bottom&&eye.z<data.levels.groundCeiling&&Math.abs(eye.y-track.at(0).y)<.32&&eye.x>opening.start-.26&&eye.x<opening.end+.26&&track.at(value).z<eye.z+.16){
+    origin=distance;goal=travel;since=now;return true;
+   }
+  }
+  pose(value);moving=step<span;return true;
+ }
+ function toggleAt(ndc,camera){
+  if(!pick(ndc,camera))return false;
+  origin=distance;goal=goal===0?travel:0;since=performance.now();moving=true;return true;
+ }
+ pose(0);
+ return {toggleAt,update,get openFraction(){return distance/travel;}};
+}
+
 function iconInteriorFacades(context) {
- const {data, wall, box, obstacle, mats, beam, opening} = context;
+ const {data, wall, box, obstacle, mats, beam, opening, section} = context;
  for(const facade of data.facades){
   let openings=facade.openings;
   const o=facade.id==='facade-garden'&&openings.find(o=>o.glass&&o.panels===3);
@@ -683,19 +895,19 @@ function iconInteriorFacades(context) {
   for(const [i,aperture] of openings.entries())if(aperture.casement)context.updateOfficeBarrier=iconOfficeCasement(context,facade,i,aperture);
  }
  const rear=data.facades.find(f=>f.id==='facade-wing-rear'),[cx,cy]=rear.a;
- for(const [id,depth,base,top] of [['ground',iconGroundFacadeDepth(rear),0,2.8],['upper',.36,2.8,4.07]])
+ for(const [id,depth,base,top] of [['ground',iconGroundFacadeDepth(rear),0,2.8],['upper',section.wallDepth,2.8,4.07]])
   obstacle('terrace-inner-corner-'+id,[cx-depth,cy-depth,cx,cy],base,top);
  iconEntryReturn(context);
  iconTerraceSlider(context);
- box('garage-sectional-door',[1.08,-.05,6.04,.05],0,2.32,mats.dark);obstacle('garage-door',[1.06,-.1,6.06,.1],0,2.35);
  // These three walls include the upper gable and its asymmetrical glazing.
- wall('front-gable',[0,0],[8.5,0],2.8,8.3,.36,[{...opening(.9,4.25,3.2,7.25),poly:[[.9,3.2],[4.25,3.2],[4.25,7.25],[.9,3.9]]}],[[0,2.8],[8.5,2.8],[8.5,4.07],[4.25,8.3],[0,4.07]]);
- const gardenGlassY=data.facades.find(f=>f.id==='facade-garden').a[1]-.24;
- wall('garden-gable',[0,18.13],[8.5,18.13],2.8,8.3,.36,[{...opening(.9,7.6,3.2,7.35),dividers:[3.1,5.4],recess:18.13-.18-gardenGlassY,wallPoly:[[.74,2.8],[7.76,2.8],[7.76,3.2],[7.6,3.2],[7.6,3.95],[4.25,7.35],[.9,3.95],[.9,3.2],[.74,3.2]],poly:[[.9,3.2],[7.6,3.2],[7.6,3.95],[4.25,7.35],[.9,3.95]]}],[[0,2.8],[8.5,2.8],[8.5,4.07],[4.25,8.3],[0,4.07]]);
+ wall('front-gable',[0,0],[8.5,0],2.8,8.3,section.wallDepth,[{...opening(.9,4.25,3.2,7.25),poly:[[.9,3.2],[4.25,3.2],[4.25,7.25],[.9,3.9]]}],[[0,2.8],[8.5,2.8],[8.5,4.07],[4.25,8.3],[0,4.07]]);
+ const gardenFacade=data.facades.find(f=>f.id==='facade-garden');
+ const gardenGlassY=gardenFacade.a[1]-iconGroundFacadeDepth(gardenFacade)/2;
+ wall('garden-gable',[0,18.13],[8.5,18.13],2.8,8.3,section.wallDepth,[{...opening(.9,7.6,3.2,7.35),dividers:[3.1,5.4],recess:18.13-section.wallDepth/2-gardenGlassY,wallPoly:[[.74,2.8],[7.76,2.8],[7.76,3.2],[7.6,3.2],[7.6,3.95],[4.25,7.35],[.9,3.95],[.9,3.2],[.74,3.2]],poly:[[.9,3.2],[7.6,3.2],[7.6,3.95],[4.25,7.35],[.9,3.95]]}],[[0,2.8],[8.5,2.8],[8.5,4.07],[4.25,8.3],[0,4.07]]);
  const transom=box('garden-window-transom',[.74,gardenGlassY-.12,7.76,gardenGlassY],2.35,.85,[mats.wall,mats.gardenFrame]);
  for(const [face,group] of transom.geometry.groups.entries())group.materialIndex=face===3?0:1;
- wall('wing-gable',[14.64,4.21],[14.64,12.71],2.8,8.3,.36,[{...opening(4.25,7.39,3.2,7.3),poly:[[4.25,3.2],[7.39,3.2],[7.39,4.15],[4.25,7.3]]}],[[0,2.8],[8.5,2.8],[8.5,4.07],[4.25,8.3],[0,4.07]]);
- for(const [id,a,b] of [['upper-main-side',[0,0],[0,18.13]],['upper-front-wing',[8.5,4.21],[14.64,4.21]],['upper-rear-wing',[8.5,12.71],[14.64,12.71]],['upper-garage-side',[8.5,0],[8.5,4.21]],['upper-terrace-side',[8.5,12.71],[8.5,18.13]]])wall(id,a,b,2.8,4.07,.36);
+ wall('wing-gable',[14.64,4.21],[14.64,12.71],2.8,8.3,section.wallDepth,[{...opening(4.25,7.39,3.2,7.3),poly:[[4.25,3.2],[7.39,3.2],[7.39,4.15],[4.25,7.3]]}],[[0,2.8],[8.5,2.8],[8.5,4.07],[4.25,8.3],[0,4.07]]);
+ for(const [id,a,b] of [['upper-main-side',[0,0],[0,18.13]],['upper-front-wing',[8.5,4.21],[14.64,4.21]],['upper-rear-wing',[8.5,12.71],[14.64,12.71]],['upper-garage-side',[8.5,0],[8.5,4.21]],['upper-terrace-side',[8.5,12.71],[8.5,18.13]]])wall(id,a,b,2.8,4.07,section.wallDepth);
 }
 
 const iconStairSheet=.009,iconLandingPlate=.022;
@@ -806,7 +1018,7 @@ function iconStairBackingGeometry(THREE,[x,from,back,to],height,nextHeight,hallR
  if(nextHeight<height)quad(0,[x,to,nextHeight],[x,to,height],[back,to,height],[back,to,nextHeight]);
  if(hallReturnEnd!==undefined){
   quad(1,[x,from,0],[back,from,0],[back,from,height],[x,from,height]);
-  quad(1,[back,from,0],[back,hallReturnEnd,0],[back,hallReturnEnd,height],[back,from,height]);
+  if(hallReturnEnd>from)quad(1,[back,from,0],[back,hallReturnEnd,0],[back,hallReturnEnd,height],[back,from,height]);
  }
  quad(0,[x,from,height],[back,from,height],[back,to,height],[x,to,height]);
  quad(0,[x,from,0],[x,to,0],[back,to,0],[back,from,0]);
@@ -916,17 +1128,89 @@ function iconMatchedVeneerUV(face,width,height) {
 }
 
 function iconOfficeFittedCabinet(context,frame) {
- const {item,part,width,depth,line}=frame,h=item.height,veneer=iconOfficeVeneer(context);
- const {graphite,silver}=iconBedroomOfficePalette(context),leaf=width/item.doors;
- part('plinth',[.014,0,width-.014,depth-.077],0,.072,graphite);
- part('body',[0,0,width,depth-.045],.072,h-.072,graphite);
- for(let i=0;i<item.doors;i++){
-  const front=part('door-'+i,[i*leaf+.0025,depth-.045,(i+1)*leaf-.0025,depth-.024],.074,h-.078,veneer);
-  iconMatchedVeneerUV(front,1.78,2.84);
-  const pull=i*leaf+(i===0?leaf-.069:.069);
-  line('knob-neck-'+i,[pull,depth-.024,.94],[pull,depth-.008,.94],.010,graphite);
-  line('handle-'+i,[pull,depth-.008,.94],[pull,depth,.94],.021,silver);
+ const {item,part,width,depth,line,point}=frame,h=item.height,veneer=iconOfficeVeneer(context);
+ const {graphite,silver,laminate}=iconBedroomOfficePalette(context),leaf=width/item.doors;
+ const service=item.id===(context.data.furniture.find(cabinet=>cabinet.heatingManifold)?.id??'office-under-stair-4');
+ const t=.018,front=depth-.046,base=.072,backBase=service ? .88 : base;
+ part('side-left',[0,0,t,front],0,h,laminate);
+ part('side-right',[width-t,0,width,front],0,h,laminate);
+ part('back',[t,0,width-t,.008],backBase,h-t-backBase,laminate);
+ part('top',[t,0,width-t,front],h-t,t,laminate);
+ if(!service){
+  part('plinth',[t,0,width-t,depth-.077],0,base,graphite);
+  part('bottom',[t,.008,width-t,front],base,t,laminate);
  }
+ const tiers=Math.round((h-base)/.36);
+ const shelves=service?[backBase]:Array.from({length:tiers-1},(_,i)=>base+(i+1)*(h-base)/tiers);
+ shelves.forEach((z,i)=>part('shelf-'+i,[t,.008,width-t,front-.016],z,t,laminate));
+ frame.wardrobeDoors=[];
+ for(let i=0;i<item.doors;i++){
+  const left=i*leaf+.0025,right=(i+1)*leaf-.0025;
+  const bottom=service ? .005 : .074,folding=item.id==='office-under-stair-1',middle=(left+right)/2;
+  const panel=(name,a,b)=>{
+   const mesh=part(name,[a,depth-.045,b,depth-.024],bottom,h-.004-bottom,veneer);
+   iconMatchedVeneerUV(mesh,1.78,2.84);return mesh;
+  };
+  const door=panel('door-'+i,left,folding?middle-.0015:right);
+  const fold=folding?{hinge:point(middle,depth-.045),panel:panel('fold-'+i,middle+.0015,right)}:null;
+  const pull=i*leaf+(i===0?leaf-.069:.069),hinge=point(i===0?left:right,depth-.024);
+  const neck=line('knob-neck-'+i,[pull,depth-.024,.94],[pull,depth-.008,.94],.010,graphite);
+  const handle=line('handle-'+i,[pull,depth-.008,.94],[pull,depth,.94],.021,silver);
+  frame.wardrobeDoors.push({name:item.id+'-hinge-'+i,hinge,door,fold,span:right-left,hardware:[neck,handle],swing:i===0?1:-1});
+ }
+}
+
+function iconWardrobeHinge(THREE,parent,name,position) {
+ const pivot=new THREE.Group(),mount=new THREE.Group();
+ pivot.name=name;pivot.position.set(...position);pivot.userData.dynamic=true;
+ mount.position.copy(pivot.position).negate();parent.add(pivot);pivot.add(mount);
+ return {pivot,mount};
+}
+
+function iconMountWardrobeDoor(context,{name,hinge,door,fold,span,hardware,swing}) {
+ const {THREE,group,world,obstacle,navigation}=context;
+ const {pivot,mount}=iconWardrobeHinge(THREE,group,name,hinge);
+ mount.add(door);
+ const joint=fold&&iconWardrobeHinge(THREE,mount,name+'-fold',fold.hinge);
+ if(joint)joint.mount.add(fold.panel,...hardware);
+ else mount.add(...hardware);
+ const {width:thickness,depth:height}=door.geometry.parameters;
+ const [x,y]=hinge,tip=y-swing*span,base=door.position.z-height/2;
+ const south=Math.min(y,tip),north=Math.max(y,tip);
+ const closed=[x-thickness,south,x,north];
+ // Reserve the door and projecting knob through the complete opening or closing stroke.
+ const sweep=[x-thickness-.024,south-.046,x+(fold?span/2:span)+.046,north+.046];
+ obstacle(name,closed,base,base+height);
+ const ring=navigation.obstacles.at(-1).ring,eye=new THREE.Vector3();
+ const rect=([left,low,right,high])=>[[left,low],[right,low],[right,high],[left,high]];
+ const write=points=>points.forEach(([px,py],i)=>{
+  const p=world([px,py]);ring[i][0]=p[0];ring[i][1]=p[1];
+ });
+ function clear(camera){
+  if(!camera.isPerspectiveCamera)return true;
+  group.worldToLocal(camera.getWorldPosition(eye));
+  const dx=eye.x-THREE.MathUtils.clamp(eye.x,sweep[0],sweep[2]),dy=eye.y-THREE.MathUtils.clamp(eye.y,sweep[1],sweep[3]);
+  return eye.z<base||eye.z>base+height+1.7||Math.hypot(dx,dy)>.28;
+ }
+ return {roots:[pivot],canOpen:clear,canClose:clear,pose(fraction,opening){
+  const angle=swing*THREE.MathUtils.degToRad(84)*fraction;
+  pivot.rotation.z=angle;
+  if(joint)joint.pivot.rotation.z=-2*angle;
+  if(fraction!==Number(opening)){write(rect(sweep));return;}
+  if(!fraction){write(rect(closed));return;}
+  if(joint){
+   const panels=[door,fold.panel],points=[];
+   for(const mesh of panels){
+    const {width:w,height:d}=mesh.geometry.parameters;
+    for(const [u,v] of rect([-w/2,-d/2,w/2,d/2]))points.push(group.worldToLocal(mesh.localToWorld(new THREE.Vector3(u,v,0))));
+   }
+   const bounds=new THREE.Box3().setFromPoints(points);
+   write(rect([bounds.min.x,bounds.min.y,bounds.max.x,bounds.max.y]));
+  }else{
+   const cos=Math.cos(angle),sin=Math.sin(angle);
+   write(rect(closed).map(([px,py])=>[x+cos*(px-x)-sin*(py-y),y+sin*(px-x)+cos*(py-y)]));
+  }
+ }};
 }
 
 function iconInteriorOfficePartition(context,cabinets,frontY,run) {
@@ -2839,6 +3123,7 @@ function iconApplianceControls(context) {
  if(context.socketCover)add(context.socketCover);
  if(context.dishwasher)add(context.dishwasher);
  for(const pullout of context.pullouts??[])add(pullout);
+ for(const leaf of context.wardrobeDoors??[])add(leaf);
  for(const id of ['fridge','freezer']){
   const pivot=context.group.getObjectByName('kitchen-'+id+'-door');
   if(!pivot)continue;
@@ -2864,7 +3149,7 @@ function iconApplianceControls(context) {
  }
  function toggleAt(ndc,camera){
   const part=pick(ndc,camera),state=parts.get(part);
-  if(!state||(!state.open&&!state.canOpen(camera,part)))return false;
+  if(!state||(state.open?state.canClose?.(camera,part)===false:!state.canOpen(camera,part)))return false;
   if(!state.open&&state.clearance&&motions.some(other=>other!==state&&(state.dishwasher||other.dishwasher)
    &&(other.open||other.fraction>0)&&other.clearance?.intersectsBox(state.clearance)))return false;
   const now=performance.now();
@@ -2881,16 +3166,19 @@ function iconApplianceControls(context) {
 function iconProjectorControl(context,assembly,wall) {
  const {THREE,group,data}=context,pick=iconVisiblePick(context,[assembly]);
  const lens=assembly.getObjectByName('projector-lens-glass'),paint=wall.material[2];
- let projectedPaint,isOn=false;
+ const projectedPaint=iconProjectedPaint(THREE,paint,data.projection,Math.sign(group.matrix.determinant()));
+ const setPower=on=>{
+  wall.material[2]=on?projectedPaint:paint;
+  lens.material.emissive.setHex(on?0xa8d8ff:0);
+ };
+ const isOn=()=>wall.material[2]===projectedPaint;
+ setPower(true);
  function toggleAt(ndc,camera){
   if(!pick(ndc,camera))return false;
-  projectedPaint??=iconProjectedPaint(THREE,paint,data.projection,Math.sign(group.matrix.determinant()));
-  isOn=!isOn;
-  wall.material[2]=isOn?projectedPaint:paint;
-  lens.material.emissive.setHex(isOn?0xa8d8ff:0);
+  setPower(!isOn());
   return true;
  }
- return {toggleAt,get isOn(){return isOn;}};
+ return {toggleAt,get isOn(){return isOn();}};
 }
 
 function iconLivingCoffeeTable(THREE,s,p) {
@@ -3360,6 +3648,8 @@ function iconInteriorFurnishings(context) {
   if(item.type==='rug'||item.type==='concealed-door'||item.support)continue;
   const bounds=objects.reduce((max,object)=>{object.updateMatrix();object.geometry.computeBoundingBox();return Math.max(max,object.geometry.boundingBox.clone().applyMatrix4(object.matrix).max.z);},frame.z);
   obstacle('furniture-'+item.id,frame.walkBox??item.box,frame.z,bounds);
+  for(const leaf of frame.wardrobeDoors??[])
+   (context.wardrobeDoors??=[]).push(iconMountWardrobeDoor(context,leaf));
   for(const appliance of frame.appliances??[])iconMountSamsung(context,appliance);
   if(frame.dishwasher)context.dishwasher=iconMountDishwasher(context,frame.dishwasher);
   if(frame.socketCover){
@@ -3678,7 +3968,7 @@ function iconFramedArt(context) {
   {id:'hall-still-life',title:'Dzbanek i gruszka',support:'hall-front',along:8.90,normal:[0,1],z:1.65,w:.54,h:.68,wood:walnut,sheet:[300,380],draw:iconStillLifePrint},
   {id:'playroom-hare',title:'Zając w biegu',support:'facade-wing-end',along:6.12,normal:[-1,0],z:1.57,w:.94,h:.68,wood:ash,sheet:[420,300],draw:iconHarePrint},
   {id:'bedroom-lake',title:'Cisza nad jeziorem',support:'u-room1',along:3.45,normal:[0,-1],z:4.74,w:1.14,h:.64,wood:walnut,sheet:[500,272],draw:iconReedbedPrint},
-  {id:'suite-lunaria',title:'Miesiącznica',support:'u-suite-hall',along:10.67,normal:[1,0],z:4.76,w:.69,h:.91,wood:ash,sheet:[300,400],draw:iconLunariaPrint}
+  {id:'suite-lunaria',title:'Miesiącznica',support:'u-suite-hall',along:10.56,normal:[1,0],z:4.54,w:.69,h:.91,wood:ash,sheet:[300,400],draw:iconLunariaPrint}
  ];
  for(const {id,title,support,along,normal:[nx,ny],z,w,h,wood,sheet,draw} of pieces){
   const facade=data.facades.find(f=>f.id===support),wall=facade??data.walls.find(p=>p.id===support);
@@ -3699,7 +3989,9 @@ function iconFramedArt(context) {
  }
 }
 
-function iconMezzaninePrint({THREE,box,mats}) {
+function iconMezzaninePrint({THREE,box,mats,data}) {
+ const partition=data.walls.find(w=>w.id==='u-suite-front');
+ const faceY=partition.a[1]+partition.thickness/2;
  const width=240,height=256,pixels=new Uint8Array(width*height*4);
  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
   const u=(x+.5)/width*2-1,v=(y+.5)/height*2-1,theta=Math.atan2(v,u);
@@ -3712,10 +4004,10 @@ function iconMezzaninePrint({THREE,box,mats}) {
  const paper=new THREE.DataTexture(pixels,width,height);paper.colorSpace=THREE.SRGBColorSpace;paper.magFilter=THREE.LinearFilter;paper.generateMipmaps=true;paper.minFilter=THREE.LinearMipmapLinearFilter;paper.needsUpdate=true;
  for(let i=0;i<2;i++){
   const x=6.72+i*.55;
-  box('gallery-frame-'+i,[x-.016,8.032,x+.536,8.066],4.17,1.09,mats.metal);
+  box('gallery-frame-'+i,[x-.016,faceY+.002,x+.536,faceY+.036],4.17,1.09,mats.metal);
   const map=paper.clone();map.repeat.x=.5;map.offset.x=i*.5;map.needsUpdate=true;
   const print=new THREE.MeshStandardMaterial({map,roughness:.98});
-  box('gallery-print-'+i,[x,8.066,x+.52,8.071],4.185,1.06,print);
+  box('gallery-print-'+i,[x,faceY+.036,x+.52,faceY+.041],4.185,1.06,print);
  }
 }
 
@@ -3757,8 +4049,8 @@ function iconSplitRoofPolygon(polygon,axis,limit) {
 }
 
 function iconRoofLining(context,part,inverse,neutral,white,bedroom) {
- const {THREE,group,mesh,data,cutRoof}=context,{left,front,right,back,oak}=bedroom;
- const points=part.vertices.map(v=>{const p=new THREE.Vector3(...v).applyMatrix4(inverse);p.z-=.045;return p;});
+ const {THREE,group,mesh,data,cutRoof,section}=context,{left,front,right,back,oak}=bedroom;
+ const points=part.vertices.map(v=>{const p=new THREE.Vector3(...v).applyMatrix4(inverse);p.z=section.roof(p.x,p.y);return p;});
  const [,start,endX]=data.void.box,main=points.every(p=>p.x<=endX+1e-5);
  const finishes=new Map([[neutral,''],[white,'-living'],[oak,'-bedroom']]);
  const positions=new Map([...finishes.keys()].map(mat=>[mat,[]]));
@@ -3768,6 +4060,13 @@ function iconRoofLining(context,part,inverse,neutral,white,bedroom) {
  };
  for(const indices of part.faces){
   let face=indices.map(i=>points[i]);
+  for(const [x0,y0,x1,y1,height] of section.closed){
+   let panel=iconSplitRoofPolygon(face,'z',height)[1];
+   for(const [axis,limit,side] of [['x',x0,1],['y',y0,1],['x',x1,0],['y',y1,0]]){
+    panel=iconSplitRoofPolygon(panel,axis,limit)[side];
+   }
+   if(panel.length>=3)add(panel.map(p=>new THREE.Vector3(p.x,p.y,height)),neutral);
+  }
   if(main){
    const [other,living]=iconSplitRoofPolygon(face,'y',start);
    add(other,neutral);add(living,white);continue;
@@ -3807,7 +4106,7 @@ function iconDiningLantern(context,paper,id,x,y,z,radius,halfHeight) {
  beam(id+'-cap',[x,y,top-.006],[x,y,top+.018],.049,mats.metal);
 }
 
-function iconLivingLighting(context,roofTimber) {
+function iconLivingLighting(context) {
  const {THREE,mesh,box,beam,ceilingAt,mats,data}=context;
  const paper=new THREE.MeshStandardMaterial({color:'#ffebc8',emissive:'#f4cba2',emissiveIntensity:.34,side:THREE.DoubleSide,roughness:.96});
  paper.onBeforeCompile=shader=>{
@@ -3833,54 +4132,34 @@ function iconLivingLighting(context,roofTimber) {
   const bulb=mesh(new THREE.SphereGeometry(.053,14,10),mats.lamp,id+'-bulb');
   bulb.position.set(px,py,bottom-.014);
  }
- for(const py of [11.45,12.95,14.45,15.95]){
-  const z=7.06,ridge=4.25;
-  const half=(ceilingAt(ridge,py)-z)/((8.3-4.07)/4.25);
-  const bevel=.17*4.25/(8.3-4.07);
-  const section=new THREE.Shape([[-half,0],[half,0],[half-bevel,.17],[-half+bevel,.17]].map(([u,v])=>new THREE.Vector2(u,v)));
-  const geometry=new THREE.ExtrudeGeometry(section,{depth:.11,bevelEnabled:false});
-  const {position,normal,uv}=geometry.attributes;
-  for(let i=0;i<position.count;i++){
-   const across=Math.abs(normal.getZ(i))>.5?position.getY(i):position.getZ(i);
-   uv.setXY(i,across/.32+py*.27,position.getX(i)/2.65+py*.43);
-  }
-  const tie=mesh(geometry,roofTimber,'living-collar-tie-'+py);
-  tie.rotation.x=Math.PI/2;tie.position.set(ridge,py+.055,z);
- }
  box('kitchen-linear-light',[.8,10.09,4.68,10.115],2.787,.012,mats.lamp);
 }
 
-function iconMezzanineTrusses(context,roofTimber) {
- const {THREE,mesh,data}=context,{eave,ridge}=data.levels;
- const pitch=(ridge-eave)/4.25,top=ridge-.045,mid=8.46;
- function timber(name,a,b,width,depth){
-  const dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
-  const nx=-dy*width/(2*length),ny=dx*width/(2*length);
-  const vertices=[a,b].flatMap(([x,y,z])=>[[x+nx,y+ny,z],[x-nx,y-ny,z],[x-nx,y-ny,z-depth],[x+nx,y+ny,z-depth]]);
-  const g=new THREE.BufferGeometry(),positions=[],uv=[];
-  for(const [i,j,k,l] of [[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7],[3,2,1,0],[4,5,6,7]]){
-   const edge=(p,q)=>Math.hypot(...vertices[p].map((n,c)=>n-vertices[q][c]));
-   const across=edge(i,j)/.32,along=edge(i,l)/2.65;
-   for(const [index,u,v] of [[i,0,0],[j,across,0],[k,across,along],[i,0,0],[k,across,along],[l,0,along]]){
-    positions.push(...vertices[index]);uv.push(u+a[0]*.27+i*.17,v+b[1]*.43);
-   }
+function iconAtticCollarTies(context,roofTimber) {
+ const {THREE,mesh,data,section}=context,z=data.levels.upperCeiling;
+ const height=.18,depth=.11,half=(section.ridge-z)/section.pitch,bevel=height/section.pitch;
+ const suite=data.rooms.find(room=>room.id==='1.8').box;
+ const crossRidge=8.46,mainRidge=4.25,wallFace=suite[1]-crossRidge;
+ function tie(id,station,wing=false){
+  const start=wing?wallFace:-half;
+  const shape=new THREE.Shape([ [start,0],[half,0],[half-bevel,height],[Math.max(start,-half+bevel),height] ]
+   .map(([u,v])=>new THREE.Vector2(u,v)));
+  const geometry=new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:false});
+  const {position,normal,uv}=geometry.attributes;
+  for(let i=0;i<position.count;i++){
+   const across=Math.abs(normal.getZ(i))>.5?position.getY(i):position.getZ(i);
+   uv.setXY(i,across/.32+station*.27,position.getX(i)/2.65+station*.43);
   }
-  g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
-  g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.computeVertexNormals();mesh(g,roofTimber,'gallery-truss-'+name);
+  const member=mesh(geometry,roofTimber,id);
+  member.rotation.set(Math.PI/2,0,wing?Math.PI/2:0,'ZXY');
+  if(wing)member.position.set(station-depth/2,crossRidge,z);
+  else member.position.set(mainRidge,station+depth/2,z);
  }
- const roofZ=run=>top-.013-run*pitch;
- for(const sign of [-1,1]){
-  const run=4.25;
-  timber('valley-'+sign,[4.25,mid,top-.08],[8.50,mid+sign*run,top-.08-run*pitch],.15,.23);
- }
- for(const [i,x] of [6.43,7.55,8.87].entries()){
-  const run=Math.min(x-4.25,4.04);
-  for(const sign of [-1,1]){
-   timber('rafter-'+i+'-'+sign,[x,mid,roofZ(0)],[x,mid+sign*run,roofZ(run)],.12,.235);
-  }
-  const tieRun=1.15,tieTop=roofZ(tieRun)-.022;
-  timber('collar-'+i,[x,mid-tieRun,tieTop],[x,mid+tieRun,tieTop],.112,.17);
- }
+ for(const y of [11.45,12.95,14.45,15.95])tie('living-collar-tie-'+y,y);
+ for(const [i,x] of [6.43,7.55,8.87].entries())tie('gallery-truss-collar-'+i,x,true);
+ const child=data.rooms.find(room=>room.id==='1.1').box;
+ for(const [i,offset] of [-.75,.75].entries())tie('bedroom-collar-tie-1.1-'+i,(child[1]+child[3])/2+offset);
+ for(const [i,offset] of [-1.5,0,1.5].entries())tie('bedroom-collar-tie-1.8-'+i,(suite[0]+suite[2])/2+offset,true);
 }
 
 function iconRoomShade(THREE, profile, radius, pleats=0) {
@@ -3919,27 +4198,28 @@ function iconRoomCeilingLights(context) {
  for(const [id,x,y,z,style,r] of fittings){
   const upstairs=id.startsWith('upper-'),ceiling=upstairs?ceilingAt(x,y):data.levels.groundCeiling;
   const name='light-fixture-'+id+'-',shape=profiles[style],shadeTop=shape.at(-1)[1];
+  const fixtureZ=Math.min(z,ceiling-shadeTop-.065);
   const part=(geometry,material,suffix,height)=>{
    const m=mesh(geometry,material,name+suffix);
    m.position.set(x,y,height);return m;
   };
   const mat=style==='opal'?mats.lamp:style==='disc'?palette.slate:linenShade;
-  part(iconRoomShade(THREE,shape,r,style==='pleated'?30:0),mat,'shade',z);
+  part(iconRoomShade(THREE,shape,r,style==='pleated'?30:0),mat,'shade',fixtureZ);
   if(style!=='opal'){
    const lens=iconRoomShade(THREE,[[.001,0],[.61,.003],[.98,.014]],r*.93);
-   part(lens,mats.lamp,'diffuser',z+.009);
+   part(lens,mats.lamp,'diffuser',fixtureZ+.009);
   }
   const collar=iconRoomShade(THREE,[[.80,0],[1,.005],[1,.020],[.64,.024],[.001,.024]],r*.22);
-  part(collar,palette.brass,'collar',z+shadeTop-.002);
+  part(collar,palette.brass,'collar',fixtureZ+shadeTop-.002);
   const slopeX=upstairs?(ceilingAt(x+.001,y)-ceilingAt(x-.001,y))/.002:0;
   const slopeY=upstairs?(ceilingAt(x,y+.001)-ceilingAt(x,y-.001))/.002:0;
   const up=new THREE.Vector3(-slopeX,-slopeY,1).normalize();
   const mounting=part(new THREE.CylinderGeometry(.050,.042,.025,20),palette.brass,'canopy',ceiling);
   mounting.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),up);
   mounting.position.addScaledVector(up,-.0125);
-  beam(name+'drop',[x,y,z+shadeTop+.020],[x,y,ceiling-.010],.0055,mats.dark);
+  beam(name+'drop',[x,y,fixtureZ+shadeTop+.020],[x,y,ceiling-.010],.0055,mats.dark);
   const lamp=new THREE.PointLight('#ffe4c2',8,5,2);
-  lamp.position.set(x,y,z-.018);group.add(lamp);
+  lamp.position.set(x,y,fixtureZ-.018);group.add(lamp);
  }
  // General room lighting for the two existing groups of decorative pendants.
  for(const [x,y,z] of [[4.4,14,2.5],[4.3,10.5,2.55]]){
@@ -4026,8 +4306,8 @@ function iconInteriorLightingAndRoof(context) {
  iconRoofPhotovoltaics(context);
  const roofTimber=iconLongGrainOak(context.THREE,'Clear-finished light oak roof timber',[207,177,137]);
  roofTimber.roughness=.72;
- iconMezzanineTrusses(context,roofTimber);
- iconLivingLighting(context,roofTimber);
+ iconAtticCollarTies(context,roofTimber);
+ iconLivingLighting(context);
  iconIndoorOlive(context,.97,16.21,.88);
  iconIndoorPlants(context);
  iconMezzaninePrint(context);
@@ -4130,7 +4410,7 @@ function iconInteriorCurtains(context) {
  const cloth=new THREE.MeshStandardMaterial({color:'#dbccb3',roughness:.97,vertexColors:true,side:THREE.DoubleSide});
  const metal=new THREE.MeshStandardMaterial({color:'#786750',roughness:.55,metalness:.39});
  const garden={depth:.18,rise:.076,face:.12,left:-.028,right:-.028,stack:.46};
- const ground={depth:.335,rise:.083,face:.24,left:.17,right:.17,stack:.25};
+ const ground={depth:.335,rise:.083,face:iconGroundFacadeDepth(context.data.facades.find(f=>f.id==='facade-front-wing'))/2,left:.17,right:.17,stack:.25};
  const gable={depth:.265,rise:.075,face:.18,left:.10,right:.10,stack:.33};
  const office=context.data.facades.find(f=>f.id==='facade-wing-end').openings[1];
  const windows=[
@@ -4570,10 +4850,10 @@ function iconBrorPost(THREE,width,height,holes) {
  return new THREE.ExtrudeGeometry(face,{depth:t,bevelEnabled:false,curveSegments:5}).rotateX(Math.PI/2).translate(0,t,0);
 }
 
-function iconBrorUprights(context,frame,shapes,height,bench) {
+function iconBrorUprights(context,frame,shapes,height) {
  const {THREE}=context,{width:w,depth:d,part}=frame,p=iconBrorFinishes(context);
- const holes=bench?[.07,.27,.47,.69,.81]:Array.from({length:17},(_,i)=>.068+.11*i);
- const flange=bench?.042:.032,t=.0018;
+ const holes=Array.from({length:17},(_,i)=>.068+.11*i);
+ const flange=.032,t=.0018;
  const face=iconBrorPost(THREE,flange,height-.006,holes);
  const side=iconBrorPost(THREE,flange-t,height-.006,holes).rotateZ(Math.PI/2).translate(t,t,0);
  const corners=[[.002,.002,0],[w-.002,.002,Math.PI/2],[w-.002,d-.002,Math.PI],[.002,d-.002,-Math.PI/2]];
@@ -4692,7 +4972,7 @@ function iconPantryVacuum(context,frame,s,p) {
 function iconBrorRack(context,frame,shapes,paint) {
  const {THREE}=context,{width:w,item}=frame,p=iconBrorFinishes(context);
  const levels=item.shelfLevelsM;
- iconBrorUprights(context,frame,shapes,1.90,false);
+ iconBrorUprights(context,frame,shapes,1.90);
  for(const [i,z] of levels.entries())iconBrorDeck(frame,'shelf-'+i,z,p);
  const span=w-.042,rise=.66;
  for(const [i,sign] of [-1,1].entries()){
@@ -4717,56 +4997,25 @@ function iconBrorRack(context,frame,shapes,paint) {
  }
 }
 
-function iconBrorWallRack(context,frame,shapes,paint) {
- const p=iconBrorFinishes(context),{width:w,part}=frame;
- const start=(w-.875)/2,end=start+.875,base=1.43;
- part('wall-cleat',[start,0,end,.014],base+.845,.055,p.steel);
- for(const [i,u] of [start+.023,end-.023].entries()){
-  part('wall-rail-'+i,[u-.015,.015,u+.015,.048],base,.885,p.steel);
- }
- const labels=['PESTO','MIÓD','ZIOŁA','HERBATA'],fills=[paint.olive,paint.putty,paint.cocoa,paint.clay];
- for(const [row,offset] of [.06,.32,.58,.84].entries()){
-  const z=base+offset;
-  part('wall-shelf-'+row,[start+.0125,.05,end-.0125,.45],z-.008,.008,p.steel);
-  for(const [i,x] of [start+.038,end-.038].entries()){
-   part('wall-arm-'+row+'-'+i,[x-.008,.044,x+.008,.435],z-.029,.021,p.fastener);
+function iconFittedPantryShelves(context,frame,shapes,paint) {
+ const {width:w,depth:d,part,item}=frame,ply=iconBrorFinishes(context).plywood;
+ const upright=.018,top=2.02;
+ for(const [i,u] of [0,w-upright].entries())
+  part('end-panel-'+i,[u,0,u+upright,d],0,top,ply);
+ const worktop=item.id==='pantry-fitted-garage';
+ const levels=worktop?[.10,.46,.88,1.50,1.80]:[.10,.45,.80,1.15,1.50,1.80];
+ const labels=['RYŻ','MĄKA','KASZA','OGÓRKI','MIÓD','FASOLA'];
+ const count=Math.floor(w/.24);
+ for(const [row,z] of levels.entries()){
+  part('shelf-'+row,[upright,0,w-upright,d],z-.024,.024,ply);
+  if(worktop&&z===.88)continue;
+  for(let i=0;i<count;i++){
+   const u=(i+.5)*w/count;
+   iconPantryJar(context,shapes,'jar-'+row+'-'+i,u,d*.55,z,.057,.16,
+    [paint.olive,paint.putty,paint.cocoa][(i+row)%3],paint.silver,labels[row]);
   }
-  for(let i=0;i<5;i++){
-   const u=start+.112+i*.160;
-   iconPantryJar(context,shapes,'wall-stock-'+row+'-'+i,u,.337,z,.052,.154,fills[row],p.fastener,labels[row]);
-  }
  }
-}
-
-function iconPantryCrate(context,frame,shapes,key,u,z,produce,vegetable) {
- const {part}=frame,p=iconBedroomOfficePalette(context),width=.48,depth=.36,back=.09,front=back+depth;
- part(key+'-bottom',[u,back,u+width,front],z,.016,p.beech);
- for(const [i,x] of [u,u+width-.014].entries())part(key+'-end-'+i,[x,back,x+.014,front],z+.016,.177,p.beech);
- for(const [i,y] of [back,front-.012].entries())for(const [j,h] of [.021,.095,.167].entries()){
-  part(key+'-slat-'+i+'-'+j,[u+.014,y,u+width-.014,y+.012],z+h,.038,p.beech);
- }
- for(let i=0;i<11;i++){
-  const upper=i>=8,col=upper?i-8:i%4;
-  const x=u+.079+col*.107+(upper?.053:0),y=back+.106+(upper?.056:Math.floor(i/4)*.112);
-  const radiusZ=vegetable?.046:.057;
-  const tuber=new context.THREE.SphereGeometry(1,11,7);
-  tuber.scale(.058,.052,radiusZ);
-  const root=shapes.add(key+'-produce-'+i,tuber,produce,x,y,z+.016+radiusZ*(upper?2.25:1));
-  root.rotation.z+=i*.85;
- }
-}
-
-function iconBrorBench(context,frame,shapes,paint) {
- const {width:w,depth:d,part}=frame,p=iconBrorFinishes(context);
- iconBrorUprights(context,frame,shapes,.857,true);
- iconBrorDeck(frame,'lower',.16,p);iconBrorDeck(frame,'middle',.49,p);
- iconBrorDeck(frame,'top-frame',.857,p);
- part('pine-plywood',[0,0,w,d],.857,.023,p.plywood);
- iconPantryCrate(context,frame,shapes,'potatoes',.038,.16,paint.putty,true);
- iconPantryCrate(context,frame,shapes,'onions',w-.518,.16,iconBedroomOfficePalette(context).beech,false);
- for(let i=0;i<3;i++)iconBrorStockBin(context,frame,shapes,'bulk-'+i,.195+i*.355,.49,.30,.38,paint,['MĄKA','RYŻ','KASZA'][i]);
- iconBrorWallRack(context,frame,shapes,paint);
- iconPantryOverhead(context,frame,shapes,paint,2.46,['PRZETWORY']);
+ iconPantryOverhead(context,frame,shapes,paint,top,['ZAPASY','PRZETWORY']);
 }
 
 function iconPlantPalette(context) {
@@ -5126,9 +5375,10 @@ const iconGroundRoomBuilders={
  'garage-wallbox':iconGarageWallbox,
  'pantry-bror-85':iconBrorRack,
  'pantry-bror-65':iconBrorRack,
- 'pantry-bror-return':iconBrorRack,
  'pantry-vacuum-bay':iconPantryVacuum,
- 'pantry-bror-bench':iconBrorBench,
+ 'pantry-fitted-garage':iconFittedPantryShelves,
+ 'pantry-fitted-end':iconFittedPantryShelves,
+ 'pantry-fitted-kitchen':iconFittedPantryShelves,
  'entry-wardrobe-rear':iconEntryWardrobe,
  'entry-wardrobe-side':iconEntryWardrobe,
  'entry-console':iconEntryConsole,
@@ -5207,8 +5457,14 @@ function iconEntryPalette(context) {
 function iconEntryWardrobe(context,frame,s,p) {
  const {item,width:w,depth:d,part}=frame,h=item.height,paint=iconEntryPalette(context);
  const leaf=(w-(item.blindCornerWidth||0))/item.doors,front=d-.028,split=2.18;
- part('toe-kick',[.028,.012,w-.028,front-.051],.008,.083,p.shadow);
- part('body',[0,0,w,front-.023],.091,h-.091,paint.mushroom);
+ const chase=item.id==='entry-wardrobe-side'&&context.data.walls.find(w=>w.id==='vestibule-service-chase');
+ const cut=chase?chase.b[1]-chase.a[1]:0;
+ const carcass=(name,start,end,back,face,z,height,finish)=>{
+  if(chase)part(name+'-behind-notch',[cut,back,end,chase.thickness],z,height,finish);
+  part(name,[start,chase?chase.thickness:back,end,face],z,height,finish);
+ };
+ carcass('toe-kick',.028,w-.028,.012,front-.051,.008,.083,p.shadow);
+ carcass('body',0,w,0,front-.023,.091,h-.091,paint.mushroom);
  for(let i=0;i<item.doors;i++){
   const a=i*leaf+.003,b=(i+1)*leaf-.003,center=(a+b)/2;
   part('door-'+i,[a,front-.023,b,front],.096,split-.099,paint.mushroom);
@@ -5287,7 +5543,7 @@ function iconEntryFloor(context) {
  },[1,1]);
  const room=data.rooms.find(r=>r.id==='0.6'),rear=data.furniture.find(f=>f.id==='entry-wardrobe-rear');
  const side=data.furniture.find(f=>f.id==='entry-wardrobe-side'),[left,front,,back]=room.box;
- const wall=room.outline[3][0],outer=[[left,front],[side.box[0],front],[side.box[0],rear.box[1]],
+ const bathWall=data.walls.find(w=>w.id==='bath-left'),wall=bathWall.a[0]-bathWall.thickness/2,outer=[[left,front],[side.box[0],front],[side.box[0],rear.box[1]],
   [wall,rear.box[1]],[wall,back],[left,back]];
  const inner=iconInteriorInsetSlab(outer,outer,.116),vertices=[],uvs=[];
  for(let i=0;i<outer.length;i++){
@@ -5705,7 +5961,7 @@ function iconPrivateVanityMirror(context,p) {
 }
 
 function iconUpperBathFinishes(context) {
- const {THREE,group,box,beam,mesh}=context,p=iconUpperBathPalette(context),floor=3.223;
+ const {THREE,data,group,box,beam,mesh}=context,p=iconUpperBathPalette(context),floor=3.223;
  group.getObjectByName('finish-1.2').material=iconFamilyBathFloor(THREE);
  group.getObjectByName('finish-1.6').material=iconPrivateBathFloor(THREE);
  const tile=(id,a,b,top,mat)=>iconUpperBathWall(context,id,a,b,floor,top,mat);
@@ -5718,35 +5974,41 @@ function iconUpperBathFinishes(context) {
  family('basin-side',[3.87,3.742],[.502,3.742],4.30);
  family('shower',[4.768,3.742],[3.87,3.742],5.29);
  tile('bath-family-shower-return',[4.768,4.638],[4.768,3.742],5.29,p.petrol);
- box('bath-family-tub-ledge',[.186,3.745,.498,5.635],3.223,.625,p.cream);
- box('bath-family-tub-shelf',[.185,3.745,.51,5.635],3.848,.025,p.piping);
- context.obstacle('bath-family-tub-ledge',[.185,3.745,.51,5.635],floor,3.873);
+ const tub=data.furniture.find(f=>f.id==='bath-tub'),west=data.rooms.find(r=>r.id==='1.2').box[0];
+ const shelfBox=[west,3.745,tub.box[0],5.635],shelfZ=3.82;
+ box('bath-family-tub-ledge',shelfBox,floor,shelfZ-.025-floor,p.cream);
+ box('bath-family-tub-shelf',shelfBox,shelfZ-.025,.025,p.piping);
+ context.obstacle('bath-family-tub-ledge',shelfBox,floor,shelfZ);
  const vessel=(id,x,y,z,r,h,finish)=>{
   const profile=[[.8,0],[1,.05],[1,.66],[.94,.77],[.56,.88],[.56,1],[.42,1],[.42,.88]];
   const g=new THREE.LatheGeometry(profile.map(([radius,height])=>new THREE.Vector2(r*radius,h*height)),28);
   g.rotateX(Math.PI/2);mesh(g,finish,id).position.set(x,y,z);
  };
- vessel('bath-family-ochre-jar',.435,4.10,3.873,.067,.16,p.honey);
- vessel('bath-family-pale-bud-vase',.435,4.25,3.873,.050,.21,p.piping);
+ vessel('bath-family-ochre-jar',west+.105,4.10,shelfZ,.067,.16,p.honey);
+ vessel('bath-family-pale-bud-vase',west+.105,4.25,shelfZ,.050,.21,p.piping);
  iconUpperBathLamp(context,'family-basin',3.35,3.743,5.262,true);
  const privateWall=(id,a,b,top,mat=p.biscuit)=>{
   tile('bath-private-'+id,a,b,top,mat);
   iconUpperBathWall(context,'bath-private-paint-'+id,a,b,top,Infinity,p.etching);
  };
- privateWall('double-vanity',[11.548,7.887],[11.548,5.115],4.34);
- privateWall('shower',[8.912,5.226],[8.912,6.50],4.34);
+ const shower=data.furniture.find(f=>f.id==='private-shower');
+ const privateRoom=data.rooms.find(r=>r.id==='1.6'),rear=privateRoom.box[3]-.002;
+ const door=data.walls.find(w=>w.id==='u-suite-front');
+ const [left,right]=door.doors[0].map(u=>door.a[0]+u);
+ privateWall('double-vanity',[11.548,rear],[11.548,privateRoom.box[1]],4.34);
+ privateWall('shower',[8.912,privateRoom.box[1]],[8.912,shower.box[3]],4.34);
  for(const side of [-1,1]){
-  const y=5.4+.51+side*.15*.64;
+  const y=shower.box[1]+.51+side*.15*.64;
   beam('bath-private-mixer-feed-'+side,[8.912,y,4.24],[8.95,y,4.24],.015,p.chrome);
  }
- privateWall('towel-wall',[8.912,6.50],[8.912,7.887],4.31);
- privateWall('door-left',[8.912,7.888],[9.997,7.888],4.31);
- privateWall('door-right',[10.902,7.888],[11.548,7.888],4.31);
- const capZ=4.176;
- box('bath-private-service-ledge',[8.913,4.82,11.545,5.132],floor,capZ-floor,p.biscuit);
+ privateWall('towel-wall',[8.912,shower.box[3]],[8.912,rear],4.31);
+ privateWall('door-left',[8.912,rear],[left-.003,rear],4.31);
+ privateWall('door-right',[right+.002,rear],[11.548,rear],4.31);
+ const capZ=3.925;
+ box('bath-private-service-ledge',[8.913,privateRoom.box[1],11.545,5.132],floor,capZ-floor,p.biscuit);
  tile('bath-private-service-glaze',[11.545,5.133],[8.913,5.133],capZ,p.biscuit);
- box('bath-private-ledge-cap',[8.913,4.82,11.545,5.143],capZ,.024,p.cream);
- context.obstacle('bath-private-service-ledge',[8.913,4.82,11.545,5.143],floor,capZ+.024);
+ box('bath-private-ledge-cap',[8.913,privateRoom.box[1],11.545,5.143],capZ,.024,p.cream);
+ context.obstacle('bath-private-service-ledge',[8.913,privateRoom.box[1],11.545,5.143],floor,capZ+.024);
  vessel('bath-private-oil-flask',10.90,5.018,capZ+.024,.041,.176,p.amber);
  vessel('bath-private-bath-salts',11.035,5.001,capZ+.024,.065,.122,p.cream);
  for(const y of [6.704,7.29])beam('bath-private-rail-bracket-'+y,[8.913,y,4.36],[8.986,y,4.36],.012,p.chrome);

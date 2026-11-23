@@ -63,6 +63,27 @@ test('all exterior faces and convex corners have one visible cladding layer',()=
  }
  assert(checked>1000);
 });
+test('window jambs, heads and sills change finish at the glazing plane',()=>{
+ const black=object('facade-garden').material[1];
+ function finish(name,origin,direction){
+  const mesh=object(name),hit=hits(mesh,origin,direction,.2)[0];
+  assert.ok(hit,name+' '+origin);
+  return mesh.material[hit.face.materialIndex];
+ }
+ for(const [name,outside,inside,direction,interiorColor] of [
+  ['facade-wing-end',[14.54,9.52,1.6],[14.24,9.52,1.6],[0,-1,0],'aec4cd'],
+  ['facade-main-side',[.10,9.31,1.6],[.38,9.31,1.6],[0,-1,0],'e9e3d7'],
+  ['front-gable',[2.1,.10,3.3],[2.1,.38,3.3],[0,0,-1],'e9e3d7'],
+  ['wing-gable',[14.54,10.21,5.46],[14.25,10.21,5.46],[0,0,1],'e9e3d7'],
+  ['facade-terrace',[8.22,15.9,2.25],[8.15,15.9,2.25],[0,0,1],'e9e3d7']
+ ]){
+  assert.equal(finish(name,outside,direction),black,name);
+  assert.equal(finish(name,inside,direction).color.getHexString(),interiorColor,name);
+ }
+ for(const y of [.05,.45])assert.equal(finish('facade-garage',[1.16,y,1.7],[-1,0,0]),black);
+ assert.notEqual(finish('facade-garage',[1,.6,1.7],[0,-1,0]),black);
+});
+
 test('garden recess shares the exterior timber scan while its black glazing trim stays smooth',async()=>{
  const boards=object('garden-gable').material[1],frame=object('facade-garden').material[1];
  assert.equal(boards.userData.surfaceProfile,'facade');
@@ -89,6 +110,42 @@ test('garden recess shares the exterior timber scan while its black glazing trim
  assert.equal(band.material[1],frame);
 });
 
+test('Thermal Redwood repeats vertically at the 117 mm board scale on the Icon exterior only', async () => {
+ const {applyRealisticSurfaces}=await load(await readFile(new URL('../src/model/surface-realism.js',import.meta.url),'utf8'));
+ const sample=new THREE.Scene(),icon=new THREE.Group(),otherHouse=new THREE.Group();
+ icon.name='icon-193-interior';otherHouse.name='floryda-190-interior';
+ sample.add(icon,otherHouse);
+ const front=object('facade-garage').clone(),side=object('facade-main-side').clone();
+ const transom=object('garden-window-transom').clone(),reveal=object('garden-gable-reveal-0').clone();
+ const other=front.clone(),pier=scene.getObjectByName('garden-pier-0-wall-1').clone();
+ icon.add(front,side,transom,reveal);otherHouse.add(other);sample.add(pier);sample.updateMatrixWorld(true);
+ const pierTimber=pier.material[1];
+ const texture=new THREE.Texture();
+ class Loader { async loadAsync(url) { assert.equal(url,'thermal-redwood');return texture; } }
+ await applyRealisticSurfaces({THREE:{...THREE,TextureLoader:Loader},scene:sample,mats:{timber:pierTimber},
+  renderer:{capabilities:{getMaxAnisotropy:()=>4}},scans:{iconThermalRedwood:['thermal-redwood']}});
+ for(const material of [front.material[1],side.material[1],reveal.material,pier.material[1]]) {
+  assert.equal(material.map,texture);assert.equal(material.name,'iconThermalRedwood');
+ }
+ for(const material of [front.material[0],pier.material[0],transom.material[1],other.material[1]]) {
+  assert.notEqual(material.map,texture);
+ }
+ assert.equal(texture.wrapS,THREE.RepeatWrapping);assert.equal(texture.wrapT,THREE.RepeatWrapping);
+ assert.equal(texture.colorSpace,THREE.SRGBColorSpace);
+ const tileWidth=14*(.117+.010),tileHeight=tileWidth*830/900;
+ for(const [wall,origin,along,normal] of [
+  [front,[6.3,-.1,.55],[1,0,0],[0,1,0]], [side,[-.1,.8,.55],[0,1,0],[1,0,0]],
+ ]) {
+  const uv=([x,y,z])=>{
+   const hit=new THREE.Raycaster(new THREE.Vector3(x,y,z),new THREE.Vector3(...normal),0,.2).intersectObject(wall)[0];
+   assert(hit && wall.material[hit.face.materialIndex].map===texture,wall.name);return hit.uv;
+  };
+  const base=uv(origin),right=uv(origin.map((v,i)=>v+along[i]*.127)),above=uv([origin[0],origin[1],origin[2]+tileHeight]);
+  close(right.x-base.x,1/14,'one board pitch');close(right.y,base.y,'same height');
+  close(above.x,base.x,'vertical board axis');close(above.y-base.y,1,'undistorted image aspect');
+ }
+});
+
 test('living-room transom is flush with both windows with no shelf or front wall band',()=>{
  const band=object('garden-window-transom'),glass=bounds(object('garden-gable-glass-0'));
  for(const x of [.8,1.1,3,4.25,7.5,7.7])for(const z of [2.4,2.6,2.79,2.9,3.15]){
@@ -109,7 +166,7 @@ test('entry wall junctions retain their exposed inner end caps',()=>{
 });
 
 test('terrace and wing walls meet at a single right angle behind the staircase on both levels',()=>{
- for(const [rear,side,x,y,z] of [['facade-wing-rear','facade-terrace',8,12.21,1],['upper-rear-wing','upper-terrace-side',8.14,12.35,3.5]]){
+ for(const [rear,side,x,y,z] of [['facade-wing-rear','facade-terrace',8,12.21,1],['upper-rear-wing','upper-terrace-side',8.0,12.21,3.5]]){
   for(const offset of [.005,.12,.28,.51,.78]){
    close(hits(object(rear),[x+offset,y-.08,z],[0,1,0],.2)[0]?.distance,.08,'Continuous rear face');
    close(hits(object(side),[x-.08,y+offset,z],[1,0,0],.2)[0]?.distance,.08,'Continuous terrace face');
@@ -120,7 +177,7 @@ test('terrace and wing walls meet at a single right angle behind the staircase o
 });
 
 test('inner wall faces end at their inner corner rather than crossing the outer cladding',()=>{
- for(const [name,x,minY,maxY] of [['wing-gable',14.28,4.57,12.35],['facade-wing-end',14.16,4.69,12.23],['upper-main-side',.36,.36,17.77]]){
+ for(const [name,x,minY,maxY] of [['wing-gable',14.14,4.71,12.21],['facade-wing-end',14.14,4.71,12.21],['upper-main-side',.50,.50,17.63]]){
   const mesh=object(name),p=mesh.geometry.attributes.position,ys=[];
   for(const group of mesh.geometry.groups.filter(g=>g.materialIndex!==1))for(let i=group.start;i<group.start+group.count;i+=3){
    if([0,1,2].every(j=>Math.abs(p.getX(i+j)-x)<1e-5))for(let j=0;j<3;j++)ys.push(p.getY(i+j));
@@ -182,15 +239,15 @@ test('the rear deck stays level between the piers and its threshold discharges i
   close(at(deck,x,y)[0]?.point.z,.080,`level pier-to-pier deck ${x},${y}`);
  for(const x of [1.0002,1.8,4.25,7.4998]){
   const line=(mesh,y)=>at(mesh,x,y)[0]?.point.z;
-  close(line(deck,17.089),.080-.066*.001/.192,'outer end of reveal');
-  close(line(deck,16.899),.014+.066*.001/.192,'deck drains to slot');
-  close(line(drain,16.896),.014,'outer lip');
-  close(line(drain,16.886),.003,'open slot floor');
-  close(line(drain,16.877),.014,'inner lip');
-  close(line(sill,16.851),.018-.004*.001/.024,'sill falls outward to drain');
-  for(const y of [16.876,16.886,16.894])assert.equal(at(deck,x,y).length,0,'boards leave the drain unobstructed');
+  close(line(deck,17.089),.080-.066*.001/.182,'outer end of reveal');
+  close(line(deck,16.909),.014+.066*.001/.182,'deck drains to slot');
+  close(line(drain,16.906),.014,'outer lip');
+  close(line(drain,16.896),.003,'open slot floor');
+  close(line(drain,16.887),.014,'inner lip');
+  close(line(sill,16.861),.018-.004*.001/.024,'sill falls outward to drain');
+  for(const y of [16.886,16.896,16.904])assert.equal(at(deck,x,y).length,0,'boards leave the drain unobstructed');
  }
- for(const x of [3.22,4.25,5.27])close(at(sill,x,16.804)[0]?.point.z,.018,'sill clears the sliding shoe');
+ for(const x of [3.22,4.25,5.27])close(at(sill,x,16.814)[0]?.point.z,.018,'sill clears the sliding shoe');
  for(const [x,y] of [[4.25,16.78],[1.4,16.84],[4.25,18.132],[.738,17.6],[7.762,17.6],[.95,16.99]])
   for(const mesh of [deck,sill,drain])assert.equal(at(mesh,x,y).length,0,`clear frame, pier, wall and adjoining deck at ${x},${y}`);
 });

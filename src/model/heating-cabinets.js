@@ -30,7 +30,7 @@ function heatingCabinetParts(THREE) {
 
 function heatingCabinetShell(THREE,root,{box,cylinder},finish,config,span) {
  const left=-.109,right=span+.068,width=right-left,middle=(left+right)/2;
- const bottom=.045,top=.735,height=top-bottom,midZ=(bottom+top)/2,back=-.067,front=.116;
+ const bottom=.045,top=.735,height=top-bottom,midZ=(bottom+top)/2,front=.116,back=-.067;
  const wall=new THREE.MeshStandardMaterial({color:config.finish,roughness:.83});
  const [start,end,liningHeight]=config.lining;
  const cladding=(name,a,b,z,h)=>box(root,name,(a+b)/2,(front+back)/2,z+h/2,b-a,front-back,h,wall);
@@ -70,7 +70,7 @@ function heatingCabinetRail(root,parts,finish,span,ports,supply,height) {
  }
 }
 
-function heatingCabinetTails(THREE,hardware,source,levelZ,finish) {
+function heatingCabinetTails(THREE,hardware,source,base,finish) {
  const position=source.geometry.getAttribute('position'),points=[];
  // Opposite vertices on the diagram tube give its exact rounded centreline.
  for(let i=0;i<position.count;i+=8){
@@ -78,7 +78,6 @@ function heatingCabinetTails(THREE,hardware,source,levelZ,finish) {
   const b=new THREE.Vector3().fromBufferAttribute(position,i+4);
   points.push(a.lerp(b,.5));
  }
- const base=levelZ+.046;
  if(points[0].z<points.at(-1).z)points.reverse();
  const path=[];
  for(const point of points){
@@ -110,15 +109,22 @@ export function createHeatingCabinets(THREE,services,makePicker) {
    const root=new THREE.Group();root.name='heating-cabinet-'+level+'-'+bank;group.add(root);
    root.userData={level,location,ports:rail.userData.ports,open:false};
    root.position.set(x,y,base);root.rotation.z=alongY?Math.PI/2:0;root.scale.y=alongY?-face:face;
-   const door=heatingCabinetShell(THREE,root,parts,finish,config,span);
    const hardware=new THREE.Group();hardware.name='manifold-hardware';root.add(hardware);
    const tails=new THREE.Group();tails.name=root.name+'-connections';group.add(tails);
    const pipes=system.children.filter(mesh=>mesh.userData.bank===bank&&mesh.userData.rail);
-   for(const pipe of pipes)heatingCabinetTails(THREE,tails,pipe,base,finish);
+   for(const pipe of pipes)heatingCabinetTails(THREE,tails,pipe,config.wardrobe?base:base+.046,finish);
    const ports=pipes.filter(mesh=>mesh.userData.rail==='supply').map(mesh=>alongY?mesh.userData.from[1]-y:mesh.userData.from[0]-x);
-   for(const u of [span*.16,span*.84])parts.box(hardware,'rail-bracket',u,-.035,.46,.020,.042,.255,finish.zinc);
+   for(const u of [span*.16,span*.84]){
+    parts.box(hardware,'rail-bracket',u,-.035,.46,.020,.042,.255,finish.zinc);
+    if(config.wardrobe){
+     parts.box(hardware,'floor-mount-post',u,-.067,.292,.024,.024,.584,finish.zinc);
+     parts.box(hardware,'floor-mount-foot',u,-.067,.004,.080,.080,.008,finish.zinc);
+    }
+   }
    heatingCabinetRail(hardware,parts,finish,span,ports,true,.55);
    heatingCabinetRail(hardware,parts,finish,span,ports,false,.38);
+   if(config.wardrobe)continue;
+   const door=heatingCabinetShell(THREE,root,parts,finish,config,span);
    hardware.visible=tails.visible=false;
    doors.set(door,()=>{root.userData.open=!root.userData.open;hardware.visible=tails.visible=root.userData.open;
     door.rotation.z=root.userData.open?Math.PI/2:0;door.updateWorldMatrix(true,true);});

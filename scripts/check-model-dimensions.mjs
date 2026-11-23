@@ -124,7 +124,8 @@ function checkDimensions(model, registry) {
   const woodyFile = readFileSync(resolve(root, 'trzy-domy-3d', registry.woodyPlanting.dataFile));
   const woodyData = JSON.parse(woodyFile);
   const planSvg = readFileSync(resolve(root, 'trzy-domy-3d/plan-kontrolny.svg'), 'utf8');
-  checkIconGardenPaths(garden, editor, registry, planSvg, neighbors.gardenAdditions);
+  const iconInterior = JSON.parse(readFileSync(resolve(root, 'trzy-domy-3d', registry.interior.dataFile), 'utf8'));
+  checkIconGardenPaths(garden, editor, registry, planSvg, neighbors.gardenAdditions, icon, iconInterior);
   assert.ok(planSvg.includes(`data-woodland-sha256="${hash(woodyFile)}"`), '2D plan must use the current planting geometry');
   assert.deepEqual(model.woodyPlantings, woodyData, 'Published planting plan and rendered beds differ');
   checkWoodyPlanting(woodyData, model.data, registry.woodyPlanting);
