@@ -30,24 +30,54 @@ test('floor dimensions measure finished faces, both worktop edges and the clear 
   assert.equal(mm(islandTop.min.y - wallTop.max.y), 1140);
 });
 
+test('all twelve vestibule front dimensions come from the finished panels on their hinges', () => {
+  const {wardrobe} = measureIconKitchen(THREE, interior.group);
+  function sizes(columns) {
+    return columns.map(({lower, upper}) => [lower, upper].map(({width, height}) =>
+      [width, height].map(m => Math.round(m * 10000) / 10)));
+  }
+  assert.deepEqual(sizes(wardrobe.rear), Array(4).fill([[486.5, 2081], [486.5, 594]]));
+  assert.deepEqual(sizes(wardrobe.side), Array(2).fill([[494, 2081], [494, 594]]));
+});
+
 test('mirrored floor guide has upright, unmirrored wall text, remains toggleable after batching and ignores picks', () => {
+  const text = [], badges = [];
   const ink = {
-    scale() {}, translate() {}, rotate() {}, save() {}, restore() {}, beginPath() {},
-    moveTo() {}, lineTo() {}, stroke() {}, fillText() {}, strokeText() {},
+    scale() {}, translate(x, y) { this.origin = {x, y}; }, rotate() {}, save() {}, restore() {}, beginPath() {},
+    moveTo() {}, lineTo() {}, stroke() {}, fillText(value) { text.push(value); }, strokeText() {},
+    fillRect(x, y, width, height) {
+      badges.push({x: this.origin.x + x, y: this.origin.y + y, width, height});
+    },
     measureText(value) { return {width: value.length * 14}; },
   };
   const canvas = {getContext: () => ink};
   globalThis.document = {createElement: () => canvas};
-  let guide;
+  let guides;
   try {
-    guide = createIconKitchenFloorDimensions(THREE, interior.group, false);
+    guides = createIconKitchenFloorDimensions(THREE, interior.group, false);
   } finally {
     delete globalThis.document;
   }
   batchStaticInteriorDetails(THREE, interior.group);
-  assert.equal(interior.group.getObjectByName('kitchen-floor-dimensions'), guide);
-  assert.equal(guide.visible, false);
-  guide.visible = true;
+  const guide = guides.getObjectByName('kitchen-floor-dimensions');
+  const entryGuide = guides.getObjectByName('entry-wardrobe-floor-dimensions');
+  assert.equal(guides.parent, interior.group);
+  assert.ok(!guides.visible && guide.visible && entryGuide.visible);
+  guides.visible = true;
+  assert.ok(entryGuide.position.z > .0087);
+  assert.deepEqual(new THREE.Raycaster().intersectObject(entryGuide), []);
+  const expected = ['48,65', '48,65', '48,65', '48,65', '49,4', '49,4'];
+  assert.deepEqual(text.slice(-24), expected.flatMap((width, i) => [
+    'Dolny ' + (i % 4 + 1), width + ' × 208,1 cm', 'Górny ' + (i % 4 + 1), width + ' × 59,4 cm',
+  ]));
+  assert.equal(badges.length, 6);
+  for (const [i, a] of badges.entries()) {
+    assert.ok(a.x > 8.49 && a.y > 4.71 && a.x + a.width < 10.6 && a.y + a.height < 5.71);
+    for (const b of badges.slice(i + 1)) {
+      assert.ok(a.x + a.width <= b.x || b.x + b.width <= a.x ||
+        a.y + a.height <= b.y || b.y + b.height <= a.y, 'Neighbouring wardrobe labels must stay apart');
+    }
+  }
   assert.equal(guide.material.depthTest, true);
   assert.equal(guide.material.depthWrite, false);
   assert.equal(guide.castShadow, false);

@@ -1254,6 +1254,7 @@ function iconInteriorFurnitureFrame(context, item) {
   const a=point(b[0],b[1]),c=point(b[2],b[3]);
   const piece=box(item.id+'-'+name,[Math.min(a[0],c[0]),Math.min(a[1],c[1]),Math.max(a[0],c[0]),Math.max(a[1],c[1])],z+h,t,mat);
   if(mat.userData.surfaceProfile==='kitchenFrontVeneer')iconMatchedVeneerUV(piece,.48,.48*632/383);
+  if(mat===context.islandSteel)iconIslandSteelUV(piece.geometry);
   return piece;
  };
  const line = (name,a,b,r=.025,mat=mats.metal) => beam(item.id+'-'+name,point(...a),point(...b),r,mat);
@@ -2079,7 +2080,7 @@ function iconIslandOven(context,frame,s,p,x,face) {
  box('lower-trim',left+.025,face,right-.025,face+.027,bottom,sill-bottom,p.black);
  box('door-rail',left+.025,face,right-.025,face+.027,lintel,.071,p.black);
  box('fascia',left+.025,face+.001,right-.025,face+.030,lintel+.076,top-lintel-.076,p.black);
- box('vent-baffle',left,face+.020,right,face+.030,top,frame.item.height-.05-top,p.black);
+ box('vent-baffle',left+.008,face+.020,right-.008,face+.030,top,frame.item.height-iconIslandTopThickness-top,p.black);
  for(const z of [top+.005,top+.012])box('vent-lip-'+z,left+.015,face+.012,right-.015,face+.020,z,.002,enamel);
  box('window',left+.025,face+.003,right-.025,face+.009,sill,lintel-sill,glass).castShadow=false;
  for(const [i,z] of [sill+.088,sill+.194].entries()){
@@ -2113,10 +2114,10 @@ function iconIslandOven(context,frame,s,p,x,face) {
  }
 }
 
-function iconIslandDrawer(context,frame,k,p,column,row,left,right,face,bottom,top,depth,wallHeight,oven=false) {
+function iconIslandDrawer(frame,steel,p,column,row,left,right,face,bottom,top,depth,wallHeight,oven=false) {
  const suffix=column+'-'+row,front=face+.021,back=front+depth,floor=bottom+.024,wall=.012;
  const id='drawer-box-'+suffix,parts=[],runners=[];
- const l=left+.027,r=right-.027,mid=(l+r)/2;
+ const l=left+.027,r=right-.027;
  const piece=(kind,outline,z,h)=>parts.push(frame.part(id+'-'+kind,outline,z,h,p.ash));
  piece('floor',[l,front,r,back],floor,wall);
  piece('back',[l,back-wall,r,back],floor+wall,wallHeight-wall);
@@ -2131,34 +2132,36 @@ function iconIslandDrawer(context,frame,k,p,column,row,left,right,face,bottom,to
    if(i===2)parts.push(rail);
   }
  }
- const first=context.group.children.length;
- iconKitchenPanel(frame,oven?'oven-tray-drawer':'working-drawer-'+suffix,left+.0025,right-.0025,bottom,top,face,k.veneer,true);
- iconKitchenGrip(frame,oven?'oven-tray-pull':'working-pull-'+suffix,mid,face,top,false,k.grip,true);
- parts.push(...context.group.children.slice(first));
+ const panel=iconKitchenPanel(frame,oven?'oven-tray-drawer':'working-drawer-'+suffix,left+.0025,right-.0025,bottom,top,face,steel,true);
+ parts.push(panel);
  const [x,y]=frame.point(left,face-.021),[endX,endY]=frame.point(right,front);
  (frame.pullouts??=[]).push({name:'kitchen-island-pullout-'+suffix,moving:parts,runners,
   box:[x,y,endX,endY],travel:-(depth-.01),bottom,top});
 }
 
-function iconIslandCabinets(context,frame,s,p,k,cx,cy,hob) {
+function iconIslandCabinets(context,frame,s,p,steel,cx,cy,hob) {
  const {width:w,depth:d,item,part}=frame,{moduleWidthsM,ovenColumn,extractorColumns}=item.cabinetry;
- const face=.045,near=face+.021,rear=d-.19,cap=item.height-.038;
+ const face=.045,near=face+.021,rear=d-.19,cap=item.height-iconIslandTopThickness;
  let edge=(w-moduleWidthsM.reduce((sum,v)=>sum+v,0))/2;
  const bodyEnd=w-edge,centerSeam=extractorColumns[1];
- part('body',[edge,rear,bodyEnd,rear+.018],.118,cap-.118,k.recess);
- for(const [id,l,r] of [['left',.038,edge],['right',bodyEnd,w-.038]])
-  part('end-filler-'+id,[l,face,r,near],.118,cap-.118,k.veneer);
+ const lining=p.shadow;
+ part('body',[edge,rear,bodyEnd,rear+.018],.118,cap-.118,lining);
+ for(const [id,l,r] of [['left',iconIslandCheek,edge],['right',bodyEnd,w-iconIslandCheek]])
+  part('end-filler-'+id,[l,face,r,near],.118,cap-.118,steel);
  for(const [id,l,r] of [['left',.064,cx-.23],['right',cx+.23,w-.064]])
-  part('plinth-'+id,[l,face+.049,r,rear],.014,.104,p.shadow);
+  part('plinth-'+id,[l,face+.049,r,rear],.014,.104,steel);
+ const rearFace=d-.002,kickHeight=.065;
+ part('steel-salon',[iconIslandCheek,rearFace-.018,w-iconIslandCheek,rearFace],kickHeight,cap-kickHeight,steel);
+ part('plinth-salon',[iconIslandCheek,rearFace-.073,w-iconIslandCheek,rearFace-.055],0,kickHeight,steel);
  const hobRear=cy+(hob.box[3]-hob.box[1])/2;
  // Keep the NYTTIG plinth unit at its standard length behind a recessed central grille.
  const outletFace=hobRear-.014+.0275-.4867;
- iconNyttig(context,frame,s,p,cx,outletFace,hobRear);
+ iconNyttig(context,frame,s,steel,cx,outletFace,hobRear);
  for(const [i,width] of moduleWidthsM.entries()){
   const right=edge+width,paired=extractorColumns.includes(i),mid=(edge+right)/2;
   // Paired 600 mm fronts share a 1200 mm chassis opening above a low rail support.
   const low=i===centerSeam,wallBack=low?near+.405:rear,wallTop=low?.680:cap,wallBase=low?.136:.118;
-  part('side-'+i,[edge-.009,near,edge+.009,wallBack],wallBase,wallTop-wallBase,k.recess);
+  part('side-'+i,[edge-.009,near,edge+.009,wallBack],wallBase,wallTop-wallBase,lining);
   if(!low){
    const railEnd=i+1===centerSeam?right+moduleWidthsM[centerSeam]:right;
    part('worktop-support-'+i,[edge+.009,near+.03,railEnd-.009,near+.105],cap-.018,.018,p.ash);
@@ -2167,15 +2170,15 @@ function iconIslandCabinets(context,frame,s,p,k,cx,cy,hob) {
   if(i===ovenColumn){
    part('oven-support',[edge+.009,near,right-.009,near+.55],.276,.018,p.ash);
    iconIslandOven(context,frame,s,p,mid,face);
-   iconIslandDrawer(context,frame,k,p,i,0,edge,right,face,.122,.289,.5,.105,true);
+   iconIslandDrawer(frame,steel,p,i,0,edge,right,face,.122,.289,.5,.105,true);
   }else{
    const depth=paired?.40:.50;
-   iconIslandDrawer(context,frame,k,p,i,0,edge,right,face,.122,.490,depth,.235);
-   iconIslandDrawer(context,frame,k,p,i,1,edge,right,face,.497,item.height-.055,depth,paired?.145:.245);
+   iconIslandDrawer(frame,steel,p,i,0,edge,right,face,.122,.490,depth,.235);
+   iconIslandDrawer(frame,steel,p,i,1,edge,right,face,.497,cap-.004,depth,paired?.145:.245);
   }
   edge=right;
  }
- part('side-end',[edge-.009,near,edge+.009,rear],.118,cap-.118,k.recess);
+ part('side-end',[edge-.009,near,edge+.009,rear],.118,cap-.118,lining);
 }
 
 function iconSamsungFinishes({THREE}) {
@@ -2346,26 +2349,66 @@ function iconKitchenDrawers(frame,k,start,end,count,face,first=0) {
  }
 }
 
-function iconIslandVeneer(THREE) {
- const tau=2*Math.PI;
- return iconFinishTexture(THREE,'Slate blue and pale ash figured veneer',2048,448,.59,(u,v)=>{
-  const across=u*18,leaf=Math.floor(across),seed=leaf*2.39996;
-  const drift=.044*Math.sin(6*v+seed)+.022*Math.sin(13*v-.7*seed)+
-   .010*Math.sin(25*v+2*Math.sin(7*v+seed)-seed);
-  const x=across-leaf-.48-.22*Math.sin(seed)-drift;
-  const z=v-(.5+.64*Math.sin(seed+1.8));
-  // A flat slice through successive growth rings opens up into a cathedral at the pith.
-  const radius=Math.sqrt(x*x+(.10+.04*Math.cos(seed))*(z+.065*Math.sin(7*x+seed))**2+.0028);
-  const layers=radius*(10.5+3*Math.cos(seed))+.11*Math.sin(28*x+4*v+seed);
-  const phase=layers+.29*Math.sin(layers*1.8+seed)+.14*Math.sin(layers*3.2-seed);
-  const ripple=Math.cos(tau*phase)+.22*Math.cos(tau*phase*2+.7);
-  const strand=Math.sin(tau*(across*29+drift*11)+2*Math.cos(tau*(v+3*x)));
-  const pore=Math.sin(Math.floor(u*2048)*17.7+Math.floor(v*448)*8.91);
-  const boundary=.23*Math.sin(tau*layers*.43+seed)+.10*strand+.075*pore;
-  const ash=Math.max(0,Math.min(1,.52+1.60*(ripple-boundary)));
-  const fibres=3.2*strand+3.4*pore+2.5*Math.sin(130*x+12*v+seed);
-  return [66+132*ash+fibres,88+109*ash+fibres,105+81*ash+fibres];
- });
+const iconIslandTopThickness=.012,iconIslandCheek=.018;
+
+function iconIslandRoomReflection({THREE,group,data},item,steel){
+ const room=data.rooms.find(room=>room.id===item.room),[x0,y0,x1,y1]=room.box;
+ const uniforms={
+  kitchenWorldToRoom:{value:group.matrix.clone().invert()},
+  kitchenMin:{value:new THREE.Vector3(x0,y0,0)},
+  kitchenMax:{value:new THREE.Vector3(x1,y1,2.84)},
+  kitchenProbe:{value:new THREE.Vector3(4.0115,10.85,.92)}
+ };
+ // Project each reflected ray onto the room so nearby floor and cabinet reflections follow the viewer.
+ steel.onBeforeCompile=shader=>{
+  Object.assign(shader.uniforms,uniforms);
+  shader.vertexShader='varying vec3 kitchenWorld;\n'+shader.vertexShader.replace('#include <project_vertex>',
+   '#include <project_vertex>\nkitchenWorld = cameraPosition + transpose(mat3(viewMatrix)) * mvPosition.xyz;');
+  const projection=`
+   vec3 kitchenRay = mat3(kitchenWorldToRoom) * reflectVec;
+   vec3 origin = (kitchenWorldToRoom * vec4(kitchenWorld, 1.0)).xyz;
+   vec3 face = mix(kitchenMin, kitchenMax, step(vec3(0.0), kitchenRay));
+   vec3 travel = (face - origin) * sign(kitchenRay) / max(abs(kitchenRay), vec3(1e-5));
+   travel = mix(vec3(1e6), travel, step(vec3(1e-5), abs(kitchenRay)));
+   vec3 hit = origin + kitchenRay * min(travel.x, min(travel.y, travel.z));
+   reflectVec = normalize(transpose(mat3(kitchenWorldToRoom)) * (hit - kitchenProbe));`;
+  const physical=THREE.ShaderChunk.envmap_physical_pars_fragment.replace(
+   'reflectVec = transformDirectionByInverseViewMatrix( reflectVec, viewMatrix );',match=>match+projection);
+  shader.fragmentShader='varying vec3 kitchenWorld;\nuniform mat4 kitchenWorldToRoom;\nuniform vec3 kitchenMin, kitchenMax, kitchenProbe;\n'
+   +shader.fragmentShader.replace('#include <envmap_physical_pars_fragment>',physical);
+ };
+}
+
+function iconIslandSteel(context,item) {
+ const {THREE}=context,w=256,h=512,bytes=new Uint8Array(w*h*4),tau=2*Math.PI;
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+  const row=Math.sin((y+1)*78.233)*43758.5453,u=x/w*tau,v=y/h*tau;
+  const hairline=row-Math.floor(row)-.5;
+  const brush=.52*Math.sin(13*v+.55*Math.cos(u))+.29*Math.cos(27*v-.46*Math.sin(2*u))+.19*Math.sin(43*v+u);
+  const i=4*(y*w+x);
+  bytes[i]=bytes[i+1]=bytes[i+2]=Math.round(206+38*hairline+7*brush);
+  bytes[i+3]=255;
+ }
+ const grain=new THREE.DataTexture(bytes,w,h);
+ grain.name='Directional stainless steel brush';grain.wrapS=grain.wrapT=THREE.RepeatWrapping;
+ grain.minFilter=THREE.LinearMipmapLinearFilter;grain.magFilter=THREE.LinearFilter;
+ grain.generateMipmaps=true;grain.anisotropy=8;grain.needsUpdate=true;
+ const steel=new THREE.MeshPhysicalMaterial({name:'Satin brushed stainless steel',color:'#b3b9be',metalness:.995,
+  map:grain,roughness:.245,roughnessMap:grain,bumpMap:grain,bumpScale:.00018,anisotropy:.52});
+ steel.userData.surfaceProfile='kitchenSteelReflection';
+ iconIslandRoomReflection(context,item,steel);
+ steel.onBeforeRender=(_renderer,scene)=>{steel.envMapIntensity=3.5*scene.environmentIntensity;};
+ return steel;
+}
+
+function iconIslandSteelUV(geometry){
+ const {normal,position,uv}=geometry.attributes;
+ for(let i=0;i<position.count;i++){
+  const top=Math.abs(normal.getZ(i))>.80,side=Math.abs(normal.getX(i))>.80;
+  const along=side?position.getY(i):position.getX(i),across=top?position.getY(i):position.getZ(i);
+  uv.setXY(i,along/.48,across/.16);
+ }
+ return geometry;
 }
 
 function iconKitchenOutline(path,x,y,w,d,r=0) {
@@ -2427,44 +2470,41 @@ function iconTacknan({THREE},frame,s,p) {
  s.cushion('blower',cx,d/2,h-.1495,.43,.435,.201,.028,iron);
 }
 
-function iconWorktopUV(THREE,geometry,base,height,fold){
+function iconWorktopUV(THREE,geometry,base,height){
  const {position,normal,uv}=geometry.attributes;
  const bandDistance=new Float32Array(position.count);
  const sampleDepth=1.05,sampleLength=sampleDepth*1642/1528;
  for(let i=0;i<position.count;i++){
   const x=position.getX(i),y=position.getY(i),drop=height-base-position.getZ(i);
   const nx=normal.getX(i),ny=normal.getY(i);
-  let u=x+nx*drop,v=y+ny*drop;
-  const edge=Math.abs(ny)>.99;
-  if(fold && edge){
-   // Continue the waterfall grain around the narrow front and rear returns.
-   u=fold.outerX+fold.direction*drop;
-   v=y+ny*Math.abs(x-fold.outerX);
-  }
-  uv.setXY(i,u/sampleLength,v/sampleDepth);
-  bandDistance[i]=edge?(fold?Math.abs(x-fold.outerX):drop):1;
+  uv.setXY(i,(x+nx*drop)/sampleLength,(y+ny*drop)/sampleDepth);
+  bandDistance[i]=Math.abs(ny)>.99?drop:1;
  }
  geometry.setAttribute('bandDistance',new THREE.BufferAttribute(bandDistance,1));
 }
 
-function iconIslandWorktop({THREE},frame,s,p,laminate,cutout) {
- const {width:w,depth:d,item}=frame,{height,socket}=item,thick=.038,base=height-thick;
+function iconIslandWorktop({THREE},frame,s,p,steel,cutout) {
+ const {width:w,depth:d,item}=frame,{height,socket}=item,base=height-iconIslandTopThickness;
  const shape=(outline,holes=[])=>{
   const profile=iconKitchenOutline(new THREE.Shape(),...outline);
   for(const hole of holes)profile.holes.push(iconKitchenOutline(new THREE.Path(),...hole));
   return profile;
  };
  const extrude=(profile,depth)=>new THREE.ExtrudeGeometry(profile,{depth,bevelEnabled:false,curveSegments:6});
- const slab=extrude(shape([0,0,w,d],[cutout]),thick);
- iconWorktopUV(THREE,slab,base,height);s.add('top',slab,laminate,0,0,base);
- const right=extrude(shape([w-thick,0,thick,d]),base);
- iconWorktopUV(THREE,right,0,height,{outerX:w,direction:1});s.add('waterfall-right',right,laminate,0,0,0);
+ const [x,y,cw,cd]=cutout,ring=.026,bevel=.00065;
+ const openingRim=[x-bevel,y-bevel,cw+2*bevel,cd+2*bevel];
+ const slab=new THREE.ExtrudeGeometry(shape([bevel,bevel,w-2*bevel,d-2*bevel,.002],[openingRim]),{
+  depth:iconIslandTopThickness-2*bevel,bevelSize:bevel,bevelThickness:bevel,bevelSegments:2,curveSegments:6});
+ s.add('top',iconIslandSteelUV(slab),steel,0,0,base+bevel);
+ const mounting=extrude(shape([x-ring,y-ring,cw+2*ring,cd+2*ring],[cutout]),.012);
+ s.add('hob-mount',iconIslandSteelUV(mounting),steel,0,0,base-.012);
+ const right=extrude(shape([w-iconIslandCheek,0,iconIslandCheek,d]),base);
+ s.add('waterfall-right',iconIslandSteelUV(right),steel,0,0,0);
 
- // On the window end the profile axes are depth and height; extrusion goes into the island.
  const endPlane=new THREE.Matrix4().makeBasis(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,1),new THREE.Vector3(1,0,0));
  const [cy,cz]=socket.centerYZ,[width,h]=socket.size,opening=[cy-width/2,cz-h/2,width,h,.004];
- const left=extrude(shape([0,0,d,base],[opening]),thick).applyMatrix4(endPlane);
- iconWorktopUV(THREE,left,0,height,{outerX:0,direction:-1});s.add('waterfall-left',left,laminate,0,0,0);
+ const left=extrude(shape([0,0,d,base],[opening]),iconIslandCheek).applyMatrix4(endPlane);
+ s.add('waterfall-left',iconIslandSteelUV(left),steel,0,0,0);
 
  const black=new THREE.MeshStandardMaterial({name:'Matte black recessed socket cover',color:'#232323',metalness:.38,roughness:.52});
  const well=shape([-.5*width,-.5*h,width,h,.004],[[-width/2+.009,-h/2+.009,width-.018,h-.018,.003]]);
@@ -2489,30 +2529,7 @@ function iconIslandWorktop({THREE},frame,s,p,laminate,cutout) {
  frame.socketCover={roots:[lid,bezel],canOpen:()=>true,pose(fraction){lid.rotation.y=1.82*fraction;}};
 }
 
-function iconKitchenIslandVeneer({THREE,mesh},frame) {
- const {width:w,depth:d,item,part}=frame;
- const x0=.038,x1=w-.038,y=d-.018,bottom=.018,top=item.height-.038;
- const core=new THREE.MeshStandardMaterial({name:'Slate veneer joint',color:'#455158',roughness:.78});
- part('veneer-backing-salon',[x0,y-.024,x1,y-.002],bottom,top-bottom,core);
- const vertices=[],uv=[],indices=[],count=6,gap=.002;
- for(let panel=0;panel<count;panel++){
-  const left=x0+(x1-x0)*panel/count+(panel?gap/2:0);
-  const right=x0+(x1-x0)*(panel+1)/count-(panel<count-1?gap/2:0);
-  const base=vertices.length/3;
-  for(const [x,z] of [[left,bottom],[left,top],[right,top],[right,bottom]]){
-   vertices.push(...frame.point(x,y,z));
-   uv.push((x-x0)/(x1-x0),(z-bottom)/(top-bottom));
-  }
-  indices.push(base,base+1,base+2,base,base+2,base+3);
- }
- const geometry=new THREE.BufferGeometry();
- geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
- geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
- geometry.setIndex(indices);geometry.computeVertexNormals();
- mesh(geometry,iconIslandVeneer(THREE),item.id+'-figured-veneer-salon');
-}
-
-function iconNyttig({THREE},frame,s,p,x,front,hobRear) {
+function iconNyttig({THREE},frame,s,steel,x,front,hobRear) {
  const {part,item}=frame,grilleWidth=.46,grilleHeight=.077,z=.032,ductWidth=.22,ductDepth=.055;
  const rear=front+.4867,axis=rear-ductDepth/2,elbow=item.height-.238;
  const shell=new THREE.MeshStandardMaterial({name:'NYTTIG charcoal duct',color:'#303335',roughness:.66,side:THREE.DoubleSide});
@@ -2537,8 +2554,8 @@ function iconNyttig({THREE},frame,s,p,x,front,hobRear) {
  duct('coupling',[riserTop,[axis,elbow-.065,ductWidth,ductDepth,Math.PI/2],
     [axis-.019,elbow-.023,ductWidth,ductDepth,Math.PI*.75],[hobRear-.115,elbow,ductWidth,ductDepth,Math.PI]],shell);
  const opening=[x-grilleWidth/2,front,x+grilleWidth/2,front+.016];
- part('plinth-under-outlet',opening,.014,z-.014,p.shadow);
- part('plinth-over-outlet',opening,z+grilleHeight,.118-z-grilleHeight,p.shadow);
+ part('plinth-under-outlet',opening,.014,z-.014,steel);
+ part('plinth-over-outlet',opening,z+grilleHeight,.118-z-grilleHeight,steel);
  const rim=iconKitchenOutline(new THREE.Shape(),-grilleWidth/2,0,grilleWidth,grilleHeight,.005);
  for(let col=0;col<9;col++)for(let row=0;row<4;row++)
   rim.holes.push(iconKitchenOutline(new THREE.Path(),-.211+col*.0475,.009+row*.015,.042,.010,.002));
@@ -2735,9 +2752,9 @@ function iconLivingKitchen(context,frame,s,p) {
   const hob=context.data.furniture.find(unit=>unit.id==='hob');
   const cx=(hob.box[0]+hob.box[2])/2-item.box[0],cy=(hob.box[1]+hob.box[3])/2-item.box[1];
   const [cw,cd]=hob.cutout;
-  iconIslandWorktop(context,frame,s,p,k.laminate,[cx-cw/2,cy-cd/2,cw,cd]);
-  iconKitchenIslandVeneer(context,frame);
-  iconIslandCabinets(context,frame,s,p,k,cx,cy,hob);
+  const steel=context.islandSteel??=iconIslandSteel(context,item);
+  iconIslandWorktop(context,frame,s,p,steel,[cx-cw/2,cy-cd/2,cw,cd]);
+  iconIslandCabinets(context,frame,s,p,steel,cx,cy,hob);
  }else{
   iconKitchenBackCounter(context,frame,s,k,face);
   iconKitchenNiche(context,frame,s,p,k);
@@ -3650,6 +3667,7 @@ function iconInteriorFurnishings(context) {
   obstacle('furniture-'+item.id,frame.walkBox??item.box,frame.z,bounds);
   for(const leaf of frame.wardrobeDoors??[])
    (context.wardrobeDoors??=[]).push(iconMountWardrobeDoor(context,leaf));
+  if(frame.entryLeaves)iconMountEntryJoinery(context,frame);
   for(const appliance of frame.appliances??[])iconMountSamsung(context,appliance);
   if(frame.dishwasher)context.dishwasher=iconMountDishwasher(context,frame.dishwasher);
   if(frame.socketCover){
@@ -5447,44 +5465,205 @@ function iconEntryPalette(context) {
   const fleck=4*Math.sin((Math.floor(u*160)+1)*(Math.floor(v*160)+3)*9.7);
   return [167+yarn+fleck,109+yarn+fleck,80+yarn+fleck];
  },[3,1]);
+ const veneer=paint('Dyed blue figured veneer','#7794a8',.54);
+ veneer.userData.surfaceProfile='entryBlueVeneer';
  return context.entryPalette={
-  mushroom:paint('putty painted MDF','#afa18b',.68),bead:paint('tonal applied moulding','#bdaF9a',.64),
+  veneer,vermilion:paint('Vermilion satin enamel wardrobe knobs','#f4512b',.37),
+  knob:iconEntryKnobShape(THREE,.052),upperKnob:iconEntryKnobShape(THREE,.032),
   blue:paint('powder-blue enamel','#adc5d4',.52),ink:paint('black lacquer','#242321',.41),
   cloth,welt:paint('cinnamon upholstery piping','#865a45',.96),
  };
 }
 
-function iconEntryWardrobe(context,frame,s,p) {
- const {item,width:w,depth:d,part}=frame,h=item.height,paint=iconEntryPalette(context);
- const leaf=(w-(item.blindCornerWidth||0))/item.doors,front=d-.028,split=2.18;
- const chase=item.id==='entry-wardrobe-side'&&context.data.walls.find(w=>w.id==='vestibule-service-chase');
- const cut=chase?chase.b[1]-chase.a[1]:0;
- const carcass=(name,start,end,back,face,z,height,finish)=>{
-  if(chase)part(name+'-behind-notch',[cut,back,end,chase.thickness],z,height,finish);
-  part(name,[start,chase?chase.thickness:back,end,face],z,height,finish);
- };
- carcass('toe-kick',.028,w-.028,.012,front-.051,.008,.083,p.shadow);
- carcass('body',0,w,0,front-.023,.091,h-.091,paint.mushroom);
- for(let i=0;i<item.doors;i++){
-  const a=i*leaf+.003,b=(i+1)*leaf-.003,center=(a+b)/2;
-  part('door-'+i,[a,front-.023,b,front],.096,split-.099,paint.mushroom);
-  part('upper-front-'+i,[a,front-.023,b,front],split+.003,h-split-.006,paint.mushroom);
-  part('upper-lip-'+i,[center-.039,front,center+.039,front+.013],split+.014,.011,p.brass);
-  const tab=.032;
-  for(const z of [.965,1.28])part('pull-post-'+i+'-'+z,[center-.008,front,center+.008,d-.010],z,.016,p.brass);
-  part('handle-'+i,[center-.010,d-.010,center+.010,d],.965-tab,.331+2*tab,p.brass);
-  const inset=.047,r=leaf-inset,archBase=1.58;
-  const left=i%2===0,cx=left?b:a,outer=left?a+inset:b-inset;
-  const profile=[[outer,front+.004,.19],[outer,front+.004,archBase]];
-  for(let j=1;j<=18;j++){
-   const angle=j*Math.PI/36;
-   profile.push([cx+(outer-cx)*Math.cos(angle),front+.004,archBase+r*Math.sin(angle)]);
+function iconEntryFront(frame,material,name,left,right,front,bottom,top,offset) {
+ const {item,part}=frame,mesh=part(name,[left,front-.023,right,front],bottom,top-bottom,material);
+ const {position,normal,uv}=mesh.geometry.attributes;
+ for(let i=0;i<position.count;i++){
+  const x=mesh.position.x+position.getX(i),y=mesh.position.y+position.getY(i),z=mesh.position.z+position.getZ(i);
+  const rear=item.facing==='-y',u=rear?item.box[2]-x:y-item.box[1],v=rear?item.box[3]-y:item.box[2]-x;
+  const onEdge=Math.abs(rear?normal.getX(i):normal.getY(i))>.5;
+  uv.setXY(i,(offset+u+(onEdge?v-front:0))/1.70,(Math.abs(normal.getZ(i))>.5?z+v-front:z)/2.80);
+ }
+ return mesh;
+}
+
+function iconEntryShell(context,frame,p,leaf,front,split) {
+ const {item,width:w,part}=frame,h=item.height,t=.018,end=front-.024;
+ const chase=item.facing==='-x'&&context.data.walls.find(wall=>wall.id==='vestibule-service-chase');
+ const cut=chase?chase.b[1]-item.box[1]:0;
+ const recess=chase?item.box[2]-(chase.a[0]-chase.thickness/2):0;
+ const linedCut=chase?cut+.008:0,linedRecess=chase?recess+.008:0;
+ function board(name,left,right,rear,face,z,height,finish=p.ash){
+  if(left<linedCut&&face>linedRecess)part(name+'-notched',[left,Math.max(rear,linedRecess),Math.min(right,linedCut),face],z,height,finish);
+  if(right>linedCut)part(name,[Math.max(left,linedCut),rear,right,face],z,height,finish);
+ }
+ if(cut){
+  part('chase-back',[0,recess,cut,recess+.008],.11,h-.128,p.ash);
+  part('chase-return',[cut,0,cut+.008,recess+.008],.11,h-.128,p.ash);
+ }
+ board('toe-kick',.028,w-.028,.012,end-.035,.008,.083,p.shadow);
+ board('body',0,w,0,.008,.109,h-.127);
+ for(const [name,z] of [['bottom',.091],['upper-shelf',split-t/2],['top',h-t]])
+  board(name,0,w,.008,end,z,t);
+ for(let i=0;i<=item.doors;i++){
+  const left=Math.max(0,i*leaf-t/2),right=Math.min(w,i*leaf+t/2+(i===0?t/2:0));
+  const edge=i===item.doors&&!item.blindCornerWidth?w-t:left;
+  board('upright-'+i,edge,right,.008,end,.109,split-t/2-.109);
+  board('loft-upright-'+i,edge,right,.008,end,split+t/2,h-t-split-t/2);
+ }
+ if(item.blindCornerWidth){
+  board('blind-end',w-t,w,.008,end,.109,split-t/2-.109);
+  board('blind-loft-end',w-t,w,.008,end,split+t/2,h-t-split-t/2);
+  iconEntryFront(frame,iconEntryPalette(context).veneer,'blind-filler',w-item.blindCornerWidth+.003,w,front,.096,h-.003,0);
+  for(let i=0;i<item.doors;i++)for(const [j,z] of [.49,.84,1.20,1.57,1.89].entries())
+   board('shelf-'+i+'-'+j,i*leaf+(i?.009:t),(i+1)*leaf-.009,.012,end-.019,z,t);
+ }
+}
+
+function iconEntrySneaker(THREE,s,p,id,u,v,z,hand) {
+  function last(name,rows,material){
+   const vertices=[],indices=[],sides=24;
+   for(const [i,[height,width,heel,toe]] of rows.entries()){
+    for(let j=0;j<sides;j++){
+     const angle=2*Math.PI*j/sides,along=Math.sin(angle),station=(along+1)/2;
+     vertices.push(width*Math.cos(angle)*(1+.12*along)+hand*.007*station,(heel+toe)/2+(toe-heel)*along/2,height);
+     if(!i)continue;
+     const a=(i-1)*sides+j,b=(i-1)*sides+(j+1)%sides;
+     indices.push(a,b,b+sides,a,b+sides,a+sides);
+    }
+   }
+   const g=new THREE.BufferGeometry();
+   g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setIndex(indices);g.computeVertexNormals();
+   return s.add('sneaker-'+name+'-'+id,g,material,u,v,z);
   }
-  const path=new context.THREE.CurvePath();
-  for(let j=1;j<profile.length;j++)
-   path.add(new context.THREE.LineCurve3(new context.THREE.Vector3(...profile[j-1]),new context.THREE.Vector3(...profile[j])));
-  s.add('arched-bead-'+i,new context.THREE.TubeGeometry(path,96,.006,6,false),paint.bead,0,0,0);
-  part('lower-bead-'+i,[Math.min(cx,outer),front,Math.max(cx,outer),front+.009],.183,.009,paint.bead);
+  const sole=last('sole',[[0,.047,-.13,.14],[.006,.050,-.134,.144],[.019,.050,-.134,.144]],p.ivory);
+  const upper=last('upper',[[.019,.049,-.132,.142],[.031,.048,-.13,.141],[.044,.044,-.127,.125],
+   [.064,.041,-.125,.044],[.086,.038,-.121,-.021],[.0865,.027,-.108,-.039],[.055,.021,-.101,-.047]],p.indigo);
+  const lining=s.disc('sneaker-lining-'+id,u,v-.074,z+.053,.023,.031,.003,p.black);
+  const laces=[.031,.051,.071].map((offset,i)=>{
+   const h=z+.067-i*.005;
+   return s.tube('sneaker-lace-'+id+'-'+i,[[u-.021,v+offset,h-.005],[u,v+offset+.004,h],[u+.022,v+offset+.009,h-.006]],.0024,p.ivory);
+  });
+  return [sole,upper,lining,...laces];
+}
+
+function iconEntryShoeDrawer(THREE,frame,s,p,leaf,i,j,z) {
+ const {item,part,point}=frame,lo=i*leaf+.045,hi=(i+1)*leaf-.045,face=frame.depth-.082,back=face-.417;
+ const id=i+'-'+j,bottom=z+.016,wall=.012,moving=[],runners=[];
+ const box=(name,rect,base,height,finish=p.ash)=>moving.push(part('shoe-drawer-'+name+'-'+id,rect,base,height,finish));
+ box('front',[lo,face-.016,hi,face],z,.175);
+ box('floor',[lo,back,hi,face-.016],bottom,wall);
+ box('back',[lo,back,hi,back+wall],bottom+wall,.096);
+ box('grip',[(lo+hi)/2-.065,face,(lo+hi)/2+.065,face+.013],z+.138,.012,p.black);
+ for(const [side,edge,sign] of [['left',lo,1],['right',hi,-1]]){
+  const rect=(a,b)=>[Math.min(edge+a*sign,edge+b*sign),back+.012,Math.max(edge+a*sign,edge+b*sign),face-.016];
+  box(side,rect(0,wall),bottom+wall,.09);
+  part('runner-spacer-'+side+'-'+id,rect(-.035,-.012),z+.033,.037,p.ash);
+  part('runner-fixed-'+side+'-'+id,rect(-.012,-.008),z+.034,.033,p.silver);
+  runners.push(part('runner-sliding-'+side+'-'+id,rect(-.008,-.004),z+.039,.023,p.silver));
+  box('runner-'+side,rect(-.004,0),z+.043,.015,p.silver);
+ }
+ if(i===2&&j===1)for(const hand of [-1,1])
+  moving.push(...iconEntrySneaker(THREE,s,p,id+'-'+hand,(lo+hi)/2+.065*hand,(back+face)/2,bottom+wall,hand));
+ const [x,y]=point(hi,face+.013),[endX,endY]=point(lo,back);
+ return {name:item.id+'-shoe-pullout-'+id,moving,runners,box:[x,y,endX,endY],travel:-.37,bottom:z,top:z+.175};
+}
+
+function iconEntryCoatBay({THREE},frame,s,p,leaf,i){
+ const {part,line,depth:d}=frame,v=d*.48,rail=2.045,drawers=[];
+ for(let j=0;j<(i===0?1:2);j++)drawers.push(iconEntryShoeDrawer(THREE,frame,s,p,leaf,i,j,.124+j*.204));
+ const left=i*leaf+(i===0?.018:.009),right=(i+1)*leaf-(i===frame.item.doors-1?.018:.009);
+ part('shoe-shelf-'+i,[left,.012,right,d-.081],i===0?.321:.535,.018,p.ash);
+ line('coat-rail-'+i,[left,v,rail],[right,v,rail],.013,p.silver);
+ for(let j=0;j<3;j++){
+  const u=left+(right-left)*(.20+.29*j),id=i+'-'+j;
+  s.tube('hook-'+id,[[u,v-.018,rail],[u,v-.012,rail+.017],[u,v+.010,rail+.017],
+   [u,v+.018,rail-.003],[u,v,rail-.039],[u,v,rail-.083]],.003,p.silver);
+  s.tube('hanger-'+id,[[u,v,rail-.083],[u,v-.058,rail-.092],[u,v-.173,rail-.150],
+   [u,v-.169,rail-.159],[u,v+.169,rail-.159],[u,v+.173,rail-.150],[u,v+.058,rail-.092],[u,v,rail-.083]],.007,p.walnut);
+  if(j!==1)iconUpperGarment(THREE,s,'coat-'+id,u,v,rail-.093,(i===0?1.32:.84)+j*.054,[p.indigo,p.sage,p.linen][(i+j)%3]);
+ }
+ return drawers;
+}
+
+function iconEntryKnobShape(THREE,radius) {
+ const profile=[[0,0],[.011,0],[.011,.015],[.014,.019],[radius-.005,.019],
+  [radius-.001,.0205],[radius,.023],[radius-.001,.025],[radius-.004,.0265],[0,.028]];
+ return new THREE.LatheGeometry(profile.map(([r,y])=>new THREE.Vector2(r,y)),48);
+}
+
+function iconEntryWardrobe(context,frame,s,p) {
+ const {item,width:w,depth:d,point}=frame,finish=iconEntryPalette(context),rear=item.facing==='-y';
+ const leaf=(w-(item.blindCornerWidth||0))/item.doors,front=d-.028,split=2.18;
+ const side=context.data.furniture.find(f=>f.id==='entry-wardrobe-side');
+ const offset=rear&&side?side.box[3]-side.box[1]-side.blindCornerWidth:0;
+ iconEntryShell(context,frame,p,leaf,front,split);
+ frame.entryLeaves=[];
+ for(let i=0;i<item.doors;i++){
+  const a=i*leaf+.003,b=(i+1)*leaf-.003,mid=(a+b)/2,drawers=rear?iconEntryCoatBay(context,frame,s,p,leaf,i):[];
+  const swing=rear?-1:1,hingeU=swing===1?a:b;
+  for(const upper of [false,true]){
+   const tier=upper?'upper':'lower',bottom=upper?split+.003:.096,top=upper?item.height-.003:split-.003;
+   const door=iconEntryFront(frame,finish.veneer,(upper?'upper-front-':'door-')+i,a,b,front,bottom,top,offset);
+   const pull=s.add((upper?'upper-lip-':'handle-')+i,upper?finish.upperKnob:finish.knob,
+    finish.vermilion,mid,front,upper?split+.060:1.075);
+   const moving=[door,pull];
+   frame.entryLeaves.push({name:item.id+'-'+tier+'-hinge-'+i,hinge:point(hingeU,front),moving,drawers:upper?[]:drawers,
+    swing,span:b-a,bottom,top,corner:i===(rear?0:item.doors-1)?tier:null,
+    at:(along,out)=>point(hingeU+swing*along,front+out)});
+  }
+ }
+}
+
+function iconEntryDoorRings(context,leaf) {
+ const {span,at}=leaf,world=points=>points.map(([along,out])=>context.world(at(along,out)).slice(0,2));
+ const r=span+.004,arc=Array.from({length:9},(_,i)=>[r*Math.cos(i*Math.PI/16),r*Math.sin(i*Math.PI/16)]);
+ return {
+  closed:world([[0,-.023],[span,-.023],[span,.028],[0,.028]]),
+  open:world([[.023,0],[.023,span],[-.028,span],[-.028,0]]),
+  sweep:world([[-.028,-.023],[r,-.023],...arc,[-.028,r]]),
+ };
+}
+
+function iconEntryDoorClear(context,camera,leaf,ring){
+ if(!camera.isPerspectiveCamera)return true;
+ const eye=camera.getWorldPosition(new context.THREE.Vector3());
+ if(eye.z<leaf.bottom||eye.z>leaf.top+1.7)return true;
+ if(iconInteriorContains([eye.x,eye.y],ring))return false;
+ return ring.every(([ax,ay],i)=>{
+  const [bx,by]=ring[(i+1)%ring.length],dx=bx-ax,dy=by-ay;
+  const t=context.THREE.MathUtils.clamp(((eye.x-ax)*dx+(eye.y-ay)*dy)/(dx*dx+dy*dy),0,1);
+  return Math.hypot(eye.x-ax-t*dx,eye.y-ay-t*dy)>.28;
+ });
+}
+
+function iconMountEntryJoinery(context,frame){
+ const {THREE,group,navigation}=context,mechanisms=(context.wardrobeDoors??=[]),corners=(context.entryCornerLeaves??={});
+ for(const leaf of frame.entryLeaves){
+  const {pivot,mount}=iconWardrobeHinge(THREE,group,leaf.name,leaf.hinge);
+  mount.add(...leaf.moving);
+  const rings=iconEntryDoorRings(context,leaf),obstacle={id:leaf.name,minZ:leaf.bottom,maxZ:leaf.top,ring:rings.closed.slice()};
+  navigation.obstacles.push(obstacle);
+  let accessible=false,lastRing=rings.closed;
+  const activeDrawers=new Set();
+  const clear=camera=>iconEntryDoorClear(context,camera,leaf,rings.sweep);
+  mechanisms.push({roots:[pivot],
+   canOpen:camera=>(!leaf.corner||!corners[leaf.corner]||corners[leaf.corner]===leaf)&&clear(camera),
+   canClose:camera=>activeDrawers.size===0&&clear(camera),
+   pose(fraction,opening){
+    pivot.rotation.z=leaf.swing*Math.PI/2*fraction;
+    accessible=opening&&fraction===1;
+    if(leaf.corner)corners[leaf.corner]=opening||fraction>0?leaf:null;
+    const ring=fraction!==Number(opening)?rings.sweep:(opening?rings.open:rings.closed);
+    if(ring!==lastRing){obstacle.ring.splice(0,obstacle.ring.length,...ring);lastRing=ring;}
+   }});
+  for(const spec of leaf.drawers){
+   const pullout=iconMountPullout(context,spec);
+   mechanisms.push({...pullout,canOpen:camera=>accessible&&pullout.canOpen(camera),pose(fraction,opening){
+    if(opening||fraction>0)activeDrawers.add(spec);else activeDrawers.delete(spec);
+    pullout.pose(fraction,opening);
+   }});
+  }
  }
 }
 
@@ -5582,17 +5761,45 @@ function iconEntryArtwork(context) {
  const print=mesh(g,canvas,'entry-framed-monotype');print.position.set(8.4655,cy,cz);print.castShadow=false;
 }
 
-function iconMoodVestibule(context,paint) {
- iconEntryArtwork(context);
- const {THREE,group,box,mesh,beam,mats}=context;
- const frame=box('entry-full-mirror-frame',[8.464,5.74,8.489,6.37],.28,1.69,mats.metal);
- frame.userData.furnitureId='entry-wall-mirror';
- const silver=iconFinishTexture(THREE,'silvered vestibule mirror',64,64,.16,(u,v)=>{
+function iconMondaWaveStrip(THREE,length,waves) {
+ const outline=new THREE.Shape();
+ outline.moveTo(0,-length/2);
+ const steps=waves*16;
+ for(let i=0;i<=steps;i++){
+  const t=i/steps,depth=.035+.015*Math.cos(t*waves*2*Math.PI);
+  outline.lineTo(-depth,length*(t-.5));
+ }
+ outline.lineTo(0,length/2);
+ outline.closePath();
+ const strip=new THREE.ExtrudeGeometry(outline,{depth:.0015,bevelEnabled:false});
+ return strip.translate(0,0,-.00075);
+}
+
+function iconEntryMirror(context) {
+ const {THREE,box,mesh}=context,wall=8.489,cy=6.055,cz=1.125;
+ const width=.50,height=1.60,extension=.03;
+ const lacquer=new THREE.MeshStandardMaterial({name:'Monda Wave · RAL 5002',color:0x202a76,roughness:.36,metalness:.22});
+ const horizontal=iconMondaWaveStrip(THREE,width+2*extension,5);
+ const vertical=iconMondaWaveStrip(THREE,height+2*extension,16).rotateX(Math.PI/2);
+ for(const sign of [-1,1]){
+  const end=mesh(horizontal,lacquer,'entry-full-mirror-frame-'+(sign<0?'bottom':'top'));
+  end.position.set(wall,cy,cz+sign*(height+.0015)/2);
+  const side=mesh(vertical,lacquer,'entry-full-mirror-frame-'+(sign<0?'left':'right'));
+  side.position.set(wall,cy+sign*(width+.0015)/2,cz);
+  end.userData.furnitureId=side.userData.furnitureId='entry-wall-mirror';
+ }
+ const silver=iconFinishTexture(THREE,'silvered vestibule mirror',64,64,.10,(u,v)=>{
   const shade=14*v+4*Math.cos(2.8*u+1.2*v)+3*Math.tanh(18*(u-.47+.13*v));
   return [178+shade,184+shade,182+shade];
  },[1,1]);
  silver.metalness=.23;
- box('entry-full-mirror-glass',[8.458,5.752,8.463,6.358],.292,1.666,silver).userData.furnitureId='entry-wall-mirror';
+ box('entry-full-mirror-glass',[wall-.014,cy-width/2,wall-.010,cy+width/2],cz-height/2,height,silver).userData.furnitureId='entry-wall-mirror';
+}
+
+function iconMoodVestibule(context,paint) {
+ iconEntryArtwork(context);
+ iconEntryMirror(context);
+ const {THREE,group,box,mesh,beam,mats}=context;
  const fiber=iconFinishTexture(THREE,'ribbed washable entry mat',128,128,.99,(u,v)=>{
   if(Math.min(u,1-u,v,1-v)<.026)return [65,60,48];
   const rib=5*Math.cos(2*Math.PI*u*31)+2*Math.cos(2*Math.PI*v*28);

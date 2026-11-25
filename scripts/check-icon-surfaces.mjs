@@ -94,7 +94,7 @@ test('counter tops have no overlapping exposed body faces and exterior walls hav
   for (const item of data.furniture.filter(f => f.type === 'counter')) {
     const body = bounds(object(item.id + '-body')), top = bounds(object(item.id + '-top'));
     close(body.max.z, top.min.z, item.id + ' adjoining solids');
-    const thickness=item.id==='kitchen-island'?.038:.050;
+    const thickness=item.id==='kitchen-island'?.012:.050;
     close(top.max.z-body.max.z,thickness,item.id+' working slab thickness');
   }
   assert(!interior.group.children.some(mesh => mesh.name.endsWith('-charred-exterior')), 'No extra nearly coplanar exterior shell');

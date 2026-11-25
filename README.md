@@ -185,3 +185,7 @@ Przycisk „Spacer” na głównym pasku, obok „Widoki i sterowanie”, przeł
 Blat zlewozmywaka i wyspa w kuchni /193 mają matowy laminat w kolorze ciemnego orzecha. Tekstura pochodzi z dostarczonego zdjęcia dekoru. Słoje biegną wzdłuż blatu i schodzą po obu bocznych płytach wyspy. Cienka brązowa krawędź odwzorowuje obrzeże widoczne na zdjęciu próbki. Wyspa ma 382,3 × 105 cm.
 
 Wysoki front tuż obok przejścia do spiżarni otwiera się po kliknięciu lub dotknięciu. W środku są stacja robota i półki. Podcięcie frontu ma 48 × 13,5 cm. Apple TV jest w uchwycie przy projektorze.
+
+## Wyspa kuchenna /193 · 2026-11-24
+
+Wyspa ma 382,3 × 105 cm. Blat, fronty szuflad, oba boki i cofnięty cokół są wykończone satynową, szczotkowaną stalą nierdzewną. Od strony salonu wyspę zamyka jeden ciągły panel z tej samej stali. Szuflady otwierają się po naciśnięciu frontu.

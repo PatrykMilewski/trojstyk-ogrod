@@ -481,6 +481,8 @@ const scannedSurfaces = {
   virginOakVinyl: {metres: 16 * Math.SQRT2 * .148, tint: 0xffffff, roughness: .60, bump: .00065, gain: 1},
 };
 
+const joineryGrainProfiles = new Set(['kitchenWorktopSmokedWalnut', 'kitchenFrontVeneer', 'entryBlueVeneer']);
+
 async function loadSurfaceScans(THREE, scans, anisotropy) {
   const textures = new Map(), loader = new THREE.TextureLoader();
   await Promise.all(Object.entries(scans).map(async ([type, images]) => {
@@ -491,7 +493,7 @@ async function loadSurfaceScans(THREE, scans, anisotropy) {
       texture.anisotropy = anisotropy;
     }
     map.colorSpace = THREE.SRGBColorSpace;
-    if (type === 'kitchenWorktopSmokedWalnut' || type === 'kitchenFrontVeneer') map.wrapS = map.wrapT = THREE.MirroredRepeatWrapping;
+    if (joineryGrainProfiles.has(type)) map.wrapS = map.wrapT = THREE.MirroredRepeatWrapping;
     textures.set(type, bumpMap ? {map, bumpMap} : {map});
   }));
   return textures;
@@ -511,7 +513,17 @@ export async function applyRealisticSurfaces({THREE, scene, mats, renderer, scan
       return;
     }
     const profile = object.material.userData?.surfaceProfile;
-    if (profile === 'kitchenWorktopSmokedWalnut' || profile === 'kitchenFrontVeneer') {
+    if (profile === 'kitchenSteelReflection') {
+      const panorama = textures.get(profile)?.map;
+      if (panorama && object.material.envMap !== panorama) {
+        panorama.mapping = THREE.EquirectangularReflectionMapping;
+        panorama.wrapT = THREE.ClampToEdgeWrapping;
+        object.material.envMap = panorama;
+        object.material.needsUpdate = true;
+      }
+      return;
+    }
+    if (joineryGrainProfiles.has(profile)) {
       const scan = textures.get(profile)?.map;
       if (scan && object.material.map !== scan) {
         object.material.map = scan;

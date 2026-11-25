@@ -1651,6 +1651,7 @@
       ],
       "facing": "+y",
       "source": "ground-plan",
+      "finish": "Szczotkowana stal nierdzewna o satynowym wykończeniu na blacie, frontach szuflad, obu bokach i cofniętym cokole. Od strony salonu wyspę zamyka jeden ciągły panel z tej samej stali. Szuflady otwierają się po naciśnięciu frontu.",
       "approximation": "Custom joinery. The two central 600 mm front columns share a 1200 mm bay with a low divider and 400 mm drawer boxes. IKEA illustrates an 800 mm METOD cabinet. The outlet is recessed into the plinth to suit the centered hob.",
       "cabinetry": {
         "moduleWidthsM": [
