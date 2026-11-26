@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-25.4",
+  "modelVersion": "2026-11-25.5",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1787,7 +1787,7 @@
     "proceduralCodeSha256": "85251c4355fbf162d6577ebe94231ec4dfd942488ea17a21c99746e1dec4a46c",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "540241237e002da82936696f65dca416836a0c88eaf340b7899f8e246433c9b7",
-    "runtimeSha256": "13cc210ef61f8ee73376c96a3d9e421f36461df7ac08c88981ef264940ab97a8"
+    "runtimeSha256": "999cdbe703071bbb730db208aece5b2ebfb3a3a8ee13d84764b512a992fcb99d"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1872,7 +1872,8 @@
     "W wiatrołapie /193 narożna szafa ma otwierane fronty z granatowo-szarym usłojeniem, drążki na odzież, wysuwane szuflady na buty i półki.",
     "Szafa w wiatrołapie /193 ma okrągłe uchwyty w kolorze cynobru, w dwóch rozmiarach.",
     "Wiatrołap /193: symetryczne rozmieszczenie uchwytów i wymiary każdego frontu szafy na podłodze po włączeniu opisów.",
-    "Wiatrołap /193: lustro Giera Design Monda Wave 56 × 166 cm w ultramarynie RAL 5002 oraz wyśrodkowane gałki na obu ramionach szafy."
+    "Wiatrołap /193: lustro Giera Design Monda Wave 56 × 166 cm w ultramarynie RAL 5002 oraz wyśrodkowane gałki na obu ramionach szafy.",
+    "Dom /193: czerwone falowane pochwyty szafy w wiatrołapie i satynowe uchwyty na płaskich falowanych szyldach na drewnianych frontach kuchennych."
   ],
   "contextParcels": [
     {

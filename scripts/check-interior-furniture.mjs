@@ -559,15 +559,15 @@ for (const [run, id] of entryRuns.entries()) {
   }
 }
 
-test('entry wardrobe fronts have equal modules, aligned tiers and centered knobs', () => {
+test('entry wardrobe fronts have equal modules, aligned tiers and centered pulls', () => {
   for (const [id, axis, width] of [[entryRuns[0], 'x', .4865], [entryRuns[1], 'y', .494]]) {
     const get = suffix => bounds(interior.group.getObjectByName(id + '-' + suffix));
     const center = box => box.getCenter(new THREE.Vector3())[axis];
     const bays = Array.from({length: furniture.get(id).doors}, (_, index) => ({
       lower: get('door-' + index), upper: get('upper-front-' + index),
-      knob: get('handle-' + index), upperKnob: get('upper-lip-' + index),
+      pull: get('handle-' + index), upperPull: get('upper-lip-' + index),
     })).sort((a, b) => a.lower.min[axis] - b.lower.min[axis]);
-    for (const [index, {lower, upper, knob, upperKnob}] of bays.entries()) {
+    for (const [index, {lower, upper, pull, upperPull}] of bays.entries()) {
       close(lower.max[axis] - lower.min[axis], width, id + ' front width');
       close(upper.min[axis], lower.min[axis], 'Left edges align');
       close(upper.max[axis], lower.max[axis], 'Right edges align');
@@ -575,10 +575,13 @@ test('entry wardrobe fronts have equal modules, aligned tiers and centered knobs
       close(lower.max.z, 2.177, 'Lower fronts align under the loft');
       close(upper.min.z - lower.max.z, .006, 'Horizontal reveal');
       close(upper.max.z, 2.777, 'Top of loft fronts');
+      close(pull.max.z - pull.min.z, .30, 'Lower wave pull height');
+      close(upperPull.max.z - upperPull.min.z, .18, 'Upper wave pull height');
+      assert(upperPull.min.z > upper.min.z, 'Upper pull clears the joint between tiers');
       if (index) close(lower.min[axis] - bays[index - 1].lower.max[axis], .006, 'Vertical reveal');
-      close(center(upperKnob), center(knob), 'Upper and lower knobs align vertically');
-      close(center(knob), center(lower), id + ' lower knob is centered on its front');
-      close(center(upperKnob), center(upper), id + ' upper knob is centered on its front');
+      close(center(upperPull), center(pull), 'Upper and lower pulls align vertically');
+      close(center(pull), center(lower), id + ' lower pull is centered on its front');
+      close(center(upperPull), center(upper), id + ' upper pull is centered on its front');
     }
   }
 });
@@ -1488,7 +1491,7 @@ test('Samsung columns preserve product envelopes, removable shelves, drawers and
   close(counter.max.x,furniture.get('kitchen-tall').box[0],'Perimeter counter meets the first column');
 });
 
-test('the wall run’s light oak fronts share continuous grain, attached bar pulls and a handleless robot cabinet', async () => {
+test('the wall run’s light oak fronts share continuous grain, wavy steel backplates with stand-off grips and a handleless robot cabinet', async () => {
   const get=id=>interior.group.getObjectByName(id);
   const veneer=get('kitchen-pantry-closed-leaf').material;
   assert.equal(veneer.userData.surfaceProfile,'kitchenFrontVeneer');
@@ -1518,24 +1521,34 @@ test('the wall run’s light oak fronts share continuous grain, attached bar pul
       close(uv.getY(i),(position.getZ(i)+door.position.z)/(.48*632/383),'Vertical grain continues across drawer seams');
     }
   }
-  const grip=bounds(get('kitchen-back-drawer-pull-2-0')),drawer=bounds(get('kitchen-back-front-2-0'));
-  close(grip.min.y,drawer.max.y+.024,'Finger clearance behind the rail');
+  const examples=[
+    ['kitchen-back-drawer-pull-2-0','kitchen-back-front-2-0','x',.18,'kitchen-sink-pullout'],
+    ['kitchen-back-dishwasher-grip','kitchen-back-dishwasher-front','x',.18,'kitchen-dishwasher-door'],
+    ['kitchen-pantry-leaf-pull','kitchen-pantry-closed-leaf','z',.32,'concealed-pantry-door'],
+    ['kitchen-tall-fridge-pull','kitchen-tall-fridge','z',.32,'kitchen-fridge-door'],
+    ['kitchen-tall-freezer-pull','kitchen-tall-freezer','z',.32,'kitchen-freezer-door'],
+  ];
+  for(const [id,face,axis,length,pivot] of examples){
+    const pull=get(id),rail=get(id+'-rail'),plate=bounds(pull),front=bounds(get(face));
+    assert.equal(rail.parent,pull);
+    assert(get(pivot).getObjectById(pull.id),'Both parts travel on '+pivot);
+    assert.equal(rail.geometry.type,'TubeGeometry');
+    assert.equal(rail.material,pull.material);
+    assert(pull.material.metalness>.7 && pull.material.map,'Satin brushed metal');
+    const outline=pull.geometry.parameters.shapes.getPoints(),count=axis==='z'?6:5;
+    const rises=outline.slice(1,count*16).filter((p,i)=>p.y>outline[i].y && p.y>outline[i+2].y);
+    assert.equal(rises.length,count,'Waves along the long edge');
+    close(plate.max[axis]-plate.min[axis],length+.0009,id+' length with bevel',.00015);
+    close(plate.min.y,front.max.y,'Backplate seats on oak');
+    close(plate.max.y-plate.min.y,.002,'2 mm sheet');
+    assert(plate.min.x>front.min.x && plate.max.x<front.max.x && plate.min.z>front.min.z && plate.max.z<front.max.z);
+    const path=rail.geometry.parameters.path,gripRadius=rail.geometry.parameters.radius;
+    close(path.getPoint(0).y,plate.max.y-pull.position.y,'First foot seats inside bevel',.0004);
+    close(path.getPoint(1).y,path.getPoint(0).y,'Other end meets plate');
+    close(path.getPoint(.5).y-gripRadius-(plate.max.y-pull.position.y),.0225,'Finger clearance');
+  }
   assert.equal(get('kitchen-pantry-robot-pull'),undefined);
   assert(get('kitchen-robot-cabinet-door').getObjectByName('kitchen-pantry-left-front'));
-  close(grip.max.z,drawer.max.z-.028,'Clear of the upper reveal');
-  for(const [id,axis] of [['kitchen-back-drawer-pull-2-0','x'],['kitchen-pantry-leaf-pull','z']]){
-    const pull=get(id);
-    assert.equal(pull.material.color.getHex(),0xa5987e);
-    assert.deepEqual(pull.children.map(o=>Math.round(o.position[axis]*1000)),[-64,64]);
-    for(const foot of pull.children){
-      assert.equal(foot.material,pull.material);
-      const b=bounds(foot).translate(pull.position),rail=bounds(pull);
-      if(axis==='x'){
-        close(b.min.y,drawer.max.y,'Mount meets the drawer');
-        close(b.max.y,rail.min.y,'Mount meets the pull');
-      }
-    }
-  }
 });
 
 test('a single 595 mm built-in oven has a separate bay facing the work aisle beside the extractor', () => {
