@@ -45,7 +45,7 @@ content = section('Domy', table(['Działka / projekt', 'Gabaryt katalogowy W × 
     for h in registry['houses']]))
 content += section('Kontekst z Geoportalu — budynek /41', '<p>Obrys z powiatowej EGiB; dokładność położenia nie została podana przez usługę. Źródło nie zawiera wysokości ani liczby kondygnacji. Elewacja, balkony i kominy są poglądowe według zdjęć.</p>' + table(
     ['Element', 'Wymiar / wartość', 'Podstawa'], context_building_rows(registry['contextBuildings'])))
-content += section('Dodatkowe działki i droga /133', '<p>/192 pozostaje pusta. Droga ma pełny urzędowy obrys, bez buforowania i poszerzania; jest to działka drogowa, nie deklaracja szerokości jezdni.</p>' + table(
+content += section('Dodatkowe działki i droga /133', '<p>W stanie bazowym /192 jest niezabudowana. Warstwa „Przyszła zabudowa” pokazuje proponowaną stodołę przy /133. Droga ma pełny urzędowy obrys, bez buforowania i poszerzania; jest to działka drogowa, nie deklaracja szerokości jezdni.</p>' + table(
     ['Działka', 'Powierzchnia geometrii (m²)', 'Długości boków (m)'], [
         ['/'+p['parcel'], number(p['areaM2']), '; '.join(number(v) for v in p['edgeLengthsM'])]
         for p in [*registry['contextParcels'], registry['road']]]))
@@ -136,13 +136,15 @@ content += section('Symulacja słońca i mapy', '<p>Pozycja słońca dla wybrane
         ['Kolory nieba i światła', 'Poglądowy model czystego nieba i zmierzchu, bez prognozy pogody'],
         ['Promień mapy wody i prądu', '150 m od rzeczywistego wspólnego wierzchołka działek'],
         ['Siatka NMT / układ wysokości', '1 m / PL-EVRF2007-NH'],
-        ['Ortofotomapa', '360 × 360 m; indeks 2024 w centrum, dokładna data nalotu nieznana']]) + '<p><a href="map-sources.json">Pełne źródła map, współrzędne i parametry eksportu</a></p>')
+        ['Ortofotomapa', '680 × 512 m. Zdjęcia GUGiK z 8 września 2024 r., na zachodzie uzupełnione zdjęciami z 23 kwietnia 2023 r.'],
+        ['Okolica trójstyku', '111 działek ewidencyjnych. Dachy opracowano na podstawie LiDAR i ortofotomapy. Otwory elewacji oraz wykończenie budynków i płotów są przybliżone. Dom na 775/41 zachowuje wcześniejszy model.'],
+        ['Rozbieżność na 775/195', 'Na miejscu obiektu 2077_BUD z ewidencji na zdjęciu z 2024 r. widać przejazd i zieleń. Pomiary z 2022 i 2024 r. nie wykazały tu dachu.']]) + '<p><a href="map-sources.json">Pełne źródła map, współrzędne i parametry eksportu</a></p>')
 content += section('Spacer i widoczność', table(['Parametr', 'Wartość'], [
     ['Wysokość oczu', number(registry['navigation']['walkEyeHeightM'])+' m'],
     ['Promień kolizji', number(registry['navigation']['walkCollisionRadiusM'])+' m'],
     ['Prędkość chodu / sprintu', number(registry['navigation']['walkSpeedMPerSecond'])+' / '+number(registry['navigation']['sprintSpeedMPerSecond'])+' m/s'],
     ['Skok — maksymalne podniesienie oczu', number(registry['navigation']['jumpApexM'])+' m ponad poziom 1,70 m'],
-    ['Przeszkody', 'Domy /191 i /41 oraz ściany wnętrz /190 i /193; przejścia drzwiowe i schody obu wnętrz dostępne. Przez płoty można przechodzić'],
+    ['Przeszkody', 'Bryły sąsiednich budynków, domy /191 i /41 oraz ściany wnętrz /190 i /193; przejścia drzwiowe i schody obu wnętrz dostępne. Przez płoty można przechodzić'],
     ['Cienie płotu', 'Ciągły panel odpowiadający przebiegowi płotu, bez cieni pojedynczych desek'],
     ['Regulacja cieni', '0–100%; daty przesileń i równonocy dla wybranego roku, przybliżone']]))
 if 'interior' in registry:

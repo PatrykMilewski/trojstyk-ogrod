@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "modelVersion": "2026-11-25.5",
+  "modelVersion": "2026-11-27.6",
   "title": "Stały rejestr wymiarów — trzy domy i trójstyk",
   "units": {
     "length": "m",
@@ -1787,7 +1787,7 @@
     "proceduralCodeSha256": "85251c4355fbf162d6577ebe94231ec4dfd942488ea17a21c99746e1dec4a46c",
     "scope": "Hash danych obejmuje granice, powierzchnie, wszystkie siatki domów i ustawienie wyposażenia. Hash kodu obejmuje proceduralne wyposażenie, rośliny, ludzi i psy; jest celowo czuły także na inne zmiany tego kodu.",
     "planSha256": "540241237e002da82936696f65dca416836a0c88eaf340b7899f8e246433c9b7",
-    "runtimeSha256": "999cdbe703071bbb730db208aece5b2ebfb3a3a8ee13d84764b512a992fcb99d"
+    "runtimeSha256": "3e6d2c8fbad101447d8e624b59193ff34f6a9d14c13435d09647be6dbf52461a"
   },
   "revisionNotes": [
     "Domy /190 i /191 odbito względem rzeczywistego modelu 2026-11-16.2, bez zmiany skali.",
@@ -1873,7 +1873,13 @@
     "Szafa w wiatrołapie /193 ma okrągłe uchwyty w kolorze cynobru, w dwóch rozmiarach.",
     "Wiatrołap /193: symetryczne rozmieszczenie uchwytów i wymiary każdego frontu szafy na podłodze po włączeniu opisów.",
     "Wiatrołap /193: lustro Giera Design Monda Wave 56 × 166 cm w ultramarynie RAL 5002 oraz wyśrodkowane gałki na obu ramionach szafy.",
-    "Dom /193: czerwone falowane pochwyty szafy w wiatrołapie i satynowe uchwyty na płaskich falowanych szyldach na drewnianych frontach kuchennych."
+    "Dom /193: czerwone falowane pochwyty szafy w wiatrołapie i satynowe uchwyty na płaskich falowanych szyldach na drewnianych frontach kuchennych.",
+    "Widok okolicy obejmuje 78 działek EGiB i 26 nowych brył zabudowy z pomiarów LiDAR i ortofotomapy.",
+    "Rozszerzenie do 111 działek. Indywidualne elewacje, dopracowane dachy i ręcznie wybrane odcinki ogrodzeń oraz żywopłotów.",
+    "Scenariusz zabudowy wolnych działek, pięć projektów, ogrodzenia i drzewa na podstawie danych ALS GUGiK.",
+    "Zróżnicowane ogrody na 61 działkach, niskie nasadzenia, szpalery tui i ogrodzenia dopasowane do posesji.",
+    "Warianty domów i garaży na 61 działkach, dom 200 m² na 775/192, wyższe drzewa, wielostronne szpalery tui i ogrody z tarasami.",
+    "Ukształtowanie okolicy według NMT GUGiK, połączenia drogi 775/133 i 29 garaży pod wspólnym dachem z domem."
   ],
   "contextParcels": [
     {
@@ -2960,10 +2966,10 @@
       6033615.105133102
     ],
     "orthophotoBounds2177": [
-      6528383.77,
-      6033436.61,
-      6528743.77,
-      6033796.61
+      6528265,
+      6033334,
+      6528945,
+      6033846
     ],
     "utilityCenter2177": [
       6528563.77,
@@ -2972,9 +2978,9 @@
     "utilityRadiusM": 150,
     "nmtGridM": 1,
     "nmtVerticalDatum": "PL-EVRF2007-NH",
-    "terrainGeometry": "flat",
+    "terrainGeometry": "NMT GUGiK, siatka 1 m i cztery zachowane poziome działki",
     "metadataFile": "map-sources.json",
-    "metadataSha256": "fea5048b39e7fb2aa10d468939c39c41523b660555bf006e0ad027345ca02d02",
+    "metadataSha256": "6a93bc597bc5d9d13baa22c675f7732332b3ab1ca103aeae2527907ba912162d",
     "utilityBounds2177": [
       6528413.77,
       6033466.61,

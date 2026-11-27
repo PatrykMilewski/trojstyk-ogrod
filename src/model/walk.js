@@ -37,7 +37,7 @@ export function walkHouseFootprints(house, neighbors) {
     }
   }
   for (const model of neighbors.context.buildings) {
-    footprints.push({ parcel: model.parcel, ring: model.footprint.coordinates[0].map(point => point.slice(0, 2)) });
+    footprints.push({ parcel: model.parcel, ring: model.footprint.coordinates[0].map(point => point.slice(0, 2)), enabled: model.enabled });
   }
   return footprints.filter(item => item.ring.length >= 3);
 }
@@ -66,9 +66,19 @@ function walkSegmentDistance(a, b, c, d) {
 }
 
 export function createWalkCollision(footprints, radius = .28) {
+  const bounds = footprints.map(({ring}) => {
+    const xs = ring.map(p => p[0]), ys = ring.map(p => p[1]);
+    return [Math.min(...xs)-radius, Math.min(...ys)-radius, Math.max(...xs)+radius, Math.max(...ys)+radius];
+  });
   function pathBlocked(a, b) {
-    return footprints.some(({ ring }) => walkInside(a, ring) || walkInside(b, ring) || ring.some((point, i) =>
-      walkSegmentDistance(a, b, point, ring[(i + 1) % ring.length]) <= radius));
+    const left = Math.min(a[0], b[0]), right = Math.max(a[0], b[0]);
+    const bottom = Math.min(a[1], b[1]), top = Math.max(a[1], b[1]);
+    return footprints.some(({ring, enabled}, i) => {
+      const [west, south, east, north] = bounds[i];
+      if (right < west || left > east || top < south || bottom > north || (enabled && !enabled())) return false;
+      return walkInside(a, ring) || walkInside(b, ring) || ring.some((p, j) =>
+        walkSegmentDistance(a, b, p, ring[(j+1) % ring.length]) <= radius);
+    });
   }
   function advance(start, delta) {
     const end = [start[0] + delta[0], start[1] + delta[1]];
@@ -572,7 +582,7 @@ export function mergeInteriorNavigation(interiors) {
     ceilingHeight: point => Math.min(Infinity, ...sources.map(({ navigation }) => navigation.ceilingHeight?.(point) ?? Infinity)) };
 }
 
-function walkTerrainSampler(THREE, meshes) {
+function walkTerrainSampler(THREE, meshes, groundHeight) {
   const surfaces = meshes.map(mesh => {
     mesh.updateWorldMatrix(true, false);
     return {mesh, bounds: new THREE.Box3().setFromObject(mesh)};
@@ -585,15 +595,15 @@ function walkTerrainSampler(THREE, meshes) {
       const [hit] = ray.intersectObject(mesh, false);
       if (hit) return hit.point.z;
     }
-    return 0;
+    return groundHeight?.(x,y) ?? 0;
   };
 }
 
-export function setupWalk({ THREE, scene, house, neighbors, camera, controls, renderer, requestDraw, onCameraChange, button, shortcutButton, interior, interiors, startView, terrainMeshes = [] }) {
+export function setupWalk({ THREE, scene, house, neighbors, camera, controls, renderer, requestDraw, onCameraChange, button, shortcutButton, interior, interiors, startView, terrainMeshes = [], groundHeight }) {
   const view = createWalkView(THREE, requestDraw, scene), perspective = view.camera;
   const sources = interiors ?? [{ parcel: '193', navigation: interior?.navigation }];
   const navigation = mergeInteriorNavigation(sources);
-  if (navigation && terrainMeshes.length) navigation.terrainHeight = walkTerrainSampler(THREE, terrainMeshes);
+  if (navigation && (terrainMeshes.length || groundHeight)) navigation.terrainHeight = walkTerrainSampler(THREE, terrainMeshes, groundHeight);
   const navigableParcels = new Set(sources.filter(item => item.navigation).map(item => item.parcel));
   const footprints = walkHouseFootprints(house, neighbors).filter(item => !navigableParcels.has(item.parcel));
   const collision = createWalkCollision(footprints), motion = createWalkMotion(collision, navigation);

@@ -108,10 +108,33 @@ controller.setLocal('2026-07-20', '15:50');
 assert.ok(draws >= 7);
 const farRoad = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshBasicMaterial());
 farRoad.receiveShadow = true; scene.add(farRoad);
-const bounded = solar.setupSolar({ THREE, scene, sun, renderer, requestDraw() {},
-  shadowBounds: { min: [-50, -40, -.35], max: [60, 50, 15] } });
+const neighborhoodBounds = { min: [-170, -210, -.35], max: [260, 230, 15] };
+let viewRedraws = 0;
+const bounded = solar.setupSolar({ THREE, scene, sun, renderer, requestDraw() { viewRedraws++; },
+  shadowBounds: { min: [-50, -40, -.35], max: [60, 50, 15] }, neighborhoodShadowBounds: neighborhoodBounds });
 assert.ok(sun.shadow.camera.right - sun.shadow.camera.left < 160, 'bounded core ignores distant road and map extents');
 assert.equal(sun.shadow.mapSize.x, 4096);
+const coreProjection = sun.shadow.camera.projectionMatrix.clone();
+const initialSolar = bounded.getState();
+bounded.setNeighborhoodView(true);
+assert.deepEqual(bounded.getState(), initialSolar, 'view switch preserves the solar clock and activation');
+const afterViewSwitch = viewRedraws;
+renderer.shadowMap.needsUpdate = false; sun.shadow.needsUpdate = false;
+bounded.setNeighborhoodView(true);
+assert.equal(viewRedraws, afterViewSwitch, 'repeated neighborhood camera frames do not enqueue redraws');
+assert.ok(!renderer.shadowMap.needsUpdate && !sun.shadow.needsUpdate);
+for (const time of ['15:50', '06:00']) {
+  bounded.setLocal('2026-07-20', time);
+  for (const x of [-170, 260]) for (const y of [-210, 230]) for (const z of [-.35, 15]) {
+    const ndc = new THREE.Vector3(x, y, z).project(sun.shadow.camera);
+    assert.ok(ndc.toArray().every(component => Math.abs(component) < 1), 'all neighborhood corners fit at both sun angles');
+  }
+}
+bounded.setLocal('2026-07-20', '15:50');
+renderer.shadowMap.needsUpdate = false; sun.shadow.needsUpdate = false;
+bounded.setNeighborhoodView(false);
+assert.ok(sun.shadow.camera.projectionMatrix.equals(coreProjection), 'returning to the core restores its shadow resolution');
+assert.ok(renderer.shadowMap.needsUpdate && sun.shadow.needsUpdate, 'view transition invalidates frozen shadow maps');
 bounded.dispose();
 function fakeClock() {
   let timestamp = 0, nextId = 0;

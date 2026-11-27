@@ -274,22 +274,30 @@ function syncSolarControls(controls, state) {
   controls.status.textContent = state.daylight ? 'Słońce nad horyzontem' : 'Słońce pod horyzontem';
 }
 
-function applySolarLight({ THREE, sun, bounds, renderer, intensity }, instant) {
-  const position = solarPosition(instant), direction = sunDirection(position);
-  const daylight = position.elevationDeg > 0;
+function updateSolarShadow({ THREE, sun, bounds, renderer }, direction) {
   fitSolarShadow(THREE, sun, bounds, direction);
-  sun.intensity = daylight ? intensity : 0;
-  sun.castShadow = daylight;
   renderer.shadowMap.needsUpdate = true;
   sun.shadow.needsUpdate = true;
+}
+
+function applySolarLight(lighting, instant) {
+  const { sun, intensity } = lighting;
+  const position = solarPosition(instant), direction = sunDirection(position);
+  const daylight = position.elevationDeg > 0;
+  updateSolarShadow(lighting, direction);
+  sun.intensity = daylight ? intensity : 0;
+  sun.castShadow = daylight;
   return { ...solarCalendarFields(instant), instant: instant.toISOString(), ...position, direction, daylight };
 }
 
+function paddedShadowBounds(THREE, { min, max }) {
+  return new THREE.Box3(new THREE.Vector3(...min), new THREE.Vector3(...max)).expandByScalar(2);
+}
+
 export function setupSolar({ THREE, scene, sun, renderer, requestDraw, container, shadowBounds,
-  onActivate = () => {}, playbackClock = {} }) {
-  const bounds = shadowBounds
-    ? new THREE.Box3(new THREE.Vector3(...shadowBounds.min), new THREE.Vector3(...shadowBounds.max)).expandByScalar(2)
-    : solarShadowBounds(THREE, scene);
+  neighborhoodShadowBounds, onActivate = () => {}, playbackClock = {} }) {
+  const bounds = shadowBounds ? paddedShadowBounds(THREE, shadowBounds) : solarShadowBounds(THREE, scene);
+  const neighborhoodBounds = neighborhoodShadowBounds ? paddedShadowBounds(THREE, neighborhoodShadowBounds) : bounds;
   sun.shadow.mapSize.set(Math.min(4096, renderer.capabilities?.maxTextureSize || 4096),
     Math.min(4096, renderer.capabilities?.maxTextureSize || 4096));
   const lighting = { THREE, sun, bounds, renderer, intensity: sun.intensity };
@@ -322,8 +330,15 @@ export function setupSolar({ THREE, scene, sun, renderer, requestDraw, container
     sync(); requestDraw();
     return getState();
   }
+  function setNeighborhoodView(expanded) {
+    const nextBounds = expanded ? neighborhoodBounds : bounds;
+    if (lighting.bounds === nextBounds) return;
+    lighting.bounds = nextBounds;
+    updateSolarShadow(lighting, state.direction);
+    requestDraw();
+  }
   playback = createSolarPlayback({ ...playbackClock, apply, onChange() { sync(); requestDraw(); } });
-  const api = { activate, setLocal, setPreset, setShadowStrength, getState, pause: playback.pause,
+  const api = { activate, setLocal, setPreset, setShadowStrength, setNeighborhoodView, getState, pause: playback.pause,
     play() { activate(); playback.play(); }, setPlaybackSpeed: playback.setPlaybackSpeed,
     deactivate() { playback.pause(); active = false; requestDraw(); },
     dispose() { playback.dispose(); controls?.dispose(); } };

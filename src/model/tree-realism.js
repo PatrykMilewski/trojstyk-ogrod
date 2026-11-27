@@ -116,7 +116,7 @@ function woodyPlantBatches(THREE, group, records, name) {
         radial = Math.max(radial,Math.hypot(p.x,p.y)); top = Math.max(top,p.z);
       }
     }
-    const scale = new THREE.Vector3(r/radial,r/radial,h/top), offset = new THREE.Vector3(x,y,0);
+    const scale = new THREE.Vector3(r/radial,r/radial,h/top), offset = new THREE.Vector3(x,y,record.groundZ??0);
     for (let i=startingBranch; i<branches.length; i++) {
       const item=branches[i];
       branches[i] = {start:item.start.clone().multiply(scale).add(offset),end:item.end.clone().multiply(scale).add(offset),width:item.width};

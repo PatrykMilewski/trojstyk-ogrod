@@ -1,126 +1,424 @@
 {
   "orthophoto": {
-    "retrievedAtUTC": "2026-11-16T19:09:29.064375+00:00",
+    "retrievedAtUTC": "2026-11-27T21:10:37.902443+00:00",
     "attribution": "Główny Urząd Geodezji i Kartografii — Geoportal.gov.pl",
-    "source": "GUGiK WMS StandardResolution, Raster",
+    "source": "GUGiK WMS HighResolution (Raster), with StandardResolution (Raster) where the high-resolution service has no coverage",
+    "sourceURL": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution",
+    "sourceURLs": [
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033718.0%2C6528409.0%2C6033846.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033718.0%2C6528409.0%2C6033846.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528409.0%2C6033718.0%2C6528553.0%2C6033846.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528553.0%2C6033718.0%2C6528697.0%2C6033846.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528697.0%2C6033718.0%2C6528841.0%2C6033846.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528841.0%2C6033718.0%2C6528945.0%2C6033846.0&WIDTH=832&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033590.0%2C6528409.0%2C6033718.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033590.0%2C6528409.0%2C6033718.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528409.0%2C6033590.0%2C6528553.0%2C6033718.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528553.0%2C6033590.0%2C6528697.0%2C6033718.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528697.0%2C6033590.0%2C6528841.0%2C6033718.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528841.0%2C6033590.0%2C6528945.0%2C6033718.0&WIDTH=832&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033462.0%2C6528409.0%2C6033590.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033462.0%2C6528409.0%2C6033590.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528409.0%2C6033462.0%2C6528553.0%2C6033590.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528553.0%2C6033462.0%2C6528697.0%2C6033590.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528697.0%2C6033462.0%2C6528841.0%2C6033590.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528841.0%2C6033462.0%2C6528945.0%2C6033590.0&WIDTH=832&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033334.0%2C6528409.0%2C6033462.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033334.0%2C6528409.0%2C6033462.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528409.0%2C6033334.0%2C6528553.0%2C6033462.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528553.0%2C6033334.0%2C6528697.0%2C6033462.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528697.0%2C6033334.0%2C6528841.0%2C6033462.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528841.0%2C6033334.0%2C6528945.0%2C6033462.0&WIDTH=832&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+    ],
+    "tiles": [
+      {
+        "rect": [
+          0,
+          0,
+          1152,
+          1024
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033718.0%2C6528409.0%2C6033846.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033718.0%2C6528409.0%2C6033846.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 1009987
+      },
+      {
+        "rect": [
+          1152,
+          0,
+          2304,
+          1024
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528409.0%2C6033718.0%2C6528553.0%2C6033846.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 0
+      },
+      {
+        "rect": [
+          2304,
+          0,
+          3456,
+          1024
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528553.0%2C6033718.0%2C6528697.0%2C6033846.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 0
+      },
+      {
+        "rect": [
+          3456,
+          0,
+          4608,
+          1024
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528697.0%2C6033718.0%2C6528841.0%2C6033846.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 0
+      },
+      {
+        "rect": [
+          4608,
+          0,
+          5440,
+          1024
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528841.0%2C6033718.0%2C6528945.0%2C6033846.0&WIDTH=832&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 0
+      },
+      {
+        "rect": [
+          0,
+          1024,
+          1152,
+          2048
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033590.0%2C6528409.0%2C6033718.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033590.0%2C6528409.0%2C6033718.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 1016535
+      },
+      {
+        "rect": [
+          1152,
+          1024,
+          2304,
+          2048
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528409.0%2C6033590.0%2C6528553.0%2C6033718.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 0
+      },
+      {
+        "rect": [
+          2304,
+          1024,
+          3456,
+          2048
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528553.0%2C6033590.0%2C6528697.0%2C6033718.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 0
+      },
+      {
+        "rect": [
+          3456,
+          1024,
+          4608,
+          2048
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528697.0%2C6033590.0%2C6528841.0%2C6033718.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 0
+      },
+      {
+        "rect": [
+          4608,
+          1024,
+          5440,
+          2048
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528841.0%2C6033590.0%2C6528945.0%2C6033718.0&WIDTH=832&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 0
+      },
+      {
+        "rect": [
+          0,
+          2048,
+          1152,
+          3072
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033462.0%2C6528409.0%2C6033590.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033462.0%2C6528409.0%2C6033590.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 1023027
+      },
+      {
+        "rect": [
+          1152,
+          2048,
+          2304,
+          3072
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528409.0%2C6033462.0%2C6528553.0%2C6033590.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 0
+      },
+      {
+        "rect": [
+          2304,
+          2048,
+          3456,
+          3072
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528553.0%2C6033462.0%2C6528697.0%2C6033590.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 0
+      },
+      {
+        "rect": [
+          3456,
+          2048,
+          4608,
+          3072
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528697.0%2C6033462.0%2C6528841.0%2C6033590.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 0
+      },
+      {
+        "rect": [
+          4608,
+          2048,
+          5440,
+          3072
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528841.0%2C6033462.0%2C6528945.0%2C6033590.0&WIDTH=832&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 0
+      },
+      {
+        "rect": [
+          0,
+          3072,
+          1152,
+          4096
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033334.0%2C6528409.0%2C6033462.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033334.0%2C6528409.0%2C6033462.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 1029529
+      },
+      {
+        "rect": [
+          1152,
+          3072,
+          2304,
+          4096
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528409.0%2C6033334.0%2C6528553.0%2C6033462.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 0
+      },
+      {
+        "rect": [
+          2304,
+          3072,
+          3456,
+          4096
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528553.0%2C6033334.0%2C6528697.0%2C6033462.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 0
+      },
+      {
+        "rect": [
+          3456,
+          3072,
+          4608,
+          4096
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528697.0%2C6033334.0%2C6528841.0%2C6033462.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 0
+      },
+      {
+        "rect": [
+          4608,
+          3072,
+          5440,
+          4096
+        ],
+        "sourceURLs": [
+          "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528841.0%2C6033334.0%2C6528945.0%2C6033462.0&WIDTH=832&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+        ],
+        "standardFillPixels": 0
+      }
+    ],
+    "standardFillPixels": 4079078,
+    "standardFillFraction": 0.183064,
     "crs": "EPSG:2177",
-    "axisOrder": "easting,northing; WMS1.1.1 SRS prevents WMS1.3 axis-order ambiguity",
+    "axisOrder": "easting,northing",
     "bbox": [
-      6528383.77,
-      6033436.61,
-      6528743.77,
-      6033796.61
+      6528265,
+      6033334,
+      6528945,
+      6033846
     ],
     "center2177": [
-      6528563.77,
-      6033616.61
+      6528605.0,
+      6033590.0
     ],
     "imageSize": [
-      2048,
-      2048
+      5440,
+      4096
     ],
-    "pixelSizeM": 0.17578125,
-    "sourceResolutionM": null,
-    "acquisitionDate": null,
+    "pixelSizeM": 0.125,
     "origin2177": [
       6528545.937850511,
       6033615.105133102
     ],
-    "worldToLocal": "[E-originE, N-originN, z]",
     "localBBox": [
-      -162.16785051114857,
-      -178.49513310194016,
-      197.83214948885143,
-      181.50486689805984
+      -280.93785051070154,
+      -281.10513310227543,
+      399.06214948929846,
+      230.89486689772457
     ],
-    "imageOrientation": "top=north; left=west",
+    "worldToLocal": "[E-originE, N-originN, z]",
     "planeZ": -0.015,
-    "notes": [
-      "WMS pixel size is export resolution, not source aerial survey GSD.",
-      "Engineering scene remains level. Ortho is visual context, not surveyed terrain."
-    ],
-    "nmtRequestBBox2180": [
-      463514.0,
-      729730.0,
-      463880.0,
-      730095.0
-    ],
+    "imageOrientation": "top=north; left=west",
+    "sourceResolutionM": null,
+    "acquisitionDate": null,
+    "sha256Orthophoto": "5fd177ae634f54fda760f837c832d1314dcfd32159c7ba1dcc03bcdbf0f69e09",
+    "extentMethod": "Combined extent of the original backdrop, 111 selected whole parcels and three additional traced areas, with at least 2 m margins.",
+    "acquisitionDateAtCenter": "2024-09-08",
     "acquisitionYearIndexAtCenter": 2024,
-    "acquisitionDateStatus": "2024 index layer contains this location; 2025 and 2026 return no results. Exact imagery acquisition date and survey date not exposed in queried index feature. Not a guarantee every mosaic pixel has this vintage.",
-    "registrationVerification": {
-      "method": "Official EGiB building and ULDK cadastral polygons projected to north-up raster; visual check",
-      "artifact": "orthophoto-cadastral-check.png",
-      "result": "Cyan official /41 building footprint coincides with photographed roof; southwest approach and southeastern built parcels align. No rotation or axis swap."
+    "sourceSheetPixelSizeAtCenterM": 0.05,
+    "sourceSheetAtCenter": "N-34-49-D-b-4-3",
+    "sourceIndexURLAtCenter": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WFS/Skorowidze?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&TYPENAME=gugik%3ASkorowidzOrtofomapy2024&BBOX=729884.27%2C463736.41%2C729886.27%2C463738.41%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A2180&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A2180",
+    "sampledSheetIndex": {
+      "center": [
+        {
+          "year": 2024,
+          "date": "2024-09-08",
+          "sheet": "N-34-49-D-b-4-3",
+          "sourcePixelSizeM": 0.05,
+          "url": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WFS/Skorowidze?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&TYPENAME=gugik%3ASkorowidzOrtofomapy2024&BBOX=729884.27%2C463736.41%2C729886.27%2C463738.41%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A2180&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A2180"
+        }
+      ],
+      "west": [
+        {
+          "year": 2023,
+          "date": "2023-04-23",
+          "sheet": "N-34-49-D-b-3-4",
+          "sourcePixelSizeM": 0.25,
+          "url": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WFS/Skorowidze?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&TYPENAME=gugik%3ASkorowidzOrtofomapy2023&BBOX=729868.61%2C463431.35%2C729870.61%2C463433.35%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A2180&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A2180"
+        }
+      ],
+      "east": [
+        {
+          "year": 2024,
+          "date": "2024-09-08",
+          "sheet": "N-34-49-D-b-4-3",
+          "sourcePixelSizeM": 0.05,
+          "url": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WFS/Skorowidze?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&TYPENAME=gugik%3ASkorowidzOrtofomapy2024&BBOX=729920.05%2C464031.77%2C729922.05%2C464033.77%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A2180&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A2180"
+        }
+      ]
     },
-    "sha256Orthophoto": "d0e8c574be3446dd28a10105346f9dda420b124744714b62eca19481cd811f06",
-    "sourceURL": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528383.77%2C6033436.61%2C6528743.77%2C6033796.61&WIDTH=2048&HEIGHT=2048&FORMAT=image%2Fjpeg"
+    "acquisitionDateStatus": "Dates and native sheet resolution are indexed at sample points. Pixel source and date may vary in the WMS mosaic.",
+    "registrationVerification": {
+      "method": "Compare expanded and previous registered ground rasters in 25 distributed blocks over their shared area using bilinear samples at identical EPSG:2177 pixel centers. Independently compare the 775/193 boundary between county WFS, ULDK and existing local scene.",
+      "result": "Median grayscale correlation is 0.985. The existing 775/193 parcel ring agrees with official EGiB to under 0.000001 m."
+    },
+    "notes": [
+      "The export samples 0.125 m grid cells. Source detail is coarser in the western StandardResolution sector.",
+      "Source tile rects are image pixel coordinates from the upper-left, right/bottom exclusive."
+    ]
   },
   "height": {
-    "source": "GUGiK WCS DigitalTerrainModel DTM_PL-EVRF2007-NH",
-    "sourceURL": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WCS/DigitalTerrainModel?SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&FORMAT=image%2Fx-aaigrid&COVERAGE=DTM_PL-EVRF2007-NH&BBOX=463514.0%2C729730.0%2C463880.0%2C730095.0&CRS=EPSG%3A2180&RESPONSE_CRS=EPSG%3A2180&RESX=1&RESY=1",
-    "horizontalCRS": "EPSG:2180",
+    "source": "Numeryczny model terenu GUGiK",
+    "sourceURL": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/NumerycznyModelTerenuEVRF2007/WFS/Skorowidze",
+    "horizontalCRS": "EPSG:2177",
     "verticalDatum": "PL-EVRF2007-NH",
-    "sourceGridHeader": {
-      "ncols": 366.0,
-      "nrows": 365.0,
-      "xllcorner": 463513.9999999997,
-      "yllcorner": 729729.9999999988,
-      "cellsize": 1.000000000001
-    },
-    "sourceShape": [
-      365,
-      366
+    "origin2177": [
+      6528545.937850511,
+      6033615.105133102
     ],
-    "sourceMinM": 150.5800018310547,
-    "sourceMaxM": 158.74000549316406,
-    "visualizationCRS": "EPSG:2177",
-    "visualizationBBox2177": [
-      6528383.77,
-      6033436.61,
-      6528743.77,
-      6033796.61
+    "localBounds": [
+      -280.93785051070154,
+      -281.10513310227543,
+      399.06214948929846,
+      230.89486689772457
     ],
-    "visualizationSize": [
-      1024,
-      1024
-    ],
-    "visualizationPixelSizeM": 0.3515625,
-    "visualizationSampling": "bilinear from source cell centres",
-    "visualizationMinM": 150.60339422403567,
-    "visualizationMaxM": 158.7234536588344,
-    "sharedVertexNearestCellHeightM": 156.38999938964844,
-    "normalized16Formula": "heightM = visualizationMinM + sample/65535*(visualizationMaxM-visualizationMinM)",
-    "acquisitionDate": null,
-    "notes": [
-      "No no-data cells or nonfinite values found in returned ASCII grid.",
-      "1m request/grid spacing does not imply 1m vertical accuracy.",
-      "Flat engineering scene is not a terrain survey or proposed grading design."
-    ],
-    "within100m": {
-      "minM": 154.0132708961178,
-      "maxM": 157.03399985026192,
-      "rangeM": 3.0207289541441185
-    },
-    "sceneParcelStats": {
-      "190": {
-        "minM": 155.78125377375454,
-        "maxM": 156.61874121605018,
-        "rangeM": 0.8374874422956395,
-        "meanM": 156.14576424243572
+    "sourceMinM": 146.66,
+    "sourceMaxM": 158.67,
+    "referenceElevationM": 156.16,
+    "gridM": 1,
+    "tiles": [
+      {
+        "url": "https://opendata.geoportal.gov.pl/NumDaneWys/NMT/81008/81008_1561282_N-34-49-D-b-4-3.asc",
+        "year": 2024,
+        "horizontalCRS": "EPSG:2180",
+        "spacingM": 1.0,
+        "indexedVerticalErrorM": 0.07,
+        "usedCells": 284161,
+        "sha256": "119297268caf884d3856e0ccd614d829afb9915600cc2a4add396504d3167627"
       },
-      "191": {
-        "minM": 155.70097508682525,
-        "maxM": 156.3992647167291,
-        "rangeM": 0.6982896299038543,
-        "meanM": 155.99382659639517
+      {
+        "url": "https://opendata.geoportal.gov.pl/NumDaneWys/NMT/77225/77225_1309655_6.222.24.08.4.asc",
+        "year": 2022,
+        "horizontalCRS": "EPSG:2177",
+        "spacingM": 0.5,
+        "indexedVerticalErrorM": 0.1,
+        "usedCells": 20942,
+        "sha256": "cb6e5ad5bd1e172d2b32585428d525cc36c2abf768e8fa6881d8c8e3eb8eb124"
       },
-      "193": {
-        "minM": 156.2432559482049,
-        "maxM": 156.55396153641226,
-        "rangeM": 0.3107055882073553,
-        "meanM": 156.38588650438243
+      {
+        "url": "https://opendata.geoportal.gov.pl/NumDaneWys/NMT/77225/77225_1309666_6.222.24.08.2.asc",
+        "year": 2022,
+        "horizontalCRS": "EPSG:2177",
+        "spacingM": 0.5,
+        "indexedVerticalErrorM": 0.1,
+        "usedCells": 43057,
+        "sha256": "e88df28ead872407f639f94e3827bc89d5b18becb57950bf7ec05a2c1cd28922"
       }
-    }
+    ],
+    "processing": {
+      "horizontal": "EPSG:2177 local east, north",
+      "vertical": "PL-EVRF2007-NH",
+      "grid": "1 m cell centres; rows north to south. Centimetre quantization.",
+      "coverageURL": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/NumerycznyModelTerenuEVRF2007/WFS/Skorowidze",
+      "method": "Official bare-earth DTM. Model grades preserve the four original parcels, level the house and terrace pads, and blend the surrounding terrain.",
+      "naturalGridSHA256": "a875e33ee64c8c294590add0556ed07d4a5b72e5feebdf92a9bf1e4e1c1102ce",
+      "gradedGridSHA256": "2d0c89cfee7168da316ad0ea34bcdb9ada10bddb088bf969640d33fd466d912c"
+    },
+    "preservedParcels": [
+      "775/190",
+      "775/191",
+      "775/192",
+      "775/193"
+    ]
   },
   "utilities": {
     "retrievedAtUTC": "2026-11-16T19:40:06.887977+00:00",
@@ -390,12 +688,12 @@
     ]
   },
   "display": {
-    "engineeringTerrain": "flat",
+    "engineeringTerrain": "NMT GUGiK, with level protected parcels and building pads",
     "orthophotoPlaneZM": -0.015,
     "heightPlaneZM": 0.025,
     "waterPlaneZM": 0.14,
     "electricityPlaneZM": 0.145,
-    "heightDeformsGeometry": false,
+    "heightDeformsGeometry": true,
     "orthophotoBakedShadowsAreStatic": true,
     "utilityRadiusM": 150,
     "utilityInkEmphasized": true,
@@ -403,9 +701,164 @@
     "graphicalUtilityWidthNotPhysical": true
   },
   "assets": {
-    "orthophoto.jpg": "d0e8c574be3446dd28a10105346f9dda420b124744714b62eca19481cd811f06",
     "height-hypsometry.png": "b440be32a8667890e257c778e119d42c821877af1f182d6387bc6ea4241c5bd3",
     "water-reprojected-enhanced-150m.png": "606154c36ebb7ad55c0f3c3cf231b8b81e5476ff68f966de2f57a4c5c685697e",
-    "electricity-group-emphasis-150m.png": "cdb94be220b57bf65c66d157feb30ea7ba651dfad472fad65999b193e3ddf111"
+    "electricity-group-emphasis-150m.png": "cdb94be220b57bf65c66d157feb30ea7ba651dfad472fad65999b193e3ddf111",
+    "ground.jpg": "5fd177ae634f54fda760f837c832d1314dcfd32159c7ba1dcc03bcdbf0f69e09",
+    "roof-atlas.webp": "7ed1c55c28a8c6de7bfbf80bfa515c3f8e49de5a050744ba71d2ce4aaee44972"
+  },
+  "neighborhood": {
+    "date": "2026-11-27",
+    "horizontal": "EPSG:2180 E,N metres",
+    "vertical": "PL-EVRF2007-NH metres",
+    "egib": {
+      "provider": "Starosta Kartuski, Powiatowe EGiB WFS ms:budynki",
+      "url": "https://kartuski-wms.webewid.pl/iip/ows?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&TYPENAME=ms%3Abudynki&SRSNAME=EPSG%3A2180&BBOX=729465,463235,730355,464125,EPSG%3A2180"
+    },
+    "lidar": {
+      "provider": "GUGiK / Państwowy Zasób Geodezyjny i Kartograficzny",
+      "info": "https://www.geoportal.gov.pl/pl/dane/dane-pomiarowe-lidar-lidar/",
+      "index": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/DanePomiaroweLidarEVRF2007/WFS/Skorowidze",
+      "tiles": [
+        {
+          "url": "https://opendata.geoportal.gov.pl/NumDaneWys/DanePomiaroweLAZ/81005/81005_1559100_N-34-49-D-b-4-3-1-1.laz",
+          "density": "12 p/m2",
+          "xy": "PL-1992",
+          "z": "PL-EVRF2007-NH",
+          "date": "2024-09-08"
+        },
+        {
+          "url": "https://opendata.geoportal.gov.pl/NumDaneWys/DanePomiaroweLAZ/81005/81005_1559102_N-34-49-D-b-4-3-1-3.laz",
+          "density": "12 p/m2",
+          "xy": "PL-1992",
+          "z": "PL-EVRF2007-NH",
+          "date": "2024-09-08"
+        },
+        {
+          "url": "https://opendata.geoportal.gov.pl/NumDaneWys/DanePomiaroweLAZ/81005/81005_1559101_N-34-49-D-b-4-3-1-2.laz",
+          "density": "12 p/m2",
+          "xy": "PL-1992",
+          "z": "PL-EVRF2007-NH",
+          "date": "2024-09-23"
+        },
+        {
+          "url": "https://opendata.geoportal.gov.pl/NumDaneWys/DanePomiaroweLAZ/77222/77222_1307749_6.222.24.08.4.laz",
+          "density": "40 p/m2",
+          "xy": "PL-2000:S6",
+          "z": "PL-EVRF2007-NH",
+          "date": "2022-04-30"
+        },
+        {
+          "url": "https://opendata.geoportal.gov.pl/NumDaneWys/DanePomiaroweLAZ/77222/77222_1307760_6.222.24.08.2.laz",
+          "density": "40 p/m2",
+          "xy": "PL-2000:S6",
+          "z": "PL-EVRF2007-NH",
+          "date": "2022-04-30"
+        }
+      ]
+    },
+    "surfaceModel": "Roof planes fitted individually to GUGiK class-6 ALS returns. Continuous hip/gable faces use intersecting fitted planes when the measured form supports them. Complex roof shapes use contiguous regions with boundaries fitted to point-cloud segments, shared ridges, and separate vertical risers at measured height changes. Unresolved small details are generalized. Heights normalized to local ground for the level-ground visualization.",
+    "ground": "Local median of subsampled class-2 ground returns within and up to 4 m outside footprint",
+    "validation": "Checked all 57 triangulated roof XY areas against the measured or source-traced eaves (maximum absolute projected-area difference 0.000120 m²). Compared to interior class-6 upper-surface returns with a 0.25 m perimeter inset, the median of the per-roof median absolute residuals is 0.021 m, and median of per-roof 90th percentile residuals 0.061 m. These are same-source fit checks, not independent survey accuracy.",
+    "missingBuilding": {
+      "id": "220508_5.0004.2077_BUD",
+      "status": "Registry outline only; no matching roof at surveyed XY in the 2022/2024 epochs; unbuilt/removed/date unknown. 2026 service timestamp is not cadastral construction date.",
+      "samples": [
+        {
+          "date": "2022-04-30",
+          "returns": 12559,
+          "class6": 0
+        },
+        {
+          "date": "2022-05-09",
+          "returns": 3451,
+          "class6": 0
+        },
+        {
+          "date": "2024-09-08",
+          "returns": 9751,
+          "class6": 0
+        }
+      ]
+    },
+    "data_files": [
+      "buildings-selected.json",
+      "roof-measurements.json.gz",
+      "roof-returns.npz",
+      "roof-refinement.json"
+    ],
+    "geometryEvidence": {
+      "measuredRoofRecords": 57,
+      "registryOnly": 1,
+      "surveyDates": [
+        "2022-04-30",
+        "2024-09-08",
+        "2024-09-23"
+      ],
+      "roofPlaneModes": {
+        "continuous plane regions with vertical risers": 34,
+        "intersected roof planes": 22,
+        "four-plane hipped pavilion with inferred obscured corner": 1
+      },
+      "registeredWallAndIndependentEaveOutline": [
+        "220508_5.0004.3093_BUD",
+        "220508_5.0004.3140_BUD",
+        "220508_5.0004.3147_BUD"
+      ],
+      "openAdjoiningCovers": {
+        "ALS2024-area2-8": "220508_5.0004.2084_BUD",
+        "ALS2024-area2-31": "220508_5.0004.2822_BUD",
+        "ALS2024-area2-127": "220508_5.0004.3140_BUD"
+      },
+      "partiallyHiddenRoof": "ALS2024-200 fourth corner inferred from visible eaves under the canopy; common ridge slope fitted to three visible sides."
+    },
+    "parcels": {
+      "provider": "Starosta Kartuski, EGiB, ms:dzialki",
+      "url": "https://kartuski-wms.webewid.pl/iip/ows?service=WFS&request=GetCapabilities",
+      "count": 111,
+      "areaM2": 136492.06,
+      "selection": "Whole parcels independently selected within four marked areas, merged by parcel ID."
+    },
+    "roofColorSources": [
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033718.0%2C6528409.0%2C6033846.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033718.0%2C6528409.0%2C6033846.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528409.0%2C6033718.0%2C6528553.0%2C6033846.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528553.0%2C6033718.0%2C6528697.0%2C6033846.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528697.0%2C6033718.0%2C6528841.0%2C6033846.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528841.0%2C6033718.0%2C6528945.0%2C6033846.0&WIDTH=832&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033590.0%2C6528409.0%2C6033718.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033590.0%2C6528409.0%2C6033718.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528409.0%2C6033590.0%2C6528553.0%2C6033718.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528553.0%2C6033590.0%2C6528697.0%2C6033718.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528697.0%2C6033590.0%2C6528841.0%2C6033718.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528841.0%2C6033590.0%2C6528945.0%2C6033718.0&WIDTH=832&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033462.0%2C6528409.0%2C6033590.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033462.0%2C6528409.0%2C6033590.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528409.0%2C6033462.0%2C6528553.0%2C6033590.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528553.0%2C6033462.0%2C6528697.0%2C6033590.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528697.0%2C6033462.0%2C6528841.0%2C6033590.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528841.0%2C6033462.0%2C6528945.0%2C6033590.0&WIDTH=832&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033334.0%2C6528409.0%2C6033462.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528265.0%2C6033334.0%2C6528409.0%2C6033462.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528409.0%2C6033334.0%2C6528553.0%2C6033462.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528553.0%2C6033334.0%2C6528697.0%2C6033462.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528697.0%2C6033334.0%2C6528841.0%2C6033462.0&WIDTH=1152&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE",
+      "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Raster&STYLES=&SRS=EPSG%3A2177&BBOX=6528841.0%2C6033334.0%2C6528945.0%2C6033462.0&WIDTH=832&HEIGHT=1024&FORMAT=image%2Fpng&TRANSPARENT=TRUE"
+    ],
+    "roofTextureAtlas": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution",
+    "modeledBuildings": 56,
+    "facades": "Odrębne układy elewacji dla każdego budynku. Otwory, stolarka i materiały elewacji opracowane orientacyjnie.",
+    "fences": {
+      "runs": 86,
+      "parcels": 32,
+      "source": "Ręczna interpretacja widocznych pasów zieleni, cieni i przebiegu wjazdów na ortofotomapie GUGiK. Wysokość i rodzaj przęseł przybliżone."
+    },
+    "plannedHousing": {
+      "status": "Scenariusz koncepcyjny",
+      "scope": "Niezabudowane działki do 3000 m² w granicach modelu, z wyłączeniem działek drogowych i dojazdów.",
+      "placement": "Odległość od granicy każdej działki drogowej jest sprawdzana dla obrysu domu powiększonego o 0,5 m na okapy i elementy wejścia.",
+      "vegetation": "Korony odtworzono z pomiarów laserowych GUGiK i sprawdzono na ortofotomapach. Przesunięcia drzew są propozycją zagospodarowania działki. Wyłączenie warstwy przywraca położenie z pomiaru.",
+      "survey": "https://www.geoportal.gov.pl/pl/dane/dane-pomiarowe-lidar-lidar/"
+    }
   }
 }
